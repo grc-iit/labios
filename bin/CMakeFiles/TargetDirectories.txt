@@ -1,0 +1,5 @@
+/home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles/edit_cache.dir
+/home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles/rebuild_cache.dir
+/home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles/worker_service.dir
+/home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles/sort.dir
+/home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles/porus.dir

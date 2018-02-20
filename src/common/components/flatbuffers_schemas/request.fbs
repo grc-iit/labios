@@ -1,0 +1,15 @@
+/******************************************************************************
+*IDL schema for posix_api_request
+******************************************************************************/
+
+enum posix_operation : int { OPEN = 0,
+                                 CLOSE =1,
+                                 READ = 2,
+                                 WRITE = 3 }
+
+struct posix_api_request {
+  operation:posix_operation;
+  offset:long;
+  size:uint;
+  fd:int;
+}
