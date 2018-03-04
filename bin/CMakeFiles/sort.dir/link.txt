@@ -1,1 +1,0 @@
-/usr/bin/c++   -std=c++11 -L/usr/local/lib/ -lmemcached -L/home/anthony/Downloads/or-tools-master/lib -lortools -g -Wl,-rpath -Wl,/usr/lib/openmpi/lib -Wl,--enable-new-dtags  CMakeFiles/sort.dir/program_repository/src/sort.cpp.o  -o executables/sort 

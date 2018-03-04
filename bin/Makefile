@@ -39,38 +39,27 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /home/anthony/Templates/clion-2017.2.3/bin/cmake/bin/cmake
+CMAKE_COMMAND = /home/hariharan/clion-2017.3.3/bin/cmake/bin/cmake
 
 # The command to remove a file.
-RM = /home/anthony/Templates/clion-2017.2.3/bin/cmake/bin/cmake -E remove -f
+RM = /home/hariharan/clion-2017.3.3/bin/cmake/bin/cmake -E remove -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/anthony/Dropbox/Projects/PORUS/porus
+CMAKE_SOURCE_DIR = /home/hariharan/Documents/porus_main
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/anthony/Dropbox/Projects/PORUS/porus/bin
+CMAKE_BINARY_DIR = /home/hariharan/Documents/porus_main/bin
 
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/home/anthony/Templates/clion-2017.2.3/bin/cmake/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
-
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/home/anthony/Templates/clion-2017.2.3/bin/cmake/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/home/hariharan/clion-2017.3.3/bin/cmake/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -78,11 +67,22 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/home/hariharan/clion-2017.3.3/bin/cmake/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
+
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles /home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/hariharan/Documents/porus_main/bin/CMakeFiles /home/hariharan/Documents/porus_main/bin/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/anthony/Dropbox/Projects/PORUS/porus/bin/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/hariharan/Documents/porus_main/bin/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -111,967 +111,679 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named worker_service
+# Target rules for targets named porus_worker
 
 # Build rule for target.
-worker_service: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 worker_service
-.PHONY : worker_service
+porus_worker: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 porus_worker
+.PHONY : porus_worker
 
 # fast build rule for target.
-worker_service/fast:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/build
-.PHONY : worker_service/fast
+porus_worker/fast:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/build
+.PHONY : porus_worker/fast
 
 #=============================================================================
-# Target rules for targets named sort
+# Target rules for targets named porus_worker_manager
 
 # Build rule for target.
-sort: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 sort
-.PHONY : sort
+porus_worker_manager: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 porus_worker_manager
+.PHONY : porus_worker_manager
 
 # fast build rule for target.
-sort/fast:
-	$(MAKE) -f CMakeFiles/sort.dir/build.make CMakeFiles/sort.dir/build
-.PHONY : sort/fast
+porus_worker_manager/fast:
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/build
+.PHONY : porus_worker_manager/fast
 
 #=============================================================================
-# Target rules for targets named porus
+# Target rules for targets named porus_task_scheduler
 
 # Build rule for target.
-porus: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 porus
-.PHONY : porus
+porus_task_scheduler: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 porus_task_scheduler
+.PHONY : porus_task_scheduler
 
 # fast build rule for target.
-porus/fast:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/build
-.PHONY : porus/fast
+porus_task_scheduler/fast:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/build
+.PHONY : porus_task_scheduler/fast
 
-include/config_manager.o: include/config_manager.cpp.o
+#=============================================================================
+# Target rules for targets named porus_server
 
-.PHONY : include/config_manager.o
+# Build rule for target.
+porus_server: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 porus_server
+.PHONY : porus_server
 
-# target to build an object file
-include/config_manager.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/include/config_manager.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/include/config_manager.cpp.o
-.PHONY : include/config_manager.cpp.o
+# fast build rule for target.
+porus_server/fast:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/build
+.PHONY : porus_server/fast
 
-include/config_manager.i: include/config_manager.cpp.i
+#=============================================================================
+# Target rules for targets named porus_client
 
-.PHONY : include/config_manager.i
+# Build rule for target.
+porus_client: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 porus_client
+.PHONY : porus_client
 
-# target to preprocess a source file
-include/config_manager.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/include/config_manager.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/include/config_manager.cpp.i
-.PHONY : include/config_manager.cpp.i
+# fast build rule for target.
+porus_client/fast:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/build
+.PHONY : porus_client/fast
 
-include/config_manager.s: include/config_manager.cpp.s
+#=============================================================================
+# Target rules for targets named porus_lib
 
-.PHONY : include/config_manager.s
+# Build rule for target.
+porus_lib: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 porus_lib
+.PHONY : porus_lib
 
-# target to generate assembly for a file
-include/config_manager.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/include/config_manager.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/include/config_manager.cpp.s
-.PHONY : include/config_manager.cpp.s
+# fast build rule for target.
+porus_lib/fast:
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/build
+.PHONY : porus_lib/fast
 
-main.o: main.cpp.o
+src/System.o: src/System.cpp.o
 
-.PHONY : main.o
-
-# target to build an object file
-main.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/main.cpp.o
-.PHONY : main.cpp.o
-
-main.i: main.cpp.i
-
-.PHONY : main.i
-
-# target to preprocess a source file
-main.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/main.cpp.i
-.PHONY : main.cpp.i
-
-main.s: main.cpp.s
-
-.PHONY : main.s
-
-# target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/main.cpp.s
-.PHONY : main.cpp.s
-
-program_repository/src/sort.o: program_repository/src/sort.cpp.o
-
-.PHONY : program_repository/src/sort.o
+.PHONY : src/System.o
 
 # target to build an object file
-program_repository/src/sort.cpp.o:
-	$(MAKE) -f CMakeFiles/sort.dir/build.make CMakeFiles/sort.dir/program_repository/src/sort.cpp.o
-.PHONY : program_repository/src/sort.cpp.o
+src/System.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/System.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/System.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/System.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/System.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/System.cpp.o
+.PHONY : src/System.cpp.o
 
-program_repository/src/sort.i: program_repository/src/sort.cpp.i
+src/System.i: src/System.cpp.i
 
-.PHONY : program_repository/src/sort.i
+.PHONY : src/System.i
 
 # target to preprocess a source file
-program_repository/src/sort.cpp.i:
-	$(MAKE) -f CMakeFiles/sort.dir/build.make CMakeFiles/sort.dir/program_repository/src/sort.cpp.i
-.PHONY : program_repository/src/sort.cpp.i
+src/System.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/System.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/System.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/System.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/System.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/System.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/System.cpp.i
+.PHONY : src/System.cpp.i
 
-program_repository/src/sort.s: program_repository/src/sort.cpp.s
+src/System.s: src/System.cpp.s
 
-.PHONY : program_repository/src/sort.s
+.PHONY : src/System.s
 
 # target to generate assembly for a file
-program_repository/src/sort.cpp.s:
-	$(MAKE) -f CMakeFiles/sort.dir/build.make CMakeFiles/sort.dir/program_repository/src/sort.cpp.s
-.PHONY : program_repository/src/sort.cpp.s
+src/System.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/System.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/System.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/System.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/System.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/System.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/System.cpp.s
+.PHONY : src/System.cpp.s
 
-src/api.o: src/api.cpp.o
+src/client/PorusClient.o: src/client/PorusClient.cpp.o
 
-.PHONY : src/api.o
+.PHONY : src/client/PorusClient.o
 
 # target to build an object file
-src/api.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/api.cpp.o
-.PHONY : src/api.cpp.o
+src/client/PorusClient.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o
+.PHONY : src/client/PorusClient.cpp.o
 
-src/api.i: src/api.cpp.i
+src/client/PorusClient.i: src/client/PorusClient.cpp.i
 
-.PHONY : src/api.i
+.PHONY : src/client/PorusClient.i
 
 # target to preprocess a source file
-src/api.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/api.cpp.i
-.PHONY : src/api.cpp.i
+src/client/PorusClient.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.i
+.PHONY : src/client/PorusClient.cpp.i
 
-src/api.s: src/api.cpp.s
+src/client/PorusClient.s: src/client/PorusClient.cpp.s
 
-.PHONY : src/api.s
+.PHONY : src/client/PorusClient.s
 
 # target to generate assembly for a file
-src/api.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/api.cpp.s
-.PHONY : src/api.cpp.s
+src/client/PorusClient.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.s
+.PHONY : src/client/PorusClient.cpp.s
 
-src/common/components/memtable.o: src/common/components/memtable.cpp.o
+src/client/main.o: src/client/main.cpp.o
 
-.PHONY : src/common/components/memtable.o
+.PHONY : src/client/main.o
 
 # target to build an object file
-src/common/components/memtable.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/components/memtable.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/components/memtable.cpp.o
-.PHONY : src/common/components/memtable.cpp.o
+src/client/main.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/main.cpp.o
+.PHONY : src/client/main.cpp.o
 
-src/common/components/memtable.i: src/common/components/memtable.cpp.i
+src/client/main.i: src/client/main.cpp.i
 
-.PHONY : src/common/components/memtable.i
+.PHONY : src/client/main.i
 
 # target to preprocess a source file
-src/common/components/memtable.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/components/memtable.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/components/memtable.cpp.i
-.PHONY : src/common/components/memtable.cpp.i
+src/client/main.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/main.cpp.i
+.PHONY : src/client/main.cpp.i
 
-src/common/components/memtable.s: src/common/components/memtable.cpp.s
+src/client/main.s: src/client/main.cpp.s
 
-.PHONY : src/common/components/memtable.s
+.PHONY : src/client/main.s
 
 # target to generate assembly for a file
-src/common/components/memtable.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/components/memtable.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/components/memtable.cpp.s
-.PHONY : src/common/components/memtable.cpp.s
+src/client/main.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/main.cpp.s
+.PHONY : src/client/main.cpp.s
 
-src/common/porus_system.o: src/common/porus_system.cpp.o
+src/common/data_manager/data_manager.o: src/common/data_manager/data_manager.cpp.o
 
-.PHONY : src/common/porus_system.o
+.PHONY : src/common/data_manager/data_manager.o
 
 # target to build an object file
-src/common/porus_system.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/porus_system.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/porus_system.cpp.o
-.PHONY : src/common/porus_system.cpp.o
+src/common/data_manager/data_manager.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o
+.PHONY : src/common/data_manager/data_manager.cpp.o
 
-src/common/porus_system.i: src/common/porus_system.cpp.i
+src/common/data_manager/data_manager.i: src/common/data_manager/data_manager.cpp.i
 
-.PHONY : src/common/porus_system.i
+.PHONY : src/common/data_manager/data_manager.i
 
 # target to preprocess a source file
-src/common/porus_system.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/porus_system.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/porus_system.cpp.i
-.PHONY : src/common/porus_system.cpp.i
+src/common/data_manager/data_manager.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.i
+.PHONY : src/common/data_manager/data_manager.cpp.i
 
-src/common/porus_system.s: src/common/porus_system.cpp.s
+src/common/data_manager/data_manager.s: src/common/data_manager/data_manager.cpp.s
 
-.PHONY : src/common/porus_system.s
+.PHONY : src/common/data_manager/data_manager.s
 
 # target to generate assembly for a file
-src/common/porus_system.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/porus_system.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/porus_system.cpp.s
-.PHONY : src/common/porus_system.cpp.s
+src/common/data_manager/data_manager.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.s
+.PHONY : src/common/data_manager/data_manager.cpp.s
 
-src/common/utils/Timer.o: src/common/utils/Timer.cpp.o
+src/common/external_clients/DistributedHashMap.o: src/common/external_clients/DistributedHashMap.cpp.o
 
-.PHONY : src/common/utils/Timer.o
+.PHONY : src/common/external_clients/DistributedHashMap.o
 
 # target to build an object file
-src/common/utils/Timer.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/utils/Timer.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/utils/Timer.cpp.o
-.PHONY : src/common/utils/Timer.cpp.o
+src/common/external_clients/DistributedHashMap.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.o
+.PHONY : src/common/external_clients/DistributedHashMap.cpp.o
 
-src/common/utils/Timer.i: src/common/utils/Timer.cpp.i
+src/common/external_clients/DistributedHashMap.i: src/common/external_clients/DistributedHashMap.cpp.i
 
-.PHONY : src/common/utils/Timer.i
+.PHONY : src/common/external_clients/DistributedHashMap.i
 
 # target to preprocess a source file
-src/common/utils/Timer.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/utils/Timer.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/utils/Timer.cpp.i
-.PHONY : src/common/utils/Timer.cpp.i
+src/common/external_clients/DistributedHashMap.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.i
+.PHONY : src/common/external_clients/DistributedHashMap.cpp.i
 
-src/common/utils/Timer.s: src/common/utils/Timer.cpp.s
+src/common/external_clients/DistributedHashMap.s: src/common/external_clients/DistributedHashMap.cpp.s
 
-.PHONY : src/common/utils/Timer.s
+.PHONY : src/common/external_clients/DistributedHashMap.s
 
 # target to generate assembly for a file
-src/common/utils/Timer.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/utils/Timer.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/utils/Timer.cpp.s
-.PHONY : src/common/utils/Timer.cpp.s
+src/common/external_clients/DistributedHashMap.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.s
+.PHONY : src/common/external_clients/DistributedHashMap.cpp.s
 
-src/common/utils/google_tools/city.o: src/common/utils/google_tools/city.cc.o
+src/common/external_clients/DistributedQueue.o: src/common/external_clients/DistributedQueue.cpp.o
 
-.PHONY : src/common/utils/google_tools/city.o
+.PHONY : src/common/external_clients/DistributedQueue.o
 
 # target to build an object file
-src/common/utils/google_tools/city.cc.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/utils/google_tools/city.cc.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/utils/google_tools/city.cc.o
-.PHONY : src/common/utils/google_tools/city.cc.o
+src/common/external_clients/DistributedQueue.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.o
+.PHONY : src/common/external_clients/DistributedQueue.cpp.o
 
-src/common/utils/google_tools/city.i: src/common/utils/google_tools/city.cc.i
+src/common/external_clients/DistributedQueue.i: src/common/external_clients/DistributedQueue.cpp.i
 
-.PHONY : src/common/utils/google_tools/city.i
+.PHONY : src/common/external_clients/DistributedQueue.i
 
 # target to preprocess a source file
-src/common/utils/google_tools/city.cc.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/utils/google_tools/city.cc.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/utils/google_tools/city.cc.i
-.PHONY : src/common/utils/google_tools/city.cc.i
+src/common/external_clients/DistributedQueue.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.i
+.PHONY : src/common/external_clients/DistributedQueue.cpp.i
 
-src/common/utils/google_tools/city.s: src/common/utils/google_tools/city.cc.s
+src/common/external_clients/DistributedQueue.s: src/common/external_clients/DistributedQueue.cpp.s
 
-.PHONY : src/common/utils/google_tools/city.s
+.PHONY : src/common/external_clients/DistributedQueue.s
 
 # target to generate assembly for a file
-src/common/utils/google_tools/city.cc.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/common/utils/google_tools/city.cc.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/common/utils/google_tools/city.cc.s
-.PHONY : src/common/utils/google_tools/city.cc.s
+src/common/external_clients/DistributedQueue.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.s
+.PHONY : src/common/external_clients/DistributedQueue.cpp.s
 
-src/core/cache_manager/cache_manager.o: src/core/cache_manager/cache_manager.cpp.o
+src/common/external_clients/MemcacheDImpl.o: src/common/external_clients/MemcacheDImpl.cpp.o
 
-.PHONY : src/core/cache_manager/cache_manager.o
+.PHONY : src/common/external_clients/MemcacheDImpl.o
 
 # target to build an object file
-src/core/cache_manager/cache_manager.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/cache_manager/cache_manager.cpp.o
-.PHONY : src/core/cache_manager/cache_manager.cpp.o
+src/common/external_clients/MemcacheDImpl.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+.PHONY : src/common/external_clients/MemcacheDImpl.cpp.o
 
-src/core/cache_manager/cache_manager.i: src/core/cache_manager/cache_manager.cpp.i
+src/common/external_clients/MemcacheDImpl.i: src/common/external_clients/MemcacheDImpl.cpp.i
 
-.PHONY : src/core/cache_manager/cache_manager.i
+.PHONY : src/common/external_clients/MemcacheDImpl.i
 
 # target to preprocess a source file
-src/core/cache_manager/cache_manager.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/cache_manager/cache_manager.cpp.i
-.PHONY : src/core/cache_manager/cache_manager.cpp.i
+src/common/external_clients/MemcacheDImpl.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/MemcacheDImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/MemcacheDImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/MemcacheDImpl.cpp.i
+.PHONY : src/common/external_clients/MemcacheDImpl.cpp.i
 
-src/core/cache_manager/cache_manager.s: src/core/cache_manager/cache_manager.cpp.s
+src/common/external_clients/MemcacheDImpl.s: src/common/external_clients/MemcacheDImpl.cpp.s
 
-.PHONY : src/core/cache_manager/cache_manager.s
+.PHONY : src/common/external_clients/MemcacheDImpl.s
 
 # target to generate assembly for a file
-src/core/cache_manager/cache_manager.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/cache_manager/cache_manager.cpp.s
-.PHONY : src/core/cache_manager/cache_manager.cpp.s
+src/common/external_clients/MemcacheDImpl.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/MemcacheDImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/MemcacheDImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/MemcacheDImpl.cpp.s
+.PHONY : src/common/external_clients/MemcacheDImpl.cpp.s
 
-src/core/cache_manager/memcached_client.o: src/core/cache_manager/memcached_client.cpp.o
+src/common/external_clients/RocksDBImpl.o: src/common/external_clients/RocksDBImpl.cpp.o
 
-.PHONY : src/core/cache_manager/memcached_client.o
+.PHONY : src/common/external_clients/RocksDBImpl.o
 
 # target to build an object file
-src/core/cache_manager/memcached_client.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/cache_manager/memcached_client.cpp.o
-.PHONY : src/core/cache_manager/memcached_client.cpp.o
+src/common/external_clients/RocksDBImpl.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/RocksDBImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/RocksDBImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/RocksDBImpl.cpp.o
+.PHONY : src/common/external_clients/RocksDBImpl.cpp.o
 
-src/core/cache_manager/memcached_client.i: src/core/cache_manager/memcached_client.cpp.i
+src/common/external_clients/RocksDBImpl.i: src/common/external_clients/RocksDBImpl.cpp.i
 
-.PHONY : src/core/cache_manager/memcached_client.i
+.PHONY : src/common/external_clients/RocksDBImpl.i
 
 # target to preprocess a source file
-src/core/cache_manager/memcached_client.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/cache_manager/memcached_client.cpp.i
-.PHONY : src/core/cache_manager/memcached_client.cpp.i
+src/common/external_clients/RocksDBImpl.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/RocksDBImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/RocksDBImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/RocksDBImpl.cpp.i
+.PHONY : src/common/external_clients/RocksDBImpl.cpp.i
 
-src/core/cache_manager/memcached_client.s: src/core/cache_manager/memcached_client.cpp.s
+src/common/external_clients/RocksDBImpl.s: src/common/external_clients/RocksDBImpl.cpp.s
 
-.PHONY : src/core/cache_manager/memcached_client.s
+.PHONY : src/common/external_clients/RocksDBImpl.s
 
 # target to generate assembly for a file
-src/core/cache_manager/memcached_client.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/cache_manager/memcached_client.cpp.s
-.PHONY : src/core/cache_manager/memcached_client.cpp.s
+src/common/external_clients/RocksDBImpl.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/RocksDBImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/RocksDBImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/RocksDBImpl.cpp.s
+.PHONY : src/common/external_clients/RocksDBImpl.cpp.s
 
-src/core/metadata_manager/abstract_mdm.o: src/core/metadata_manager/abstract_mdm.cpp.o
+src/common/external_clients/serialization_manager.o: src/common/external_clients/serialization_manager.cpp.o
 
-.PHONY : src/core/metadata_manager/abstract_mdm.o
+.PHONY : src/common/external_clients/serialization_manager.o
 
 # target to build an object file
-src/core/metadata_manager/abstract_mdm.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/abstract_mdm.cpp.o
-.PHONY : src/core/metadata_manager/abstract_mdm.cpp.o
+src/common/external_clients/serialization_manager.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o
+.PHONY : src/common/external_clients/serialization_manager.cpp.o
 
-src/core/metadata_manager/abstract_mdm.i: src/core/metadata_manager/abstract_mdm.cpp.i
+src/common/external_clients/serialization_manager.i: src/common/external_clients/serialization_manager.cpp.i
 
-.PHONY : src/core/metadata_manager/abstract_mdm.i
+.PHONY : src/common/external_clients/serialization_manager.i
 
 # target to preprocess a source file
-src/core/metadata_manager/abstract_mdm.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/abstract_mdm.cpp.i
-.PHONY : src/core/metadata_manager/abstract_mdm.cpp.i
+src/common/external_clients/serialization_manager.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.i
+.PHONY : src/common/external_clients/serialization_manager.cpp.i
 
-src/core/metadata_manager/abstract_mdm.s: src/core/metadata_manager/abstract_mdm.cpp.s
+src/common/external_clients/serialization_manager.s: src/common/external_clients/serialization_manager.cpp.s
 
-.PHONY : src/core/metadata_manager/abstract_mdm.s
+.PHONY : src/common/external_clients/serialization_manager.s
 
 # target to generate assembly for a file
-src/core/metadata_manager/abstract_mdm.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/abstract_mdm.cpp.s
-.PHONY : src/core/metadata_manager/abstract_mdm.cpp.s
+src/common/external_clients/serialization_manager.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.s
+.PHONY : src/common/external_clients/serialization_manager.cpp.s
 
-src/core/metadata_manager/mdm_factory.o: src/core/metadata_manager/mdm_factory.cpp.o
+src/common/metadata_manager/metadata_manager.o: src/common/metadata_manager/metadata_manager.cpp.o
 
-.PHONY : src/core/metadata_manager/mdm_factory.o
+.PHONY : src/common/metadata_manager/metadata_manager.o
 
 # target to build an object file
-src/core/metadata_manager/mdm_factory.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/mdm_factory.cpp.o
-.PHONY : src/core/metadata_manager/mdm_factory.cpp.o
+src/common/metadata_manager/metadata_manager.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o
+.PHONY : src/common/metadata_manager/metadata_manager.cpp.o
 
-src/core/metadata_manager/mdm_factory.i: src/core/metadata_manager/mdm_factory.cpp.i
+src/common/metadata_manager/metadata_manager.i: src/common/metadata_manager/metadata_manager.cpp.i
 
-.PHONY : src/core/metadata_manager/mdm_factory.i
+.PHONY : src/common/metadata_manager/metadata_manager.i
 
 # target to preprocess a source file
-src/core/metadata_manager/mdm_factory.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/mdm_factory.cpp.i
-.PHONY : src/core/metadata_manager/mdm_factory.cpp.i
+src/common/metadata_manager/metadata_manager.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.i
+.PHONY : src/common/metadata_manager/metadata_manager.cpp.i
 
-src/core/metadata_manager/mdm_factory.s: src/core/metadata_manager/mdm_factory.cpp.s
+src/common/metadata_manager/metadata_manager.s: src/common/metadata_manager/metadata_manager.cpp.s
 
-.PHONY : src/core/metadata_manager/mdm_factory.s
+.PHONY : src/common/metadata_manager/metadata_manager.s
 
 # target to generate assembly for a file
-src/core/metadata_manager/mdm_factory.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/mdm_factory.cpp.s
-.PHONY : src/core/metadata_manager/mdm_factory.cpp.s
+src/common/metadata_manager/metadata_manager.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.s
+.PHONY : src/common/metadata_manager/metadata_manager.cpp.s
 
-src/core/metadata_manager/posix_mdm.o: src/core/metadata_manager/posix_mdm.cpp.o
+src/common/task_handler/task_handler.o: src/common/task_handler/task_handler.cpp.o
 
-.PHONY : src/core/metadata_manager/posix_mdm.o
+.PHONY : src/common/task_handler/task_handler.o
 
 # target to build an object file
-src/core/metadata_manager/posix_mdm.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/posix_mdm.cpp.o
-.PHONY : src/core/metadata_manager/posix_mdm.cpp.o
+src/common/task_handler/task_handler.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.o
+.PHONY : src/common/task_handler/task_handler.cpp.o
 
-src/core/metadata_manager/posix_mdm.i: src/core/metadata_manager/posix_mdm.cpp.i
+src/common/task_handler/task_handler.i: src/common/task_handler/task_handler.cpp.i
 
-.PHONY : src/core/metadata_manager/posix_mdm.i
+.PHONY : src/common/task_handler/task_handler.i
 
 # target to preprocess a source file
-src/core/metadata_manager/posix_mdm.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/posix_mdm.cpp.i
-.PHONY : src/core/metadata_manager/posix_mdm.cpp.i
+src/common/task_handler/task_handler.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.i
+.PHONY : src/common/task_handler/task_handler.cpp.i
 
-src/core/metadata_manager/posix_mdm.s: src/core/metadata_manager/posix_mdm.cpp.s
+src/common/task_handler/task_handler.s: src/common/task_handler/task_handler.cpp.s
 
-.PHONY : src/core/metadata_manager/posix_mdm.s
+.PHONY : src/common/task_handler/task_handler.s
 
 # target to generate assembly for a file
-src/core/metadata_manager/posix_mdm.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/metadata_manager/posix_mdm.cpp.s
-.PHONY : src/core/metadata_manager/posix_mdm.cpp.s
+src/common/task_handler/task_handler.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.s
+.PHONY : src/common/task_handler/task_handler.cpp.s
 
-src/core/prefetcher/abstract_prefetcher.o: src/core/prefetcher/abstract_prefetcher.cpp.o
+src/lib/driver.o: src/lib/driver.cpp.o
 
-.PHONY : src/core/prefetcher/abstract_prefetcher.o
+.PHONY : src/lib/driver.o
 
 # target to build an object file
-src/core/prefetcher/abstract_prefetcher.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/abstract_prefetcher.cpp.o
-.PHONY : src/core/prefetcher/abstract_prefetcher.cpp.o
+src/lib/driver.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/lib/driver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o
+.PHONY : src/lib/driver.cpp.o
 
-src/core/prefetcher/abstract_prefetcher.i: src/core/prefetcher/abstract_prefetcher.cpp.i
+src/lib/driver.i: src/lib/driver.cpp.i
 
-.PHONY : src/core/prefetcher/abstract_prefetcher.i
+.PHONY : src/lib/driver.i
 
 # target to preprocess a source file
-src/core/prefetcher/abstract_prefetcher.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/abstract_prefetcher.cpp.i
-.PHONY : src/core/prefetcher/abstract_prefetcher.cpp.i
+src/lib/driver.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/lib/driver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/driver.cpp.i
+.PHONY : src/lib/driver.cpp.i
 
-src/core/prefetcher/abstract_prefetcher.s: src/core/prefetcher/abstract_prefetcher.cpp.s
+src/lib/driver.s: src/lib/driver.cpp.s
 
-.PHONY : src/core/prefetcher/abstract_prefetcher.s
+.PHONY : src/lib/driver.s
 
 # target to generate assembly for a file
-src/core/prefetcher/abstract_prefetcher.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/abstract_prefetcher.cpp.s
-.PHONY : src/core/prefetcher/abstract_prefetcher.cpp.s
+src/lib/driver.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/lib/driver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/driver.cpp.s
+.PHONY : src/lib/driver.cpp.s
 
-src/core/prefetcher/posix_prefetcher.o: src/core/prefetcher/posix_prefetcher.cpp.o
+src/lib/posix.o: src/lib/posix.cpp.o
 
-.PHONY : src/core/prefetcher/posix_prefetcher.o
+.PHONY : src/lib/posix.o
 
 # target to build an object file
-src/core/prefetcher/posix_prefetcher.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/posix_prefetcher.cpp.o
-.PHONY : src/core/prefetcher/posix_prefetcher.cpp.o
+src/lib/posix.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o
+.PHONY : src/lib/posix.cpp.o
 
-src/core/prefetcher/posix_prefetcher.i: src/core/prefetcher/posix_prefetcher.cpp.i
+src/lib/posix.i: src/lib/posix.cpp.i
 
-.PHONY : src/core/prefetcher/posix_prefetcher.i
+.PHONY : src/lib/posix.i
 
 # target to preprocess a source file
-src/core/prefetcher/posix_prefetcher.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/posix_prefetcher.cpp.i
-.PHONY : src/core/prefetcher/posix_prefetcher.cpp.i
+src/lib/posix.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/posix.cpp.i
+.PHONY : src/lib/posix.cpp.i
 
-src/core/prefetcher/posix_prefetcher.s: src/core/prefetcher/posix_prefetcher.cpp.s
+src/lib/posix.s: src/lib/posix.cpp.s
 
-.PHONY : src/core/prefetcher/posix_prefetcher.s
+.PHONY : src/lib/posix.s
 
 # target to generate assembly for a file
-src/core/prefetcher/posix_prefetcher.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/posix_prefetcher.cpp.s
-.PHONY : src/core/prefetcher/posix_prefetcher.cpp.s
+src/lib/posix.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/posix.cpp.s
+.PHONY : src/lib/posix.cpp.s
 
-src/core/prefetcher/prefetcher_factory.o: src/core/prefetcher/prefetcher_factory.cpp.o
+src/server/main.o: src/server/main.cpp.o
 
-.PHONY : src/core/prefetcher/prefetcher_factory.o
+.PHONY : src/server/main.o
 
 # target to build an object file
-src/core/prefetcher/prefetcher_factory.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/prefetcher_factory.cpp.o
-.PHONY : src/core/prefetcher/prefetcher_factory.cpp.o
+src/server/main.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/server/main.cpp.o
+.PHONY : src/server/main.cpp.o
 
-src/core/prefetcher/prefetcher_factory.i: src/core/prefetcher/prefetcher_factory.cpp.i
+src/server/main.i: src/server/main.cpp.i
 
-.PHONY : src/core/prefetcher/prefetcher_factory.i
+.PHONY : src/server/main.i
 
 # target to preprocess a source file
-src/core/prefetcher/prefetcher_factory.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/prefetcher_factory.cpp.i
-.PHONY : src/core/prefetcher/prefetcher_factory.cpp.i
+src/server/main.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/server/main.cpp.i
+.PHONY : src/server/main.cpp.i
 
-src/core/prefetcher/prefetcher_factory.s: src/core/prefetcher/prefetcher_factory.cpp.s
+src/server/main.s: src/server/main.cpp.s
 
-.PHONY : src/core/prefetcher/prefetcher_factory.s
+.PHONY : src/server/main.s
 
 # target to generate assembly for a file
-src/core/prefetcher/prefetcher_factory.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/prefetcher/prefetcher_factory.cpp.s
-.PHONY : src/core/prefetcher/prefetcher_factory.cpp.s
+src/server/main.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/server/main.cpp.s
+.PHONY : src/server/main.cpp.s
 
-src/core/request_handler/abstract_rh.o: src/core/request_handler/abstract_rh.cpp.o
+src/task_scheduler/main.o: src/task_scheduler/main.cpp.o
 
-.PHONY : src/core/request_handler/abstract_rh.o
+.PHONY : src/task_scheduler/main.o
 
 # target to build an object file
-src/core/request_handler/abstract_rh.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/abstract_rh.cpp.o
-.PHONY : src/core/request_handler/abstract_rh.cpp.o
+src/task_scheduler/main.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o
+.PHONY : src/task_scheduler/main.cpp.o
 
-src/core/request_handler/abstract_rh.i: src/core/request_handler/abstract_rh.cpp.i
+src/task_scheduler/main.i: src/task_scheduler/main.cpp.i
 
-.PHONY : src/core/request_handler/abstract_rh.i
+.PHONY : src/task_scheduler/main.i
 
 # target to preprocess a source file
-src/core/request_handler/abstract_rh.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/abstract_rh.cpp.i
-.PHONY : src/core/request_handler/abstract_rh.cpp.i
+src/task_scheduler/main.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.i
+.PHONY : src/task_scheduler/main.cpp.i
 
-src/core/request_handler/abstract_rh.s: src/core/request_handler/abstract_rh.cpp.s
+src/task_scheduler/main.s: src/task_scheduler/main.cpp.s
 
-.PHONY : src/core/request_handler/abstract_rh.s
+.PHONY : src/task_scheduler/main.s
 
 # target to generate assembly for a file
-src/core/request_handler/abstract_rh.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/abstract_rh.cpp.s
-.PHONY : src/core/request_handler/abstract_rh.cpp.s
+src/task_scheduler/main.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s
+.PHONY : src/task_scheduler/main.cpp.s
 
-src/core/request_handler/posix_rh.o: src/core/request_handler/posix_rh.cpp.o
+src/worker/main.o: src/worker/main.cpp.o
 
-.PHONY : src/core/request_handler/posix_rh.o
+.PHONY : src/worker/main.o
 
 # target to build an object file
-src/core/request_handler/posix_rh.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh.cpp.o
-.PHONY : src/core/request_handler/posix_rh.cpp.o
+src/worker/main.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/main.cpp.o
+.PHONY : src/worker/main.cpp.o
 
-src/core/request_handler/posix_rh.i: src/core/request_handler/posix_rh.cpp.i
+src/worker/main.i: src/worker/main.cpp.i
 
-.PHONY : src/core/request_handler/posix_rh.i
+.PHONY : src/worker/main.i
 
 # target to preprocess a source file
-src/core/request_handler/posix_rh.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh.cpp.i
-.PHONY : src/core/request_handler/posix_rh.cpp.i
+src/worker/main.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/main.cpp.i
+.PHONY : src/worker/main.cpp.i
 
-src/core/request_handler/posix_rh.s: src/core/request_handler/posix_rh.cpp.s
+src/worker/main.s: src/worker/main.cpp.s
 
-.PHONY : src/core/request_handler/posix_rh.s
+.PHONY : src/worker/main.s
 
 # target to generate assembly for a file
-src/core/request_handler/posix_rh.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh.cpp.s
-.PHONY : src/core/request_handler/posix_rh.cpp.s
+src/worker/main.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/main.cpp.s
+.PHONY : src/worker/main.cpp.s
 
-src/core/request_handler/posix_rh_factory.o: src/core/request_handler/posix_rh_factory.cpp.o
+src/worker_manager/main.o: src/worker_manager/main.cpp.o
 
-.PHONY : src/core/request_handler/posix_rh_factory.o
+.PHONY : src/worker_manager/main.o
 
 # target to build an object file
-src/core/request_handler/posix_rh_factory.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh_factory.cpp.o
-.PHONY : src/core/request_handler/posix_rh_factory.cpp.o
+src/worker_manager/main.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/worker_manager/main.cpp.o
+.PHONY : src/worker_manager/main.cpp.o
 
-src/core/request_handler/posix_rh_factory.i: src/core/request_handler/posix_rh_factory.cpp.i
+src/worker_manager/main.i: src/worker_manager/main.cpp.i
 
-.PHONY : src/core/request_handler/posix_rh_factory.i
-
-# target to preprocess a source file
-src/core/request_handler/posix_rh_factory.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh_factory.cpp.i
-.PHONY : src/core/request_handler/posix_rh_factory.cpp.i
-
-src/core/request_handler/posix_rh_factory.s: src/core/request_handler/posix_rh_factory.cpp.s
-
-.PHONY : src/core/request_handler/posix_rh_factory.s
-
-# target to generate assembly for a file
-src/core/request_handler/posix_rh_factory.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh_factory.cpp.s
-.PHONY : src/core/request_handler/posix_rh_factory.cpp.s
-
-src/core/request_handler/posix_rh_two_sided.o: src/core/request_handler/posix_rh_two_sided.cpp.o
-
-.PHONY : src/core/request_handler/posix_rh_two_sided.o
-
-# target to build an object file
-src/core/request_handler/posix_rh_two_sided.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh_two_sided.cpp.o
-.PHONY : src/core/request_handler/posix_rh_two_sided.cpp.o
-
-src/core/request_handler/posix_rh_two_sided.i: src/core/request_handler/posix_rh_two_sided.cpp.i
-
-.PHONY : src/core/request_handler/posix_rh_two_sided.i
+.PHONY : src/worker_manager/main.i
 
 # target to preprocess a source file
-src/core/request_handler/posix_rh_two_sided.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh_two_sided.cpp.i
-.PHONY : src/core/request_handler/posix_rh_two_sided.cpp.i
+src/worker_manager/main.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/worker_manager/main.cpp.i
+.PHONY : src/worker_manager/main.cpp.i
 
-src/core/request_handler/posix_rh_two_sided.s: src/core/request_handler/posix_rh_two_sided.cpp.s
+src/worker_manager/main.s: src/worker_manager/main.cpp.s
 
-.PHONY : src/core/request_handler/posix_rh_two_sided.s
-
-# target to generate assembly for a file
-src/core/request_handler/posix_rh_two_sided.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/request_handler/posix_rh_two_sided.cpp.s
-.PHONY : src/core/request_handler/posix_rh_two_sided.cpp.s
-
-src/core/task_handler/abstract_th.o: src/core/task_handler/abstract_th.cpp.o
-
-.PHONY : src/core/task_handler/abstract_th.o
-
-# target to build an object file
-src/core/task_handler/abstract_th.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/abstract_th.cpp.o
-.PHONY : src/core/task_handler/abstract_th.cpp.o
-
-src/core/task_handler/abstract_th.i: src/core/task_handler/abstract_th.cpp.i
-
-.PHONY : src/core/task_handler/abstract_th.i
-
-# target to preprocess a source file
-src/core/task_handler/abstract_th.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/abstract_th.cpp.i
-.PHONY : src/core/task_handler/abstract_th.cpp.i
-
-src/core/task_handler/abstract_th.s: src/core/task_handler/abstract_th.cpp.s
-
-.PHONY : src/core/task_handler/abstract_th.s
+.PHONY : src/worker_manager/main.s
 
 # target to generate assembly for a file
-src/core/task_handler/abstract_th.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/abstract_th.cpp.s
-.PHONY : src/core/task_handler/abstract_th.cpp.s
-
-src/core/task_handler/async_th.o: src/core/task_handler/async_th.cpp.o
-
-.PHONY : src/core/task_handler/async_th.o
-
-# target to build an object file
-src/core/task_handler/async_th.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/async_th.cpp.o
-.PHONY : src/core/task_handler/async_th.cpp.o
-
-src/core/task_handler/async_th.i: src/core/task_handler/async_th.cpp.i
-
-.PHONY : src/core/task_handler/async_th.i
-
-# target to preprocess a source file
-src/core/task_handler/async_th.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/async_th.cpp.i
-.PHONY : src/core/task_handler/async_th.cpp.i
-
-src/core/task_handler/async_th.s: src/core/task_handler/async_th.cpp.s
-
-.PHONY : src/core/task_handler/async_th.s
-
-# target to generate assembly for a file
-src/core/task_handler/async_th.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/async_th.cpp.s
-.PHONY : src/core/task_handler/async_th.cpp.s
-
-src/core/task_handler/sync_th.o: src/core/task_handler/sync_th.cpp.o
-
-.PHONY : src/core/task_handler/sync_th.o
-
-# target to build an object file
-src/core/task_handler/sync_th.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/sync_th.cpp.o
-.PHONY : src/core/task_handler/sync_th.cpp.o
-
-src/core/task_handler/sync_th.i: src/core/task_handler/sync_th.cpp.i
-
-.PHONY : src/core/task_handler/sync_th.i
-
-# target to preprocess a source file
-src/core/task_handler/sync_th.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/sync_th.cpp.i
-.PHONY : src/core/task_handler/sync_th.cpp.i
-
-src/core/task_handler/sync_th.s: src/core/task_handler/sync_th.cpp.s
-
-.PHONY : src/core/task_handler/sync_th.s
-
-# target to generate assembly for a file
-src/core/task_handler/sync_th.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/sync_th.cpp.s
-.PHONY : src/core/task_handler/sync_th.cpp.s
-
-src/core/task_handler/th_factory.o: src/core/task_handler/th_factory.cpp.o
-
-.PHONY : src/core/task_handler/th_factory.o
-
-# target to build an object file
-src/core/task_handler/th_factory.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/th_factory.cpp.o
-.PHONY : src/core/task_handler/th_factory.cpp.o
-
-src/core/task_handler/th_factory.i: src/core/task_handler/th_factory.cpp.i
-
-.PHONY : src/core/task_handler/th_factory.i
-
-# target to preprocess a source file
-src/core/task_handler/th_factory.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/th_factory.cpp.i
-.PHONY : src/core/task_handler/th_factory.cpp.i
-
-src/core/task_handler/th_factory.s: src/core/task_handler/th_factory.cpp.s
-
-.PHONY : src/core/task_handler/th_factory.s
-
-# target to generate assembly for a file
-src/core/task_handler/th_factory.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_handler/th_factory.cpp.s
-.PHONY : src/core/task_handler/th_factory.cpp.s
-
-src/core/task_scheduler/abstract_ts.o: src/core/task_scheduler/abstract_ts.cpp.o
-
-.PHONY : src/core/task_scheduler/abstract_ts.o
-
-# target to build an object file
-src/core/task_scheduler/abstract_ts.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/abstract_ts.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/abstract_ts.cpp.o
-.PHONY : src/core/task_scheduler/abstract_ts.cpp.o
-
-src/core/task_scheduler/abstract_ts.i: src/core/task_scheduler/abstract_ts.cpp.i
-
-.PHONY : src/core/task_scheduler/abstract_ts.i
-
-# target to preprocess a source file
-src/core/task_scheduler/abstract_ts.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/abstract_ts.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/abstract_ts.cpp.i
-.PHONY : src/core/task_scheduler/abstract_ts.cpp.i
-
-src/core/task_scheduler/abstract_ts.s: src/core/task_scheduler/abstract_ts.cpp.s
-
-.PHONY : src/core/task_scheduler/abstract_ts.s
-
-# target to generate assembly for a file
-src/core/task_scheduler/abstract_ts.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/abstract_ts.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/abstract_ts.cpp.s
-.PHONY : src/core/task_scheduler/abstract_ts.cpp.s
-
-src/core/task_scheduler/active_worker_ts.o: src/core/task_scheduler/active_worker_ts.cpp.o
-
-.PHONY : src/core/task_scheduler/active_worker_ts.o
-
-# target to build an object file
-src/core/task_scheduler/active_worker_ts.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/active_worker_ts.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/active_worker_ts.cpp.o
-.PHONY : src/core/task_scheduler/active_worker_ts.cpp.o
-
-src/core/task_scheduler/active_worker_ts.i: src/core/task_scheduler/active_worker_ts.cpp.i
-
-.PHONY : src/core/task_scheduler/active_worker_ts.i
-
-# target to preprocess a source file
-src/core/task_scheduler/active_worker_ts.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/active_worker_ts.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/active_worker_ts.cpp.i
-.PHONY : src/core/task_scheduler/active_worker_ts.cpp.i
-
-src/core/task_scheduler/active_worker_ts.s: src/core/task_scheduler/active_worker_ts.cpp.s
-
-.PHONY : src/core/task_scheduler/active_worker_ts.s
-
-# target to generate assembly for a file
-src/core/task_scheduler/active_worker_ts.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/active_worker_ts.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/active_worker_ts.cpp.s
-.PHONY : src/core/task_scheduler/active_worker_ts.cpp.s
-
-src/core/task_scheduler/file_location_ts.o: src/core/task_scheduler/file_location_ts.cpp.o
-
-.PHONY : src/core/task_scheduler/file_location_ts.o
-
-# target to build an object file
-src/core/task_scheduler/file_location_ts.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/file_location_ts.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/file_location_ts.cpp.o
-.PHONY : src/core/task_scheduler/file_location_ts.cpp.o
-
-src/core/task_scheduler/file_location_ts.i: src/core/task_scheduler/file_location_ts.cpp.i
-
-.PHONY : src/core/task_scheduler/file_location_ts.i
-
-# target to preprocess a source file
-src/core/task_scheduler/file_location_ts.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/file_location_ts.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/file_location_ts.cpp.i
-.PHONY : src/core/task_scheduler/file_location_ts.cpp.i
-
-src/core/task_scheduler/file_location_ts.s: src/core/task_scheduler/file_location_ts.cpp.s
-
-.PHONY : src/core/task_scheduler/file_location_ts.s
-
-# target to generate assembly for a file
-src/core/task_scheduler/file_location_ts.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/file_location_ts.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/file_location_ts.cpp.s
-.PHONY : src/core/task_scheduler/file_location_ts.cpp.s
-
-src/core/task_scheduler/random_selection_ts.o: src/core/task_scheduler/random_selection_ts.cpp.o
-
-.PHONY : src/core/task_scheduler/random_selection_ts.o
-
-# target to build an object file
-src/core/task_scheduler/random_selection_ts.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/random_selection_ts.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/random_selection_ts.cpp.o
-.PHONY : src/core/task_scheduler/random_selection_ts.cpp.o
-
-src/core/task_scheduler/random_selection_ts.i: src/core/task_scheduler/random_selection_ts.cpp.i
-
-.PHONY : src/core/task_scheduler/random_selection_ts.i
-
-# target to preprocess a source file
-src/core/task_scheduler/random_selection_ts.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/random_selection_ts.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/random_selection_ts.cpp.i
-.PHONY : src/core/task_scheduler/random_selection_ts.cpp.i
-
-src/core/task_scheduler/random_selection_ts.s: src/core/task_scheduler/random_selection_ts.cpp.s
-
-.PHONY : src/core/task_scheduler/random_selection_ts.s
-
-# target to generate assembly for a file
-src/core/task_scheduler/random_selection_ts.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/random_selection_ts.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/random_selection_ts.cpp.s
-.PHONY : src/core/task_scheduler/random_selection_ts.cpp.s
-
-src/core/task_scheduler/ts_factory.o: src/core/task_scheduler/ts_factory.cpp.o
-
-.PHONY : src/core/task_scheduler/ts_factory.o
-
-# target to build an object file
-src/core/task_scheduler/ts_factory.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/ts_factory.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/ts_factory.cpp.o
-.PHONY : src/core/task_scheduler/ts_factory.cpp.o
-
-src/core/task_scheduler/ts_factory.i: src/core/task_scheduler/ts_factory.cpp.i
-
-.PHONY : src/core/task_scheduler/ts_factory.i
-
-# target to preprocess a source file
-src/core/task_scheduler/ts_factory.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/ts_factory.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/ts_factory.cpp.i
-.PHONY : src/core/task_scheduler/ts_factory.cpp.i
-
-src/core/task_scheduler/ts_factory.s: src/core/task_scheduler/ts_factory.cpp.s
-
-.PHONY : src/core/task_scheduler/ts_factory.s
-
-# target to generate assembly for a file
-src/core/task_scheduler/ts_factory.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/task_scheduler/ts_factory.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/task_scheduler/ts_factory.cpp.s
-.PHONY : src/core/task_scheduler/ts_factory.cpp.s
-
-src/core/worker_manager/worker_manager.o: src/core/worker_manager/worker_manager.cpp.o
-
-.PHONY : src/core/worker_manager/worker_manager.o
-
-# target to build an object file
-src/core/worker_manager/worker_manager.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/worker_manager/worker_manager.cpp.o
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/worker_manager/worker_manager.cpp.o
-.PHONY : src/core/worker_manager/worker_manager.cpp.o
-
-src/core/worker_manager/worker_manager.i: src/core/worker_manager/worker_manager.cpp.i
-
-.PHONY : src/core/worker_manager/worker_manager.i
-
-# target to preprocess a source file
-src/core/worker_manager/worker_manager.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/worker_manager/worker_manager.cpp.i
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/worker_manager/worker_manager.cpp.i
-.PHONY : src/core/worker_manager/worker_manager.cpp.i
-
-src/core/worker_manager/worker_manager.s: src/core/worker_manager/worker_manager.cpp.s
-
-.PHONY : src/core/worker_manager/worker_manager.s
-
-# target to generate assembly for a file
-src/core/worker_manager/worker_manager.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/src/core/worker_manager/worker_manager.cpp.s
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/core/worker_manager/worker_manager.cpp.s
-.PHONY : src/core/worker_manager/worker_manager.cpp.s
-
-src/mpi_init.o: src/mpi_init.cpp.o
-
-.PHONY : src/mpi_init.o
-
-# target to build an object file
-src/mpi_init.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/mpi_init.cpp.o
-.PHONY : src/mpi_init.cpp.o
-
-src/mpi_init.i: src/mpi_init.cpp.i
-
-.PHONY : src/mpi_init.i
-
-# target to preprocess a source file
-src/mpi_init.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/mpi_init.cpp.i
-.PHONY : src/mpi_init.cpp.i
-
-src/mpi_init.s: src/mpi_init.cpp.s
-
-.PHONY : src/mpi_init.s
-
-# target to generate assembly for a file
-src/mpi_init.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/mpi_init.cpp.s
-.PHONY : src/mpi_init.cpp.s
-
-src/posix.o: src/posix.cpp.o
-
-.PHONY : src/posix.o
-
-# target to build an object file
-src/posix.cpp.o:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/posix.cpp.o
-.PHONY : src/posix.cpp.o
-
-src/posix.i: src/posix.cpp.i
-
-.PHONY : src/posix.i
-
-# target to preprocess a source file
-src/posix.cpp.i:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/posix.cpp.i
-.PHONY : src/posix.cpp.i
-
-src/posix.s: src/posix.cpp.s
-
-.PHONY : src/posix.s
-
-# target to generate assembly for a file
-src/posix.cpp.s:
-	$(MAKE) -f CMakeFiles/porus.dir/build.make CMakeFiles/porus.dir/src/posix.cpp.s
-.PHONY : src/posix.cpp.s
-
-worker/src/worker_service.o: worker/src/worker_service.cpp.o
-
-.PHONY : worker/src/worker_service.o
-
-# target to build an object file
-worker/src/worker_service.cpp.o:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/worker/src/worker_service.cpp.o
-.PHONY : worker/src/worker_service.cpp.o
-
-worker/src/worker_service.i: worker/src/worker_service.cpp.i
-
-.PHONY : worker/src/worker_service.i
-
-# target to preprocess a source file
-worker/src/worker_service.cpp.i:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/worker/src/worker_service.cpp.i
-.PHONY : worker/src/worker_service.cpp.i
-
-worker/src/worker_service.s: worker/src/worker_service.cpp.s
-
-.PHONY : worker/src/worker_service.s
-
-# target to generate assembly for a file
-worker/src/worker_service.cpp.s:
-	$(MAKE) -f CMakeFiles/worker_service.dir/build.make CMakeFiles/worker_service.dir/worker/src/worker_service.cpp.s
-.PHONY : worker/src/worker_service.cpp.s
+src/worker_manager/main.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/worker_manager/main.cpp.s
+.PHONY : src/worker_manager/main.cpp.s
 
 # Help Target
 help:
@@ -1079,110 +791,65 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... worker_service"
-	@echo "... sort"
-	@echo "... porus"
-	@echo "... include/config_manager.o"
-	@echo "... include/config_manager.i"
-	@echo "... include/config_manager.s"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
-	@echo "... program_repository/src/sort.o"
-	@echo "... program_repository/src/sort.i"
-	@echo "... program_repository/src/sort.s"
-	@echo "... src/api.o"
-	@echo "... src/api.i"
-	@echo "... src/api.s"
-	@echo "... src/common/components/memtable.o"
-	@echo "... src/common/components/memtable.i"
-	@echo "... src/common/components/memtable.s"
-	@echo "... src/common/porus_system.o"
-	@echo "... src/common/porus_system.i"
-	@echo "... src/common/porus_system.s"
-	@echo "... src/common/utils/Timer.o"
-	@echo "... src/common/utils/Timer.i"
-	@echo "... src/common/utils/Timer.s"
-	@echo "... src/common/utils/google_tools/city.o"
-	@echo "... src/common/utils/google_tools/city.i"
-	@echo "... src/common/utils/google_tools/city.s"
-	@echo "... src/core/cache_manager/cache_manager.o"
-	@echo "... src/core/cache_manager/cache_manager.i"
-	@echo "... src/core/cache_manager/cache_manager.s"
-	@echo "... src/core/cache_manager/memcached_client.o"
-	@echo "... src/core/cache_manager/memcached_client.i"
-	@echo "... src/core/cache_manager/memcached_client.s"
-	@echo "... src/core/metadata_manager/abstract_mdm.o"
-	@echo "... src/core/metadata_manager/abstract_mdm.i"
-	@echo "... src/core/metadata_manager/abstract_mdm.s"
-	@echo "... src/core/metadata_manager/mdm_factory.o"
-	@echo "... src/core/metadata_manager/mdm_factory.i"
-	@echo "... src/core/metadata_manager/mdm_factory.s"
-	@echo "... src/core/metadata_manager/posix_mdm.o"
-	@echo "... src/core/metadata_manager/posix_mdm.i"
-	@echo "... src/core/metadata_manager/posix_mdm.s"
-	@echo "... src/core/prefetcher/abstract_prefetcher.o"
-	@echo "... src/core/prefetcher/abstract_prefetcher.i"
-	@echo "... src/core/prefetcher/abstract_prefetcher.s"
-	@echo "... src/core/prefetcher/posix_prefetcher.o"
-	@echo "... src/core/prefetcher/posix_prefetcher.i"
-	@echo "... src/core/prefetcher/posix_prefetcher.s"
-	@echo "... src/core/prefetcher/prefetcher_factory.o"
-	@echo "... src/core/prefetcher/prefetcher_factory.i"
-	@echo "... src/core/prefetcher/prefetcher_factory.s"
-	@echo "... src/core/request_handler/abstract_rh.o"
-	@echo "... src/core/request_handler/abstract_rh.i"
-	@echo "... src/core/request_handler/abstract_rh.s"
-	@echo "... src/core/request_handler/posix_rh.o"
-	@echo "... src/core/request_handler/posix_rh.i"
-	@echo "... src/core/request_handler/posix_rh.s"
-	@echo "... src/core/request_handler/posix_rh_factory.o"
-	@echo "... src/core/request_handler/posix_rh_factory.i"
-	@echo "... src/core/request_handler/posix_rh_factory.s"
-	@echo "... src/core/request_handler/posix_rh_two_sided.o"
-	@echo "... src/core/request_handler/posix_rh_two_sided.i"
-	@echo "... src/core/request_handler/posix_rh_two_sided.s"
-	@echo "... src/core/task_handler/abstract_th.o"
-	@echo "... src/core/task_handler/abstract_th.i"
-	@echo "... src/core/task_handler/abstract_th.s"
-	@echo "... src/core/task_handler/async_th.o"
-	@echo "... src/core/task_handler/async_th.i"
-	@echo "... src/core/task_handler/async_th.s"
-	@echo "... src/core/task_handler/sync_th.o"
-	@echo "... src/core/task_handler/sync_th.i"
-	@echo "... src/core/task_handler/sync_th.s"
-	@echo "... src/core/task_handler/th_factory.o"
-	@echo "... src/core/task_handler/th_factory.i"
-	@echo "... src/core/task_handler/th_factory.s"
-	@echo "... src/core/task_scheduler/abstract_ts.o"
-	@echo "... src/core/task_scheduler/abstract_ts.i"
-	@echo "... src/core/task_scheduler/abstract_ts.s"
-	@echo "... src/core/task_scheduler/active_worker_ts.o"
-	@echo "... src/core/task_scheduler/active_worker_ts.i"
-	@echo "... src/core/task_scheduler/active_worker_ts.s"
-	@echo "... src/core/task_scheduler/file_location_ts.o"
-	@echo "... src/core/task_scheduler/file_location_ts.i"
-	@echo "... src/core/task_scheduler/file_location_ts.s"
-	@echo "... src/core/task_scheduler/random_selection_ts.o"
-	@echo "... src/core/task_scheduler/random_selection_ts.i"
-	@echo "... src/core/task_scheduler/random_selection_ts.s"
-	@echo "... src/core/task_scheduler/ts_factory.o"
-	@echo "... src/core/task_scheduler/ts_factory.i"
-	@echo "... src/core/task_scheduler/ts_factory.s"
-	@echo "... src/core/worker_manager/worker_manager.o"
-	@echo "... src/core/worker_manager/worker_manager.i"
-	@echo "... src/core/worker_manager/worker_manager.s"
-	@echo "... src/mpi_init.o"
-	@echo "... src/mpi_init.i"
-	@echo "... src/mpi_init.s"
-	@echo "... src/posix.o"
-	@echo "... src/posix.i"
-	@echo "... src/posix.s"
-	@echo "... worker/src/worker_service.o"
-	@echo "... worker/src/worker_service.i"
-	@echo "... worker/src/worker_service.s"
+	@echo "... porus_worker"
+	@echo "... porus_worker_manager"
+	@echo "... porus_task_scheduler"
+	@echo "... porus_server"
+	@echo "... edit_cache"
+	@echo "... porus_client"
+	@echo "... porus_lib"
+	@echo "... src/System.o"
+	@echo "... src/System.i"
+	@echo "... src/System.s"
+	@echo "... src/client/PorusClient.o"
+	@echo "... src/client/PorusClient.i"
+	@echo "... src/client/PorusClient.s"
+	@echo "... src/client/main.o"
+	@echo "... src/client/main.i"
+	@echo "... src/client/main.s"
+	@echo "... src/common/data_manager/data_manager.o"
+	@echo "... src/common/data_manager/data_manager.i"
+	@echo "... src/common/data_manager/data_manager.s"
+	@echo "... src/common/external_clients/DistributedHashMap.o"
+	@echo "... src/common/external_clients/DistributedHashMap.i"
+	@echo "... src/common/external_clients/DistributedHashMap.s"
+	@echo "... src/common/external_clients/DistributedQueue.o"
+	@echo "... src/common/external_clients/DistributedQueue.i"
+	@echo "... src/common/external_clients/DistributedQueue.s"
+	@echo "... src/common/external_clients/MemcacheDImpl.o"
+	@echo "... src/common/external_clients/MemcacheDImpl.i"
+	@echo "... src/common/external_clients/MemcacheDImpl.s"
+	@echo "... src/common/external_clients/RocksDBImpl.o"
+	@echo "... src/common/external_clients/RocksDBImpl.i"
+	@echo "... src/common/external_clients/RocksDBImpl.s"
+	@echo "... src/common/external_clients/serialization_manager.o"
+	@echo "... src/common/external_clients/serialization_manager.i"
+	@echo "... src/common/external_clients/serialization_manager.s"
+	@echo "... src/common/metadata_manager/metadata_manager.o"
+	@echo "... src/common/metadata_manager/metadata_manager.i"
+	@echo "... src/common/metadata_manager/metadata_manager.s"
+	@echo "... src/common/task_handler/task_handler.o"
+	@echo "... src/common/task_handler/task_handler.i"
+	@echo "... src/common/task_handler/task_handler.s"
+	@echo "... src/lib/driver.o"
+	@echo "... src/lib/driver.i"
+	@echo "... src/lib/driver.s"
+	@echo "... src/lib/posix.o"
+	@echo "... src/lib/posix.i"
+	@echo "... src/lib/posix.s"
+	@echo "... src/server/main.o"
+	@echo "... src/server/main.i"
+	@echo "... src/server/main.s"
+	@echo "... src/task_scheduler/main.o"
+	@echo "... src/task_scheduler/main.i"
+	@echo "... src/task_scheduler/main.s"
+	@echo "... src/worker/main.o"
+	@echo "... src/worker/main.i"
+	@echo "... src/worker/main.s"
+	@echo "... src/worker_manager/main.o"
+	@echo "... src/worker_manager/main.i"
+	@echo "... src/worker_manager/main.s"
 .PHONY : help
 
 
