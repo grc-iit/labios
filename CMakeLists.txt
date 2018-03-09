@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.8)
 project(porus_main)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -10,6 +10,8 @@ set(PORUS_SERVER_SRC  ${COMMON_SRC} "src/server/main.cpp")
 set(PORUS_TS_SRC  ${COMMON_SRC} "src/task_scheduler/main.cpp")
 set(PORUS_WM_SRC  ${COMMON_SRC} "src/worker_manager/main.cpp")
 set(PORUS_WS_SRC  ${COMMON_SRC} "src/worker/main.cpp")
+set(PORUS_W_PROG_STATS_SRC  ${COMMON_SRC} "src/worker/program_repo/statistics.h src/worker/program_repo/statistics.cpp")
+
 find_package(MPI REQUIRED)
 set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
 set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
@@ -23,9 +25,15 @@ add_executable(porus_server ${PORUS_SERVER_SRC})
 add_executable(porus_task_scheduler ${PORUS_TS_SRC})
 add_executable(porus_worker_manager ${PORUS_WM_SRC})
 add_executable(porus_worker ${PORUS_WS_SRC})
+
+
 target_link_libraries(porus_lib ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
 target_link_libraries(porus_client ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
 target_link_libraries(porus_server ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
 target_link_libraries(porus_task_scheduler ${MPI_LIBRARIES} -pthread -lrocksdb  -lnats memcached)
 target_link_libraries(porus_worker_manager ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
 target_link_libraries(porus_worker ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
+
+#worker programs
+add_executable(porus_worker_stats ${PORUS_W_PROG_STATS_SRC})
+target_link_libraries(porus_worker_stats ${MPI_LIBRARIES} -pthread)
