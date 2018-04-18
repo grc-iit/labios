@@ -60,7 +60,7 @@ int PorusClient::listen_request() {
                         file_meta f;
                         f.file_struct.size=file_struct.size;
                         f.file_struct.offset=file_struct.offset;
-                        strcpy(f.file_struct.filename,file_struct.filename);
+                        strcpy(const_cast<char *>(f.file_struct.filename.c_str()), file_struct.filename.c_str());
                         switch(key.operation_type){
                             case WRITE:{
                                 update_file(f,key.key);
@@ -88,12 +88,15 @@ int PorusClient::listen_request() {
                         file_meta f;
                         f.file_struct.size=chunk_struct.file_size;
                         f.file_struct.offset=chunk_struct.offset;
-                        strcpy(f.file_struct.filename,chunk_struct.filename);
+                        strcpy(const_cast<char *>(f.file_struct.filename.c_str()), chunk_struct.filename.c_str());
                         chunk_meta c;
-                        c.file_struct.file_size=chunk_struct.file_size;
-                        c.file_struct.offset=chunk_struct.offset;
-                        strcpy(c.file_struct.filename,chunk_struct.filename);
-                        c.dataspace_id=chunk_struct.dataspace_id;
+                        c.destination.size=chunk_struct.file_size;
+                        c.destination.offset=chunk_struct.offset;
+                        if(chunk_struct.dataspace_id.empty()){
+                            strcpy(const_cast<char *>(c.destination.filename.c_str()), chunk_struct.filename.c_str());
+                        }else{
+                            c.destination.filename=chunk_struct.dataspace_id;
+                        }
                         f.chunks.push_back(c);
                         switch(key.operation_type){
                             case WRITE:{
@@ -104,11 +107,11 @@ int PorusClient::listen_request() {
                                 get_chunk(f,key.key);
                                 chunk_msg msgs[f.chunks.size()];
                                 for(int i=0;i<f.chunks.size();++i){
-                                    msgs[i].chunkType=f.chunks[i].chunkType;
-                                    msgs[i].dataspace_id=f.chunks[i].dataspace_id;
-                                    strcpy(msgs[i].filename,f.chunks[i].file_struct.filename);
-                                    msgs[i].offset=f.chunks[i].file_struct.offset;
-                                    msgs[i].file_size=f.chunks[i].file_struct.file_size;
+                                    msgs[i].chunkType=f.chunks[i].destination.dest_t;
+                                    msgs[i].dataspace_id=f.chunks[i].destination.filename;
+                                    strcpy(const_cast<char *>(msgs[i].filename.c_str()), f.chunks[i].destination.filename.c_str());
+                                    msgs[i].offset=f.chunks[i].destination.offset;
+                                    msgs[i].file_size=f.chunks[i].destination.size;
                                 }
                                 MPI_Ssend(&msgs,f.chunks.size(),message_chunk,source, 0,applications_comms);
                                 break;

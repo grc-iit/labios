@@ -55,8 +55,8 @@ struct chunk_meta{
 };
 struct chunk_msg{
     source_type chunkType;
-    size_t dataspace_id;
-    char filename[FILE_SIZE];
+    std::string dataspace_id;
+    std::string filename;
     size_t offset;
     size_t file_size;
 
