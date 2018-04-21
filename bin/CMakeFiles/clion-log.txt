@@ -1,4 +1,4 @@
-/home/hdevarajan/software/clion/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/hdevarajan/clion/porus
+/home/hariharan/clion-2017.3.3/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/hariharan/Documents/porus
 -- The C compiler identification is GNU 5.4.0
 -- The CXX compiler identification is GNU 5.4.0
 -- Check for working C compiler: /usr/bin/cc
@@ -13,9 +13,8 @@
 -- Detecting CXX compiler ABI info - done
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
--- Found MPI_C: /usr/local/lib/libmpi.so (found version "3.1") 
--- Found MPI_CXX: /usr/local/lib/libmpicxx.so (found version "3.1") 
--- Found MPI: TRUE (found version "3.1")  
+-- Found MPI_C: /usr/local/lib/libmpi.so  
+-- Found MPI_CXX: /usr/local/lib/libmpicxx.so;/usr/local/lib/libmpi.so  
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/hdevarajan/clion/porus/bin
+-- Build files have been written to: /home/hariharan/Documents/porus/bin
