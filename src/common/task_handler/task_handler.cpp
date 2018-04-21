@@ -54,7 +54,7 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
                 sub_task.source.offset=source.offset+sub_task.destination.offset;
                 sub_task.source.size=sub_task.destination.size;
                 sub_task.dest_t=source_type::DATASPACE_LOC;
-                sub_task.datasource_id=dataspace_id;
+                sub_task.datasource_id=std::to_string(dataspace_id);
             }
             base_offset+=(io_unit_max-base_offset);
             left-=(io_unit_max-base_offset);
@@ -65,7 +65,7 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
                 sub_task.source.offset=source.offset+sub_task.destination.offset;
                 sub_task.source.size=sub_task.destination.size;
                 sub_task.dest_t=source_type::DATASPACE_LOC;
-                sub_task.datasource_id=dataspace_id;
+                sub_task.datasource_id=std::to_string(dataspace_id);
                 base_offset+=left;
                 left-=left;
             }else{
@@ -74,7 +74,7 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
                 sub_task.source.offset=source.offset+sub_task.destination.offset;
                 sub_task.source.size=sub_task.destination.size;
                 sub_task.dest_t=source_type::DATASPACE_LOC;
-                sub_task.datasource_id=dataspace_id;
+                sub_task.datasource_id=std::to_string(dataspace_id);
                 base_offset+=io_unit_max;
                 left-=io_unit_max;
             }

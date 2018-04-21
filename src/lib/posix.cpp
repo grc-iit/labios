@@ -64,7 +64,7 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 
     for(auto task:read_tasks){
         task_m->submit(&task);
-        void * data=data_m->get(task.datasource_id);
+        char * data= const_cast<char *>(data_m->get(task.datasource_id).c_str());
         memcpy(ptr+ptr_pos,data+task.source.offset,task.source.size);
     }
     mdm->update_read_task_info(read_tasks,filename);
@@ -87,7 +87,8 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
         id=task.datasource_id;
     }
     mdm->update_write_task_info(write_tasks,filename);
-    data_m->put(id, const_cast<void *>(ptr));
+    std::string data((char*)ptr);
+    data_m->put(id, data);
     return size*count;
 }
 
