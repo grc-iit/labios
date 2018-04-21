@@ -19,7 +19,7 @@ private:
     natsConnection      *nc  = NULL;
     natsSubscription    *sub = NULL;
     DistributedQueue(Service service):service(service){
-        natsConnection_ConnectTo(&nc, NATS_URL.c_str());
+        natsConnection_ConnectTo(&nc, NATS_URL_CLIENT.c_str());
 
     }
 public:

@@ -1,29 +1,27 @@
 # README #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+##TODO
+* Finish Porus lib 
+    * application registration
+    * test write and read to and from Porus Client (Memcached and NATS)
+* Complete Task Scheduler
+    * Decide on strategies for Task Scheduler
+    * finalize code for how to do pick up task and put in worker queue
+* Complete Worker Programs
+    * Integrate worker programs into code
 
-### What is this repository for? ###
+* Run end to end test
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
-### How do I get set up? ###
+##Setup Porus
+### Memcached
+#### Client
+`memcached -p 11211 -l localhost -d`
+#### Server
+`memcached -p 11212 -l localhost -d`
+### NATS
+#### Client
+`./gnatsd -p 4222 -a localhost -l ~/nats_client.log &`
+#### Server
+`./gnatsd -p 4223 -a localhost -l ~/nats_server.log &`
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
