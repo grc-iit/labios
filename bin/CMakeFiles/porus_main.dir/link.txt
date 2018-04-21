@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/porus_main.dir/main.cpp.o  -o porus_main 

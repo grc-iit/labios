@@ -1,9 +1,0 @@
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/porus_worker_stats.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/porus_worker.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/porus_worker_manager.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/porus_lib.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/porus_client.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/porus_server.dir
-/home/hdevarajan/clion/porus/cmake-build-debug/CMakeFiles/porus_task_scheduler.dir

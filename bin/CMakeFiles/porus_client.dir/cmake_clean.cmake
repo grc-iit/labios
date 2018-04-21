@@ -10,7 +10,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
   "CMakeFiles/porus_client.dir/src/client/main.cpp.o"
   "CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o"
-  "CMakeFiles/porus_client.dir/src/lib/driver.cpp.o"
   "porus_client.pdb"
   "porus_client"
 )

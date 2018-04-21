@@ -2,13 +2,13 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
     <generated>
-      <config projectName="porus_main" targetName="porus_lib" />
       <config projectName="porus_main" targetName="porus_worker_stats" />
-      <config projectName="porus_main" targetName="porus_worker" />
-      <config projectName="porus_main" targetName="porus_worker_manager" />
-      <config projectName="porus_main" targetName="porus_client" />
-      <config projectName="porus_main" targetName="porus_task_scheduler" />
       <config projectName="porus_main" targetName="porus_server" />
+      <config projectName="porus_main" targetName="porus_worker" />
+      <config projectName="porus_main" targetName="porus_task_scheduler" />
+      <config projectName="porus_main" targetName="porus_client" />
+      <config projectName="porus_main" targetName="porus_worker_manager" />
+      <config projectName="porus_main" targetName="porus_lib" />
     </generated>
   </component>
   <component name="CMakeSettings" AUTO_RELOAD="true">
@@ -17,7 +17,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="237dac12-23e4-4b5e-82f0-e75bb25cb213" name="Default" comment="">
+    <list default="true" id="237dac12-23e4-4b5e-82f0-e75bb25cb213" name="Default" comment="recitified compilation">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeCache.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeCache.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/3.9.6/CMakeCCompiler.cmake" beforeDir="false" />
@@ -36,40 +37,40 @@
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/TargetDirectories.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/TargetDirectories.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/clion-log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/clion-log.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.bin" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/CXX.includecache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/CXX.includecache" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/CXX.includecache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/DependInfo.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/build.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/cmake_clean.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.internal" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.internal" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.internal" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/System.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/client/main.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/CXX.includecache" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/System.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/System.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/client/main.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/client/main.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/CXX.includecache" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/CXX.includecache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/DependInfo.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.internal" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.internal" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.internal" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/System.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/MemcacheDImpl.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/RocksDBImpl.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/System.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/System.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/MemcacheDImpl.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/MemcacheDImpl.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/RocksDBImpl.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/RocksDBImpl.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_main.dir/DependInfo.cmake" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_main.dir/build.make" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_main.dir/cmake_clean.cmake" beforeDir="false" />
@@ -79,27 +80,33 @@
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_main.dir/progress.make" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/DependInfo.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/build.make" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/progress.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/DependInfo.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/build.make" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/progress.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/DependInfo.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/build.make" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/progress.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/DependInfo.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/build.make" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/progress.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/progress.marks" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/progress.marks" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Makefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/cmake_install.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/cmake_install.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/porus_client" beforeDir="false" afterPath="$PROJECT_DIR$/bin/porus_client" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/porus_lib" beforeDir="false" afterPath="$PROJECT_DIR$/bin/porus_lib" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/porus_main.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/bin/porus_main.cbp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeCache.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/3.10.3/CMakeCCompiler.cmake" beforeDir="false" />
@@ -316,7 +323,7 @@
         <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
             <state>
-              <caret column="3" selection-start-column="3" selection-end-column="3" />
+              <caret column="4" selection-start-column="4" selection-end-column="4" />
             </state>
           </provider>
         </entry>
@@ -324,7 +331,7 @@
       <file leaf-file-name="posix.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/lib/posix.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="518">
+            <state relative-caret-position="1241">
               <caret line="73" column="14" selection-start-line="73" selection-start-column="14" selection-end-line="73" selection-end-column="14" />
             </state>
           </provider>
@@ -438,7 +445,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -488,7 +495,8 @@
       <workItem from="1524327857787" duration="8000" />
       <workItem from="1524327887476" duration="213000" />
       <workItem from="1524328140755" duration="2155000" />
-      <workItem from="1524331001115" duration="136000" />
+      <workItem from="1524331001115" duration="289000" />
+      <workItem from="1524331312158" duration="86000" />
     </task>
     <task id="LOCAL-00001" summary="made some cool changes">
       <created>1524060178418</created>
@@ -504,19 +512,24 @@
       <option name="project" value="LOCAL" />
       <updated>1524062747002</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="recitified compilation">
+      <created>1524331235052</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1524331235052</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="5341000" />
+    <option name="totallyTimeSpent" value="5580000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="8" y="31" width="1707" height="897" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25563464" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25563464" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info active="true" anchor="bottom" id="Messages" order="7" visible="true" weight="0.32873276" />
       <window_info anchor="bottom" id="CMake" order="7" weight="0.32916147" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" />
@@ -533,6 +546,7 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Find" order="1" />
+      <window_info active="true" anchor="bottom" id="Messages" order="7" visible="true" weight="0.32873276" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -563,6 +577,13 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="9" selection-start-line="1" selection-start-column="9" selection-end-line="1" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
@@ -931,7 +952,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/posix.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="518">
+        <state relative-caret-position="1241">
           <caret line="73" column="14" selection-start-line="73" selection-start-column="14" selection-end-line="73" selection-end-column="14" />
         </state>
       </provider>
@@ -954,7 +975,7 @@
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state>
-          <caret column="3" selection-start-column="3" selection-end-column="3" />
+          <caret column="4" selection-start-column="4" selection-end-column="4" />
         </state>
       </provider>
     </entry>
