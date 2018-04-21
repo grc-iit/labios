@@ -4,24 +4,24 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/hariharan/Documents/porus/src/System.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/System.cpp.o"
-  "/home/hariharan/Documents/porus/src/client/PorusClient.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o"
-  "/home/hariharan/Documents/porus/src/client/main.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/client/main.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/data_manager/data_manager.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/external_clients/DistributedHashMap.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/external_clients/DistributedQueue.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/external_clients/MemcacheDImpl.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/external_clients/RocksDBImpl.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/external_clients/serialization_manager.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/metadata_manager/metadata_manager.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o"
-  "/home/hariharan/Documents/porus/src/common/task_handler/task_handler.cpp" "/home/hariharan/Documents/porus/bin/CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o"
+  "/opt/projects/porus/src/System.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/System.cpp.o"
+  "/opt/projects/porus/src/client/PorusClient.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o"
+  "/opt/projects/porus/src/client/main.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/client/main.cpp.o"
+  "/opt/projects/porus/src/common/data_manager/data_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o"
+  "/opt/projects/porus/src/common/external_clients/DistributedHashMap.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o"
+  "/opt/projects/porus/src/common/external_clients/DistributedQueue.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o"
+  "/opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
+  "/opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.o"
+  "/opt/projects/porus/src/common/external_clients/serialization_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o"
+  "/opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o"
+  "/opt/projects/porus/src/common/task_handler/task_handler.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "../libs"
-  "/usr/local/include"
+  "/opt/install/include"
   )
 
 # Targets to which this target links.

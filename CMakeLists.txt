@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.5)
 project(porus_main)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -10,7 +10,7 @@ set(MPI true)
 #set(ROCKS true)
 
 
-
+set(CMAKE_MODULE_PATH )
 set(COMMON_SRC "" libs/cereal/cereal.hpp src/common/enumeration.h src/common/exception.h src/common/structure.h src/common/data_manager/data_manager.cpp src/common/data_manager/data_manager.h src/common/external_clients/DistributedHashMap.cpp src/common/external_clients/DistributedHashMap.h src/common/utility.h src/common/metadata_manager/metadata_manager.cpp src/common/metadata_manager/metadata_manager.h src/common/constants.h src/System.cpp src/System.h src/common/task_handler/task_handler.cpp src/common/task_handler/task_handler.h src/common/external_clients/DistributedHashMap.cpp src/common/external_clients/DistributedHashMap.h src/common/external_clients/DistributedQueue.cpp src/common/external_clients/DistributedQueue.h src/common/external_clients/serialization_manager.cpp src/common/external_clients/serialization_manager.h src/common/external_clients/RocksDBImpl.cpp src/common/external_clients/RocksDBImpl.h src/common/external_clients/MemcacheDImpl.cpp src/common/external_clients/MemcacheDImpl.h)
 set(PORUS_LIB_SRC ${COMMON_SRC} src/lib/driver.cpp src/lib/posix.cpp include/posix.h)
 set(PORUS_CLIENT_SRC  ${COMMON_SRC} "src/client/main.cpp" src/client/PorusClient.cpp src/client/PorusClient.h src/common/exception.h)
@@ -27,7 +27,7 @@ if(DEFINED MPI)
     include_directories(${MPI_INCLUDE_PATH})
 endif()
 if(DEFINED MEMCACHED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/lib/ -lmemcached -DMEMCACHED_P")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/opt/install/lib -lmemcached -DMEMCACHED_P")
 endif()
 if(DEFINED ROCKS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROCKS_P")

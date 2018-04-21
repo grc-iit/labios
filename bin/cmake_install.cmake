@@ -1,4 +1,4 @@
-# Install script for directory: /home/hariharan/Documents/porus
+# Install script for directory: /opt/projects/porus
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -40,5 +40,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/hariharan/Documents/porus/bin/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/opt/projects/porus/bin/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
