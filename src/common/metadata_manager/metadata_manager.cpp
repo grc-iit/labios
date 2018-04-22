@@ -214,3 +214,19 @@ void metadata_manager::update_on_write(std::string filename, size_t size) {
         map->put(table::FILE_DB,filename,fs_str);
     }
 }
+
+std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
+    DistributedHashMap*  map=System::getInstance(service)->map_client;
+    serialization_manager sm=serialization_manager();
+    size_t base_offset=(task.source.offset/io_unit_max)*io_unit_max;
+    size_t left=task.source.size;
+    std::vector<chunk_meta> chunks=std::vector<chunk_meta>();
+    while(left>0){
+        std::string chunk_str=map->get(table::CHUNK_DB, task.source.filename+std::to_string(base_offset));
+        chunk_meta cm=sm.deserialise_chunk(chunk_str);
+        chunks.push_back(cm);
+        left-=cm.actual_user_chunk.size;
+        base_offset+=cm.actual_user_chunk.size;
+    }
+    return chunks;
+}

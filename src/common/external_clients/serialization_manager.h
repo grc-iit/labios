@@ -8,7 +8,7 @@
 
 #include "../structure.h"
 #include <string>
-#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
 #include <sstream>
 #include <cereal/cereal.hpp>
 class serialization_manager {

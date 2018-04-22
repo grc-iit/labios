@@ -6,11 +6,12 @@
 
 int MemcacheDImpl::put(table table_name, std::string key, std::string value) {
     key=std::to_string(application_id)+KEY_SEPARATOR+std::to_string(table_name)+KEY_SEPARATOR+key;
+
     memcached_return_t rc= memcached_set(mem_client,
                                                 key.c_str(),
                                                 key.length(),
                                                 value.c_str(),
-                                                value.length(),
+                                                value.length()+1,
                                                 (time_t)0,
                                                 (uint32_t)0);
     return 0;

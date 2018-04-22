@@ -13,7 +13,7 @@ FILE *porus::fopen(const char *filename, const char *mode) {
             mdm->create(filename,mode,fh);
         }
     }else{
-        if(!mdm->is_opened(filename))
+        if(mdm->is_opened(filename))
             mdm->update_on_open(filename,mode,fh);
         else return nullptr;
     }
@@ -63,8 +63,19 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     int ptr_pos=0;
 
     for(auto task:read_tasks){
-        task_m->submit(&task);
-        char * data= const_cast<char *>(data_m->get(task.datasource_id).c_str());
+        char * data;
+        switch(task.source.dest_t){
+            case FILE_LOC:{
+                task_m->submit(&task);
+                //TODO: add logic to wait from Buffer
+                break;
+            }
+            case DATASPACE_LOC:{
+                break;
+            }
+
+        }
+        data = const_cast<char *>(data_m->get(task.source.filename).c_str());
         memcpy(ptr+ptr_pos,data+task.source.offset,task.source.size);
     }
     mdm->update_read_task_info(read_tasks,filename);
@@ -84,11 +95,13 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     std::string id;
     for(auto task:write_tasks){
         task_m->submit(&task);
-        id=task.datasource_id;
+        id=task.destination.filename;
     }
     mdm->update_write_task_info(write_tasks,filename);
     std::string data((char*)ptr);
     data_m->put(id, data);
+    auto map=System::getInstance(LIB)->map_client;
+    map->put(table::DATASPACE_DB,"count",id);
     return size*count;
 }
 

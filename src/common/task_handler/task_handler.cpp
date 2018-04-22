@@ -5,6 +5,7 @@
 #include <cmath>
 #include "task_handler.h"
 #include "../structure.h"
+#include "../metadata_manager/metadata_manager.h"
 
 std::shared_ptr<task_handler> task_handler::instance = nullptr;
 
@@ -45,16 +46,16 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
                 sub_task.source.offset=source.offset+sub_task.destination.offset;
                 sub_task.source.size=sub_task.destination.size;
 
-                sub_task.dest_t=source_type::DATASPACE_LOC;
-                sub_task.datasource_id=chunk_meta.destination.filename;
+                sub_task.destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task.destination.filename=chunk_meta.destination.filename;
                 sub_task.meta_updated=true;
             }else{
                 sub_task.destination.size=io_unit_max-base_offset;
                 sub_task.destination.offset=data_offset;
                 sub_task.source.offset=source.offset+sub_task.destination.offset;
                 sub_task.source.size=sub_task.destination.size;
-                sub_task.dest_t=source_type::DATASPACE_LOC;
-                sub_task.datasource_id=std::to_string(dataspace_id);
+                sub_task.destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task.destination.filename=std::to_string(dataspace_id);
             }
             base_offset+=(io_unit_max-base_offset);
             left-=(io_unit_max-base_offset);
@@ -64,8 +65,8 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
                 sub_task.destination.offset=i*io_unit_max;
                 sub_task.source.offset=source.offset+sub_task.destination.offset;
                 sub_task.source.size=sub_task.destination.size;
-                sub_task.dest_t=source_type::DATASPACE_LOC;
-                sub_task.datasource_id=std::to_string(dataspace_id);
+                sub_task.destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task.destination.filename=std::to_string(dataspace_id);
                 base_offset+=left;
                 left-=left;
             }else{
@@ -73,8 +74,8 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
                 sub_task.destination.offset=i*io_unit_max;
                 sub_task.source.offset=source.offset+sub_task.destination.offset;
                 sub_task.source.size=sub_task.destination.size;
-                sub_task.dest_t=source_type::DATASPACE_LOC;
-                sub_task.datasource_id=std::to_string(dataspace_id);
+                sub_task.destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task.destination.filename=std::to_string(dataspace_id);
                 base_offset+=io_unit_max;
                 left-=io_unit_max;
             }
@@ -87,7 +88,13 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
 
 std::vector<read_task> task_handler::build_task_read(read_task task) {
     std::vector<read_task> tasks=std::vector<read_task>();
-    tasks.push_back(task);
+    std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
+    auto chunks=mdm->fetch_chunks(task);
+    for(auto chunk:chunks){
+        read_task rt;
+        rt.source=chunk.destination;
+        tasks.push_back(rt);
+    }
     return tasks;
 }
 

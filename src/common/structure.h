@@ -99,47 +99,39 @@ struct write_task:public task{
     write_task(file source,
                file destination,
                source_type dest_t,
-               std::string datasource_id):task(WRITE_TASK),source(source),dest_t(dest_t),destination(destination),datasource_id(datasource_id){}
+               std::string datasource_id):task(WRITE_TASK),source(source),destination(destination){}
     write_task(const write_task &write_task_t):task(WRITE_TASK),
                                         source(write_task_t.source),
-                                        dest_t(write_task_t.dest_t),
-                                        destination(write_task_t.destination),
-                                        datasource_id(write_task_t.datasource_id){}
+                                        destination(write_task_t.destination){}
     file source;
     bool meta_updated;
     std::string data;
     file destination;
-    source_type dest_t;
-    std::string datasource_id;
 
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( cereal::base_class<task>( this ),this->source,this->destination,this->dest_t,this->datasource_id );
+        archive( cereal::base_class<task>( this ),this->source,this->destination);
     }
 };
 struct read_task:public task{
     read_task():task(READ_TASK){}
     read_task(const read_task &read_task_t):task(READ_TASK),
                                         source(read_task_t.source),
-                                        dest_t(read_task_t.dest_t),
-                                        destination(read_task_t.destination),
-                                        datasource_id(read_task_t.datasource_id){}
+                                        destination(read_task_t.destination){}
     read_task(file source,
               file destination,
               source_type dest_t,
-              std::string datasource_id):task(WRITE_TASK),source(source),dest_t(dest_t),destination(destination),datasource_id(datasource_id){}
+              std::string datasource_id):task(WRITE_TASK),source(source),destination(destination){}
 
     std::string data;
     bool meta_updated;
     file source;
     file destination;
-    source_type dest_t;
-    std::string datasource_id;
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( cereal::base_class<task>( this ),this->source,this->destination,this->dest_t,this->datasource_id );
+        archive( cereal::base_class<task>( this ),this->source,this->destination);
     }
 };
 
