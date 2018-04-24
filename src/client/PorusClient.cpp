@@ -7,7 +7,7 @@
 #include "PorusClient.h"
 #include "../common/constants.h"
 #include "../System.h"
-#include "../common/structure.h"
+#include "../common/data_structures.h"
 
 int PorusClient::init() {
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(PORUS_CLIENT_PORT.c_str()));

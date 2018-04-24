@@ -30,10 +30,10 @@ int System::init(Service service) {
         case CLIENT:{
             break;
         }
-        case SERVER:{
+        case SYSTEM_MANAGER:{
             break;
         }
-        case TASK_SCHEDULAR:{
+        case TASK_SCHEDULER:{
             break;
         }
         case WORKER_MANAGER:{

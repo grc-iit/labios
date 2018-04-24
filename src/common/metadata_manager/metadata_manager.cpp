@@ -6,7 +6,7 @@
 #include <cstring>
 #include "metadata_manager.h"
 #include "../external_clients/serialization_manager.h"
-#include "../utility.h"
+#include "../utilities.h"
 
 std::shared_ptr<metadata_manager> metadata_manager::instance = nullptr;
 

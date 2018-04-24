@@ -7,9 +7,9 @@
 
 
 #include <memory>
-#include "../enumeration.h"
-#include "../external_clients/DistributedQueue.h"
-#include "../structure.h"
+#include "../enumerations.h"
+#include "../client_interface/DistributedQueue.h"
+#include "../data_structures.h"
 
 class task_handler {
 private:

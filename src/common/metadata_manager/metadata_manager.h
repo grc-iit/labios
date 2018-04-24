@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <cereal/types/memory.hpp>
 #include "../../System.h"
-#include "../structure.h"
+#include "../data_structures.h"
 
 class metadata_manager {
 private:

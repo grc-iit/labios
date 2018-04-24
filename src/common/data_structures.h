@@ -8,7 +8,7 @@
 
 
 #include <cereal/types/memory.hpp>
-#include "enumeration.h"
+#include "enumerations.h"
 #include "constants.h"
 #include <cereal/types/string.hpp>
 

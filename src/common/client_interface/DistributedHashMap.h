@@ -7,9 +7,9 @@
 
 
 #include <cereal/types/memory.hpp>
-#include "../enumeration.h"
+#include "../enumerations.h"
 #include "../constants.h"
-#include "../exception.h"
+#include "../exceptions.h"
 
 class DistributedHashMap {
 protected:

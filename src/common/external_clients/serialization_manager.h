@@ -6,7 +6,7 @@
 #define PORUS_MAIN_SERIALIZATION_MANAGER_H
 
 
-#include "../structure.h"
+#include "../data_structures.h"
 #include <string>
 #include <cereal/archives/json.hpp>
 #include <sstream>

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(porus_main)
 
 set(CMAKE_CXX_STANDARD 11)
-include_directories(libs/)
+include_directories(external_libs/)
 #define ones we have installed
 set(MEMCACHED true)
 set(NATS true)
@@ -11,10 +11,10 @@ set(MPI true)
 
 
 set(CMAKE_MODULE_PATH )
-set(COMMON_SRC "" libs/cereal/cereal.hpp src/common/enumeration.h src/common/exception.h src/common/structure.h src/common/data_manager/data_manager.cpp src/common/data_manager/data_manager.h src/common/external_clients/DistributedHashMap.cpp src/common/external_clients/DistributedHashMap.h src/common/utility.h src/common/metadata_manager/metadata_manager.cpp src/common/metadata_manager/metadata_manager.h src/common/constants.h src/System.cpp src/System.h src/common/task_handler/task_handler.cpp src/common/task_handler/task_handler.h src/common/external_clients/DistributedHashMap.cpp src/common/external_clients/DistributedHashMap.h src/common/external_clients/DistributedQueue.cpp src/common/external_clients/DistributedQueue.h src/common/external_clients/serialization_manager.cpp src/common/external_clients/serialization_manager.h src/common/external_clients/RocksDBImpl.cpp src/common/external_clients/RocksDBImpl.h src/common/external_clients/MemcacheDImpl.cpp src/common/external_clients/MemcacheDImpl.h)
-set(PORUS_LIB_SRC ${COMMON_SRC} src/lib/driver.cpp src/lib/posix.cpp include/posix.h)
-set(PORUS_CLIENT_SRC  ${COMMON_SRC} "src/client/main.cpp" src/client/PorusClient.cpp src/client/PorusClient.h src/common/exception.h)
-set(PORUS_SERVER_SRC  ${COMMON_SRC} "src/server/main.cpp")
+set(COMMON_SRC "" external_libs/cereal/cereal.hpp src/common/enumerations.h src/common/exceptions.h src/common/data_structures.h src/common/data_manager/data_manager.cpp src/common/data_manager/data_manager.h src/common/client_interface/DistributedHashMap.cpp src/common/client_interface/DistributedHashMap.h src/common/utilities.h src/common/metadata_manager/metadata_manager.cpp src/common/metadata_manager/metadata_manager.h src/common/constants.h src/System.cpp src/System.h src/common/task_handler/task_handler.cpp src/common/task_handler/task_handler.h src/common/client_interface/DistributedHashMap.cpp src/common/client_interface/DistributedHashMap.h src/common/client_interface/DistributedQueue.cpp src/common/client_interface/DistributedQueue.h src/common/external_clients/serialization_manager.cpp src/common/external_clients/serialization_manager.h src/common/external_clients/RocksDBImpl.cpp src/common/external_clients/RocksDBImpl.h src/common/external_clients/MemcacheDImpl.cpp src/common/external_clients/MemcacheDImpl.h)
+set(PORUS_LIB_SRC ${COMMON_SRC} src/lib/driver.cpp src/lib/posix.cpp src/lib/posix.h src/lib/mpi.cpp)
+set(PORUS_CLIENT_SRC  ${COMMON_SRC} "src/client/main.cpp" src/client/PorusClient.cpp src/client/PorusClient.h src/common/exceptions.h src/lib/mpi.h include/porus.h)
+set(PORUS_SERVER_SRC  ${COMMON_SRC} "src/system_manager/main.cpp")
 set(PORUS_TS_SRC  ${COMMON_SRC} "src/task_scheduler/main.cpp")
 set(PORUS_WM_SRC  ${COMMON_SRC} "src/worker_manager/main.cpp")
 set(PORUS_WS_SRC  ${COMMON_SRC} "src/worker/main.cpp")

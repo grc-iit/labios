@@ -8,11 +8,11 @@
 
 #include <cstdio>
 #include <cstring>
-#include <mpi.h>
-#include "../src/common/task_handler/task_handler.h"
-#include "../src/common/metadata_manager/metadata_manager.h"
-#include "../src/common/data_manager/data_manager.h"
-#include "../src/System.h"
+#include "mpi.h"
+#include "../common/task_handler/task_handler.h"
+#include "../common/metadata_manager/metadata_manager.h"
+#include "../common/data_manager/data_manager.h"
+#include "../System.h"
 namespace porus{
     FILE *fopen(const char *filename, const char *mode);
 
@@ -23,11 +23,7 @@ namespace porus{
     size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
 
     size_t fwrite(void *ptr, size_t size, size_t count, FILE *stream);
-    int MPI_Init(int *argc, char ***argv);
 
-    void MPI_Finalize();
-
-    void MPI_Finalize();
 }
 
 

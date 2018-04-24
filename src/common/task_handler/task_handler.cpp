@@ -4,7 +4,7 @@
 
 #include <cmath>
 #include "task_handler.h"
-#include "../structure.h"
+#include "../data_structures.h"
 #include "../metadata_manager/metadata_manager.h"
 
 std::shared_ptr<task_handler> task_handler::instance = nullptr;

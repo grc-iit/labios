@@ -8,9 +8,9 @@
 
 #include <memory>
 #include <climits>
-#include "common/enumeration.h"
+#include "common/enumerations.h"
 #include "common/constants.h"
-#include "common/external_clients/DistributedHashMap.h"
+#include "common/client_interface/DistributedHashMap.h"
 #include "common/external_clients/MemcacheDImpl.h"
 #include "common/external_clients/RocksDBImpl.h"
 #include <mpi.h>

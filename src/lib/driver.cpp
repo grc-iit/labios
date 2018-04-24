@@ -2,7 +2,7 @@
  * Created by hariharan on 3/3/18.
  */
 #include <mpi.h>
-#include "../../include/posix.h"
+#include "posix.h"
 enum test_case{
     SIMPLE_WRITE=0,
     SIMPLE_READ=1,

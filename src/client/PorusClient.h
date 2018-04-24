@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 #include <future>
-#include "../common/structure.h"
+#include "../common/data_structures.h"
 
 class PorusClient {
 private:

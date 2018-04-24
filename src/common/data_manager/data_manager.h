@@ -7,8 +7,8 @@
 
 
 #include <cereal/types/memory.hpp>
-#include "../enumeration.h"
-#include "../external_clients/DistributedHashMap.h"
+#include "../enumerations.h"
+#include "../client_interface/DistributedHashMap.h"
 #include "../../System.h"
 
 class data_manager {

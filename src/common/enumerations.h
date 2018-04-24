@@ -30,8 +30,8 @@ enum source_type{
 enum Service{
     LIB=0,
     CLIENT=1,
-    SERVER=2,
-    TASK_SCHEDULAR=3,
+    SYSTEM_MANAGER=2,
+    TASK_SCHEDULER=3,
     WORKER=4,
     WORKER_MANAGER=5
 };

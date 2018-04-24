@@ -6,7 +6,7 @@
 #define PORUS_MAIN_MEMCACHEDIMPL_H
 
 
-#include "DistributedHashMap.h"
+#include "../client_interface/DistributedHashMap.h"
 #include <libmemcached/memcached.h>
 
 class MemcacheDImpl: public DistributedHashMap {

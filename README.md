@@ -1,6 +1,12 @@
 # README #
 
 ##TODO
+* Organize the code
+    * Make a generic abstract (pure virtual) interface in 
+    common/client_interface.
+    * Make all external client implement the abstract class.
+* Implement Porus Client Service(Future task)
+    * simply route all calls through this guy
 * Finish Porus lib 
     * application registration
     * test write and read to and from Porus Client (Memcached and NATS)

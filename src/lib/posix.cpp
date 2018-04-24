@@ -1,7 +1,7 @@
 //
 // Created by hariharan on 2/16/18.
 //
-#include "../../include/posix.h"
+#include "posix.h"
 
 FILE *porus::fopen(const char *filename, const char *mode) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
@@ -105,12 +105,4 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     return size*count;
 }
 
-int porus::MPI_Init(int *argc, char ***argv) {
-    PMPI_Init(argc,argv);
-    System::getInstance(Service::LIB);
-    return 0;
-}
 
-void porus::MPI_Finalize() {
-    PMPI_Finalize();
-}

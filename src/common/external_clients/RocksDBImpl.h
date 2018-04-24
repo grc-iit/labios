@@ -6,7 +6,7 @@
 #define PORUS_MAIN_ROCKSDBIMPL_H
 
 
-#include "DistributedHashMap.h"
+#include "../client_interface/DistributedHashMap.h"
 #ifdef ROCKS_P
 #include <rocksdb/db.h>
 #include <rocksdb/slice.h>

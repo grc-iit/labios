@@ -7,10 +7,10 @@
 
 
 #include <memory>
-#include "../enumeration.h"
-#include "../structure.h"
+#include "../enumerations.h"
+#include "../data_structures.h"
 #include <nats.h>
-#include "serialization_manager.h"
+#include "../external_clients/serialization_manager.h"
 #include "../../System.h"
 class DistributedQueue {
 private:
