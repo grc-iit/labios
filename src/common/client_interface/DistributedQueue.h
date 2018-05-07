@@ -11,24 +11,25 @@
 #include "../data_structures.h"
 #include <nats.h>
 #include "../external_clients/serialization_manager.h"
-#include "../../System.h"
+#include "../exceptions.h"
+
 class DistributedQueue {
 private:
-    static std::shared_ptr<DistributedQueue> instance;
+
+protected:
     Service service;
-    natsConnection      *nc  = NULL;
-    natsSubscription    *sub = NULL;
     DistributedQueue(Service service):service(service){
-        natsConnection_ConnectTo(&nc, NATS_URL_CLIENT.c_str());
+
 
     }
 public:
-    inline static std::shared_ptr<DistributedQueue> getInstance(Service service){
-        return instance== nullptr ? instance=std::shared_ptr<DistributedQueue>(new DistributedQueue(service))
-                                  : instance;
+
+    virtual int publish_task(task *task_t){
+        throw NotImplementedException("publish_task");
     }
-    int publish_task(task *task_t);
-    int subscribe_task(task &task_t);
+    virtual int subscribe_task(task &task_t){
+        throw NotImplementedException("subscribe_task");
+    }
 };
 
 

@@ -6,5 +6,5 @@ CXX_FLAGS =  -L/opt/install/lib -lmemcached -DMEMCACHED_P -w -g   -std=gnu++11
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/opt/projects/porus/libs -I/opt/install/include 
+CXX_INCLUDES = -I/opt/projects/porus/external_libs -I/opt/install/include 
 

@@ -16,7 +16,7 @@ bool metadata_manager::is_created(std::string filename) {
 }
 
 int metadata_manager::create(std::string filename, std::string mode, FILE *&fh) {
-    DistributedHashMap* map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap> map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     if(filename.length() > FILENAME_MAX)
         return -1;
@@ -45,7 +45,7 @@ int metadata_manager::update_on_open(std::string filename, std::string mode, FIL
     if(filename.length() > FILENAME_MAX)
         return -1;
 
-   DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap>  map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     file_stat stat;
@@ -82,7 +82,7 @@ bool metadata_manager::is_opened(FILE *fh) {
 }
 
 int metadata_manager::remove_chunks(std::string filename) {
-   DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap>  map=System::getInstance(service)->map_client;
     std::string chunks_str = map->remove(table::FILE_CHUNK_DB, filename);
     std::vector<std::string> chunks = string_split(chunks_str);
     for (auto chunk :chunks) {
@@ -121,7 +121,7 @@ std::size_t metadata_manager::get_fp(std::string filename) {
 }
 
 int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::string filename) {
-    DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap>  map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     file_stat fs;
     auto iter=file_map.find(filename);
@@ -131,7 +131,7 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
     return 0;
 }
 int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std::string filename) {
-    DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap>  map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     file_stat fs;
     auto iter=file_map.find(filename);
@@ -155,7 +155,7 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
     return 0;
 }
 int metadata_manager::update_on_seek(std::string filename,size_t offset, size_t origin){
-   DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap>  map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -186,7 +186,7 @@ int metadata_manager::update_on_seek(std::string filename,size_t offset, size_t 
 }
 
 void metadata_manager::update_on_read(std::string filename, size_t size) {
-   DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap>  map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -201,7 +201,7 @@ void metadata_manager::update_on_read(std::string filename, size_t size) {
 }
 
 void metadata_manager::update_on_write(std::string filename, size_t size) {
-   DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap>  map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -216,7 +216,7 @@ void metadata_manager::update_on_write(std::string filename, size_t size) {
 }
 
 std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
-    DistributedHashMap*  map=System::getInstance(service)->map_client;
+    std::shared_ptr<DistributedHashMap> map=System::getInstance(service)->map_client;
     serialization_manager sm=serialization_manager();
     size_t base_offset=(task.source.offset/io_unit_max)*io_unit_max;
     size_t left=task.source.size;

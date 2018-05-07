@@ -23,6 +23,7 @@ const std::string NATS_URL_SERVER="nats://localhost:4223/";
 const std::string MEMCACHED_URL_CLIENT="--SYSTEM_MANAGER=localhost:11211";
 const std::string MEMCACHED_URL_SERVER="--SYSTEM_MANAGER=localhost:11212";
 const map_impl_type map_impl_type_t=map_impl_type::MEMCACHE_D;
+const queue_impl_type queue_impl_type_t=queue_impl_type::NATS;
 const size_t io_unit_max=2*1024*1024;
 const std::string TASK_SUBJECT="TASK";
 const std::string KEY_SEPARATOR="#";

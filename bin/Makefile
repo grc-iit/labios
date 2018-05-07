@@ -300,6 +300,96 @@ src/client/main.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/main.cpp.s
 .PHONY : src/client/main.cpp.s
 
+src/common/client_interface/DistributedHashMap.o: src/common/client_interface/DistributedHashMap.cpp.o
+
+.PHONY : src/common/client_interface/DistributedHashMap.o
+
+# target to build an object file
+src/common/client_interface/DistributedHashMap.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/client_interface/DistributedHashMap.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o
+.PHONY : src/common/client_interface/DistributedHashMap.cpp.o
+
+src/common/client_interface/DistributedHashMap.i: src/common/client_interface/DistributedHashMap.cpp.i
+
+.PHONY : src/common/client_interface/DistributedHashMap.i
+
+# target to preprocess a source file
+src/common/client_interface/DistributedHashMap.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/client_interface/DistributedHashMap.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.i
+.PHONY : src/common/client_interface/DistributedHashMap.cpp.i
+
+src/common/client_interface/DistributedHashMap.s: src/common/client_interface/DistributedHashMap.cpp.s
+
+.PHONY : src/common/client_interface/DistributedHashMap.s
+
+# target to generate assembly for a file
+src/common/client_interface/DistributedHashMap.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/client_interface/DistributedHashMap.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.s
+.PHONY : src/common/client_interface/DistributedHashMap.cpp.s
+
+src/common/client_interface/DistributedQueue.o: src/common/client_interface/DistributedQueue.cpp.o
+
+.PHONY : src/common/client_interface/DistributedQueue.o
+
+# target to build an object file
+src/common/client_interface/DistributedQueue.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/client_interface/DistributedQueue.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o
+.PHONY : src/common/client_interface/DistributedQueue.cpp.o
+
+src/common/client_interface/DistributedQueue.i: src/common/client_interface/DistributedQueue.cpp.i
+
+.PHONY : src/common/client_interface/DistributedQueue.i
+
+# target to preprocess a source file
+src/common/client_interface/DistributedQueue.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/client_interface/DistributedQueue.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.i
+.PHONY : src/common/client_interface/DistributedQueue.cpp.i
+
+src/common/client_interface/DistributedQueue.s: src/common/client_interface/DistributedQueue.cpp.s
+
+.PHONY : src/common/client_interface/DistributedQueue.s
+
+# target to generate assembly for a file
+src/common/client_interface/DistributedQueue.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/client_interface/DistributedQueue.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.s
+.PHONY : src/common/client_interface/DistributedQueue.cpp.s
+
 src/common/data_manager/data_manager.o: src/common/data_manager/data_manager.cpp.o
 
 .PHONY : src/common/data_manager/data_manager.o
@@ -345,96 +435,6 @@ src/common/data_manager/data_manager.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s
 .PHONY : src/common/data_manager/data_manager.cpp.s
 
-src/common/external_clients/DistributedHashMap.o: src/common/external_clients/DistributedHashMap.cpp.o
-
-.PHONY : src/common/external_clients/DistributedHashMap.o
-
-# target to build an object file
-src/common/external_clients/DistributedHashMap.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/DistributedHashMap.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedHashMap.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedHashMap.cpp.o
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.o
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedHashMap.cpp.o
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedHashMap.cpp.o
-.PHONY : src/common/external_clients/DistributedHashMap.cpp.o
-
-src/common/external_clients/DistributedHashMap.i: src/common/external_clients/DistributedHashMap.cpp.i
-
-.PHONY : src/common/external_clients/DistributedHashMap.i
-
-# target to preprocess a source file
-src/common/external_clients/DistributedHashMap.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/DistributedHashMap.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedHashMap.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedHashMap.cpp.i
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.i
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.i
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedHashMap.cpp.i
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedHashMap.cpp.i
-.PHONY : src/common/external_clients/DistributedHashMap.cpp.i
-
-src/common/external_clients/DistributedHashMap.s: src/common/external_clients/DistributedHashMap.cpp.s
-
-.PHONY : src/common/external_clients/DistributedHashMap.s
-
-# target to generate assembly for a file
-src/common/external_clients/DistributedHashMap.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/DistributedHashMap.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedHashMap.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedHashMap.cpp.s
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedHashMap.cpp.s
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.s
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedHashMap.cpp.s
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedHashMap.cpp.s
-.PHONY : src/common/external_clients/DistributedHashMap.cpp.s
-
-src/common/external_clients/DistributedQueue.o: src/common/external_clients/DistributedQueue.cpp.o
-
-.PHONY : src/common/external_clients/DistributedQueue.o
-
-# target to build an object file
-src/common/external_clients/DistributedQueue.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/DistributedQueue.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedQueue.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedQueue.cpp.o
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.o
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedQueue.cpp.o
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedQueue.cpp.o
-.PHONY : src/common/external_clients/DistributedQueue.cpp.o
-
-src/common/external_clients/DistributedQueue.i: src/common/external_clients/DistributedQueue.cpp.i
-
-.PHONY : src/common/external_clients/DistributedQueue.i
-
-# target to preprocess a source file
-src/common/external_clients/DistributedQueue.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/DistributedQueue.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedQueue.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedQueue.cpp.i
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.i
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.i
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedQueue.cpp.i
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedQueue.cpp.i
-.PHONY : src/common/external_clients/DistributedQueue.cpp.i
-
-src/common/external_clients/DistributedQueue.s: src/common/external_clients/DistributedQueue.cpp.s
-
-.PHONY : src/common/external_clients/DistributedQueue.s
-
-# target to generate assembly for a file
-src/common/external_clients/DistributedQueue.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/DistributedQueue.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedQueue.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/DistributedQueue.cpp.s
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/DistributedQueue.cpp.s
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.s
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/DistributedQueue.cpp.s
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/DistributedQueue.cpp.s
-.PHONY : src/common/external_clients/DistributedQueue.cpp.s
-
 src/common/external_clients/MemcacheDImpl.o: src/common/external_clients/MemcacheDImpl.cpp.o
 
 .PHONY : src/common/external_clients/MemcacheDImpl.o
@@ -479,6 +479,51 @@ src/common/external_clients/MemcacheDImpl.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/MemcacheDImpl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s
 .PHONY : src/common/external_clients/MemcacheDImpl.cpp.s
+
+src/common/external_clients/NatsImpl.o: src/common/external_clients/NatsImpl.cpp.o
+
+.PHONY : src/common/external_clients/NatsImpl.o
+
+# target to build an object file
+src/common/external_clients/NatsImpl.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/NatsImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/NatsImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/NatsImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/NatsImpl.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o
+.PHONY : src/common/external_clients/NatsImpl.cpp.o
+
+src/common/external_clients/NatsImpl.i: src/common/external_clients/NatsImpl.cpp.i
+
+.PHONY : src/common/external_clients/NatsImpl.i
+
+# target to preprocess a source file
+src/common/external_clients/NatsImpl.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/NatsImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/NatsImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/NatsImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/NatsImpl.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.i
+.PHONY : src/common/external_clients/NatsImpl.cpp.i
+
+src/common/external_clients/NatsImpl.s: src/common/external_clients/NatsImpl.cpp.s
+
+.PHONY : src/common/external_clients/NatsImpl.s
+
+# target to generate assembly for a file
+src/common/external_clients/NatsImpl.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/NatsImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/NatsImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/NatsImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/external_clients/NatsImpl.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.s
+.PHONY : src/common/external_clients/NatsImpl.cpp.s
 
 src/common/external_clients/RocksDBImpl.o: src/common/external_clients/RocksDBImpl.cpp.o
 
@@ -687,6 +732,33 @@ src/lib/driver.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/driver.cpp.s
 .PHONY : src/lib/driver.cpp.s
 
+src/lib/mpi.o: src/lib/mpi.cpp.o
+
+.PHONY : src/lib/mpi.o
+
+# target to build an object file
+src/lib/mpi.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o
+.PHONY : src/lib/mpi.cpp.o
+
+src/lib/mpi.i: src/lib/mpi.cpp.i
+
+.PHONY : src/lib/mpi.i
+
+# target to preprocess a source file
+src/lib/mpi.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.i
+.PHONY : src/lib/mpi.cpp.i
+
+src/lib/mpi.s: src/lib/mpi.cpp.s
+
+.PHONY : src/lib/mpi.s
+
+# target to generate assembly for a file
+src/lib/mpi.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.s
+.PHONY : src/lib/mpi.cpp.s
+
 src/lib/posix.o: src/lib/posix.cpp.o
 
 .PHONY : src/lib/posix.o
@@ -714,32 +786,32 @@ src/lib/posix.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/posix.cpp.s
 .PHONY : src/lib/posix.cpp.s
 
-src/server/main.o: src/server/main.cpp.o
+src/system_manager/main.o: src/system_manager/main.cpp.o
 
-.PHONY : src/server/main.o
+.PHONY : src/system_manager/main.o
 
 # target to build an object file
-src/server/main.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/server/main.cpp.o
-.PHONY : src/server/main.cpp.o
+src/system_manager/main.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o
+.PHONY : src/system_manager/main.cpp.o
 
-src/server/main.i: src/server/main.cpp.i
+src/system_manager/main.i: src/system_manager/main.cpp.i
 
-.PHONY : src/server/main.i
+.PHONY : src/system_manager/main.i
 
 # target to preprocess a source file
-src/server/main.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/server/main.cpp.i
-.PHONY : src/server/main.cpp.i
+src/system_manager/main.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system_manager/main.cpp.i
+.PHONY : src/system_manager/main.cpp.i
 
-src/server/main.s: src/server/main.cpp.s
+src/system_manager/main.s: src/system_manager/main.cpp.s
 
-.PHONY : src/server/main.s
+.PHONY : src/system_manager/main.s
 
 # target to generate assembly for a file
-src/server/main.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/server/main.cpp.s
-.PHONY : src/server/main.cpp.s
+src/system_manager/main.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system_manager/main.cpp.s
+.PHONY : src/system_manager/main.cpp.s
 
 src/task_scheduler/main.o: src/task_scheduler/main.cpp.o
 
@@ -876,18 +948,21 @@ help:
 	@echo "... src/client/main.o"
 	@echo "... src/client/main.i"
 	@echo "... src/client/main.s"
+	@echo "... src/common/client_interface/DistributedHashMap.o"
+	@echo "... src/common/client_interface/DistributedHashMap.i"
+	@echo "... src/common/client_interface/DistributedHashMap.s"
+	@echo "... src/common/client_interface/DistributedQueue.o"
+	@echo "... src/common/client_interface/DistributedQueue.i"
+	@echo "... src/common/client_interface/DistributedQueue.s"
 	@echo "... src/common/data_manager/data_manager.o"
 	@echo "... src/common/data_manager/data_manager.i"
 	@echo "... src/common/data_manager/data_manager.s"
-	@echo "... src/common/external_clients/DistributedHashMap.o"
-	@echo "... src/common/external_clients/DistributedHashMap.i"
-	@echo "... src/common/external_clients/DistributedHashMap.s"
-	@echo "... src/common/external_clients/DistributedQueue.o"
-	@echo "... src/common/external_clients/DistributedQueue.i"
-	@echo "... src/common/external_clients/DistributedQueue.s"
 	@echo "... src/common/external_clients/MemcacheDImpl.o"
 	@echo "... src/common/external_clients/MemcacheDImpl.i"
 	@echo "... src/common/external_clients/MemcacheDImpl.s"
+	@echo "... src/common/external_clients/NatsImpl.o"
+	@echo "... src/common/external_clients/NatsImpl.i"
+	@echo "... src/common/external_clients/NatsImpl.s"
 	@echo "... src/common/external_clients/RocksDBImpl.o"
 	@echo "... src/common/external_clients/RocksDBImpl.i"
 	@echo "... src/common/external_clients/RocksDBImpl.s"
@@ -903,12 +978,15 @@ help:
 	@echo "... src/lib/driver.o"
 	@echo "... src/lib/driver.i"
 	@echo "... src/lib/driver.s"
+	@echo "... src/lib/mpi.o"
+	@echo "... src/lib/mpi.i"
+	@echo "... src/lib/mpi.s"
 	@echo "... src/lib/posix.o"
 	@echo "... src/lib/posix.i"
 	@echo "... src/lib/posix.s"
-	@echo "... src/server/main.o"
-	@echo "... src/server/main.i"
-	@echo "... src/server/main.s"
+	@echo "... src/system_manager/main.o"
+	@echo "... src/system_manager/main.i"
+	@echo "... src/system_manager/main.s"
 	@echo "... src/task_scheduler/main.o"
 	@echo "... src/task_scheduler/main.i"
 	@echo "... src/task_scheduler/main.s"

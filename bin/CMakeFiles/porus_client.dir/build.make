@@ -81,28 +81,28 @@ CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o.provides:
 CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o
 
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o: CMakeFiles/porus_client.dir/flags.make
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o: ../src/common/external_clients/DistributedHashMap.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o -c /opt/projects/porus/src/common/external_clients/DistributedHashMap.cpp
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o: CMakeFiles/porus_client.dir/flags.make
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o: ../src/common/client_interface/DistributedHashMap.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/DistributedHashMap.cpp > CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.i
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp > CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.i
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/DistributedHashMap.cpp -o CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.s
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp -o CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.s
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.requires:
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires:
 
-.PHONY : CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.requires
+.PHONY : CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.provides: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.provides
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o
 
 
 CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o: CMakeFiles/porus_client.dir/flags.make
@@ -177,28 +177,28 @@ CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.provides:
 CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o
 
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o: CMakeFiles/porus_client.dir/flags.make
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o: ../src/common/external_clients/DistributedQueue.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o -c /opt/projects/porus/src/common/external_clients/DistributedQueue.cpp
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o: CMakeFiles/porus_client.dir/flags.make
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o: ../src/common/client_interface/DistributedQueue.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/DistributedQueue.cpp > CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.i
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp > CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.i
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/DistributedQueue.cpp -o CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.s
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp -o CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.s
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.requires:
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.requires:
 
-.PHONY : CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.requires
+.PHONY : CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.requires
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.provides: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.provides
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.provides: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.provides
 
-CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o
+CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o
 
 
 CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o: CMakeFiles/porus_client.dir/flags.make
@@ -273,9 +273,33 @@ CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o.prov
 CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o
 
 
+CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o: CMakeFiles/porus_client.dir/flags.make
+CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o: ../src/common/external_clients/NatsImpl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/NatsImpl.cpp
+
+CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/NatsImpl.cpp > CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.i
+
+CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/NatsImpl.cpp -o CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.s
+
+CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.requires
+
+CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.provides: CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.provides
+
+CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o
+
+
 CMakeFiles/porus_client.dir/src/client/main.cpp.o: CMakeFiles/porus_client.dir/flags.make
 CMakeFiles/porus_client.dir/src/client/main.cpp.o: ../src/client/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_client.dir/src/client/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_client.dir/src/client/main.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/client/main.cpp.o -c /opt/projects/porus/src/client/main.cpp
 
 CMakeFiles/porus_client.dir/src/client/main.cpp.i: cmake_force
@@ -299,7 +323,7 @@ CMakeFiles/porus_client.dir/src/client/main.cpp.o.provides.build: CMakeFiles/por
 
 CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o: CMakeFiles/porus_client.dir/flags.make
 CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o: ../src/client/PorusClient.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o -c /opt/projects/porus/src/client/PorusClient.cpp
 
 CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.i: cmake_force
@@ -324,14 +348,15 @@ CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o.provides.build: CMakeFi
 # Object files for target porus_client
 porus_client_OBJECTS = \
 "CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o" \
-"CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o" \
+"CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o" \
 "CMakeFiles/porus_client.dir/src/System.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o" \
-"CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o" \
+"CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o" \
+"CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o" \
 "CMakeFiles/porus_client.dir/src/client/main.cpp.o" \
 "CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o"
 
@@ -339,21 +364,22 @@ porus_client_OBJECTS = \
 porus_client_EXTERNAL_OBJECTS =
 
 porus_client: CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o
-porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o
+porus_client: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/System.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o
-porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o
+porus_client: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/client/main.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o
 porus_client: CMakeFiles/porus_client.dir/build.make
 porus_client: /opt/install/lib/libmpicxx.so
 porus_client: /opt/install/lib/libmpi.so
 porus_client: CMakeFiles/porus_client.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX executable porus_client"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX executable porus_client"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/porus_client.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -362,14 +388,15 @@ CMakeFiles/porus_client.dir/build: porus_client
 .PHONY : CMakeFiles/porus_client.dir/build
 
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.cpp.o.requires
-CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedHashMap.cpp.o.requires
+CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/System.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.requires
-CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/DistributedQueue.cpp.o.requires
+CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/client_interface/DistributedQueue.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/RocksDBImpl.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires
+CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/NatsImpl.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/client/main.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o.requires
 

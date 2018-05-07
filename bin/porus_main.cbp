@@ -35,7 +35,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_worker_stats" />
@@ -52,7 +52,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_worker_stats/fast" />
@@ -69,7 +69,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_worker" />
@@ -86,7 +86,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_worker/fast" />
@@ -103,7 +103,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_worker_manager" />
@@ -120,7 +120,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_worker_manager/fast" />
@@ -147,7 +147,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_lib" />
@@ -164,7 +164,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_lib/fast" />
@@ -181,7 +181,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_client" />
@@ -198,7 +198,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_client/fast" />
@@ -215,7 +215,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_server" />
@@ -232,7 +232,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_server/fast" />
@@ -249,7 +249,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_task_scheduler" />
@@ -266,7 +266,7 @@
          <Option compiler="gcc" />
          <Compiler>
             <Add directory="/opt/install/include" />
-            <Add directory="/opt/projects/porus/libs" />
+            <Add directory="/opt/projects/porus/external_libs" />
          </Compiler>
          <MakeCommands>
             <Build command="/usr/bin/make -f &quot;/opt/projects/porus/bin/Makefile&quot;  VERBOSE=1 porus_task_scheduler/fast" />
@@ -276,10 +276,7 @@
          </MakeCommands>
       </Target>
       </Build>
-      <Unit filename="/opt/projects/porus/include/posix.h">
-         <Option target="porus_lib"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/libs/cereal/cereal.hpp">
+      <Unit filename="/opt/projects/porus/external_libs/cereal/cereal.hpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -287,6 +284,9 @@
          <Option target="porus_client"/>
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/include/porus.h">
+         <Option target="porus_client"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/System.cpp">
          <Option target="porus_worker_stats"/>
@@ -315,6 +315,42 @@
       <Unit filename="/opt/projects/porus/src/client/main.cpp">
          <Option target="porus_client"/>
       </Unit>
+      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedHashMap.h">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedQueue.cpp">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedQueue.h">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
       <Unit filename="/opt/projects/porus/src/common/constants.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
@@ -342,7 +378,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/enumeration.h">
+      <Unit filename="/opt/projects/porus/src/common/data_structures.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -351,7 +387,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/exception.h">
+      <Unit filename="/opt/projects/porus/src/common/enumerations.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -360,34 +396,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/DistributedHashMap.cpp">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/DistributedHashMap.h">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/DistributedQueue.cpp">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/DistributedQueue.h">
+      <Unit filename="/opt/projects/porus/src/common/exceptions.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -406,6 +415,24 @@
          <Option target="porus_task_scheduler"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/common/external_clients/MemcacheDImpl.h">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/external_clients/NatsImpl.cpp">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/external_clients/NatsImpl.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -468,15 +495,6 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/structure.h">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
       <Unit filename="/opt/projects/porus/src/common/task_handler/task_handler.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
@@ -495,7 +513,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/utility.h">
+      <Unit filename="/opt/projects/porus/src/common/utilities.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -507,10 +525,19 @@
       <Unit filename="/opt/projects/porus/src/lib/driver.cpp">
          <Option target="porus_lib"/>
       </Unit>
+      <Unit filename="/opt/projects/porus/src/lib/mpi.cpp">
+         <Option target="porus_lib"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/lib/mpi.h">
+         <Option target="porus_client"/>
+      </Unit>
       <Unit filename="/opt/projects/porus/src/lib/posix.cpp">
          <Option target="porus_lib"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/server/main.cpp">
+      <Unit filename="/opt/projects/porus/src/lib/posix.h">
+         <Option target="porus_lib"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/system_manager/main.cpp">
          <Option target="porus_server"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/task_scheduler/main.cpp">

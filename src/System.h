@@ -13,6 +13,7 @@
 #include "common/client_interface/DistributedHashMap.h"
 #include "common/external_clients/MemcacheDImpl.h"
 #include "common/external_clients/RocksDBImpl.h"
+#include "common/client_interface/DistributedQueue.h"
 #include <mpi.h>
 #include <string>
 class System {
@@ -27,7 +28,8 @@ private:
 
     int init(Service service);
 public:
-    DistributedHashMap* map_client,*map_server;
+    std::shared_ptr<DistributedHashMap> map_client,map_server;
+    std::shared_ptr<DistributedQueue> queue_client;
     int rank,client_rank;
     MPI_Comm client_comm;
     inline static std::shared_ptr<System> getInstance(Service service){

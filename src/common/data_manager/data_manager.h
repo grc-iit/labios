@@ -14,9 +14,9 @@
 class data_manager {
 private:
     static std::shared_ptr<data_manager> instance;
-    DistributedHashMap* map;
-    data_manager(Service service){
-        map=System::getInstance(service)->map_client;
+    Service service;
+    data_manager(Service service):service(service){
+
     }
 public:
     inline static std::shared_ptr<data_manager> getInstance(Service service){
@@ -26,7 +26,6 @@ public:
     std::string get(std::string);
     int put(std::string, std::string data);
     ~data_manager(){
-        delete(map);
     }
 };
 

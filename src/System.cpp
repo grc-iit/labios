@@ -3,15 +3,16 @@
 //
 
 #include "System.h"
+#include "common/external_clients/NatsImpl.h"
 
 std::shared_ptr<System> System::instance = nullptr;
 
 int System::init(Service service) {
     MPI_Comm_rank(MPI_COMM_SELF,&rank);
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_server= new MemcacheDImpl(service,MEMCACHED_URL_SERVER,0);
+        map_server= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,MEMCACHED_URL_SERVER,0));
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
-        map_server=  new RocksDBImpl(service,kDBPath_server);
+        map_server=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_server));
     }
     switch(service){
         case LIB:{
@@ -45,9 +46,13 @@ int System::init(Service service) {
     }
 
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_client= new MemcacheDImpl(service,MEMCACHED_URL_CLIENT,application_id);
+        map_client= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,MEMCACHED_URL_CLIENT,application_id));
+
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
-        map_client=  new RocksDBImpl(service,kDBPath_client);
+        map_client=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_client));
+    }
+    if(queue_impl_type_t==queue_impl_type::NATS){
+        queue_client=std::shared_ptr<NatsImpl>(new NatsImpl(service,NATS_URL_CLIENT));
     }
     return 0;
 }

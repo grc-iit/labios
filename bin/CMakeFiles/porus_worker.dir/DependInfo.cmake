@@ -5,10 +5,11 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/System.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/System.cpp.o"
+  "/opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o"
+  "/opt/projects/porus/src/common/client_interface/DistributedQueue.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o"
   "/opt/projects/porus/src/common/data_manager/data_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o"
-  "/opt/projects/porus/src/common/external_clients/DistributedHashMap.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedHashMap.cpp.o"
-  "/opt/projects/porus/src/common/external_clients/DistributedQueue.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/external_clients/DistributedQueue.cpp.o"
   "/opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
+  "/opt/projects/porus/src/common/external_clients/NatsImpl.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o"
   "/opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o"
   "/opt/projects/porus/src/common/external_clients/serialization_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o"
   "/opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o"
@@ -19,7 +20,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "../libs"
+  "../external_libs"
   "/opt/install/include"
   )
 

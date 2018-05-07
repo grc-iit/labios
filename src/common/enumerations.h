@@ -51,4 +51,7 @@ enum map_impl_type{
     ROCKS_DB=0,
     MEMCACHE_D=1
 };
+enum queue_impl_type{
+    NATS=0
+};
 #endif //PORUS_MAIN_ENUMERATION_H
