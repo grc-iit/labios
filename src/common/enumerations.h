@@ -45,7 +45,9 @@ enum table{
     FILE_CHUNK_DB=1,
     CHUNK_DB=2,
     SYSTEM_REG=3,
-    DATASPACE_DB=4
+    DATASPACE_DB=4,
+    WORKER_SCORE=5,
+    WORKER_CAPACITY=6
 };
 enum map_impl_type{
     ROCKS_DB=0,
@@ -54,4 +56,9 @@ enum map_impl_type{
 enum queue_impl_type{
     NATS=0
 };
+enum solver_impl_type{
+    DP=0,
+    GREEDY=1
+};
+
 #endif //PORUS_MAIN_ENUMERATION_H

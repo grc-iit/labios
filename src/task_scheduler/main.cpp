@@ -2,7 +2,7 @@
 
 
 #include "../common/data_structures.h"
-#include "solver/DPSolver.h"
+#include "../common/solver/DPSolver.h"
 
 int main() {
     int tasks = 10;
@@ -23,7 +23,7 @@ int main() {
         input.worker_capacity[i]=64+i*1000/5;
     }
     input.num_task = tasks;
-    DPSolver solver=DPSolver();
+    DPSolver solver=DPSolver(TASK_SCHEDULER);
     solver_output output=solver.solve(input);
     std::cout<<output.max_value<< std::endl;
     for(int i=0;i<tasks;i++){

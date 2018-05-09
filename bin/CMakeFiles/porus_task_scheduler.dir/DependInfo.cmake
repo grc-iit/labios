@@ -5,6 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/System.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o"
+  "/opt/projects/porus/src/common/Timer.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o"
   "/opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o"
   "/opt/projects/porus/src/common/client_interface/DistributedQueue.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o"
   "/opt/projects/porus/src/common/data_manager/data_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o"
@@ -13,11 +14,12 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o"
   "/opt/projects/porus/src/common/external_clients/serialization_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o"
   "/opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o"
+  "/opt/projects/porus/src/common/solver/DPSolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o"
+  "/opt/projects/porus/src/common/solver/GreedySolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o"
+  "/opt/projects/porus/src/common/solver/knapsack.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o"
   "/opt/projects/porus/src/common/task_handler/task_handler.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o"
   "/opt/projects/porus/src/task_scheduler/main.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o"
-  "/opt/projects/porus/src/task_scheduler/solver/DPSolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/DPSolver.cpp.o"
-  "/opt/projects/porus/src/task_scheduler/solver/GreedySolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/GreedySolver.cpp.o"
-  "/opt/projects/porus/src/task_scheduler/solver/knapsack.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/knapsack.cpp.o"
+  "/opt/projects/porus/src/task_scheduler/task_scheduler_service.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -20,7 +20,7 @@ int NatsImpl::subscribe_task(task &task_t) {
     serialization_manager sm=serialization_manager();
     std::string subject=sys->get_task_subject();
     natsConnection_SubscribeSync(&sub, nc, subject.c_str());
-    natsMsg             *msg = NULL;
+    natsMsg *msg = NULL;
     natsSubscription_NextMsg(&msg, sub, 1000);
     task_t=sm.deserialise_task(natsMsg_GetData(msg));
     return 0;

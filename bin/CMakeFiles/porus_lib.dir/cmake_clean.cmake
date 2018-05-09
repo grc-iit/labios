@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/porus_lib.dir/src/common/Timer.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedHashMap.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o"

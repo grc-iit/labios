@@ -315,6 +315,24 @@
       <Unit filename="/opt/projects/porus/src/client/main.cpp">
          <Option target="porus_client"/>
       </Unit>
+      <Unit filename="/opt/projects/porus/src/common/Timer.cpp">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/Timer.h">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
       <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
@@ -495,6 +513,24 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
+      <Unit filename="/opt/projects/porus/src/common/solver/DPSolver.cpp">
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/solver/DPSolver.h">
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/solver/GreedySolver.cpp">
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/solver/GreedySolver.h">
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/solver/Solver.h">
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/solver/knapsack.cpp">
+         <Option target="porus_task_scheduler"/>
+      </Unit>
       <Unit filename="/opt/projects/porus/src/common/task_handler/task_handler.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
@@ -543,22 +579,10 @@
       <Unit filename="/opt/projects/porus/src/task_scheduler/main.cpp">
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/task_scheduler/solver/DPSolver.cpp">
+      <Unit filename="/opt/projects/porus/src/task_scheduler/task_scheduler_service.cpp">
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/task_scheduler/solver/DPSolver.h">
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/task_scheduler/solver/GreedySolver.cpp">
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/task_scheduler/solver/GreedySolver.h">
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/task_scheduler/solver/knapsack.cpp">
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/task_scheduler/solver/solver.h">
+      <Unit filename="/opt/projects/porus/src/task_scheduler/task_scheduler_service.h">
          <Option target="porus_task_scheduler"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/worker/main.cpp">

@@ -39,16 +39,10 @@ int *DPSolver::calculate_values(solver_input input, int num_bins) {
         if(input.task_size[i]>=1024 && input.task_size[i]<2048) size_category=5;
         for (int j = 0; j < num_bins; j++) {
             int val = ((5*input.worker_score[j])/size_category - WORKER_ENERGY[j]
-                    //(((float) input.task_size[i] /
-
-                      //       ( input.worker_score[j]+
-                        //      (float) input.task_size[i] / WORKER_BANDWIDTH[j]))
-                             //- WORKER_LAMDA[j] * WORKER_ENERGY[j]
             );
             if (j == 0) p[i] = val;
             else if (p[i] > val) p[i] = val;
         }
-        //std::cout<<"i:"<<i<<" val:"<< p[i]<<std::endl;
     }
 
     return p;

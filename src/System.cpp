@@ -4,6 +4,8 @@
 
 #include "System.h"
 #include "common/external_clients/NatsImpl.h"
+#include "common/solver/DPSolver.h"
+#include "common/solver/GreedySolver.h"
 
 std::shared_ptr<System> System::instance = nullptr;
 
@@ -13,6 +15,11 @@ int System::init(Service service) {
         map_server= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,MEMCACHED_URL_SERVER,0));
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_server=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_server));
+    }
+    if(solver_impl_type_t==solver_impl_type::DP){
+        solver=std::shared_ptr<DPSolver>(new DPSolver(service));
+    }else if(solver_impl_type_t==solver_impl_type::GREEDY){
+        solver=std::shared_ptr<GreedySolver>(new GreedySolver(service));
     }
     switch(service){
         case LIB:{
