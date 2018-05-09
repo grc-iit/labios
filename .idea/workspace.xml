@@ -2,12 +2,12 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
     <generated>
-      <config projectName="porus_main" targetName="porus_lib" />
       <config projectName="porus_main" targetName="porus_worker_stats" />
       <config projectName="porus_main" targetName="porus_worker" />
-      <config projectName="porus_main" targetName="porus_worker_manager" />
-      <config projectName="porus_main" targetName="porus_client" />
       <config projectName="porus_main" targetName="porus_task_scheduler" />
+      <config projectName="porus_main" targetName="porus_lib" />
+      <config projectName="porus_main" targetName="porus_client" />
+      <config projectName="porus_main" targetName="porus_worker_manager" />
       <config projectName="porus_main" targetName="porus_server" />
     </generated>
   </component>
@@ -18,58 +18,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1d98b859-b25b-47e6-9e30-8b87bba0f4c5" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/solver.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/CMakeOutput.log" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/CMakeOutput.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/Makefile2" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/Makefile2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.bin" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/flags.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/flags.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/flags.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/DependInfo.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/cmake_clean.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/flags.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/flags.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/flags.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/progress.marks" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/progress.marks" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/porus_client" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/porus_lib" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/porus_main.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/bin/porus_main.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/external_libs/cereal/cereal.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/cereal.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/license.txt" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/license.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/manual.html" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/manual.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/common/constants.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/constants.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/common/data_structures.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/data_structures.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/driver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/driver.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/posix.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/posix.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/task_scheduler/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/worker/program_repo/statistics.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/worker/program_repo/statistics.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/bin/" />
@@ -82,131 +37,101 @@
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
-      <split-first>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="290">
-                  <caret line="10" column="50" selection-start-line="10" selection-start-column="50" selection-end-line="10" selection-end-column="50" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="DPSolver.h" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="406">
-                  <caret line="14" column="36" selection-start-line="14" selection-start-column="36" selection-end-line="14" selection-end-column="36" />
-                  <folding>
-                    <element signature="e#104#123#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="driver.cpp" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-954">
-                  <caret line="39" column="37" selection-start-line="39" selection-start-column="37" selection-end-line="39" selection-end-column="37" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="main.cpp" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/task_scheduler/main.cpp">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="493">
-                  <caret line="32" column="32" lean-forward="true" selection-start-line="32" selection-start-column="32" selection-end-line="32" selection-end-column="32" />
-                  <folding>
-                    <element signature="e#3#41#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="metadata_manager.h" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="332">
-                  <caret line="24" column="79" selection-start-line="24" selection-start-column="45" selection-end-line="24" selection-end-column="79" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="solver.h" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/solver.h">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="290">
-                  <caret line="10" column="2" selection-start-line="10" selection-start-column="2" selection-end-line="10" selection-end-column="2" />
-                  <folding>
-                    <element signature="e#108#122#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="DPSolver.cpp" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="261">
-                  <caret line="9" column="30" lean-forward="true" selection-start-line="9" selection-start-column="30" selection-end-line="9" selection-end-column="30" />
-                  <folding>
-                    <element signature="e#43#64#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="data_structures.h" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/common/data_structures.h">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="670">
-                  <caret line="150" column="66" selection-start-line="150" selection-start-column="66" selection-end-line="150" selection-end-column="66" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="GreedySolver.cpp" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="203">
-                  <caret line="7" column="25" selection-start-line="7" selection-start-column="25" selection-end-line="7" selection-end-column="25" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="constants.h" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/common/constants.h">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="562">
-                  <caret line="30" column="34" selection-start-line="30" selection-start-column="28" selection-end-line="30" selection-end-column="34" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-first>
-      <split-second>
-        <leaf>
-          <file leaf-file-name="knapsack.cpp" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="259">
-                  <caret line="1581" selection-start-line="1581" selection-end-line="1581" />
-                  <folding>
-                    <element signature="e#1756#1775#0" expanded="true" />
-                    <element signature="e#10596#10663#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-second>
-    </splitter>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="knapsack.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="45849">
+              <caret line="1581" column="34" selection-start-line="1581" selection-start-column="34" selection-end-line="1581" selection-end-column="35" />
+              <folding>
+                <element signature="e#1756#1775#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DPSolver.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="377">
+              <caret line="13" column="22" selection-start-line="13" selection-start-column="22" selection-end-line="13" selection-end-column="22" />
+              <folding>
+                <element signature="e#104#123#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="main.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/task_scheduler/main.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="551">
+              <caret line="19" column="30" selection-start-line="19" selection-start-column="30" selection-end-line="19" selection-end-column="30" />
+              <folding>
+                <element signature="e#3#41#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="metadata_manager.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="696">
+              <caret line="24" column="79" selection-start-line="24" selection-start-column="45" selection-end-line="24" selection-end-column="79" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="solver.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/solver.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="290">
+              <caret line="10" column="2" selection-start-line="10" selection-start-column="2" selection-end-line="10" selection-end-column="2" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DPSolver.cpp" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="928">
+              <caret line="32" column="25" selection-start-line="32" selection-start-column="25" selection-end-line="32" selection-end-column="25" />
+              <folding>
+                <element signature="e#43#64#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="data_structures.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/common/data_structures.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="4002">
+              <caret line="138" column="9" selection-start-line="138" selection-start-column="9" selection-end-line="138" selection-end-column="9" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GreedySolver.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="203">
+              <caret line="7" column="40" selection-start-line="7" selection-start-column="40" selection-end-line="7" selection-end-column="40" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="constants.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/common/constants.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="870">
+              <caret line="30" column="9" selection-start-line="30" selection-start-column="9" selection-end-line="30" selection-end-column="9" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -255,12 +180,12 @@
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.h" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/test.cpp" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/knapsack.c" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp" />
+        <option value="$PROJECT_DIR$/src/common/data_structures.h" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp" />
         <option value="$PROJECT_DIR$/src/common/constants.h" />
-        <option value="$PROJECT_DIR$/src/common/data_structures.h" />
         <option value="$PROJECT_DIR$/src/task_scheduler/main.cpp" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp" />
       </list>
@@ -290,7 +215,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -322,16 +246,23 @@
               <item name="task_scheduler" type="462c0819:PsiDirectoryNode" />
               <item name="solver" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
+              <item name="porus" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="worker" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../valgrind.sh" />
-    <property name="settings.editor.selected.configurable" value="preferences.externalTools" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -400,7 +331,9 @@
       <workItem from="1524778069100" duration="1789000" />
       <workItem from="1524843308191" duration="1893000" />
       <workItem from="1525700207969" duration="2827000" />
-      <workItem from="1525784204267" duration="28469000" />
+      <workItem from="1525784204267" duration="29298000" />
+      <workItem from="1525872137398" duration="4817000" />
+      <workItem from="1525880083281" duration="1823000" />
     </task>
     <task id="LOCAL-00001" summary="made some cool changes">
       <created>1524060178418</created>
@@ -444,54 +377,60 @@
       <option name="project" value="LOCAL" />
       <updated>1524374570119</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="added dp solutions for task scheduling algorithm">
+      <created>1525829132851</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1525829132851</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="35785000" />
+    <option name="totallyTimeSpent" value="43254000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="2497" height="1612" extended-state="6" />
-    <editor active="true" />
+    <frame x="121" y="1" width="2440" height="1600" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26604387" />
-      <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" order="8" weight="0.32959327" />
-      <window_info anchor="bottom" id="CMake" order="7" sideWeight="0.49907675" weight="0.22159888" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15640599" />
+      <window_info anchor="bottom" id="TODO" order="5" />
+      <window_info anchor="bottom" id="CMake" order="6" sideWeight="0.49907675" weight="0.22159888" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.5009232" side_tool="true" weight="0.3305416" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32959327" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32959327" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32543105" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.07082749" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.3997195" />
+      <window_info anchor="bottom" id="Terminal" order="9" weight="0.07082749" />
+      <window_info anchor="bottom" id="Debug" order="11" weight="0.3913669" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Inspection" order="4" weight="0.4" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" id="Data View" order="3" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Cvs" order="3" weight="0.25" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32959327" />
+      <window_info anchor="bottom" id="Messages" order="10" weight="0.32805756" />
     </layout>
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2782291" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2782291" />
+      <window_info anchor="right" id="Data View" order="3" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="right" id="Data View" order="3" />
+      <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Messages" order="11" visible="true" weight="0.3299389" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32998326" />
       <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.5009232" side_tool="true" weight="0.3305416" />
       <window_info anchor="bottom" id="Version Control" order="9" />
-      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="CMake" order="10" sideWeight="0.49907675" weight="0.3305416" />
       <window_info id="Favorites" order="2" side_tool="true" />
     </layout-to-restore>
@@ -503,31 +442,37 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="made some cool changes" />
     <MESSAGE value="recitified compilation" />
     <MESSAGE value="recitified compilation on new os" />
     <MESSAGE value="tested porus lib to client flow" />
     <MESSAGE value="fixed read cases" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed read cases" />
+    <MESSAGE value="added dp solutions for task scheduling algorithm" />
+    <option name="LAST_COMMIT_MESSAGE" value="added dp solutions for task scheduling algorithm" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/task_scheduler/main.cpp</url>
-          <line>1</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/task_scheduler/main.cpp</url>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="9" />
+      <option name="time" value="15" />
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="CMakeRunConfiguration">
+        <watch expression="(float)input.task_size[i]/(input.worker_score[j]+(float)input.task_size[i]/WORKER_BANDWIDTH[j])" language="ObjectiveC" />
+        <watch expression="WORKER_LAMDA[j]*WORKER_ENERGY[j]" />
+        <watch expression=" input.worker_score[j]/size_category" />
+        <watch expression="input.task_size[i]" />
+        <watch expression="(5+input.worker_score[j])/size_category" />
+      </configuration>
+    </watches-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="watch">
+      <expression>
+        <expression-string>(float)input.task_size[i]/(input.worker_score[j]+(float)input.task_size[i]/WORKER_BANDWIDTH[j])</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
       <expression>
         <expression-string>*std::min_element(f-&gt;p,f-&gt;p+4)</expression-string>
         <language-id>ObjectiveC</language-id>
@@ -555,10 +500,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
           <caret line="13" selection-start-line="13" selection-end-line="13" selection-end-column="6" />
-          <folding>
-            <element signature="e#157#236#0" expanded="true" />
-            <element signature="e#494#535#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -595,10 +536,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
           <caret line="13" selection-start-line="13" selection-end-line="13" selection-end-column="6" />
-          <folding>
-            <element signature="e#157#236#0" expanded="true" />
-            <element signature="e#494#535#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -732,9 +669,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret line="27" column="26" selection-start-line="27" selection-start-column="26" selection-end-line="27" selection-end-column="26" />
-          <folding>
-            <element signature="e#123#140#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -742,9 +676,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret line="24" column="36" selection-start-line="24" selection-start-column="36" selection-end-line="24" selection-end-column="36" />
-          <folding>
-            <element signature="e#43#59#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -766,9 +697,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret line="30" column="39" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="39" />
-          <folding>
-            <element signature="e#101#118#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -783,9 +711,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state>
           <caret line="14" column="90" selection-start-line="14" selection-start-column="90" selection-end-line="14" selection-end-column="90" />
-          <folding>
-            <element signature="e#43#62#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -800,9 +725,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="319">
           <caret line="11" column="26" selection-start-line="11" selection-start-column="20" selection-end-line="11" selection-end-column="26" />
-          <folding>
-            <element signature="e#43#64#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -810,44 +732,28 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="348">
           <caret line="12" selection-start-line="12" selection-end-line="12" />
-          <folding>
-            <element signature="e#113#132#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/test.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="827">
-          <caret line="1451" column="54" selection-start-line="1451" selection-start-column="49" selection-end-line="1451" selection-end-column="54" />
-          <folding>
-            <element signature="e#1697#1716#0" expanded="true" />
-            <element signature="e#11203#11270#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/test.cpp" />
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="290">
+        <state>
           <caret line="10" column="50" selection-start-line="10" selection-start-column="50" selection-end-line="10" selection-end-column="50" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-954">
+        <state>
           <caret line="39" column="37" selection-start-line="39" selection-start-column="37" selection-end-line="39" selection-end-column="37" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h">
+    <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="406">
-          <caret line="14" column="36" selection-start-line="14" selection-start-column="36" selection-end-line="14" selection-end-column="36" />
-          <folding>
-            <element signature="e#104#123#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="696">
+          <caret line="24" column="79" selection-start-line="24" selection-start-column="45" selection-end-line="24" selection-end-column="79" />
         </state>
       </provider>
     </entry>
@@ -855,55 +761,54 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="290">
           <caret line="10" column="2" selection-start-line="10" selection-start-column="2" selection-end-line="10" selection-end-column="2" />
-          <folding>
-            <element signature="e#108#122#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h">
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="332">
-          <caret line="24" column="79" selection-start-line="24" selection-start-column="45" selection-end-line="24" selection-end-column="79" />
+        <state relative-caret-position="45849">
+          <caret line="1581" column="34" selection-start-line="1581" selection-start-column="34" selection-end-line="1581" selection-end-column="35" />
+          <folding>
+            <element signature="e#1756#1775#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="203">
-          <caret line="7" column="25" selection-start-line="7" selection-start-column="25" selection-end-line="7" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="259">
-          <caret line="1581" selection-start-line="1581" selection-end-line="1581" />
-          <folding>
-            <element signature="e#1756#1775#0" expanded="true" />
-            <element signature="e#10596#10663#0" expanded="true" />
-          </folding>
+          <caret line="7" column="40" selection-start-line="7" selection-start-column="40" selection-end-line="7" selection-end-column="40" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/constants.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="562">
-          <caret line="30" column="34" selection-start-line="30" selection-start-column="28" selection-end-line="30" selection-end-column="34" />
+        <state relative-caret-position="870">
+          <caret line="30" column="9" selection-start-line="30" selection-start-column="9" selection-end-line="30" selection-end-column="9" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/data_structures.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="670">
-          <caret line="150" column="66" selection-start-line="150" selection-start-column="66" selection-end-line="150" selection-end-column="66" />
+        <state relative-caret-position="4002">
+          <caret line="138" column="9" selection-start-line="138" selection-start-column="9" selection-end-line="138" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="377">
+          <caret line="13" column="22" selection-start-line="13" selection-start-column="22" selection-end-line="13" selection-end-column="22" />
+          <folding>
+            <element signature="e#104#123#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/task_scheduler/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="32" column="32" lean-forward="true" selection-start-line="32" selection-start-column="32" selection-end-line="32" selection-end-column="32" />
+        <state relative-caret-position="551">
+          <caret line="19" column="30" selection-start-line="19" selection-start-column="30" selection-end-line="19" selection-end-column="30" />
           <folding>
             <element signature="e#3#41#0" expanded="true" />
           </folding>
@@ -912,8 +817,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="261">
-          <caret line="9" column="30" lean-forward="true" selection-start-line="9" selection-start-column="30" selection-end-line="9" selection-end-column="30" />
+        <state relative-caret-position="928">
+          <caret line="32" column="25" selection-start-line="32" selection-start-column="25" selection-end-line="32" selection-end-column="25" />
           <folding>
             <element signature="e#43#64#0" expanded="true" />
           </folding>

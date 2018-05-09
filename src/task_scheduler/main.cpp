@@ -14,19 +14,13 @@ int main() {
     int worker_capacity[4] = {2, 5, 5, 5};
     solver_input input(tasks,workers);
     for(auto i=0;i<tasks;i++){
-        input.task_size[i]=1+i/5;
-    }
-    for(auto i=0;i<tasks;i++){
-        input.task_size[i]=1+i/5;
+        input.task_size[i]=64+i*100/5;
     }
     for(auto i=0;i<workers;i++){
-        input.worker_score[i]=1+i/5;
+        input.worker_score[i]=(i+1);
     }
     for(auto i=0;i<workers;i++){
-        input.worker_capacity[i]=i+2;
-    }
-    for(auto i=0;i<tasks;i++){
-        input.task_value[i]=1;
+        input.worker_capacity[i]=64+i*1000/5;
     }
     input.num_task = tasks;
     DPSolver solver=DPSolver();

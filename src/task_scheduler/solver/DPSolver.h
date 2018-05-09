@@ -10,7 +10,8 @@
 
 
 class DPSolver : public solver<solver_output, solver_input> {
-
+private:
+    int* calculate_values(solver_input input,int num_bins);
 public:
     solver_output solve(solver_input input) override;
 };

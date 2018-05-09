@@ -5,5 +5,5 @@
 #include "GreedySolver.h"
 
 solver_output GreedySolver::solve(solver_input input) {
-    return solver_output();
+    return solver_output(input.num_task);
 }
