@@ -840,6 +840,87 @@ src/task_scheduler/main.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s
 .PHONY : src/task_scheduler/main.cpp.s
 
+src/task_scheduler/solver/DPSolver.o: src/task_scheduler/solver/DPSolver.cpp.o
+
+.PHONY : src/task_scheduler/solver/DPSolver.o
+
+# target to build an object file
+src/task_scheduler/solver/DPSolver.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/DPSolver.cpp.o
+.PHONY : src/task_scheduler/solver/DPSolver.cpp.o
+
+src/task_scheduler/solver/DPSolver.i: src/task_scheduler/solver/DPSolver.cpp.i
+
+.PHONY : src/task_scheduler/solver/DPSolver.i
+
+# target to preprocess a source file
+src/task_scheduler/solver/DPSolver.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/DPSolver.cpp.i
+.PHONY : src/task_scheduler/solver/DPSolver.cpp.i
+
+src/task_scheduler/solver/DPSolver.s: src/task_scheduler/solver/DPSolver.cpp.s
+
+.PHONY : src/task_scheduler/solver/DPSolver.s
+
+# target to generate assembly for a file
+src/task_scheduler/solver/DPSolver.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/DPSolver.cpp.s
+.PHONY : src/task_scheduler/solver/DPSolver.cpp.s
+
+src/task_scheduler/solver/GreedySolver.o: src/task_scheduler/solver/GreedySolver.cpp.o
+
+.PHONY : src/task_scheduler/solver/GreedySolver.o
+
+# target to build an object file
+src/task_scheduler/solver/GreedySolver.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/GreedySolver.cpp.o
+.PHONY : src/task_scheduler/solver/GreedySolver.cpp.o
+
+src/task_scheduler/solver/GreedySolver.i: src/task_scheduler/solver/GreedySolver.cpp.i
+
+.PHONY : src/task_scheduler/solver/GreedySolver.i
+
+# target to preprocess a source file
+src/task_scheduler/solver/GreedySolver.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/GreedySolver.cpp.i
+.PHONY : src/task_scheduler/solver/GreedySolver.cpp.i
+
+src/task_scheduler/solver/GreedySolver.s: src/task_scheduler/solver/GreedySolver.cpp.s
+
+.PHONY : src/task_scheduler/solver/GreedySolver.s
+
+# target to generate assembly for a file
+src/task_scheduler/solver/GreedySolver.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/GreedySolver.cpp.s
+.PHONY : src/task_scheduler/solver/GreedySolver.cpp.s
+
+src/task_scheduler/solver/knapsack.o: src/task_scheduler/solver/knapsack.cpp.o
+
+.PHONY : src/task_scheduler/solver/knapsack.o
+
+# target to build an object file
+src/task_scheduler/solver/knapsack.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/knapsack.cpp.o
+.PHONY : src/task_scheduler/solver/knapsack.cpp.o
+
+src/task_scheduler/solver/knapsack.i: src/task_scheduler/solver/knapsack.cpp.i
+
+.PHONY : src/task_scheduler/solver/knapsack.i
+
+# target to preprocess a source file
+src/task_scheduler/solver/knapsack.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/knapsack.cpp.i
+.PHONY : src/task_scheduler/solver/knapsack.cpp.i
+
+src/task_scheduler/solver/knapsack.s: src/task_scheduler/solver/knapsack.cpp.s
+
+.PHONY : src/task_scheduler/solver/knapsack.s
+
+# target to generate assembly for a file
+src/task_scheduler/solver/knapsack.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/knapsack.cpp.s
+.PHONY : src/task_scheduler/solver/knapsack.cpp.s
+
 src/worker/main.o: src/worker/main.cpp.o
 
 .PHONY : src/worker/main.o
@@ -990,6 +1071,15 @@ help:
 	@echo "... src/task_scheduler/main.o"
 	@echo "... src/task_scheduler/main.i"
 	@echo "... src/task_scheduler/main.s"
+	@echo "... src/task_scheduler/solver/DPSolver.o"
+	@echo "... src/task_scheduler/solver/DPSolver.i"
+	@echo "... src/task_scheduler/solver/DPSolver.s"
+	@echo "... src/task_scheduler/solver/GreedySolver.o"
+	@echo "... src/task_scheduler/solver/GreedySolver.i"
+	@echo "... src/task_scheduler/solver/GreedySolver.s"
+	@echo "... src/task_scheduler/solver/knapsack.o"
+	@echo "... src/task_scheduler/solver/knapsack.i"
+	@echo "... src/task_scheduler/solver/knapsack.s"
 	@echo "... src/worker/main.o"
 	@echo "... src/worker/main.i"
 	@echo "... src/worker/main.s"

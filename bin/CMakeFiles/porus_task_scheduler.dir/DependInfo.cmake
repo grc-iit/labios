@@ -15,6 +15,9 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o"
   "/opt/projects/porus/src/common/task_handler/task_handler.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o"
   "/opt/projects/porus/src/task_scheduler/main.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o"
+  "/opt/projects/porus/src/task_scheduler/solver/DPSolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/DPSolver.cpp.o"
+  "/opt/projects/porus/src/task_scheduler/solver/GreedySolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/GreedySolver.cpp.o"
+  "/opt/projects/porus/src/task_scheduler/solver/knapsack.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/knapsack.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

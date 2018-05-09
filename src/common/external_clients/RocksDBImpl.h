@@ -8,9 +8,9 @@
 
 #include "../client_interface/DistributedHashMap.h"
 #ifdef ROCKS_P
-#include <rocksdb/db.h>
-#include <rocksdb/slice.h>
-#include <rocksdb/options.h>
+#include <rocksdb/db.enumeration_index>
+#include <rocksdb/slice.enumeration_index>
+#include <rocksdb/options.enumeration_index>
 #endif
 class RocksDBImpl: public DistributedHashMap{
 private:

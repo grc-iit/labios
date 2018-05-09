@@ -135,6 +135,29 @@ struct read_task:public task{
     }
 };
 
-
-
+struct solver_input{
+    int *worker_score;
+    int num_task;
+    int *task_size;
+    int *task_value;
+    int *worker_capacity;
+    solver_input(int num_task,int num_workers){
+        worker_score=new int[num_workers];
+        worker_capacity=new int[num_workers];
+        task_size=new int[num_task];
+        task_value=new int[num_task];
+    }
+    ~solver_input(){
+        delete(worker_score,worker_capacity,task_size,task_value);
+    }
+};
+struct solver_output{
+    size_t max_value;
+    int solution[MAX_TASK_COUNT];
+    std::unordered_map<int,std::vector<int>> worker_task_map;
+    solver_output():worker_task_map(){
+    }
+    ~solver_output(){
+    }
+};
 #endif //PORUS_MAIN_STRUCTURE_H

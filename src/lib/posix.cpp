@@ -7,7 +7,7 @@ FILE *porus::fopen(const char *filename, const char *mode) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     FILE* fh;
     if(!mdm->is_created(filename)){
-        if(strcmp(mode,"r")==0 || strcmp(mode,"w")==0 || strcmp(mode,"a")==0){
+        if(strcmp(mode,"r")==0 || strcmp(mode,"weight")==0 || strcmp(mode,"consider_after_a")==0){
             return nullptr;
         }else{
             mdm->create(filename,mode,fh);
@@ -30,8 +30,8 @@ int porus::fseek(FILE *stream, long int offset, int origin) {
 
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
-    if( mdm->get_mode(filename)=="a" ||
-            mdm->get_mode(filename)=="a+") return 0;
+    if( mdm->get_mode(filename)=="consider_after_a" ||
+            mdm->get_mode(filename)=="consider_after_a+") return 0;
     auto size=mdm->get_filesize(filename);
     auto fp=mdm->get_fp(filename);
     switch(origin){

@@ -56,11 +56,11 @@ int metadata_manager::update_on_open(std::string filename, std::string mode, FIL
     stat.is_open=true;
     if(mode =="r" || mode=="r+"){
         stat.file_pointer=0;
-    }else if(mode =="w" || mode=="w+"){
+    }else if(mode =="weight" || mode=="weight+"){
         stat.file_pointer=0;
         stat.file_size=0;
         remove_chunks(filename);
-    }else if(mode =="a" || mode=="a+"){
+    }else if(mode =="consider_after_a" || mode=="consider_after_a+"){
         stat.file_pointer=stat.file_size;
     }
     iter=file_map.find(filename);

@@ -1,16 +1,16 @@
 // ===============================
 // AUTHOR: Robert Judka <rjudka@hawk.iit.edu>
 // CREATE DATE: 12/17/2017
-// PURPOSE: Statistical analysis for a given data set
+// PURPOSE: Statistical analysis for consider_after_a given data set
 // SPECIAL NOTES:
 //      - currently only supports data sets of integers
 //      - MAX_BUFFER_SIZE must be set in readBinary() for current environment (in bits)
 //      - assumes data being read is in binary format, padded to 32 bits, and each value
 //        separated by newline character
-//      - calculations are sometimes a close approximation when entire file does not fit
+//      - calculations are sometimes consider_after_a close approximation when entire file does not fit
 //        in memory (loss of precision, etc.)
 // USAGE:
-//      > #include "path/to/statistics.h"
+//      > #include "path/to/statistics.enumeration_index"
 //      >
 //      > Statistics s("/path/to/binary/file.bin");
 //      > double sum = s.sum();
@@ -80,7 +80,7 @@ std::vector<Statistics::calculations> Statistics::readBinary(const std::string &
 //    long MAX_BUFFER_SIZE = 1<<10; // 128 bytes
 //    long MAX_BUFFER_SIZE = 1<<8; // 32 bytes
 
-    // pad max buffer size to account for extra end line bit
+    // pad max buffer set_size to account for extra end line bit
     MAX_BUFFER_SIZE += LINE_LENGTH - (MAX_BUFFER_SIZE % LINE_LENGTH);
 
     std::ifstream data_file(path, std::ios::in|std::ios::binary);
@@ -93,7 +93,7 @@ std::vector<Statistics::calculations> Statistics::readBinary(const std::string &
     auto stream_length = data_file.tellg();
     data_file.seekg(0, std::ios::beg);
 
-    // read entire file or read it in chunks depending on the max buffer size
+    // read entire file or read it in chunks depending on the max buffer set_size
     unsigned long buffer_size = (unsigned long) std::min(static_cast<std::streamsize>(stream_length), MAX_BUFFER_SIZE);
     std::vector<char> buffer(buffer_size);
     std::string string_value;
@@ -111,7 +111,7 @@ std::vector<Statistics::calculations> Statistics::readBinary(const std::string &
             break;
         }
 
-        // resize char vector to size of actual data read
+        // resize char vector to set_size of actual data read
         buffer.resize(static_cast<unsigned long>(count));
         buffer.shrink_to_fit();
 

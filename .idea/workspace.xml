@@ -18,28 +18,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1d98b859-b25b-47e6-9e30-8b87bba0f4c5" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/task_scheduler/solver/solver.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/CMakeOutput.log" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/CMakeOutput.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/Makefile2" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/Makefile2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/DependInfo.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/cmake_clean.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.bin" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/DependInfo.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/cmake_clean.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/DependInfo.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/cmake_clean.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/link.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/progress.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/DependInfo.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/build.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/cmake_clean.cmake" afterDir="false" />
@@ -47,35 +46,30 @@
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/DependInfo.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/cmake_clean.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/progress.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/DependInfo.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/DependInfo.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/build.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/build.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/cmake_clean.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/cmake_clean.cmake" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/flags.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/flags.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/link.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/link.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/progress.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/progress.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/progress.marks" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/progress.marks" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/porus_client" beforeDir="false" afterPath="$PROJECT_DIR$/bin/porus_client" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/porus_lib" beforeDir="false" afterPath="$PROJECT_DIR$/bin/porus_lib" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/porus_client" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/porus_lib" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/porus_main.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/bin/porus_main.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/System.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/System.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/System.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/System.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/client_interface/DistributedQueue.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/client_interface/DistributedQueue.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/client_interface/DistributedQueue.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/client_interface/DistributedQueue.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/external_libs/cereal/cereal.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/cereal.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/license.txt" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/license.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/manual.html" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/external/rapidxml/manual.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/common/constants.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/constants.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/data_manager/data_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/data_manager/data_manager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/data_manager/data_manager.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/data_manager/data_manager.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/enumerations.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/enumerations.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/data_structures.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/data_structures.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/task_handler/task_handler.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/task_handler/task_handler.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/driver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/driver.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/posix.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/posix.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/task_scheduler/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/worker/program_repo/statistics.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/worker/program_repo/statistics.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/bin/" />
@@ -88,113 +82,148 @@
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="data_manager.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/data_manager/data_manager.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="195">
-              <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DistributedQueue.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/client_interface/DistributedQueue.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="27" column="26" selection-start-line="27" selection-start-column="26" selection-end-line="27" selection-end-column="26" />
-              <folding>
-                <element signature="e#123#140#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="task_handler.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/task_handler/task_handler.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="24" column="36" selection-start-line="24" selection-start-column="36" selection-end-line="24" selection-end-column="36" />
-              <folding>
-                <element signature="e#43#59#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="data_manager.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/data_manager/data_manager.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="330">
-              <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NatsImpl.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/external_clients/NatsImpl.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="9" selection-start-line="9" selection-end-line="9" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NatsImpl.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/external_clients/NatsImpl.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="11" column="26" selection-start-line="11" selection-start-column="20" selection-end-line="11" selection-end-column="26" />
-              <folding>
-                <element signature="e#43#64#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="195">
-              <caret line="13" column="1116" selection-start-line="13" selection-start-column="1116" selection-end-line="13" selection-end-column="1116" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="System.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/System.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
-              <caret line="30" column="39" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="39" />
-              <folding>
-                <element signature="e#101#118#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="System.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/System.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="90" selection-start-line="14" selection-start-column="90" selection-end-line="14" selection-end-column="90" />
-              <folding>
-                <element signature="e#43#62#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="metadata_manager.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="632">
-              <caret line="218" column="39" selection-start-line="218" selection-start-column="39" selection-end-line="218" selection-end-column="39" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <splitter split-orientation="horizontal" split-proportion="0.5">
+      <split-first>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="290">
+                  <caret line="10" column="50" selection-start-line="10" selection-start-column="50" selection-end-line="10" selection-end-column="50" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="DPSolver.h" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="406">
+                  <caret line="14" column="36" selection-start-line="14" selection-start-column="36" selection-end-line="14" selection-end-column="36" />
+                  <folding>
+                    <element signature="e#104#123#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="driver.cpp" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="-954">
+                  <caret line="39" column="37" selection-start-line="39" selection-start-column="37" selection-end-line="39" selection-end-column="37" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="main.cpp" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/task_scheduler/main.cpp">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="493">
+                  <caret line="32" column="32" lean-forward="true" selection-start-line="32" selection-start-column="32" selection-end-line="32" selection-end-column="32" />
+                  <folding>
+                    <element signature="e#3#41#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="metadata_manager.h" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="332">
+                  <caret line="24" column="79" selection-start-line="24" selection-start-column="45" selection-end-line="24" selection-end-column="79" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="solver.h" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/solver.h">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="290">
+                  <caret line="10" column="2" selection-start-line="10" selection-start-column="2" selection-end-line="10" selection-end-column="2" />
+                  <folding>
+                    <element signature="e#108#122#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="DPSolver.cpp" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="261">
+                  <caret line="9" column="30" lean-forward="true" selection-start-line="9" selection-start-column="30" selection-end-line="9" selection-end-column="30" />
+                  <folding>
+                    <element signature="e#43#64#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="data_structures.h" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/common/data_structures.h">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="670">
+                  <caret line="150" column="66" selection-start-line="150" selection-start-column="66" selection-end-line="150" selection-end-column="66" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="GreedySolver.cpp" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="203">
+                  <caret line="7" column="25" selection-start-line="7" selection-start-column="25" selection-end-line="7" selection-end-column="25" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="constants.h" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/src/common/constants.h">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="562">
+                  <caret line="30" column="34" selection-start-line="30" selection-start-column="28" selection-end-line="30" selection-end-column="34" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf>
+          <file leaf-file-name="knapsack.cpp" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="259">
+                  <caret line="1581" selection-start-line="1581" selection-end-line="1581" />
+                  <folding>
+                    <element signature="e#1756#1775#0" expanded="true" />
+                    <element signature="e#10596#10663#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-second>
+    </splitter>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>MAXN</find>
+      <find>main</find>
+      <find>z1</find>
+      <find>x</find>
+      <find>definesolution2</find>
+      <find>DET</find>
+      <find>-&gt;y</find>
+      <find>partsort</find>
+      <find>multi</find>
+      <find>profit</find>
+      <find>pfree</find>
+      <find>DP</find>
+      <find>-&gt;y]</find>
+    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -213,7 +242,6 @@
         <option value="$PROJECT_DIR$/src/lib/driver.cpp" />
         <option value="$PROJECT_DIR$/src/common/client_interface/DistributedQueue.cpp" />
         <option value="$PROJECT_DIR$/src/common/enumerations.h" />
-        <option value="$PROJECT_DIR$/src/common/constants.h" />
         <option value="$PROJECT_DIR$/src/common/client_interface/DistributedQueue.h" />
         <option value="$PROJECT_DIR$/src/common/task_handler/task_handler.cpp" />
         <option value="$PROJECT_DIR$/src/System.h" />
@@ -223,7 +251,18 @@
         <option value="$PROJECT_DIR$/src/System.cpp" />
         <option value="$PROJECT_DIR$/src/common/external_clients/NatsImpl.h" />
         <option value="$PROJECT_DIR$/src/common/external_clients/NatsImpl.cpp" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/solver.h" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.h" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/test.cpp" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/knapsack.c" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp" />
+        <option value="$PROJECT_DIR$/src/common/constants.h" />
+        <option value="$PROJECT_DIR$/src/common/data_structures.h" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/main.cpp" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp" />
       </list>
     </option>
   </component>
@@ -237,7 +276,7 @@
     <packageJsonPaths />
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-5" />
     <option name="y" value="82" />
     <option name="width" value="3830" />
@@ -251,6 +290,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -273,357 +313,31 @@
               <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
               <item name="porus" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
-              <item name="porus" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
-              <item name="client_interface" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
-              <item name="porus" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
-              <item name="external_clients" type="462c0819:PsiDirectoryNode" />
+              <item name="task_scheduler" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
               <item name="porus" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="task_scheduler" type="462c0819:PsiDirectoryNode" />
+              <item name="solver" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../valgrind.sh" />
+    <property name="settings.editor.selected.configurable" value="preferences.externalTools" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/lib" />
       <recent name="$PROJECT_DIR$/src/common/client_interface" />
     </key>
-  </component>
-  <component name="RestoreUpdateTree" date="Moments ago" ActionInfo="_Update">
-    <UpdatedFiles>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Updated from server" />
-        <option name="myStatusName" value="Changed on server" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="CHANGED_ON_SERVER" />
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Updated" />
-          <option name="myStatusName" value="Changed" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="false" />
-          <option name="myId" value="UPDATED" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/.idea/workspace.xml</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/CMakeLists.txt</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/README.md</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/System.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/System.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/client/PorusClient.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/client/PorusClient.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/constants.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/data_manager/data_manager.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/external_clients/MemcacheDImpl.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/external_clients/serialization_manager.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/task_handler/task_handler.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/task_handler/task_handler.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/lib/driver.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/lib/posix.cpp</PATH>
-        </FILE-GROUP>
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Created" />
-          <option name="myStatusName" value="Created" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="false" />
-          <option name="myId" value="CREATED" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/access.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/archives/adapters.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/archives/binary.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/archives/json.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/archives/portable_binary.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/archives/xml.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/cereal.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/details/helpers.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/details/polymorphic_impl.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/details/polymorphic_impl_fwd.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/details/static_object.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/details/traits.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/details/util.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/base64.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/allocators.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/document.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/encodedstream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/encodings.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/error/en.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/error/error.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/filereadstream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/filewritestream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/fwd.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/biginteger.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/diyfp.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/dtoa.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/ieee754.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/itoa.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/meta.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/pow10.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/regex.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/stack.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/strfunc.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/strtod.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/internal/swap.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/istreamwrapper.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/memorybuffer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/memorystream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/msinttypes/inttypes.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/msinttypes/stdint.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/ostreamwrapper.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/pointer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/prettywriter.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/rapidjson.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/reader.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/schema.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/stream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/stringbuffer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidjson/writer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidxml/license.txt</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidxml/manual.html</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidxml/rapidxml.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidxml/rapidxml_iterators.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidxml/rapidxml_print.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/external/rapidxml/rapidxml_utils.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/macros.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/array.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/base_class.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/bitset.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/boost_variant.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/chrono.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/common.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/complex.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/concepts/pair_associative_container.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/deque.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/forward_list.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/functional.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/list.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/map.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/memory.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/polymorphic.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/queue.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/set.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/stack.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/string.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/tuple.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/unordered_map.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/unordered_set.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/utility.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/valarray.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/external_libs/cereal/types/vector.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/include/porus.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/client_interface/DistributedHashMap.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/client_interface/DistributedHashMap.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/client_interface/DistributedQueue.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/client_interface/DistributedQueue.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/data_structures.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/enumerations.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/exceptions.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/utilities.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/lib/mpi.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/lib/mpi.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/lib/posix.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/system_manager/main.cpp</PATH>
-        </FILE-GROUP>
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Deleted" />
-          <option name="myStatusName" value="Deleted" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="true" />
-          <option name="myId" value="REMOVED_FROM_REPOSITORY" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/include/posix.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/access.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/archives/adapters.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/archives/binary.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/archives/json.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/archives/portable_binary.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/archives/xml.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/cereal.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/details/helpers.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/details/polymorphic_impl.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/details/polymorphic_impl_fwd.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/details/static_object.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/details/traits.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/details/util.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/base64.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/allocators.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/document.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/encodedstream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/encodings.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/error/en.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/error/error.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/filereadstream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/filewritestream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/fwd.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/biginteger.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/diyfp.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/dtoa.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/ieee754.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/itoa.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/meta.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/pow10.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/regex.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/stack.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/strfunc.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/strtod.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/internal/swap.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/istreamwrapper.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/memorybuffer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/memorystream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/msinttypes/inttypes.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/msinttypes/stdint.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/ostreamwrapper.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/pointer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/prettywriter.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/rapidjson.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/reader.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/schema.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/stream.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/stringbuffer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidjson/writer.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidxml/license.txt</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidxml/manual.html</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidxml/rapidxml.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidxml/rapidxml_iterators.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidxml/rapidxml_print.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/external/rapidxml/rapidxml_utils.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/macros.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/array.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/base_class.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/bitset.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/boost_variant.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/chrono.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/common.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/complex.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/concepts/pair_associative_container.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/deque.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/forward_list.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/functional.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/list.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/map.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/memory.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/polymorphic.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/queue.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/set.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/stack.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/string.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/tuple.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/unordered_map.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/unordered_set.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/utility.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/valarray.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/libs/cereal/types/vector.hpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/enumeration.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/exception.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/external_clients/DistributedHashMap.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/external_clients/DistributedHashMap.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/external_clients/DistributedQueue.cpp</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/external_clients/DistributedQueue.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/structure.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/common/utility.h</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/server/main.cpp</PATH>
-        </FILE-GROUP>
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Restored" />
-          <option name="myStatusName" value="Will be restored" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="false" />
-          <option name="myId" value="RESTORED" />
-        </FILE-GROUP>
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Modified" />
-        <option name="myStatusName" value="Modified" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MODIFIED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Skipped" />
-        <option name="myStatusName" value="Skipped" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="SKIPPED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged with conflicts" />
-        <option name="myStatusName" value="Will be merged with conflicts" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED_WITH_CONFLICTS" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged with tree conflicts" />
-        <option name="myStatusName" value="Merged with tree conflicts" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED_WITH_TREE_CONFLICT" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged with property conflicts" />
-        <option name="myStatusName" value="Will be merged with property conflicts" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED_WITH_PROPERTY_CONFLICT" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged" />
-        <option name="myStatusName" value="Will be merged" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Not in repository" />
-        <option name="myStatusName" value="Not in repository" />
-        <option name="mySupportsDeletion" value="true" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="UNKNOWN" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Locally added" />
-        <option name="myStatusName" value="Locally added" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="LOCALLY_ADDED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Locally removed" />
-        <option name="myStatusName" value="Locally removed" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="LOCALLY_REMOVED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Switched" />
-        <option name="myStatusName" value="Switched" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="SWITCHED" />
-      </FILE-GROUP>
-    </UpdatedFiles>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -637,11 +351,11 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.Build All">
-    <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all" />
-    <configuration name="porus_client" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_client" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_client" />
-    <configuration name="porus_lib" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_lib" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_lib" />
-    <configuration name="porus_server" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_server" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_server" />
+  <component name="RunManager" selected="Application.porus_task_scheduler">
+    <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_task_scheduler" EXPLICIT_BUILD_TARGET_NAME="all" />
+    <configuration name="porus_client" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_client" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_task_scheduler" />
+    <configuration name="porus_lib" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_lib" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_task_scheduler" />
+    <configuration name="porus_server" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_server" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_task_scheduler" />
     <configuration name="porus_task_scheduler" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_task_scheduler" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_task_scheduler" />
     <configuration name="porus_worker" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker" />
     <configuration name="porus_worker_manager" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker_manager" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker_manager" />
@@ -662,7 +376,7 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="237dac12-23e4-4b5e-82f0-e75bb25cb213" name="Default" comment="" />
+      <changelist id="1d98b859-b25b-47e6-9e30-8b87bba0f4c5" name="Default" comment="" />
       <created>1524058223600</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
@@ -686,6 +400,7 @@
       <workItem from="1524778069100" duration="1789000" />
       <workItem from="1524843308191" duration="1893000" />
       <workItem from="1525700207969" duration="2827000" />
+      <workItem from="1525784204267" duration="28469000" />
     </task>
     <task id="LOCAL-00001" summary="made some cool changes">
       <created>1524060178418</created>
@@ -733,42 +448,53 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7316000" />
+    <option name="totallyTimeSpent" value="35785000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="64" y="-11" width="2497" height="1612" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2564725" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.26604387" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" order="8" visible="true" weight="0.3299389" />
-      <window_info anchor="bottom" id="CMake" order="7" weight="0.33333334" />
-      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32926002" />
-      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32954547" />
+      <window_info anchor="bottom" id="Messages" order="8" weight="0.32959327" />
+      <window_info anchor="bottom" id="CMake" order="7" sideWeight="0.49907675" weight="0.22159888" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.5009232" side_tool="true" weight="0.3305416" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32959327" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32959327" />
+      <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.3299389" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39850646" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.07082749" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.3997195" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.11975732" />
-      <window_info id="Structure" order="1" weight="0.25" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" id="Data View" order="3" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+    </layout>
+    <layout-to-restore>
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2782291" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.32998326" />
+      <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="right" id="Data View" order="3" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Messages" order="11" visible="true" weight="0.3299389" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.32998326" />
+      <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.5009232" side_tool="true" weight="0.3305416" />
+      <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.5009232" side_tool="true" weight="0.3305416" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="CMake" order="7" sideWeight="0.49907675" weight="0.3305416" />
+      <window_info anchor="bottom" id="CMake" order="10" sideWeight="0.49907675" weight="0.3305416" />
       <window_info id="Favorites" order="2" side_tool="true" />
-    </layout>
+    </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
@@ -784,21 +510,47 @@
     <MESSAGE value="fixed read cases" />
     <option name="LAST_COMMIT_MESSAGE" value="fixed read cases" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/task_scheduler/main.cpp</url>
+          <line>1</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/task_scheduler/main.cpp</url>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="9" />
+    </breakpoint-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="watch">
+      <expression>
+        <expression-string>*std::min_element(f-&gt;p,f-&gt;p+4)</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>a-&gt;p</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>a-&gt;j</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>a-&gt;b</expression-string>
+        <language-id>ObjectiveC</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/structure.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="969">
-          <caret line="57" column="16" selection-start-line="57" selection-start-column="16" selection-end-line="57" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
@@ -838,59 +590,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/structure.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="969">
-          <caret line="57" column="16" selection-start-line="57" selection-start-column="16" selection-end-line="57" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="13" selection-start-line="13" selection-end-line="13" selection-end-column="6" />
-          <folding>
-            <element signature="e#157#236#0" expanded="true" />
-            <element signature="e#494#535#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="884">
-          <caret line="52" column="6" selection-start-line="52" selection-start-column="6" selection-end-line="52" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/client/PorusClient.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1887">
-          <caret line="111" column="59" selection-start-line="111" selection-start-column="59" selection-end-line="111" selection-end-column="59" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/client/main.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" selection-start-line="2" selection-end-line="2" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/structure.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="969">
-          <caret line="57" column="16" selection-start-line="57" selection-start-column="16" selection-end-line="57" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/structure.h" />
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/RocksDBImpl.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="221">
@@ -944,20 +644,8 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/external_clients/DistributedQueue.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="21" column="50" selection-start-line="21" selection-start-column="50" selection-end-line="21" selection-end-column="50" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/external_clients/DistributedQueue.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="20" column="28" selection-start-line="20" selection-start-column="28" selection-end-line="20" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/external_clients/DistributedQueue.h" />
+    <entry file="file://$PROJECT_DIR$/src/common/external_clients/DistributedQueue.cpp" />
     <entry file="file://$PROJECT_DIR$/../../install/include/libmemcached-1.0/get.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="285">
@@ -965,13 +653,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/libs/cereal/archives/binary.hpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="267">
-          <caret line="104" selection-start-line="104" selection-end-line="104" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/libs/cereal/archives/binary.hpp" />
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/serialization_manager.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="150">
@@ -979,27 +661,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/structure.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="435">
-          <caret line="29" column="11" selection-start-line="29" selection-start-column="11" selection-end-line="29" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/enumeration.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="27" column="19" selection-start-line="26" selection-start-column="4" selection-end-line="27" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/external_clients/DistributedHashMap.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" column="24" selection-start-line="23" selection-start-column="24" selection-end-line="23" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/structure.h" />
+    <entry file="file://$PROJECT_DIR$/src/common/enumeration.h" />
+    <entry file="file://$PROJECT_DIR$/src/common/external_clients/DistributedHashMap.h" />
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/serialization_manager.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="510">
@@ -1011,20 +675,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1260">
           <caret line="84" column="74" selection-start-line="84" selection-start-column="74" selection-end-line="84" selection-end-column="74" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="5" selection-start-line="23" selection-start-column="4" selection-end-line="26" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="585">
-          <caret line="39" column="37" selection-start-line="39" selection-start-column="37" selection-end-line="39" selection-end-column="37" />
         </state>
       </provider>
     </entry>
@@ -1042,9 +692,6 @@
           <second_editor />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/client_interface/DistributedHashMap.cpp">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/MemcacheDImpl.h">
       <provider selected="true" editor-type-id="text-editor">
@@ -1074,13 +721,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/constants.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="20" column="6" selection-start-line="20" selection-start-column="6" selection-end-line="20" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/common/enumerations.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="795">
@@ -1090,7 +730,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/client_interface/DistributedQueue.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
+        <state>
           <caret line="27" column="26" selection-start-line="27" selection-start-column="26" selection-end-line="27" selection-end-column="26" />
           <folding>
             <element signature="e#123#140#0" expanded="true" />
@@ -1100,7 +740,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/task_handler/task_handler.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
+        <state>
           <caret line="24" column="36" selection-start-line="24" selection-start-column="36" selection-end-line="24" selection-end-column="36" />
           <folding>
             <element signature="e#43#59#0" expanded="true" />
@@ -1110,21 +750,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/data_manager/data_manager.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
+        <state>
           <caret line="25" column="18" selection-start-line="25" selection-start-column="18" selection-end-line="25" selection-end-column="18" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/data_manager/data_manager.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
+        <state>
           <caret line="13" column="38" selection-start-line="13" selection-start-column="38" selection-end-line="13" selection-end-column="38" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/System.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
+        <state>
           <caret line="30" column="39" selection-start-line="30" selection-start-column="4" selection-end-line="30" selection-end-column="39" />
           <folding>
             <element signature="e#101#118#0" expanded="true" />
@@ -1134,14 +774,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="632">
+        <state>
           <caret line="218" column="39" selection-start-line="218" selection-start-column="39" selection-end-line="218" selection-end-column="39" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/System.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
+        <state>
           <caret line="14" column="90" selection-start-line="14" selection-start-column="90" selection-end-line="14" selection-end-column="90" />
           <folding>
             <element signature="e#43#62#0" expanded="true" />
@@ -1151,14 +791,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/NatsImpl.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
+        <state>
           <caret line="9" selection-start-line="9" selection-end-line="9" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/NatsImpl.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
+        <state relative-caret-position="319">
           <caret line="11" column="26" selection-start-line="11" selection-start-column="20" selection-end-line="11" selection-end-column="26" />
           <folding>
             <element signature="e#43#64#0" expanded="true" />
@@ -1166,10 +806,117 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="348">
+          <caret line="12" selection-start-line="12" selection-end-line="12" />
+          <folding>
+            <element signature="e#113#132#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/test.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="827">
+          <caret line="1451" column="54" selection-start-line="1451" selection-start-column="49" selection-end-line="1451" selection-end-column="54" />
+          <folding>
+            <element signature="e#1697#1716#0" expanded="true" />
+            <element signature="e#11203#11270#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="13" column="1116" selection-start-line="13" selection-start-column="1116" selection-end-line="13" selection-end-column="1116" />
+        <state relative-caret-position="290">
+          <caret line="10" column="50" selection-start-line="10" selection-start-column="50" selection-end-line="10" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-954">
+          <caret line="39" column="37" selection-start-line="39" selection-start-column="37" selection-end-line="39" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="406">
+          <caret line="14" column="36" selection-start-line="14" selection-start-column="36" selection-end-line="14" selection-end-column="36" />
+          <folding>
+            <element signature="e#104#123#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/solver.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="290">
+          <caret line="10" column="2" selection-start-line="10" selection-start-column="2" selection-end-line="10" selection-end-column="2" />
+          <folding>
+            <element signature="e#108#122#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="332">
+          <caret line="24" column="79" selection-start-line="24" selection-start-column="45" selection-end-line="24" selection-end-column="79" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="203">
+          <caret line="7" column="25" selection-start-line="7" selection-start-column="25" selection-end-line="7" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/knapsack.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="259">
+          <caret line="1581" selection-start-line="1581" selection-end-line="1581" />
+          <folding>
+            <element signature="e#1756#1775#0" expanded="true" />
+            <element signature="e#10596#10663#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/constants.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="562">
+          <caret line="30" column="34" selection-start-line="30" selection-start-column="28" selection-end-line="30" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/data_structures.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="670">
+          <caret line="150" column="66" selection-start-line="150" selection-start-column="66" selection-end-line="150" selection-end-column="66" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="32" column="32" lean-forward="true" selection-start-line="32" selection-start-column="32" selection-end-line="32" selection-end-column="32" />
+          <folding>
+            <element signature="e#3#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="261">
+          <caret line="9" column="30" lean-forward="true" selection-start-line="9" selection-start-column="30" selection-end-line="9" selection-end-column="30" />
+          <folding>
+            <element signature="e#43#64#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

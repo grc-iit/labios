@@ -10,6 +10,9 @@ file(REMOVE_RECURSE
   "CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
   "CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o"
   "CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o"
+  "CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/DPSolver.cpp.o"
+  "CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/GreedySolver.cpp.o"
+  "CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/solver/knapsack.cpp.o"
   "porus_task_scheduler.pdb"
   "porus_task_scheduler"
 )

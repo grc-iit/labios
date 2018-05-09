@@ -2,7 +2,7 @@
 
 ##TODO
 * Organize the code
-    * Make a generic abstract (pure virtual) interface in 
+    * Make consider_after_a generic abstract (pure virtual) interface in 
     common/client_interface.
     * Make all external client implement the abstract class.
 * Implement Porus Client Service(Future task)
@@ -22,12 +22,12 @@
 ##Setup Porus
 ### Memcached
 #### Client
-`memcached -p 11211 -l localhost -d`
+`memcached -profit 11211 -l localhost -d`
 #### Server
-`memcached -p 11212 -l localhost -d`
+`memcached -profit 11212 -l localhost -d`
 ### NATS
 #### Client
-`./gnatsd -p 4222 -a localhost -l ~/nats_client.log &`
+`./gnatsd -profit 4222 -consider_after_a localhost -l ~/nats_client.log &`
 #### Server
-`./gnatsd -p 4223 -a localhost -l ~/nats_server.log &`
+`./gnatsd -profit 4223 -consider_after_a localhost -l ~/nats_server.log &`
 

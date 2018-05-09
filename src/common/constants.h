@@ -27,4 +27,8 @@ const queue_impl_type queue_impl_type_t=queue_impl_type::NATS;
 const size_t io_unit_max=2*1024*1024;
 const std::string TASK_SUBJECT="TASK";
 const std::string KEY_SEPARATOR="#";
+const size_t MAX_WORKER_COUNT=4;
+const size_t MAX_TASK_COUNT=256000;
+const size_t WORKER_BANDWIDTH[MAX_WORKER_COUNT]={125,125,125,125};
+const float WORKER_ENERGY[MAX_WORKER_COUNT]={.1,.1,.1,.1};
 #endif //PORUS_MAIN_CONSTANTS_H

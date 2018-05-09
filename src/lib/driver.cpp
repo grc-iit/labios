@@ -59,7 +59,7 @@ int main(int argc, char** argv){
     return return_val;
 }
 int simple_write(){
-    FILE* fh=porus::fopen("test","w+");
+    FILE* fh=porus::fopen("test","weight+");
     char* t="hello";
     porus::fwrite(t,1,5,fh);
     porus::fclose(fh);
@@ -76,7 +76,7 @@ int simple_read(){
     return 0;
 }
 int multi_write(){
-    FILE* fh=porus::fopen("test","w+");
+    FILE* fh=porus::fopen("test","weight+");
     size_t size_of_io=16 * 1024 * 1024;
     char* t= static_cast<char *>(calloc(size_of_io, 1));
     for(int i=0;i<1024;i++){
