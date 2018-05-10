@@ -9,13 +9,13 @@
 #include "../client_interface/distributed_queue.h"
 
 
-class NatsImpl: public DistributedQueue {
+class NatsImpl: public distributed_queue {
 private:
     natsConnection      *nc  = NULL;
     natsSubscription    *sub = NULL;
 
 public:
-    NatsImpl(Service service,std::string url): DistributedQueue(service) {
+    NatsImpl(service service,std::string url): distributed_queue(service) {
         natsConnection_ConnectTo(&nc, url.c_str());
     }
     int publish_task(task *task_t, std::string subject) override;

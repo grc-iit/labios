@@ -14,7 +14,7 @@ private:
     int* calculate_values(solver_input input,int num_bins);
 
 public:
-    DPSolver(Service service):solver(service){}
+    DPSolver(service service):solver(service){}
     solver_output solve(solver_input input) override;
 };
 

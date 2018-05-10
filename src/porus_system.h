@@ -17,26 +17,26 @@
 #include "common/solver/solver.h"
 #include <mpi.h>
 #include <string>
-class System {
+class porus_system {
 private:
-    static std::shared_ptr<System> instance;
+    static std::shared_ptr<porus_system> instance;
     int application_id;
-    Service service;
-    System(Service service):service(service){
+    service service_i;
+    porus_system(service service):service_i(service){
         init(service);
 
     }
 
-    int init(Service service);
+    int init(service service);
 public:
-    std::shared_ptr<solver> solver;
+    std::shared_ptr<solver> solver_i;
     std::shared_ptr<distributed_hashmap> map_client,map_server;
-    std::shared_ptr<DistributedQueue> queue_client;
-    std::shared_ptr<DistributedQueue> worker_queue[MAX_WORKER_COUNT];
+    std::shared_ptr<distributed_queue> queue_client;
+    std::shared_ptr<distributed_queue> worker_queue[MAX_WORKER_COUNT];
     int rank,client_rank;
     MPI_Comm client_comm;
-    inline static std::shared_ptr<System> getInstance(Service service){
-        return instance== nullptr ? instance=std::shared_ptr<System>(new System(service))
+    inline static std::shared_ptr<porus_system> getInstance(service service){
+        return instance== nullptr ? instance=std::shared_ptr<porus_system>(new porus_system(service))
                                   : instance;
     }
 

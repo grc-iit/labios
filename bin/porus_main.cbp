@@ -288,10 +288,10 @@
       <Unit filename="/opt/projects/porus/include/porus.h">
          <Option target="porus_client"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/client/PorusClient.cpp">
+      <Unit filename="/opt/projects/porus/src/client/client.cpp">
          <Option target="porus_client"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/client/PorusClient.h">
+      <Unit filename="/opt/projects/porus/src/client/client.h">
          <Option target="porus_client"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/client/main.cpp">
@@ -591,7 +591,7 @@
       <Unit filename="/opt/projects/porus/src/lib/posix.h">
          <Option target="porus_lib"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/system.cpp">
+      <Unit filename="/opt/projects/porus/src/porus_system.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -600,7 +600,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/system.h">
+      <Unit filename="/opt/projects/porus/src/porus_system.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>

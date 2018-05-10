@@ -4,9 +4,9 @@
 
 #include <mpi.h>
 #include <cstring>
-#include "PorusClient.h"
+#include "client.h"
 #include "../common/constants.h"
-#include "../system.h"
+#include "../porus_system.h"
 #include "../common/data_structures.h"
 
 int PorusClient::init() {
@@ -43,7 +43,7 @@ int PorusClient::listen_request() {
     message msg;
     message_key key;
     MPI_Datatype message_key;
-    int error= System::getInstance(CLIENT)->build_message_key(message_key);
+    int error= porus_system::getInstance(CLIENT)->build_message_key(message_key);
     while(true){
         MPI_Status status;
         MPI_Recv(&key,1,message_key,MPI_ANY_SOURCE, MPI_ANY_TAG,applications_comms,&status);
@@ -54,7 +54,7 @@ int PorusClient::listen_request() {
                     case META_FH:{
                         file file_struct;
                         MPI_Datatype message_file;
-                        error= System::getInstance(CLIENT)->build_message_file(message_file);
+                        error= porus_system::getInstance(CLIENT)->build_message_file(message_file);
                         MPI_Status status_file;
                         MPI_Recv(&file_struct,1,message_file,source, MPI_ANY_TAG,applications_comms,&status_file);
                         file_meta f;
@@ -82,7 +82,7 @@ int PorusClient::listen_request() {
                     case META_CHUNK:{
                         chunk_msg chunk_struct;
                         MPI_Datatype message_chunk;
-                        error= System::getInstance(CLIENT)->build_message_chunk(message_chunk);
+                        error= porus_system::getInstance(CLIENT)->build_message_chunk(message_chunk);
                         MPI_Status status_file;
                         MPI_Recv(&chunk_struct,1,message_chunk,source, MPI_ANY_TAG,applications_comms,&status_file);
                         file_meta f;

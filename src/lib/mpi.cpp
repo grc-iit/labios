@@ -5,7 +5,7 @@
 
 int porus::MPI_Init(int *argc, char ***argv) {
   PMPI_Init(argc,argv);
-  System::getInstance(Service::LIB);
+  porus_system::getInstance(service::LIB);
   return 0;
 }
 

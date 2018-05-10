@@ -4,14 +4,14 @@
 
 #include "posix_client.h"
 #include "../../common/client_interface/distributed_hashmap.h"
-#include "../../system.h"
+#include "../../porus_system.h"
 
 int PosixClient::read(read_task task) {
     FILE* fh=fopen(task.source.filename.c_str(),"r+");
     char* data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     fseek(fh,task.source.offset,SEEK_SET);
     fread(data,task.source.size, sizeof(char),fh);
-    std::shared_ptr<distributed_hashmap> map=System::getInstance(WORKER)->map_client;
+    std::shared_ptr<distributed_hashmap> map=porus_system::getInstance(WORKER)->map_client;
     map->put(DATASPACE_DB,task.destination.filename,data);
     //TODO:update MedataManager of read
     fclose(fh);
@@ -19,7 +19,7 @@ int PosixClient::read(read_task task) {
 }
 
 int PosixClient::write(write_task task) {
-    std::shared_ptr<distributed_hashmap> map=System::getInstance(WORKER)->map_client;
+    std::shared_ptr<distributed_hashmap> map=porus_system::getInstance(WORKER)->map_client;
     std::string data=map->get(DATASPACE_DB,task.source.filename);
     FILE* fh=fopen(task.destination.filename.c_str(),"r+");
     fseek(fh,task.destination.offset,SEEK_SET);

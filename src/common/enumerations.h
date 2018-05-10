@@ -27,7 +27,7 @@ enum source_type{
     FILE_LOC=0,
     DATASPACE_LOC=1
 };
-enum Service{
+enum service{
     LIB=0,
     CLIENT=1,
     SYSTEM_MANAGER=2,

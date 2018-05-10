@@ -20,7 +20,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/lib/driver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o"
   "/opt/projects/porus/src/lib/mpi.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o"
   "/opt/projects/porus/src/lib/posix.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o"
-  "/opt/projects/porus/src/system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_lib.dir/src/system.cpp.o"
+  "/opt/projects/porus/src/porus_system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_lib.dir/src/porus_system.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

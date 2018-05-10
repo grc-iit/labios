@@ -201,32 +201,32 @@ porus_task_scheduler/fast:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/build
 .PHONY : porus_task_scheduler/fast
 
-src/client/PorusClient.o: src/client/PorusClient.cpp.o
+src/client/client.o: src/client/client.cpp.o
 
-.PHONY : src/client/PorusClient.o
+.PHONY : src/client/client.o
 
 # target to build an object file
-src/client/PorusClient.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.o
-.PHONY : src/client/PorusClient.cpp.o
+src/client/client.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/client.cpp.o
+.PHONY : src/client/client.cpp.o
 
-src/client/PorusClient.i: src/client/PorusClient.cpp.i
+src/client/client.i: src/client/client.cpp.i
 
-.PHONY : src/client/PorusClient.i
+.PHONY : src/client/client.i
 
 # target to preprocess a source file
-src/client/PorusClient.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.i
-.PHONY : src/client/PorusClient.cpp.i
+src/client/client.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/client.cpp.i
+.PHONY : src/client/client.cpp.i
 
-src/client/PorusClient.s: src/client/PorusClient.cpp.s
+src/client/client.s: src/client/client.cpp.s
 
-.PHONY : src/client/PorusClient.s
+.PHONY : src/client/client.s
 
 # target to generate assembly for a file
-src/client/PorusClient.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/PorusClient.cpp.s
-.PHONY : src/client/PorusClient.cpp.s
+src/client/client.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/client/client.cpp.s
+.PHONY : src/client/client.cpp.s
 
 src/client/main.o: src/client/main.cpp.o
 
@@ -921,50 +921,50 @@ src/lib/posix.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/posix.cpp.s
 .PHONY : src/lib/posix.cpp.s
 
-src/system.o: src/system.cpp.o
+src/porus_system.o: src/porus_system.cpp.o
 
-.PHONY : src/system.o
+.PHONY : src/porus_system.o
 
 # target to build an object file
-src/system.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/system.cpp.o
-.PHONY : src/system.cpp.o
+src/porus_system.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/porus_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/porus_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/porus_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/porus_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/porus_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/porus_system.cpp.o
+.PHONY : src/porus_system.cpp.o
 
-src/system.i: src/system.cpp.i
+src/porus_system.i: src/porus_system.cpp.i
 
-.PHONY : src/system.i
+.PHONY : src/porus_system.i
 
 # target to preprocess a source file
-src/system.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/system.cpp.i
-.PHONY : src/system.cpp.i
+src/porus_system.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/porus_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/porus_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/porus_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/porus_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/porus_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/porus_system.cpp.i
+.PHONY : src/porus_system.cpp.i
 
-src/system.s: src/system.cpp.s
+src/porus_system.s: src/porus_system.cpp.s
 
-.PHONY : src/system.s
+.PHONY : src/porus_system.s
 
 # target to generate assembly for a file
-src/system.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/system.cpp.s
-.PHONY : src/system.cpp.s
+src/porus_system.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/porus_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/porus_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/porus_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/porus_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/porus_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/porus_system.cpp.s
+.PHONY : src/porus_system.cpp.s
 
 src/system_manager/main.o: src/system_manager/main.cpp.o
 
@@ -1200,9 +1200,9 @@ help:
 	@echo "... porus_client"
 	@echo "... porus_server"
 	@echo "... porus_task_scheduler"
-	@echo "... src/client/PorusClient.o"
-	@echo "... src/client/PorusClient.i"
-	@echo "... src/client/PorusClient.s"
+	@echo "... src/client/client.o"
+	@echo "... src/client/client.i"
+	@echo "... src/client/client.s"
 	@echo "... src/client/main.o"
 	@echo "... src/client/main.i"
 	@echo "... src/client/main.s"
@@ -1254,9 +1254,9 @@ help:
 	@echo "... src/lib/posix.o"
 	@echo "... src/lib/posix.i"
 	@echo "... src/lib/posix.s"
-	@echo "... src/system.o"
-	@echo "... src/system.i"
-	@echo "... src/system.s"
+	@echo "... src/porus_system.o"
+	@echo "... src/porus_system.i"
+	@echo "... src/porus_system.s"
 	@echo "... src/system_manager/main.o"
 	@echo "... src/system_manager/main.i"
 	@echo "... src/system_manager/main.s"

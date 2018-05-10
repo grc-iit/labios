@@ -11,7 +11,7 @@
 
 class GreedySolver: public solver {
 public:
-    GreedySolver(Service service):solver(service){}
+    GreedySolver(service service):solver(service){}
     solver_output solve(solver_input input) override;
 };
 

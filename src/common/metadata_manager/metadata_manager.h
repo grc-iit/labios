@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 #include <cereal/types/memory.hpp>
-#include "../../system.h"
+#include "../../porus_system.h"
 #include "../data_structures.h"
 
 class metadata_manager {
@@ -18,10 +18,10 @@ private:
     static std::shared_ptr<metadata_manager> instance;
     std::unordered_map<FILE*,std::string> fh_map;
     std::unordered_map<std::string,file_stat> file_map;
-    Service service;
-    metadata_manager(Service service):fh_map(),file_map(),service(service){}
+    service service_i;
+    metadata_manager(service service):fh_map(),file_map(),service_i(service){}
 public:
-    inline static std::shared_ptr<metadata_manager> getInstance(Service service){
+    inline static std::shared_ptr<metadata_manager> getInstance(service service){
         return instance== nullptr ? instance=std::shared_ptr<metadata_manager>(new metadata_manager(service))
                                   : instance;
     }

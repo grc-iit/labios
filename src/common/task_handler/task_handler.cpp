@@ -18,7 +18,7 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
     serialization_manager sm=serialization_manager();
     file source=task.source;
     int number_of_tasks= static_cast<int>(ceil((float)(source.offset + source.size) / io_unit_max));
-    auto map=System::getInstance(service)->map_client;
+    auto map=porus_system::getInstance(service_i)->map_client;
     auto value=map->get(table::DATASPACE_DB,"count");
     int dataspace_id=0;
     if(strcmp(value.c_str(),"")!=0){

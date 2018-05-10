@@ -17,7 +17,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/common/solver/knapsack.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o"
   "/opt/projects/porus/src/common/task_handler/task_handler.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o"
   "/opt/projects/porus/src/common/timer.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/common/timer.cpp.o"
-  "/opt/projects/porus/src/system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/system.cpp.o"
+  "/opt/projects/porus/src/porus_system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/porus_system.cpp.o"
   "/opt/projects/porus/src/worker/main.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/worker/main.cpp.o"
   "/opt/projects/porus/src/worker/worker_service.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker.dir/src/worker/worker_service.cpp.o"
   )

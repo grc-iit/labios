@@ -6,7 +6,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o"
-  "CMakeFiles/porus_server.dir/src/system.cpp.o"
+  "CMakeFiles/porus_server.dir/src/porus_system.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o"

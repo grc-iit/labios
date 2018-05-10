@@ -17,7 +17,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/common/solver/knapsack.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.o"
   "/opt/projects/porus/src/common/task_handler/task_handler.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o"
   "/opt/projects/porus/src/common/timer.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker_manager.dir/src/common/timer.cpp.o"
-  "/opt/projects/porus/src/system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker_manager.dir/src/system.cpp.o"
+  "/opt/projects/porus/src/porus_system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o"
   "/opt/projects/porus/src/worker_manager/main.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_worker_manager.dir/src/worker_manager/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")

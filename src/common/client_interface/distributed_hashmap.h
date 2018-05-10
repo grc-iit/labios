@@ -13,9 +13,9 @@
 
 class distributed_hashmap {
 protected:
-    Service service;
+    service service_i;
 public:
-    distributed_hashmap(Service service):service(service){
+    distributed_hashmap(service service):service_i(service){
 
     }
     virtual int put(table table_name,std::string key,std::string value){

@@ -17,7 +17,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/common/solver/knapsack.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o"
   "/opt/projects/porus/src/common/task_handler/task_handler.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o"
   "/opt/projects/porus/src/common/timer.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/common/timer.cpp.o"
-  "/opt/projects/porus/src/system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/system.cpp.o"
+  "/opt/projects/porus/src/porus_system.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/porus_system.cpp.o"
   "/opt/projects/porus/src/task_scheduler/main.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o"
   "/opt/projects/porus/src/task_scheduler/task_scheduler_service.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.o"
   )

@@ -13,12 +13,12 @@
 #include "../external_clients/serialization_manager.h"
 #include "../exceptions.h"
 
-class DistributedQueue {
+class distributed_queue {
 private:
 
 protected:
-    Service service;
-    DistributedQueue(Service service):service(service){
+    service service_i;
+    distributed_queue(service service):service_i(service){
 
 
     }

@@ -225,28 +225,28 @@ CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager
 CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides.build: CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.o
 
 
-CMakeFiles/porus_worker_manager.dir/src/system.cpp.o: CMakeFiles/porus_worker_manager.dir/flags.make
-CMakeFiles/porus_worker_manager.dir/src/system.cpp.o: ../src/system.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_worker_manager.dir/src/system.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker_manager.dir/src/system.cpp.o -c /opt/projects/porus/src/system.cpp
+CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o: CMakeFiles/porus_worker_manager.dir/flags.make
+CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o: ../src/porus_system.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o -c /opt/projects/porus/src/porus_system.cpp
 
-CMakeFiles/porus_worker_manager.dir/src/system.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_worker_manager.dir/src/system.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/system.cpp > CMakeFiles/porus_worker_manager.dir/src/system.cpp.i
+CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/porus_system.cpp > CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.i
 
-CMakeFiles/porus_worker_manager.dir/src/system.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_worker_manager.dir/src/system.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/system.cpp -o CMakeFiles/porus_worker_manager.dir/src/system.cpp.s
+CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/porus_system.cpp -o CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.s
 
-CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.requires:
+CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.requires:
 
-.PHONY : CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.requires
+.PHONY : CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.requires
 
-CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.provides: CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.provides
+CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.provides: CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.provides
 
-CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.provides.build: CMakeFiles/porus_worker_manager.dir/src/system.cpp.o
+CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.provides.build: CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o
 
 
 CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o: CMakeFiles/porus_worker_manager.dir/flags.make
@@ -426,7 +426,7 @@ porus_worker_manager_OBJECTS = \
 "CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.o" \
 "CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_hashmap.cpp.o" \
 "CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.o" \
-"CMakeFiles/porus_worker_manager.dir/src/system.cpp.o" \
+"CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o" \
 "CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o" \
 "CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_queue.cpp.o" \
 "CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.o" \
@@ -445,7 +445,7 @@ porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/common/timer.cpp.o
 porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.o
 porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_hashmap.cpp.o
 porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.o
-porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/system.cpp.o
+porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o
 porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o
 porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_queue.cpp.o
 porus_worker_manager: CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.o
@@ -472,7 +472,7 @@ CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.di
 CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.o.requires
 CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_hashmap.cpp.o.requires
 CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires
-CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/system.cpp.o.requires
+CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o.requires
 CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o.requires
 CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_queue.cpp.o.requires
 CMakeFiles/porus_worker_manager.dir/requires: CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.o.requires

@@ -7,9 +7,9 @@
 #include "../data_structures.h"
 class solver {
 protected:
-    Service service;
+    service service_i;
 public:
-    solver(Service service):service(service){}
+    solver(service service):service_i(service){}
     virtual solver_output solve(solver_input input)=0;
 };
 #endif //PORUS_MAIN_SOLVER_H

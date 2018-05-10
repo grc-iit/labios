@@ -16,7 +16,7 @@ class RocksDBImpl: public distributed_hashmap{
 private:
     std::string table_prefix;
 public:
-    RocksDBImpl(Service service,std::string table_prefix):distributed_hashmap(service),table_prefix(table_prefix){
+    RocksDBImpl(service service,std::string table_prefix):distributed_hashmap(service),table_prefix(table_prefix){
         throw 20;
     }
 #ifdef ROCKS_P
