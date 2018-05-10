@@ -6,5 +6,5 @@ CXX_FLAGS =  -DDEBUG -g -L/opt/install/lib -lmemcached -DMEMCACHED_P -w -g   -st
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/opt/projects/porus/external_libs -I/opt/install/include 
+CXX_INCLUDES = -I/opt/projects/aetrio/external_libs -I/opt/install/include 
 

@@ -17,14 +17,13 @@
 #include "common/solver/solver.h"
 #include <mpi.h>
 #include <string>
-class porus_system {
+class aetrio_system {
 private:
-    static std::shared_ptr<porus_system> instance;
+    static std::shared_ptr<aetrio_system> instance;
     int application_id;
     service service_i;
-    porus_system(service service):service_i(service){
+    aetrio_system(service service):service_i(service){
         init(service);
-
     }
 
     int init(service service);
@@ -35,8 +34,8 @@ public:
     std::shared_ptr<distributed_queue> worker_queue[MAX_WORKER_COUNT];
     int rank,client_rank;
     MPI_Comm client_comm;
-    inline static std::shared_ptr<porus_system> getInstance(service service){
-        return instance== nullptr ? instance=std::shared_ptr<porus_system>(new porus_system(service))
+    inline static std::shared_ptr<aetrio_system> getInstance(service service){
+        return instance== nullptr ? instance=std::shared_ptr<aetrio_system>(new aetrio_system(service))
                                   : instance;
     }
 

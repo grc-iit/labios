@@ -17,7 +17,8 @@ enum message_type{
 enum operation{
     WRITE=0,
     READ=1,
-    DELETE=2
+    DELETE=2,
+    FLUSH=3
 };
 enum map_type{
     META_FH=0,
@@ -37,7 +38,9 @@ enum service{
 };
 enum task_type{
     READ_TASK=0,
-    WRITE_TASK=1
+    WRITE_TASK=1,
+    FLUSH_TASK=2,
+    DELETE_TASK=3
 };
 
 enum table{
@@ -59,6 +62,9 @@ enum queue_impl_type{
 enum solver_impl_type{
     DP=0,
     GREEDY=1
+};
+enum io_client_type{
+    POSIX=0
 };
 
 #endif //PORUS_MAIN_ENUMERATION_H

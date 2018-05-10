@@ -7,13 +7,14 @@
 
 
 #include "../../common/data_structures.h"
+#include "io_client.h"
 
-class PosixClient {
+class posix_client:public io_client {
 public:
-    int write(write_task task);
-    int read(read_task task);
-    int delete_file(read_task task);
-    int flush_file(read_task task);
+    int write(write_task task) override ;
+    int read(read_task task) override ;
+    int delete_file(delete_task task) override ;
+    int flush_file(flush_task task) override ;
 };
 
 

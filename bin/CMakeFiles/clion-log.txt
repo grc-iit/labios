@@ -1,4 +1,4 @@
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /opt/projects/porus
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /opt/projects/aetrio
 -- Configuring done
 -- Generating done
--- Build files have been written to: /opt/projects/porus/bin
+-- Build files have been written to: /opt/projects/aetrio/bin

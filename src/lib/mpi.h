@@ -6,7 +6,7 @@
 #define PORUS_MAIN_MPI_H
 #include <mpi.h>
 #include "../common/enumerations.h"
-#include "../porus_system.h"
+#include "../aetrio_system.h"
 
 namespace porus {
   int MPI_Init(int *argc, char ***argv);

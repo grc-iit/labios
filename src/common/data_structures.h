@@ -135,6 +135,37 @@ struct read_task:public task{
     }
 };
 
+struct flush_task:public task{
+    flush_task():task(FLUSH_TASK){}
+    flush_task(const flush_task &flush_task_t):task(FLUSH_TASK),
+            source(flush_task_t.source),
+            destination(flush_task_t.destination){}
+    flush_task(file source,
+            file destination,
+            source_type dest_t,
+            std::string datasource_id):task(FLUSH_TASK),source(source),destination(destination){}
+
+    file source;
+    file destination;
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive( cereal::base_class<task>( this ),this->source,this->destination);
+    }
+};
+
+struct delete_task:public task{
+    delete_task():task(DELETE_TASK){}
+    delete_task(const delete_task &delete_task_i):task(DELETE_TASK),source(delete_task_i.source){}
+    delete_task(file source):task(DELETE_TASK),source(source){}
+    file source;
+    template<class Archive>
+    void serialize(Archive & archive)
+    {
+        archive( cereal::base_class<task>( this ),this->source);
+    }
+};
+
 struct solver_input{
     int *worker_score;
     int num_task;

@@ -25,6 +25,7 @@ const std::string MEMCACHED_URL_SERVER = "--SYSTEM_MANAGER=localhost:11212";
 const map_impl_type map_impl_type_t = map_impl_type::MEMCACHE_D;
 const solver_impl_type solver_impl_type_t = solver_impl_type::DP;
 const queue_impl_type queue_impl_type_t = queue_impl_type::NATS;
+const io_client_type io_client_type_t = io_client_type::POSIX;
 const size_t io_unit_max = 2 * 1024 * 1024;
 const std::string CLIENT_TASK_SUBJECT = "TASK";
 const std::string KEY_SEPARATOR = "#";

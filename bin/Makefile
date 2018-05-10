@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /opt/projects/porus
+CMAKE_SOURCE_DIR = /opt/projects/aetrio
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /opt/projects/porus/bin
+CMAKE_BINARY_DIR = /opt/projects/aetrio/bin
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /opt/projects/porus/bin/CMakeFiles /opt/projects/porus/bin/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /opt/projects/aetrio/bin/CMakeFiles /opt/projects/aetrio/bin/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /opt/projects/porus/bin/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /opt/projects/aetrio/bin/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -200,6 +200,51 @@ porus_task_scheduler: cmake_check_build_system
 porus_task_scheduler/fast:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/build
 .PHONY : porus_task_scheduler/fast
+
+src/aetrio_system.o: src/aetrio_system.cpp.o
+
+.PHONY : src/aetrio_system.o
+
+# target to build an object file
+src/aetrio_system.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/aetrio_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/aetrio_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/aetrio_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/aetrio_system.cpp.o
+.PHONY : src/aetrio_system.cpp.o
+
+src/aetrio_system.i: src/aetrio_system.cpp.i
+
+.PHONY : src/aetrio_system.i
+
+# target to preprocess a source file
+src/aetrio_system.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/aetrio_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/aetrio_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/aetrio_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/aetrio_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/aetrio_system.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/aetrio_system.cpp.i
+.PHONY : src/aetrio_system.cpp.i
+
+src/aetrio_system.s: src/aetrio_system.cpp.s
+
+.PHONY : src/aetrio_system.s
+
+# target to generate assembly for a file
+src/aetrio_system.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/aetrio_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/aetrio_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/aetrio_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/aetrio_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/aetrio_system.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/aetrio_system.cpp.s
+.PHONY : src/aetrio_system.cpp.s
 
 src/client/client.o: src/client/client.cpp.o
 
@@ -921,51 +966,6 @@ src/lib/posix.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/lib/posix.cpp.s
 .PHONY : src/lib/posix.cpp.s
 
-src/porus_system.o: src/porus_system.cpp.o
-
-.PHONY : src/porus_system.o
-
-# target to build an object file
-src/porus_system.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/porus_system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/porus_system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/porus_system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/porus_system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/porus_system.cpp.o
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/porus_system.cpp.o
-.PHONY : src/porus_system.cpp.o
-
-src/porus_system.i: src/porus_system.cpp.i
-
-.PHONY : src/porus_system.i
-
-# target to preprocess a source file
-src/porus_system.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/porus_system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/porus_system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/porus_system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/porus_system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/porus_system.cpp.i
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/porus_system.cpp.i
-.PHONY : src/porus_system.cpp.i
-
-src/porus_system.s: src/porus_system.cpp.s
-
-.PHONY : src/porus_system.s
-
-# target to generate assembly for a file
-src/porus_system.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/porus_system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/porus_system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/porus_system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/porus_system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/porus_system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/porus_system.cpp.s
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/porus_system.cpp.s
-.PHONY : src/porus_system.cpp.s
-
 src/system_manager/main.o: src/system_manager/main.cpp.o
 
 .PHONY : src/system_manager/main.o
@@ -1200,6 +1200,9 @@ help:
 	@echo "... porus_client"
 	@echo "... porus_server"
 	@echo "... porus_task_scheduler"
+	@echo "... src/aetrio_system.o"
+	@echo "... src/aetrio_system.i"
+	@echo "... src/aetrio_system.s"
 	@echo "... src/client/client.o"
 	@echo "... src/client/client.i"
 	@echo "... src/client/client.s"
@@ -1254,9 +1257,6 @@ help:
 	@echo "... src/lib/posix.o"
 	@echo "... src/lib/posix.i"
 	@echo "... src/lib/posix.s"
-	@echo "... src/porus_system.o"
-	@echo "... src/porus_system.i"
-	@echo "... src/porus_system.s"
 	@echo "... src/system_manager/main.o"
 	@echo "... src/system_manager/main.i"
 	@echo "... src/system_manager/main.s"

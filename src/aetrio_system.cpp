@@ -2,14 +2,14 @@
 // Created by hariharan on 2/16/18.
 //
 
-#include "porus_system.h"
+#include "aetrio_system.h"
 #include "common/external_clients/nats_impl.h"
 #include "common/solver/dp_solver.h"
 #include "common/solver/greedy_solver.h"
 
-std::shared_ptr<porus_system> porus_system::instance = nullptr;
+std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
 
-int porus_system::init(service service) {
+int aetrio_system::init(service service) {
     MPI_Comm_rank(MPI_COMM_SELF,&rank);
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_server= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,MEMCACHED_URL_SERVER,0));
@@ -67,7 +67,7 @@ int porus_system::init(service service) {
     return 0;
 }
 
-int porus_system::build_message_key(MPI_Datatype &message) {
+int aetrio_system::build_message_key(MPI_Datatype &message) {
     MPI_Datatype  type[4] = {MPI_INT, MPI_INT, MPI_INT,MPI_CHAR};
     int blocklen[4] = {1, 1,1, KEY_SIZE};
     MPI_Aint disp[4]={0, sizeof(MPI_INT), 2*sizeof(MPI_INT), 3*sizeof(MPI_INT)};
@@ -76,7 +76,7 @@ int porus_system::build_message_key(MPI_Datatype &message) {
     return 0;
 }
 
-int porus_system::build_message_file(MPI_Datatype &message_file) {
+int aetrio_system::build_message_file(MPI_Datatype &message_file) {
     MPI_Datatype  type[3] = {MPI_CHAR, MPI_INT, MPI_INT};
     int blocklen[3] = {KEY_SIZE,1, 1, };
     MPI_Aint disp[3]={0, KEY_SIZE*sizeof(MPI_CHAR), KEY_SIZE*sizeof(MPI_CHAR)+sizeof(MPI_INT)};
@@ -85,7 +85,7 @@ int porus_system::build_message_file(MPI_Datatype &message_file) {
     return 0;
 }
 
-int porus_system::build_message_chunk(MPI_Datatype &message_chunk) {
+int aetrio_system::build_message_chunk(MPI_Datatype &message_chunk) {
     MPI_Datatype  type[5] = {MPI_INT,MPI_INT,MPI_CHAR,MPI_INT,MPI_INT};
     int blocklen[5] = {1, 1,FILE_SIZE,1,1 };
     MPI_Aint disp[5]={0, sizeof(MPI_INT),2*sizeof(MPI_INT),2*sizeof(MPI_INT)+FILE_SIZE*sizeof(MPI_CHAR),3*sizeof(MPI_INT)+FILE_SIZE*sizeof(MPI_CHAR)};
