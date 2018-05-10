@@ -57,9 +57,81 @@ include CMakeFiles/porus_worker.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/porus_worker.dir/flags.make
 
+CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o: CMakeFiles/porus_worker.dir/flags.make
+CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o: ../src/common/solver/DPSolver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o -c /opt/projects/porus/src/common/solver/DPSolver.cpp
+
+CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/solver/DPSolver.cpp > CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.i
+
+CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/solver/DPSolver.cpp -o CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.s
+
+CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.requires
+
+CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.provides: CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.provides
+
+CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.provides.build: CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o
+
+
+CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o: CMakeFiles/porus_worker.dir/flags.make
+CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o: ../src/common/solver/GreedySolver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o -c /opt/projects/porus/src/common/solver/GreedySolver.cpp
+
+CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/solver/GreedySolver.cpp > CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.i
+
+CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/solver/GreedySolver.cpp -o CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.s
+
+CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.requires
+
+CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.provides: CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.provides
+
+CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.provides.build: CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o
+
+
+CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o: CMakeFiles/porus_worker.dir/flags.make
+CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o: ../src/common/solver/knapsack.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o -c /opt/projects/porus/src/common/solver/knapsack.cpp
+
+CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/solver/knapsack.cpp > CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.i
+
+CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/solver/knapsack.cpp -o CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.s
+
+CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.requires
+
+CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.provides: CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.provides
+
+CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.provides.build: CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o
+
+
 CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o: ../src/common/Timer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o -c /opt/projects/porus/src/common/Timer.cpp
 
 CMakeFiles/porus_worker.dir/src/common/Timer.cpp.i: cmake_force
@@ -83,7 +155,7 @@ CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o.provides.build: CMakeFiles/po
 
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/data_manager/data_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o -c /opt/projects/porus/src/common/data_manager/data_manager.cpp
 
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.i: cmake_force
@@ -107,7 +179,7 @@ CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o.provides.
 
 CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o: ../src/common/client_interface/DistributedHashMap.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp
 
 CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.i: cmake_force
@@ -131,7 +203,7 @@ CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o
 
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/metadata_manager/metadata_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o -c /opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp
 
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.i: cmake_force
@@ -155,7 +227,7 @@ CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o.p
 
 CMakeFiles/porus_worker.dir/src/System.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/System.cpp.o: ../src/System.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_worker.dir/src/System.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_worker.dir/src/System.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/System.cpp.o -c /opt/projects/porus/src/System.cpp
 
 CMakeFiles/porus_worker.dir/src/System.cpp.i: cmake_force
@@ -179,7 +251,7 @@ CMakeFiles/porus_worker.dir/src/System.cpp.o.provides.build: CMakeFiles/porus_wo
 
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/task_handler/task_handler.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o -c /opt/projects/porus/src/common/task_handler/task_handler.cpp
 
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.i: cmake_force
@@ -203,7 +275,7 @@ CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o.provides.
 
 CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o: ../src/common/client_interface/DistributedQueue.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp
 
 CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.i: cmake_force
@@ -227,7 +299,7 @@ CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedQueue.cpp.o.p
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o: ../src/common/external_clients/serialization_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o -c /opt/projects/porus/src/common/external_clients/serialization_manager.cpp
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.i: cmake_force
@@ -251,7 +323,7 @@ CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cp
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o: ../src/common/external_clients/RocksDBImpl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.i: cmake_force
@@ -275,7 +347,7 @@ CMakeFiles/porus_worker.dir/src/common/external_clients/RocksDBImpl.cpp.o.provid
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o: ../src/common/external_clients/MemcacheDImpl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.i: cmake_force
@@ -299,7 +371,7 @@ CMakeFiles/porus_worker.dir/src/common/external_clients/MemcacheDImpl.cpp.o.prov
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o: ../src/common/external_clients/NatsImpl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/NatsImpl.cpp
 
 CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.i: cmake_force
@@ -323,7 +395,7 @@ CMakeFiles/porus_worker.dir/src/common/external_clients/NatsImpl.cpp.o.provides.
 
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: CMakeFiles/porus_worker.dir/flags.make
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/worker/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_worker.dir/src/worker/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/porus_worker.dir/src/worker/main.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_worker.dir/src/worker/main.cpp.o -c /opt/projects/porus/src/worker/main.cpp
 
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.i: cmake_force
@@ -347,6 +419,9 @@ CMakeFiles/porus_worker.dir/src/worker/main.cpp.o.provides.build: CMakeFiles/por
 
 # Object files for target porus_worker
 porus_worker_OBJECTS = \
+"CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o" \
+"CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o" \
+"CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o" \
 "CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o" \
 "CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o" \
 "CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o" \
@@ -363,6 +438,9 @@ porus_worker_OBJECTS = \
 # External object files for target porus_worker
 porus_worker_EXTERNAL_OBJECTS =
 
+porus_worker: CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o
+porus_worker: CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o
+porus_worker: CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o
 porus_worker: CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o
 porus_worker: CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o
 porus_worker: CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o
@@ -379,7 +457,7 @@ porus_worker: CMakeFiles/porus_worker.dir/build.make
 porus_worker: /opt/install/lib/libmpicxx.so
 porus_worker: /opt/install/lib/libmpi.so
 porus_worker: CMakeFiles/porus_worker.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX executable porus_worker"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Linking CXX executable porus_worker"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/porus_worker.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -387,6 +465,9 @@ CMakeFiles/porus_worker.dir/build: porus_worker
 
 .PHONY : CMakeFiles/porus_worker.dir/build
 
+CMakeFiles/porus_worker.dir/requires: CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o.requires
+CMakeFiles/porus_worker.dir/requires: CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o.requires
+CMakeFiles/porus_worker.dir/requires: CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o.requires
 CMakeFiles/porus_worker.dir/requires: CMakeFiles/porus_worker.dir/src/common/Timer.cpp.o.requires
 CMakeFiles/porus_worker.dir/requires: CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o.requires
 CMakeFiles/porus_worker.dir/requires: CMakeFiles/porus_worker.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires

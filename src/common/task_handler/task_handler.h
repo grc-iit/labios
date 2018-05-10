@@ -15,10 +15,16 @@ class task_handler {
 private:
     static std::shared_ptr<task_handler> instance;
     Service service;
-    task_handler(Service service):service(service){}
+    std::string subject;
+    std::shared_ptr<DistributedQueue> dq;
+    task_handler(Service service,
+            std::shared_ptr<DistributedQueue> dq,
+            std::string subject):service(service),dq(dq),subject(subject){}
 public:
-    inline static std::shared_ptr<task_handler> getInstance(Service service){
-        return instance== nullptr ? instance=std::shared_ptr<task_handler>(new task_handler(service))
+    inline static std::shared_ptr<task_handler> getInstance(Service service,
+                                                            std::shared_ptr<DistributedQueue> dq,
+                                                            std::string subject){
+        return instance== nullptr ? instance=std::shared_ptr<task_handler>(new task_handler(service,dq,subject))
                                   : instance;
     }
     int submit(task *task_t);

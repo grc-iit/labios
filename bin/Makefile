@@ -711,6 +711,12 @@ src/common/solver/DPSolver.o: src/common/solver/DPSolver.cpp.o
 
 # target to build an object file
 src/common/solver/DPSolver.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/DPSolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/DPSolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/DPSolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/DPSolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/DPSolver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o
 .PHONY : src/common/solver/DPSolver.cpp.o
 
@@ -720,6 +726,12 @@ src/common/solver/DPSolver.i: src/common/solver/DPSolver.cpp.i
 
 # target to preprocess a source file
 src/common/solver/DPSolver.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/DPSolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/DPSolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/DPSolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/DPSolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/DPSolver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.i
 .PHONY : src/common/solver/DPSolver.cpp.i
 
@@ -729,6 +741,12 @@ src/common/solver/DPSolver.s: src/common/solver/DPSolver.cpp.s
 
 # target to generate assembly for a file
 src/common/solver/DPSolver.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/DPSolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/DPSolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/DPSolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/DPSolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/DPSolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/DPSolver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.s
 .PHONY : src/common/solver/DPSolver.cpp.s
 
@@ -738,6 +756,12 @@ src/common/solver/GreedySolver.o: src/common/solver/GreedySolver.cpp.o
 
 # target to build an object file
 src/common/solver/GreedySolver.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/GreedySolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/GreedySolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/GreedySolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/GreedySolver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/GreedySolver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o
 .PHONY : src/common/solver/GreedySolver.cpp.o
 
@@ -747,6 +771,12 @@ src/common/solver/GreedySolver.i: src/common/solver/GreedySolver.cpp.i
 
 # target to preprocess a source file
 src/common/solver/GreedySolver.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/GreedySolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/GreedySolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/GreedySolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/GreedySolver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/GreedySolver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.i
 .PHONY : src/common/solver/GreedySolver.cpp.i
 
@@ -756,6 +786,12 @@ src/common/solver/GreedySolver.s: src/common/solver/GreedySolver.cpp.s
 
 # target to generate assembly for a file
 src/common/solver/GreedySolver.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/GreedySolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/GreedySolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/GreedySolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/GreedySolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/GreedySolver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/GreedySolver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.s
 .PHONY : src/common/solver/GreedySolver.cpp.s
 
@@ -765,6 +801,12 @@ src/common/solver/knapsack.o: src/common/solver/knapsack.cpp.o
 
 # target to build an object file
 src/common/solver/knapsack.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/knapsack.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/knapsack.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o
 .PHONY : src/common/solver/knapsack.cpp.o
 
@@ -774,6 +816,12 @@ src/common/solver/knapsack.i: src/common/solver/knapsack.cpp.i
 
 # target to preprocess a source file
 src/common/solver/knapsack.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/knapsack.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/knapsack.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.i
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.i
 .PHONY : src/common/solver/knapsack.cpp.i
 
@@ -783,6 +831,12 @@ src/common/solver/knapsack.s: src/common/solver/knapsack.cpp.s
 
 # target to generate assembly for a file
 src/common/solver/knapsack.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/knapsack.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/knapsack.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.s
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.s
 .PHONY : src/common/solver/knapsack.cpp.s
 

@@ -24,10 +24,10 @@ protected:
     }
 public:
 
-    virtual int publish_task(task *task_t){
+    virtual int publish_task(task *task_t, std::string subject){
         throw NotImplementedException("publish_task");
     }
-    virtual int subscribe_task(task &task_t){
+    virtual int subscribe_task(task &task_t, std::string subject){
         throw NotImplementedException("subscribe_task");
     }
 };

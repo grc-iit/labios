@@ -54,7 +54,7 @@ int porus::fseek(FILE *stream, long int offset, int origin) {
 
 size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB);
+    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,System::getInstance(LIB)->queue_client,CLIENT_TASK_SUBJECT);
     std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     auto offset=mdm->get_fp(filename);
@@ -84,7 +84,7 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 
 size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB);
+    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,System::getInstance(LIB)->queue_client,CLIENT_TASK_SUBJECT);
     std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     auto offset=mdm->get_fp(filename);

@@ -18,21 +18,23 @@ int task_scheduler_service::run() {
     while(!kill){
         usleep(10);
         task task_i(task_type::WRITE_TASK);
-        queue->subscribe_task(task_i);
-        count++;
-        task_list.push_back(task_i);
-        switch (task_i.t_type){
-            case WRITE_TASK:{
-                write_count++;
-                break;
-            }
-            case READ_TASK:{
-                read_count++;
-                break;
+        int status=queue->subscribe_task(task_i,CLIENT_TASK_SUBJECT);
+        if(status!=-1){
+            count++;
+            task_list.push_back(task_i);
+            switch (task_i.t_type){
+                case WRITE_TASK:{
+                    write_count++;
+                    break;
+                }
+                case READ_TASK:{
+                    read_count++;
+                    break;
+                }
             }
         }
         auto time_elapsed= t.endTimeWithoutPrint("");
-        if(count>MAX_TASK || time_elapsed>MAX_TASK_TIMER){
+        if(task_list.size() >0 && (count>MAX_TASK || time_elapsed>MAX_TASK_TIMER)){
             schedule_tasks(task_list,write_count,read_count);
             count=0;
             t.startTime();
@@ -107,7 +109,6 @@ void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_co
             case WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(&tasks[task_index]);
                 worker_tasks.push_back(*wt);
-
                 break;
             }
             case READ_TASK:{
@@ -119,5 +120,11 @@ void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_co
 
         worker_tasks_map.emplace(worker_index,worker_tasks);
     }
-    //TODO: put tasks to worker queues
+    for (std::pair<int,std::vector<task>> element : worker_tasks_map)
+    {
+        std::shared_ptr<DistributedQueue> queue=System::getInstance(service)->worker_queue[element.first];
+        for(auto task:element.second){
+            queue->publish_task(&task,WORKER_TASK_SUBJECT[element.first]);
+        }
+    }
 }

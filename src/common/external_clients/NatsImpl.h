@@ -18,8 +18,8 @@ public:
     NatsImpl(Service service,std::string url): DistributedQueue(service) {
         natsConnection_ConnectTo(&nc, url.c_str());
     }
-    int publish_task(task *task_t) override;
-    int subscribe_task(task &task_t) override;
+    int publish_task(task *task_t, std::string subject) override;
+    int subscribe_task(task &task_t, std::string subject) override;
 
 };
 

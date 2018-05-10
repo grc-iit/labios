@@ -59,6 +59,9 @@ int System::init(Service service) {
         map_client=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_client));
     }
     if(queue_impl_type_t==queue_impl_type::NATS){
+        for(int i=0;i<MAX_WORKER_COUNT;i++){
+
+        }
         queue_client=std::shared_ptr<NatsImpl>(new NatsImpl(service,NATS_URL_CLIENT));
     }
     return 0;
@@ -89,8 +92,4 @@ int System::build_message_chunk(MPI_Datatype &message_chunk) {
     MPI_Type_struct(10, blocklen, disp, type, &message_chunk);
     MPI_Type_commit(&message_chunk);
     return 0;
-}
-
-std::string System::get_task_subject() {
-    return TASK_SUBJECT;
 }

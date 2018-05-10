@@ -32,6 +32,7 @@ public:
     std::shared_ptr<Solver> solver;
     std::shared_ptr<DistributedHashMap> map_client,map_server;
     std::shared_ptr<DistributedQueue> queue_client;
+    std::shared_ptr<DistributedQueue> worker_queue[MAX_WORKER_COUNT];
     int rank,client_rank;
     MPI_Comm client_comm;
     inline static std::shared_ptr<System> getInstance(Service service){
@@ -42,7 +43,6 @@ public:
     int build_message_key(MPI_Datatype &message);
     int build_message_file(MPI_Datatype &message_file);
     int build_message_chunk(MPI_Datatype &message_chunk);
-    std::string get_task_subject();
 };
 
 

@@ -14,6 +14,9 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/common/external_clients/RocksDBImpl.cpp.o"
   "/opt/projects/porus/src/common/external_clients/serialization_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o"
   "/opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o"
+  "/opt/projects/porus/src/common/solver/DPSolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/common/solver/DPSolver.cpp.o"
+  "/opt/projects/porus/src/common/solver/GreedySolver.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/common/solver/GreedySolver.cpp.o"
+  "/opt/projects/porus/src/common/solver/knapsack.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o"
   "/opt/projects/porus/src/common/task_handler/task_handler.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.o"
   "/opt/projects/porus/src/system_manager/main.cpp" "/opt/projects/porus/bin/CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o"
   )

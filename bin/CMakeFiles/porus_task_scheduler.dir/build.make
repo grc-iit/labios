@@ -57,297 +57,9 @@ include CMakeFiles/porus_task_scheduler.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/porus_task_scheduler.dir/flags.make
 
-CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o: ../src/common/Timer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o -c /opt/projects/porus/src/common/Timer.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/Timer.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/Timer.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/data_manager/data_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o -c /opt/projects/porus/src/common/data_manager/data_manager.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/data_manager/data_manager.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/data_manager/data_manager.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o: ../src/common/client_interface/DistributedHashMap.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/metadata_manager/metadata_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o -c /opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o: ../src/System.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o -c /opt/projects/porus/src/System.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/System.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/System.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/System.cpp > CMakeFiles/porus_task_scheduler.dir/src/System.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/System.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/System.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/System.cpp -o CMakeFiles/porus_task_scheduler.dir/src/System.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/task_handler/task_handler.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o -c /opt/projects/porus/src/common/task_handler/task_handler.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/task_handler/task_handler.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/task_handler/task_handler.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o: ../src/common/client_interface/DistributedQueue.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o: ../src/common/external_clients/serialization_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o -c /opt/projects/porus/src/common/external_clients/serialization_manager.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/serialization_manager.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/serialization_manager.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o: ../src/common/external_clients/RocksDBImpl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o: ../src/common/external_clients/MemcacheDImpl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o: ../src/common/external_clients/NatsImpl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/NatsImpl.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/NatsImpl.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/NatsImpl.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o
-
-
-CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
-CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o: ../src/task_scheduler/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o -c /opt/projects/porus/src/task_scheduler/main.cpp
-
-CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/task_scheduler/main.cpp > CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.i
-
-CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/task_scheduler/main.cpp -o CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s
-
-CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.requires:
-
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.requires
-
-CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides
-
-CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o
-
-
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o: ../src/common/solver/DPSolver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o -c /opt/projects/porus/src/common/solver/DPSolver.cpp
 
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.i: cmake_force
@@ -371,7 +83,7 @@ CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o.provides.bu
 
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o: ../src/common/solver/GreedySolver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o -c /opt/projects/porus/src/common/solver/GreedySolver.cpp
 
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.i: cmake_force
@@ -395,7 +107,7 @@ CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o.provide
 
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o: ../src/common/solver/knapsack.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o -c /opt/projects/porus/src/common/solver/knapsack.cpp
 
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.i: cmake_force
@@ -415,6 +127,294 @@ CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o.provides: C
 .PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o.provides
 
 CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o: ../src/common/Timer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o -c /opt/projects/porus/src/common/Timer.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/Timer.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/Timer.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/data_manager/data_manager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o -c /opt/projects/porus/src/common/data_manager/data_manager.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/data_manager/data_manager.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/data_manager/data_manager.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o: ../src/common/client_interface/DistributedHashMap.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/metadata_manager/metadata_manager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o -c /opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/metadata_manager/metadata_manager.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/metadata_manager/metadata_manager.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o: ../src/System.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o -c /opt/projects/porus/src/System.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/System.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/System.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/System.cpp > CMakeFiles/porus_task_scheduler.dir/src/System.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/System.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/System.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/System.cpp -o CMakeFiles/porus_task_scheduler.dir/src/System.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/System.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/task_handler/task_handler.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o -c /opt/projects/porus/src/common/task_handler/task_handler.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/task_handler/task_handler.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/task_handler/task_handler.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o: ../src/common/client_interface/DistributedQueue.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o -c /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/client_interface/DistributedQueue.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedQueue.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o: ../src/common/external_clients/serialization_manager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o -c /opt/projects/porus/src/common/external_clients/serialization_manager.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/serialization_manager.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/serialization_manager.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/serialization_manager.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o: ../src/common/external_clients/RocksDBImpl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/RocksDBImpl.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o: ../src/common/external_clients/MemcacheDImpl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o: ../src/common/external_clients/NatsImpl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o -c /opt/projects/porus/src/common/external_clients/NatsImpl.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/common/external_clients/NatsImpl.cpp > CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/common/external_clients/NatsImpl.cpp -o CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o
+
+
+CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
+CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o: ../src/task_scheduler/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/porus/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o -c /opt/projects/porus/src/task_scheduler/main.cpp
+
+CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/porus/src/task_scheduler/main.cpp > CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.i
+
+CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/porus/src/task_scheduler/main.cpp -o CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.s
+
+CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.requires
+
+CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides
+
+CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.provides.build: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o
 
 
 CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.o: CMakeFiles/porus_task_scheduler.dir/flags.make
@@ -443,6 +443,9 @@ CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cp
 
 # Object files for target porus_task_scheduler
 porus_task_scheduler_OBJECTS = \
+"CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o" \
+"CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o" \
+"CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o" \
 "CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o" \
 "CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o" \
 "CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o" \
@@ -455,14 +458,14 @@ porus_task_scheduler_OBJECTS = \
 "CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o" \
 "CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o" \
 "CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o" \
-"CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o" \
-"CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o" \
-"CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o" \
 "CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.o"
 
 # External object files for target porus_task_scheduler
 porus_task_scheduler_EXTERNAL_OBJECTS =
 
+porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o
+porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o
+porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o
@@ -475,9 +478,6 @@ porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/external_cl
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o
-porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o
-porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o
-porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.o
 porus_task_scheduler: CMakeFiles/porus_task_scheduler.dir/build.make
 porus_task_scheduler: /opt/install/lib/libmpicxx.so
@@ -491,6 +491,9 @@ CMakeFiles/porus_task_scheduler.dir/build: porus_task_scheduler
 
 .PHONY : CMakeFiles/porus_task_scheduler.dir/build
 
+CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o.requires
+CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o.requires
+CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o.requires
 CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/Timer.cpp.o.requires
 CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/data_manager/data_manager.cpp.o.requires
 CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/DistributedHashMap.cpp.o.requires
@@ -503,9 +506,6 @@ CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.di
 CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/MemcacheDImpl.cpp.o.requires
 CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/external_clients/NatsImpl.cpp.o.requires
 CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o.requires
-CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/solver/DPSolver.cpp.o.requires
-CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/solver/GreedySolver.cpp.o.requires
-CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o.requires
 CMakeFiles/porus_task_scheduler.dir/requires: CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.o.requires
 
 .PHONY : CMakeFiles/porus_task_scheduler.dir/requires

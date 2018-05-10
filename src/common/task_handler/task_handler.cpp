@@ -10,8 +10,7 @@
 std::shared_ptr<task_handler> task_handler::instance = nullptr;
 
 int task_handler::submit(task *task_t){
-    std::shared_ptr<DistributedQueue> dq=System::getInstance(service)->queue_client;
-    return dq->publish_task(task_t);
+    return dq->publish_task(task_t,subject);
 }
 
 std::vector<write_task> task_handler::build_task_write(write_task task) {

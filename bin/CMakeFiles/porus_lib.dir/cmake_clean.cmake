@@ -1,4 +1,7 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/porus_lib.dir/src/common/solver/DPSolver.cpp.o"
+  "CMakeFiles/porus_lib.dir/src/common/solver/GreedySolver.cpp.o"
+  "CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/Timer.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/client_interface/DistributedHashMap.cpp.o"
