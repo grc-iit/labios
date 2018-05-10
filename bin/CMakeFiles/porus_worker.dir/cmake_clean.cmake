@@ -13,6 +13,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/porus_worker.dir/src/common/external_clients/rocksdb_impl.cpp.o"
   "CMakeFiles/porus_worker.dir/src/common/external_clients/memcached_impl.cpp.o"
   "CMakeFiles/porus_worker.dir/src/common/external_clients/nats_impl.cpp.o"
+  "CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o"
+  "CMakeFiles/porus_worker.dir/src/worker/program_repo/statistics.cpp.o"
   "CMakeFiles/porus_worker.dir/src/worker/main.cpp.o"
   "CMakeFiles/porus_worker.dir/src/worker/worker_service.cpp.o"
   "porus_worker.pdb"

@@ -1,5 +1,4 @@
 /opt/projects/aetrio/bin/CMakeFiles/rebuild_cache.dir
-/opt/projects/aetrio/bin/CMakeFiles/porus_worker_stats.dir
 /opt/projects/aetrio/bin/CMakeFiles/porus_worker.dir
 /opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir
 /opt/projects/aetrio/bin/CMakeFiles/edit_cache.dir

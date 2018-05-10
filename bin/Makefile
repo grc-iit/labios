@@ -111,19 +111,6 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named porus_worker_stats
-
-# Build rule for target.
-porus_worker_stats: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 porus_worker_stats
-.PHONY : porus_worker_stats
-
-# fast build rule for target.
-porus_worker_stats/fast:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/build
-.PHONY : porus_worker_stats/fast
-
-#=============================================================================
 # Target rules for targets named porus_worker
 
 # Build rule for target.
@@ -207,7 +194,6 @@ src/aetrio_system.o: src/aetrio_system.cpp.o
 
 # target to build an object file
 src/aetrio_system.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/aetrio_system.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/aetrio_system.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/aetrio_system.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o
@@ -222,7 +208,6 @@ src/aetrio_system.i: src/aetrio_system.cpp.i
 
 # target to preprocess a source file
 src/aetrio_system.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/aetrio_system.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/aetrio_system.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/aetrio_system.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.i
@@ -237,7 +222,6 @@ src/aetrio_system.s: src/aetrio_system.cpp.s
 
 # target to generate assembly for a file
 src/aetrio_system.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/aetrio_system.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/aetrio_system.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/aetrio_system.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.s
@@ -306,7 +290,6 @@ src/common/client_interface/distributed_hashmap.o: src/common/client_interface/d
 
 # target to build an object file
 src/common/client_interface/distributed_hashmap.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/distributed_hashmap.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/distributed_hashmap.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_hashmap.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.o
@@ -321,7 +304,6 @@ src/common/client_interface/distributed_hashmap.i: src/common/client_interface/d
 
 # target to preprocess a source file
 src/common/client_interface/distributed_hashmap.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/distributed_hashmap.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/distributed_hashmap.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_hashmap.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.i
@@ -336,7 +318,6 @@ src/common/client_interface/distributed_hashmap.s: src/common/client_interface/d
 
 # target to generate assembly for a file
 src/common/client_interface/distributed_hashmap.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/distributed_hashmap.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/distributed_hashmap.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_hashmap.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.s
@@ -351,7 +332,6 @@ src/common/client_interface/distributed_queue.o: src/common/client_interface/dis
 
 # target to build an object file
 src/common/client_interface/distributed_queue.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/distributed_queue.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/distributed_queue.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_queue.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.o
@@ -366,7 +346,6 @@ src/common/client_interface/distributed_queue.i: src/common/client_interface/dis
 
 # target to preprocess a source file
 src/common/client_interface/distributed_queue.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/distributed_queue.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/distributed_queue.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_queue.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.i
@@ -381,7 +360,6 @@ src/common/client_interface/distributed_queue.s: src/common/client_interface/dis
 
 # target to generate assembly for a file
 src/common/client_interface/distributed_queue.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/client_interface/distributed_queue.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/client_interface/distributed_queue.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_queue.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.s
@@ -396,7 +374,6 @@ src/common/data_manager/data_manager.o: src/common/data_manager/data_manager.cpp
 
 # target to build an object file
 src/common/data_manager/data_manager.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/data_manager/data_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o
@@ -411,7 +388,6 @@ src/common/data_manager/data_manager.i: src/common/data_manager/data_manager.cpp
 
 # target to preprocess a source file
 src/common/data_manager/data_manager.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/data_manager/data_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.i
@@ -426,7 +402,6 @@ src/common/data_manager/data_manager.s: src/common/data_manager/data_manager.cpp
 
 # target to generate assembly for a file
 src/common/data_manager/data_manager.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/data_manager/data_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.s
@@ -441,7 +416,6 @@ src/common/external_clients/memcached_impl.o: src/common/external_clients/memcac
 
 # target to build an object file
 src/common/external_clients/memcached_impl.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/memcached_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/memcached_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/memcached_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.o
@@ -456,7 +430,6 @@ src/common/external_clients/memcached_impl.i: src/common/external_clients/memcac
 
 # target to preprocess a source file
 src/common/external_clients/memcached_impl.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/memcached_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/memcached_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/memcached_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.i
@@ -471,7 +444,6 @@ src/common/external_clients/memcached_impl.s: src/common/external_clients/memcac
 
 # target to generate assembly for a file
 src/common/external_clients/memcached_impl.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/memcached_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/memcached_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/memcached_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.s
@@ -486,7 +458,6 @@ src/common/external_clients/nats_impl.o: src/common/external_clients/nats_impl.c
 
 # target to build an object file
 src/common/external_clients/nats_impl.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/nats_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/nats_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/nats_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.o
@@ -501,7 +472,6 @@ src/common/external_clients/nats_impl.i: src/common/external_clients/nats_impl.c
 
 # target to preprocess a source file
 src/common/external_clients/nats_impl.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/nats_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/nats_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/nats_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.i
@@ -516,7 +486,6 @@ src/common/external_clients/nats_impl.s: src/common/external_clients/nats_impl.c
 
 # target to generate assembly for a file
 src/common/external_clients/nats_impl.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/nats_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/nats_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/nats_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.s
@@ -531,7 +500,6 @@ src/common/external_clients/rocksdb_impl.o: src/common/external_clients/rocksdb_
 
 # target to build an object file
 src/common/external_clients/rocksdb_impl.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/rocksdb_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/rocksdb_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/rocksdb_impl.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.o
@@ -546,7 +514,6 @@ src/common/external_clients/rocksdb_impl.i: src/common/external_clients/rocksdb_
 
 # target to preprocess a source file
 src/common/external_clients/rocksdb_impl.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/rocksdb_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/rocksdb_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/rocksdb_impl.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.i
@@ -561,7 +528,6 @@ src/common/external_clients/rocksdb_impl.s: src/common/external_clients/rocksdb_
 
 # target to generate assembly for a file
 src/common/external_clients/rocksdb_impl.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/rocksdb_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/rocksdb_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/rocksdb_impl.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.s
@@ -576,7 +542,6 @@ src/common/external_clients/serialization_manager.o: src/common/external_clients
 
 # target to build an object file
 src/common/external_clients/serialization_manager.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/serialization_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o
@@ -591,7 +556,6 @@ src/common/external_clients/serialization_manager.i: src/common/external_clients
 
 # target to preprocess a source file
 src/common/external_clients/serialization_manager.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/serialization_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.i
@@ -606,7 +570,6 @@ src/common/external_clients/serialization_manager.s: src/common/external_clients
 
 # target to generate assembly for a file
 src/common/external_clients/serialization_manager.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/external_clients/serialization_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/external_clients/serialization_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/external_clients/serialization_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.s
@@ -621,7 +584,6 @@ src/common/metadata_manager/metadata_manager.o: src/common/metadata_manager/meta
 
 # target to build an object file
 src/common/metadata_manager/metadata_manager.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/metadata_manager/metadata_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o
@@ -636,7 +598,6 @@ src/common/metadata_manager/metadata_manager.i: src/common/metadata_manager/meta
 
 # target to preprocess a source file
 src/common/metadata_manager/metadata_manager.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/metadata_manager/metadata_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.i
@@ -651,7 +612,6 @@ src/common/metadata_manager/metadata_manager.s: src/common/metadata_manager/meta
 
 # target to generate assembly for a file
 src/common/metadata_manager/metadata_manager.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/metadata_manager/metadata_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/metadata_manager/metadata_manager.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.s
@@ -666,7 +626,6 @@ src/common/solver/dp_solver.o: src/common/solver/dp_solver.cpp.o
 
 # target to build an object file
 src/common/solver/dp_solver.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/dp_solver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/dp_solver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/dp_solver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o
@@ -681,7 +640,6 @@ src/common/solver/dp_solver.i: src/common/solver/dp_solver.cpp.i
 
 # target to preprocess a source file
 src/common/solver/dp_solver.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/dp_solver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/dp_solver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/dp_solver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.i
@@ -696,7 +654,6 @@ src/common/solver/dp_solver.s: src/common/solver/dp_solver.cpp.s
 
 # target to generate assembly for a file
 src/common/solver/dp_solver.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/dp_solver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/dp_solver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/dp_solver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.s
@@ -711,7 +668,6 @@ src/common/solver/greedy_solver.o: src/common/solver/greedy_solver.cpp.o
 
 # target to build an object file
 src/common/solver/greedy_solver.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/greedy_solver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/greedy_solver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/greedy_solver.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o
@@ -726,7 +682,6 @@ src/common/solver/greedy_solver.i: src/common/solver/greedy_solver.cpp.i
 
 # target to preprocess a source file
 src/common/solver/greedy_solver.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/greedy_solver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/greedy_solver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/greedy_solver.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.i
@@ -741,7 +696,6 @@ src/common/solver/greedy_solver.s: src/common/solver/greedy_solver.cpp.s
 
 # target to generate assembly for a file
 src/common/solver/greedy_solver.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/greedy_solver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/greedy_solver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/greedy_solver.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.s
@@ -756,7 +710,6 @@ src/common/solver/knapsack.o: src/common/solver/knapsack.cpp.o
 
 # target to build an object file
 src/common/solver/knapsack.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/knapsack.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o
@@ -771,7 +724,6 @@ src/common/solver/knapsack.i: src/common/solver/knapsack.cpp.i
 
 # target to preprocess a source file
 src/common/solver/knapsack.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/knapsack.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.i
@@ -786,7 +738,6 @@ src/common/solver/knapsack.s: src/common/solver/knapsack.cpp.s
 
 # target to generate assembly for a file
 src/common/solver/knapsack.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/solver/knapsack.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/knapsack.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.s
@@ -801,7 +752,6 @@ src/common/task_handler/task_handler.o: src/common/task_handler/task_handler.cpp
 
 # target to build an object file
 src/common/task_handler/task_handler.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/task_handler/task_handler.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.o
@@ -816,7 +766,6 @@ src/common/task_handler/task_handler.i: src/common/task_handler/task_handler.cpp
 
 # target to preprocess a source file
 src/common/task_handler/task_handler.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/task_handler/task_handler.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.i
@@ -831,7 +780,6 @@ src/common/task_handler/task_handler.s: src/common/task_handler/task_handler.cpp
 
 # target to generate assembly for a file
 src/common/task_handler/task_handler.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/task_handler/task_handler.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.s
@@ -846,7 +794,6 @@ src/common/timer.o: src/common/timer.cpp.o
 
 # target to build an object file
 src/common/timer.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/timer.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/timer.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/timer.cpp.o
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/timer.cpp.o
@@ -861,7 +808,6 @@ src/common/timer.i: src/common/timer.cpp.i
 
 # target to preprocess a source file
 src/common/timer.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/timer.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/timer.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/timer.cpp.i
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/timer.cpp.i
@@ -876,7 +822,6 @@ src/common/timer.s: src/common/timer.cpp.s
 
 # target to generate assembly for a file
 src/common/timer.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/common/timer.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/timer.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/timer.cpp.s
 	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/timer.cpp.s
@@ -1053,7 +998,6 @@ src/worker/main.o: src/worker/main.cpp.o
 
 # target to build an object file
 src/worker/main.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/main.cpp.o
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/main.cpp.o
 .PHONY : src/worker/main.cpp.o
 
@@ -1063,7 +1007,6 @@ src/worker/main.i: src/worker/main.cpp.i
 
 # target to preprocess a source file
 src/worker/main.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/main.cpp.i
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/main.cpp.i
 .PHONY : src/worker/main.cpp.i
 
@@ -1073,7 +1016,6 @@ src/worker/main.s: src/worker/main.cpp.s
 
 # target to generate assembly for a file
 src/worker/main.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/main.cpp.s
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/main.cpp.s
 .PHONY : src/worker/main.cpp.s
 
@@ -1083,7 +1025,7 @@ src/worker/program_repo/posix_client.o: src/worker/program_repo/posix_client.cpp
 
 # target to build an object file
 src/worker/program_repo/posix_client.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/program_repo/posix_client.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o
 .PHONY : src/worker/program_repo/posix_client.cpp.o
 
 src/worker/program_repo/posix_client.i: src/worker/program_repo/posix_client.cpp.i
@@ -1092,7 +1034,7 @@ src/worker/program_repo/posix_client.i: src/worker/program_repo/posix_client.cpp
 
 # target to preprocess a source file
 src/worker/program_repo/posix_client.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/program_repo/posix_client.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.i
 .PHONY : src/worker/program_repo/posix_client.cpp.i
 
 src/worker/program_repo/posix_client.s: src/worker/program_repo/posix_client.cpp.s
@@ -1101,7 +1043,7 @@ src/worker/program_repo/posix_client.s: src/worker/program_repo/posix_client.cpp
 
 # target to generate assembly for a file
 src/worker/program_repo/posix_client.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/program_repo/posix_client.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.s
 .PHONY : src/worker/program_repo/posix_client.cpp.s
 
 src/worker/program_repo/statistics.o: src/worker/program_repo/statistics.cpp.o
@@ -1110,7 +1052,7 @@ src/worker/program_repo/statistics.o: src/worker/program_repo/statistics.cpp.o
 
 # target to build an object file
 src/worker/program_repo/statistics.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/program_repo/statistics.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/statistics.cpp.o
 .PHONY : src/worker/program_repo/statistics.cpp.o
 
 src/worker/program_repo/statistics.i: src/worker/program_repo/statistics.cpp.i
@@ -1119,7 +1061,7 @@ src/worker/program_repo/statistics.i: src/worker/program_repo/statistics.cpp.i
 
 # target to preprocess a source file
 src/worker/program_repo/statistics.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/program_repo/statistics.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/statistics.cpp.i
 .PHONY : src/worker/program_repo/statistics.cpp.i
 
 src/worker/program_repo/statistics.s: src/worker/program_repo/statistics.cpp.s
@@ -1128,7 +1070,7 @@ src/worker/program_repo/statistics.s: src/worker/program_repo/statistics.cpp.s
 
 # target to generate assembly for a file
 src/worker/program_repo/statistics.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker_stats.dir/build.make CMakeFiles/porus_worker_stats.dir/src/worker/program_repo/statistics.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/statistics.cpp.s
 .PHONY : src/worker/program_repo/statistics.cpp.s
 
 src/worker/worker_service.o: src/worker/worker_service.cpp.o
@@ -1192,7 +1134,6 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... porus_worker_stats"
 	@echo "... porus_worker"
 	@echo "... porus_worker_manager"
 	@echo "... edit_cache"

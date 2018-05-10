@@ -16,10 +16,10 @@ private:
     static std::shared_ptr<worker_service> instance;
     service service_i;
     int worker_index;
-    io_client client;
+    std::shared_ptr<io_client> client;
     worker_service(service service,int worker_index):service_i(service),kill(false),worker_index(worker_index){
         if(io_client_type_t==io_client_type::POSIX){
-            client= posix_client();
+            client= std::shared_ptr<posix_client>(new posix_client());
         }
     }
 public:

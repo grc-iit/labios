@@ -11,6 +11,7 @@
 
 class posix_client:public io_client {
 public:
+    posix_client():io_client(){}
     int write(write_task task) override ;
     int read(read_task task) override ;
     int delete_file(delete_task task) override ;

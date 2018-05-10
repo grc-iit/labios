@@ -47,7 +47,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/porus_worker_stats.dir/DependInfo.cmake"
   "CMakeFiles/porus_worker.dir/DependInfo.cmake"
   "CMakeFiles/porus_worker_manager.dir/DependInfo.cmake"
   "CMakeFiles/porus_lib.dir/DependInfo.cmake"
