@@ -9,8 +9,8 @@
 #include <memory>
 #include "../common/enumerations.h"
 #include <zconf.h>
-#include "../common/external_clients/NatsImpl.h"
-#include "../common/Timer.h"
+#include "../common/external_clients/nats_impl.h"
+#include "../common/timer.h"
 
 class task_scheduler_service {
 private:

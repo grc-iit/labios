@@ -288,24 +288,6 @@
       <Unit filename="/opt/projects/porus/include/porus.h">
          <Option target="porus_client"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/System.cpp">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/System.h">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
       <Unit filename="/opt/projects/porus/src/client/PorusClient.cpp">
          <Option target="porus_client"/>
       </Unit>
@@ -315,7 +297,7 @@
       <Unit filename="/opt/projects/porus/src/client/main.cpp">
          <Option target="porus_client"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/Timer.cpp">
+      <Unit filename="/opt/projects/porus/src/common/client_interface/distributed_hashmap.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -324,7 +306,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/Timer.h">
+      <Unit filename="/opt/projects/porus/src/common/client_interface/distributed_hashmap.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -333,7 +315,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedHashMap.cpp">
+      <Unit filename="/opt/projects/porus/src/common/client_interface/distributed_queue.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -342,25 +324,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedHashMap.h">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedQueue.cpp">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/common/client_interface/DistributedQueue.h">
+      <Unit filename="/opt/projects/porus/src/common/client_interface/distributed_queue.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -423,7 +387,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/MemcacheDImpl.cpp">
+      <Unit filename="/opt/projects/porus/src/common/external_clients/memcached_impl.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -432,7 +396,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/MemcacheDImpl.h">
+      <Unit filename="/opt/projects/porus/src/common/external_clients/memcached_impl.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -441,7 +405,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/NatsImpl.cpp">
+      <Unit filename="/opt/projects/porus/src/common/external_clients/nats_impl.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -450,7 +414,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/NatsImpl.h">
+      <Unit filename="/opt/projects/porus/src/common/external_clients/nats_impl.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -459,7 +423,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/RocksDBImpl.cpp">
+      <Unit filename="/opt/projects/porus/src/common/external_clients/rocksdb_impl.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -468,7 +432,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/external_clients/RocksDBImpl.h">
+      <Unit filename="/opt/projects/porus/src/common/external_clients/rocksdb_impl.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -513,7 +477,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/solver/DPSolver.cpp">
+      <Unit filename="/opt/projects/porus/src/common/solver/dp_solver.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -522,7 +486,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/solver/DPSolver.h">
+      <Unit filename="/opt/projects/porus/src/common/solver/dp_solver.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -531,7 +495,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/solver/GreedySolver.cpp">
+      <Unit filename="/opt/projects/porus/src/common/solver/greedy_solver.cpp">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -540,16 +504,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/porus/src/common/solver/GreedySolver.h">
-         <Option target="porus_worker_stats"/>
-         <Option target="porus_worker"/>
-         <Option target="porus_worker_manager"/>
-         <Option target="porus_lib"/>
-         <Option target="porus_client"/>
-         <Option target="porus_server"/>
-         <Option target="porus_task_scheduler"/>
-      </Unit>
-      <Unit filename="/opt/projects/porus/src/common/solver/Solver.h">
+      <Unit filename="/opt/projects/porus/src/common/solver/greedy_solver.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -559,6 +514,15 @@
          <Option target="porus_task_scheduler"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/common/solver/knapsack.cpp">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/solver/solver.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -577,6 +541,24 @@
          <Option target="porus_task_scheduler"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/common/task_handler/task_handler.h">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/timer.cpp">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/common/timer.h">
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
@@ -609,6 +591,24 @@
       <Unit filename="/opt/projects/porus/src/lib/posix.h">
          <Option target="porus_lib"/>
       </Unit>
+      <Unit filename="/opt/projects/porus/src/system.cpp">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/system.h">
+         <Option target="porus_worker_stats"/>
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
       <Unit filename="/opt/projects/porus/src/system_manager/main.cpp">
          <Option target="porus_server"/>
       </Unit>
@@ -625,11 +625,23 @@
          <Option target="porus_worker_stats"/>
          <Option target="porus_worker"/>
       </Unit>
+      <Unit filename="/opt/projects/porus/src/worker/program_repo/posix_client.cpp">
+         <Option target="porus_worker_stats"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/worker/program_repo/posix_client.h">
+         <Option target="porus_worker_stats"/>
+      </Unit>
       <Unit filename="/opt/projects/porus/src/worker/program_repo/statistics.cpp">
          <Option target="porus_worker_stats"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/worker/program_repo/statistics.h">
          <Option target="porus_worker_stats"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/worker/worker_service.cpp">
+         <Option target="porus_worker"/>
+      </Unit>
+      <Unit filename="/opt/projects/porus/src/worker/worker_service.h">
+         <Option target="porus_worker"/>
       </Unit>
       <Unit filename="/opt/projects/porus/src/worker_manager/main.cpp">
          <Option target="porus_worker_manager"/>

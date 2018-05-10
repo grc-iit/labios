@@ -11,11 +11,11 @@
 #include "../constants.h"
 #include "../exceptions.h"
 
-class DistributedHashMap {
+class distributed_hashmap {
 protected:
     Service service;
 public:
-    DistributedHashMap(Service service):service(service){
+    distributed_hashmap(Service service):service(service){
 
     }
     virtual int put(table table_name,std::string key,std::string value){

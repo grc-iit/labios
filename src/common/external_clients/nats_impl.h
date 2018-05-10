@@ -6,7 +6,7 @@
 #define PORUS_MAIN_NATSCLIENT_H
 
 
-#include "../client_interface/DistributedQueue.h"
+#include "../client_interface/distributed_queue.h"
 
 
 class NatsImpl: public DistributedQueue {

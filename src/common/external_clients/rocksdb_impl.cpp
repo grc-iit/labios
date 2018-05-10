@@ -2,7 +2,7 @@
 // Created by hariharan on 3/2/18.
 //
 
-#include "RocksDBImpl.h"
+#include "rocksdb_impl.h"
 
 int RocksDBImpl::put(table table1, std::string key, std::string value) {
 

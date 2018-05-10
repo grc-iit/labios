@@ -6,15 +6,15 @@
 #define PORUS_MAIN_MEMCACHEDIMPL_H
 
 
-#include "../client_interface/DistributedHashMap.h"
+#include "../client_interface/distributed_hashmap.h"
 #include <libmemcached/memcached.h>
 
-class MemcacheDImpl: public DistributedHashMap {
+class MemcacheDImpl: public distributed_hashmap {
 private:
     memcached_st * mem_client;
     int application_id;
 public:
-    MemcacheDImpl(Service service,std::string config_string,int server):DistributedHashMap(service),application_id(server){
+    MemcacheDImpl(Service service,std::string config_string,int server):distributed_hashmap(service),application_id(server){
         mem_client = memcached(config_string.c_str(), config_string.length());
     }
     int put(table table_name,std::string key,std::string value) override ;

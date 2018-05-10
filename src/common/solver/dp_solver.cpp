@@ -2,7 +2,7 @@
 // Created by hdevarajan on 5/8/18.
 //
 
-#include "DPSolver.h"
+#include "dp_solver.h"
 #include "knapsack.cpp"
 
 solver_output DPSolver::solve(solver_input input) {

@@ -8,7 +8,7 @@
 
 #include <memory>
 #include "../enumerations.h"
-#include "../client_interface/DistributedQueue.h"
+#include "../client_interface/distributed_queue.h"
 #include "../data_structures.h"
 
 class task_handler {

@@ -2,8 +2,8 @@
 // Created by hdevarajan on 5/7/18.
 //
 
-#include "NatsImpl.h"
-#include "../../System.h"
+#include "nats_impl.h"
+#include "../../system.h"
 
 int NatsImpl::publish_task(task *task_t, std::string subject) {
     std::string msg;

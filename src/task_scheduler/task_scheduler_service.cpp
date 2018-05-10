@@ -3,8 +3,8 @@
 //
 
 #include "task_scheduler_service.h"
-#include "../common/external_clients/MemcacheDImpl.h"
-#include "../System.h"
+#include "../common/external_clients/memcached_impl.h"
+#include "../system.h"
 
 std::shared_ptr<task_scheduler_service> task_scheduler_service::instance = nullptr;
 
@@ -73,14 +73,14 @@ void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_co
         }
         actual_index++;
     }
-    std::shared_ptr<DistributedHashMap> map=System::getInstance(service)->map_server;
+    std::shared_ptr<distributed_hashmap> map=System::getInstance(service)->map_server;
     for(int worker_index=0;worker_index<MAX_WORKER_COUNT;worker_index++){
         std::string val=map->get(table::WORKER_SCORE,std::to_string(worker_index));
         input.worker_score[worker_index]=atoi(val.c_str());
         val=map->get(table::WORKER_CAPACITY,std::to_string(worker_index));
         input.worker_capacity[worker_index]=atoi(val.c_str());
     }
-    std::shared_ptr<Solver> solver_i=System::getInstance(service)->solver;
+    std::shared_ptr<solver> solver_i=System::getInstance(service)->solver;
     solver_output output=solver_i->solve(input);
     for(int task_index=0;task_index<tasks.size();task_index++){
         auto read_iter=read_task_solver.find(task_index);

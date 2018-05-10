@@ -2,10 +2,10 @@
 // Created by hariharan on 2/16/18.
 //
 
-#include "System.h"
-#include "common/external_clients/NatsImpl.h"
-#include "common/solver/DPSolver.h"
-#include "common/solver/GreedySolver.h"
+#include "system.h"
+#include "common/external_clients/nats_impl.h"
+#include "common/solver/dp_solver.h"
+#include "common/solver/greedy_solver.h"
 
 std::shared_ptr<System> System::instance = nullptr;
 

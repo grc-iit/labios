@@ -6,12 +6,12 @@
 #define PORUS_MAIN_GREEDYSOLVER_H
 
 
-#include "Solver.h"
+#include "solver.h"
 #include "../data_structures.h"
 
-class GreedySolver: public Solver {
+class GreedySolver: public solver {
 public:
-    GreedySolver(Service service):Solver(service){}
+    GreedySolver(Service service):solver(service){}
     solver_output solve(solver_input input) override;
 };
 

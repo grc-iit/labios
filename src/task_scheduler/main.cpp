@@ -2,7 +2,7 @@
 
 
 #include "../common/data_structures.h"
-#include "../common/solver/DPSolver.h"
+#include "../common/solver/dp_solver.h"
 
 int main() {
     int tasks = 10;

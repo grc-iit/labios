@@ -8,8 +8,8 @@
 
 #include <cereal/types/memory.hpp>
 #include "../enumerations.h"
-#include "../client_interface/DistributedHashMap.h"
-#include "../../System.h"
+#include "../client_interface/distributed_hashmap.h"
+#include "../../system.h"
 
 class data_manager {
 private:

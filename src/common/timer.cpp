@@ -2,7 +2,7 @@
 // Created by hdevarajan on 5/9/18.
 //
 
-#include "Timer.h"
+#include "timer.h"
 #include <iostream>
 #include <iomanip>
 

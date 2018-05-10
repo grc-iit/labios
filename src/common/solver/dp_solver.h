@@ -5,16 +5,16 @@
 #ifndef PORUS_MAIN_DPSOLVER_H
 #define PORUS_MAIN_DPSOLVER_H
 
-#include "Solver.h"
+#include "solver.h"
 #include "../data_structures.h"
 
 
-class DPSolver : public Solver {
+class DPSolver : public solver {
 private:
     int* calculate_values(solver_input input,int num_bins);
 
 public:
-    DPSolver(Service service):Solver(service){}
+    DPSolver(Service service):solver(service){}
     solver_output solve(solver_input input) override;
 };
 

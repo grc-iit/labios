@@ -6,7 +6,7 @@
 #include <cstring>
 #include "PorusClient.h"
 #include "../common/constants.h"
-#include "../System.h"
+#include "../system.h"
 #include "../common/data_structures.h"
 
 int PorusClient::init() {
