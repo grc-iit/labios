@@ -22,12 +22,12 @@
 ##Setup Porus
 ### Memcached
 #### Client
-`memcached -profit 11211 -l localhost -d`
+`memcached -p 11211 -l localhost -d`
 #### Server
-`memcached -profit 11212 -l localhost -d`
+`memcached -p 11212 -l localhost -d`
 ### NATS
 #### Client
-`./gnatsd -profit 4222 -consider_after_a localhost -l ~/nats_client.log &`
+`gnatsd -p 4222 -a localhost -l ~/nats_client.log &`
 #### Server
-`./gnatsd -profit 4223 -consider_after_a localhost -l ~/nats_server.log &`
+`gnatsd -p 4223 -a localhost -l ~/nats_server.log &`
 
