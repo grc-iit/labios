@@ -58,12 +58,6 @@ int aetrio_system::init(service service) {
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_client=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_client));
     }
-    if(queue_impl_type_t==queue_impl_type::NATS){
-        for(int i=0;i<MAX_WORKER_COUNT;i++){
-            worker_queue[i]=std::shared_ptr<NatsImpl>(new NatsImpl(service,NATS_URL_SERVER));
-        }
-        queue_client=std::shared_ptr<NatsImpl>(new NatsImpl(service,NATS_URL_CLIENT));
-    }
     return 0;
 }
 

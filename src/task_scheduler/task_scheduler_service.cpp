@@ -11,23 +11,48 @@ std::shared_ptr<task_scheduler_service> task_scheduler_service::instance = nullp
 int task_scheduler_service::run() {
     int count=0, read_count=0, write_count=0;
 
-    std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->queue_client;
+    std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_queue_client(CLIENT_TASK_SUBJECT);
     std::vector<task> task_list=std::vector<task>();
     Timer t=Timer();
     t.startTime();
+
+    int status=-1;
+    task* task_i= queue->subscribe_task(status);
+    if(status!=-1){
+        count++;
+        switch (task_i->t_type){
+            case WRITE_TASK:{
+                write_task *wt= static_cast<write_task *>(task_i);
+                std::cout<<wt->destination.filename<<std::endl;
+                task_list.push_back(*wt);
+                write_count++;
+                break;
+            }
+            case READ_TASK:{
+                read_task *rt= static_cast<read_task *>(task_i);
+                task_list.push_back(*rt);
+                read_count++;
+                break;
+            }
+        }
+    }
     while(!kill){
         usleep(10);
-        task task_i(task_type::WRITE_TASK);
-        int status=queue->subscribe_task(task_i,CLIENT_TASK_SUBJECT);
+        int status=-1;
+        task* task_i= queue->subscribe_task(status);
         if(status!=-1){
             count++;
-            task_list.push_back(task_i);
-            switch (task_i.t_type){
+            switch (task_i->t_type){
                 case WRITE_TASK:{
+                    write_task *wt= static_cast<write_task *>(task_i);
+                    std::cout<<wt->destination.filename<<std::endl;
+                    task_list.push_back(*wt);
                     write_count++;
                     break;
                 }
                 case READ_TASK:{
+                    read_task *rt= static_cast<read_task *>(task_i);
+                    task_list.push_back(*rt);
                     read_count++;
                     break;
                 }
@@ -122,9 +147,9 @@ void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_co
     }
     for (std::pair<int,std::vector<task>> element : worker_tasks_map)
     {
-        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->worker_queue[element.first];
+        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first,WORKER_TASK_SUBJECT[element.first]);
         for(auto task:element.second){
-            queue->publish_task(&task,WORKER_TASK_SUBJECT[element.first]);
+            queue->publish_task(&task);
         }
     }
 }

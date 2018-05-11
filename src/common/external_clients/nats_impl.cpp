@@ -5,7 +5,7 @@
 #include "nats_impl.h"
 #include "../../aetrio_system.h"
 
-int NatsImpl::publish_task(task *task_t, std::string subject) {
+int NatsImpl::publish_task(task *task_t) {
     std::string msg;
     serialization_manager sm=serialization_manager();
     msg=sm.serialise_task(task_t);
@@ -14,13 +14,42 @@ int NatsImpl::publish_task(task *task_t, std::string subject) {
     return 0;
 }
 
-int NatsImpl::subscribe_task(task &task_t, std::string subject) {
+task*  NatsImpl::subscribe_task_with_timeout(int &status) {
     std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
     serialization_manager sm=serialization_manager();
-    natsConnection_SubscribeSync(&sub, nc, subject.c_str());
     natsMsg *msg = NULL;
-    natsSubscription_NextMsg(&msg, sub, MAX_TASK_TIMER);
-    if(msg==NULL) return -1;
-    task_t=sm.deserialise_task(natsMsg_GetData(msg));
-    return 0;
+    natsSubscription_NextMsg(&msg, sub, MAX_TASK_TIMER_MS);
+    if(msg==NULL) return nullptr;
+    task* t=sm.deserialise_task(natsMsg_GetData(msg));
+    status=0;
+    return t;
+}
+
+task* NatsImpl::subscribe_task(int &status) {
+    std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
+    serialization_manager sm=serialization_manager();
+    natsMsg *msg = NULL;
+    natsSubscription_NextMsg(&msg, sub, MAX_TASK_TIMER_MS_MAX);
+    if(msg==NULL) return nullptr;
+    task* t=sm.deserialise_task(natsMsg_GetData(msg));
+    status=0;
+    return t;
+}
+
+int NatsImpl::get_queue_size() {
+    int size_of_queue;
+    natsSubscription_GetPending(sub,NULL,&size_of_queue);
+    return size_of_queue;
+}
+
+int NatsImpl::get_queue_count() {
+    int count_of_queue;
+    natsSubscription_GetPending(sub,&count_of_queue,NULL);
+    return count_of_queue;
+}
+
+int NatsImpl::get_queue_count_limit() {
+    int count_of_queue;
+    natsSubscription_GetPendingLimits(sub,&count_of_queue,NULL);
+    return count_of_queue;
 }

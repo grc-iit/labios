@@ -340,6 +340,7 @@ CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/c
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/enumerations.h
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/exceptions.h
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/external_clients/memcached_impl.h
+CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/external_clients/nats_impl.h
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/external_clients/rocksdb_impl.h
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/external_clients/serialization_manager.h
 CMakeFiles/porus_worker.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/solver/solver.h
@@ -764,6 +765,7 @@ CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: 
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/enumerations.h
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/exceptions.h
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/external_clients/memcached_impl.h
+CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/external_clients/nats_impl.h
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/external_clients/rocksdb_impl.h
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/external_clients/serialization_manager.h
 CMakeFiles/porus_worker.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/metadata_manager/metadata_manager.cpp
@@ -943,6 +945,7 @@ CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/c
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/enumerations.h
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/exceptions.h
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/external_clients/memcached_impl.h
+CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/external_clients/nats_impl.h
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/external_clients/rocksdb_impl.h
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/external_clients/serialization_manager.h
 CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/metadata_manager/metadata_manager.h
@@ -1065,6 +1068,9 @@ CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/libmemca
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/libmemcached-1.0/version.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/libmemcached-1.0/visibility.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/libmemcached/memcached.h
+CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/mpi.h
+CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/mpicxx.h
+CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/mpio.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/nats.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/nats/nats.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/nats/status.h
@@ -1212,6 +1218,7 @@ CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/c
 CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/common/enumerations.h
 CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/common/exceptions.h
 CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/common/external_clients/memcached_impl.h
+CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/common/external_clients/nats_impl.h
 CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/common/external_clients/rocksdb_impl.h
 CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/common/external_clients/serialization_manager.h
 CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o: ../src/common/solver/solver.h

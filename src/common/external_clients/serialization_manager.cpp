@@ -62,23 +62,29 @@ std::string serialization_manager::serialise_task(task* task) {
 }
 
 
-task serialization_manager::deserialise_task(const char *string) {
-    task cm(task_type::WRITE_TASK);
+task* serialization_manager::deserialise_task(std::string string) {
+    task cm(DUMMY);
     {
         std::stringstream ss(string);
         cereal::JSONInputArchive iarchive(ss); // Create an input archive
         iarchive(cm);
         switch (cm.t_type){
             case task_type ::WRITE_TASK:{
-                write_task *wt= static_cast<write_task *>(&cm);
-                return *wt;
+                write_task* wt=new write_task();
+                std::stringstream ss(string);
+                cereal::JSONInputArchive iarchive(ss);
+                iarchive(*wt);
+                return wt;
             }
             case task_type ::READ_TASK:{
-                read_task *rt= static_cast<read_task *>(&cm);
-                return *rt;
+                read_task* wt=new read_task();
+                std::stringstream ss(string);
+                cereal::JSONInputArchive iarchive(ss);
+                iarchive(*wt);
+                return wt;
             }
         }
     }
-    return cm;
+    return &cm;
 }
 

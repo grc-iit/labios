@@ -54,12 +54,12 @@ int porus::fseek(FILE *stream, long int offset, int origin) {
 
 size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,aetrio_system::getInstance(LIB)->queue_client,CLIENT_TASK_SUBJECT);
+    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT));
     std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     auto offset=mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
-    std::vector<read_task> read_tasks=task_m->build_task_read(read_task(file(filename,offset,size*count),file(),source_type::FILE_LOC,""));
+    std::vector<read_task> read_tasks=task_m->build_task_read(read_task(file(filename,offset,size*count),file()));
     int ptr_pos=0;
 
     for(auto task:read_tasks){
@@ -84,14 +84,13 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 
 size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,aetrio_system::getInstance(LIB)->queue_client,CLIENT_TASK_SUBJECT);
+    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT));
     std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     auto offset=mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
-    auto tsk=write_task(file(filename,offset,size*count),file(),source_type::DATASPACE_LOC,"");
-    tsk.data= static_cast<char *>(ptr);
-    std::vector<write_task> write_tasks=task_m->build_task_write(tsk);
+    auto tsk=write_task(file(filename,offset,size*count),file());
+    std::vector<write_task> write_tasks=task_m->build_task_write(tsk,static_cast<char *>(ptr));
     std::string id;
     for(auto task:write_tasks){
         task_m->submit(&task);

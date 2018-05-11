@@ -20,6 +20,11 @@
 
 
 ##Setup Porus
+### Go
+#### Installations
+`wget https://dl.google.com/go/go1.10.2.linux-amd64.tar.gz`
+`tar -C /opt/install/ -xzf go1.10.2.linux-amd64.tar.gz`
+#####add to $PATH
 ### Memcached
 #### Client
 `memcached -p 11211 -l localhost -d`
@@ -27,7 +32,13 @@
 `memcached -p 11212 -l localhost -d`
 ### NATS
 #### Client
-`gnatsd -p 4222 -a localhost -l ~/nats_client.log &`
+`gnatsd -p 4222 -a localhost -DV -m 8222 ~/nats_client.log &`
 #### Server
-`gnatsd -p 4223 -a localhost -l ~/nats_server.log &`
+`gnatsd -p 4223 -a localhost -l -DV -m 8223 ~/nats_server.log &`
+#### Top
+`wget https://github.com/nats-io/nats-top/releases/download/v0.3.2/nats-top-linux_amd64.zip`
+`unzip nats-top-linux_amd64.zip`
+#####add to $PATH
+
+
 

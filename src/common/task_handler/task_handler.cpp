@@ -10,10 +10,10 @@
 std::shared_ptr<task_handler> task_handler::instance = nullptr;
 
 int task_handler::submit(task *task_t){
-    return dq->publish_task(task_t,subject);
+    return dq->publish_task(task_t);
 }
 
-std::vector<write_task> task_handler::build_task_write(write_task task) {
+std::vector<write_task> task_handler::build_task_write(write_task task,std::string data) {
     std::vector<write_task> tasks=std::vector<write_task>();
     serialization_manager sm=serialization_manager();
     file source=task.source;
@@ -37,7 +37,7 @@ std::vector<write_task> task_handler::build_task_write(write_task task) {
             chunk_meta chunk_meta=sm.deserialise_chunk(chunk_str);
             if(chunk_meta.destination.dest_t==source_type::DATASPACE_LOC){
                 auto chunk_value=map->get(table::DATASPACE_DB,chunk_meta.destination.filename);
-                chunk_value.replace(base_offset,io_unit_max-base_offset,task.data.substr(data_offset,io_unit_max-base_offset));
+                chunk_value.replace(base_offset,io_unit_max-base_offset,data.substr(data_offset,io_unit_max-base_offset));
                 map->put(table::DATASPACE_DB,chunk_meta.destination.filename,chunk_value);
 
                 sub_task.destination.size=io_unit_max-base_offset;

@@ -622,7 +622,7 @@ namespace cereal
       {
         search();
 
-        val = static_cast<T>( itsIteratorStack.back().value().GetUint() );
+        val = static_cast<T>( itsIteratorStack.back().value().GetInt64() );
         ++itsIteratorStack.back();
       }
 

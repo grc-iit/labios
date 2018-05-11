@@ -34,5 +34,7 @@ const std::string WORKER_TASK_SUBJECT[MAX_WORKER_COUNT] = {"1","2","3","4"};
 const int WORKER_ENERGY[MAX_WORKER_COUNT] = {1, 2, 3, 1};
 const size_t MAX_TASK=1000000;
 const size_t MAX_TASK_TIMER=2;
+const size_t MAX_TASK_TIMER_MS=MAX_TASK_TIMER*1000;
+const size_t MAX_TASK_TIMER_MS_MAX=MAX_TASK_TIMER*1000000;
 
 #endif //PORUS_MAIN_CONSTANTS_H

@@ -7,7 +7,6 @@
 
 
 #include "../data_structures.h"
-#include <string>
 #include <cereal/archives/json.hpp>
 #include <sstream>
 #include <cereal/cereal.hpp>
@@ -21,7 +20,7 @@ public:
 
     std::string serialise_task(task* task);
 
-    task deserialise_task(const char *string);
+    task* deserialise_task(std::string string);
 };
 
 

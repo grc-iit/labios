@@ -15,7 +15,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=SIMPLE_MIXED;
+test_case testCase=MULTI_WRITE;
 /*
  * function definitions
  */

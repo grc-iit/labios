@@ -40,7 +40,8 @@ enum task_type{
     READ_TASK=0,
     WRITE_TASK=1,
     FLUSH_TASK=2,
-    DELETE_TASK=3
+    DELETE_TASK=3,
+    DUMMY=4,
 };
 
 enum table{
