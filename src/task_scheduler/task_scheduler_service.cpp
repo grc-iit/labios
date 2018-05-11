@@ -23,7 +23,7 @@ int task_scheduler_service::run() {
         switch (task_i->t_type){
             case WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(task_i);
-                std::cout<<wt->destination.filename<<std::endl;
+                std::cout<< serialization_manager().serialise_task(wt) << std::endl;
                 task_list.push_back(wt);
                 write_count++;
                 break;
@@ -45,7 +45,7 @@ int task_scheduler_service::run() {
             switch (task_i->t_type){
                 case WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task_i);
-                    std::cout<<wt->destination.filename<<std::endl;
+                    std::cout<< serialization_manager().serialise_task(wt) << std::endl;
                     task_list.push_back(wt);
                     write_count++;
                     break;
@@ -104,6 +104,7 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
         input.worker_score[worker_index]=atoi(val.c_str());
         val=map->get(table::WORKER_CAPACITY,std::to_string(worker_index+1));
         input.worker_capacity[worker_index]=atoi(val.c_str());
+        std::cout<<"worker:"<<worker_index<<" capacity:"<<input.worker_capacity[worker_index]<<" score:"<<input.worker_score[worker_index]<<std::endl;
     }
     std::shared_ptr<solver> solver_i=aetrio_system::getInstance(service_i)->solver_i;
     solver_output output=solver_i->solve(input);

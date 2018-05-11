@@ -18,6 +18,7 @@ int worker_service::run() {
            switch (task_i->t_type){
                 case WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task_i);
+                    std::cout<< serialization_manager().serialise_task(wt) << std::endl;
                     client->write(*wt);
                     break;
                 }

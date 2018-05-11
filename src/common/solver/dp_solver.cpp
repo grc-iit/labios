@@ -25,6 +25,10 @@ solver_output DPSolver::solve(solver_input input) {
             }
         }
     }
+    std::cout<<"Final Solution"<<std::endl;
+    for(int i=0;i<input.num_task;i++){
+        std::cout<<"task:"<<(i+1)<<" worker:"<<solver_output_i.solution[i]<<std::endl;
+    }
     return solver_output_i;
 }
 
