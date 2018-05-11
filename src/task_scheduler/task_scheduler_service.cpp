@@ -12,7 +12,7 @@ int task_scheduler_service::run() {
     int count=0, read_count=0, write_count=0;
 
     std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_queue_client(CLIENT_TASK_SUBJECT);
-    std::vector<task> task_list=std::vector<task>();
+    std::vector<task*> task_list=std::vector<task*>();
     Timer t=Timer();
     t.startTime();
 
@@ -24,13 +24,13 @@ int task_scheduler_service::run() {
             case WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(task_i);
                 std::cout<<wt->destination.filename<<std::endl;
-                task_list.push_back(*wt);
+                task_list.push_back(wt);
                 write_count++;
                 break;
             }
             case READ_TASK:{
                 read_task *rt= static_cast<read_task *>(task_i);
-                task_list.push_back(*rt);
+                task_list.push_back(rt);
                 read_count++;
                 break;
             }
@@ -46,13 +46,13 @@ int task_scheduler_service::run() {
                 case WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task_i);
                     std::cout<<wt->destination.filename<<std::endl;
-                    task_list.push_back(*wt);
+                    task_list.push_back(wt);
                     write_count++;
                     break;
                 }
                 case READ_TASK:{
                     read_task *rt= static_cast<read_task *>(task_i);
-                    task_list.push_back(*rt);
+                    task_list.push_back(rt);
                     read_count++;
                     break;
                 }
@@ -69,19 +69,19 @@ int task_scheduler_service::run() {
     return 0;
 }
 
-void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_count,int read_count) {
+void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_count,int read_count) {
     solver_input input(write_count,MAX_WORKER_COUNT);
     input.num_task=write_count;
     int write_index=0,read_index=0,actual_index=0;
-    std::unordered_map<int,std::vector<task>> worker_tasks_map=std::unordered_map<int,std::vector<task>>();
+    std::unordered_map<int,std::vector<task*>> worker_tasks_map=std::unordered_map<int,std::vector<task*>>();
     std::unordered_map<int,int> write_task_solver=std::unordered_map<int,int>();
     std::unordered_map<int,int> read_task_solver=std::unordered_map<int,int>();
     int i=0;
     for(auto task_t:tasks){
 
-        switch (task_t.t_type){
+        switch (task_t->t_type){
             case WRITE_TASK:{
-                write_task *wt= static_cast<write_task *>(&task_t);
+                write_task *wt= static_cast<write_task *>(task_t);
                 input.task_size[write_index]=wt->source.size;
                 write_task_solver.emplace(actual_index,write_index);
                 write_index++;
@@ -89,7 +89,7 @@ void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_co
             }
             case READ_TASK:{
                 int worker_index=0;
-                read_task *rt= static_cast<read_task *>(&task_t);
+                read_task *rt= static_cast<read_task *>(task_t);
                 //TODO:calculate which worker has data from MDM
                 read_task_solver.emplace(actual_index,worker_index);
                 read_index++;
@@ -100,9 +100,9 @@ void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_co
     }
     std::shared_ptr<distributed_hashmap> map=aetrio_system::getInstance(service_i)->map_server;
     for(int worker_index=0;worker_index<MAX_WORKER_COUNT;worker_index++){
-        std::string val=map->get(table::WORKER_SCORE,std::to_string(worker_index));
+        std::string val=map->get(table::WORKER_SCORE,std::to_string(worker_index+1));
         input.worker_score[worker_index]=atoi(val.c_str());
-        val=map->get(table::WORKER_CAPACITY,std::to_string(worker_index));
+        val=map->get(table::WORKER_CAPACITY,std::to_string(worker_index+1));
         input.worker_capacity[worker_index]=atoi(val.c_str());
     }
     std::shared_ptr<solver> solver_i=aetrio_system::getInstance(service_i)->solver_i;
@@ -122,34 +122,46 @@ void task_scheduler_service::schedule_tasks(std::vector<task> tasks,int write_co
             worker_index=read_iter->second;
         }
         auto worker_task_iter=worker_tasks_map.find(worker_index);
-        std::vector<task> worker_tasks;
+        std::vector<task*> worker_tasks;
         if(worker_task_iter==worker_tasks_map.end()){
-            worker_tasks=std::vector<task>();
+            worker_tasks=std::vector<task*>();
         }else{
             worker_tasks=worker_task_iter->second;
             worker_tasks_map.erase(worker_task_iter);
         }
-        task task_i=tasks[task_index];
-        switch (task_i.t_type){
+        task* task_i=tasks[task_index];
+        switch (task_i->t_type){
             case WRITE_TASK:{
-                write_task *wt= static_cast<write_task *>(&tasks[task_index]);
-                worker_tasks.push_back(*wt);
+                write_task *wt= static_cast<write_task *>(tasks[task_index]);
+                worker_tasks.push_back(wt);
                 break;
             }
             case READ_TASK:{
-                read_task *rt= static_cast<read_task *>(&tasks[task_index]);
-                worker_tasks.push_back(*rt);
+                read_task *rt= static_cast<read_task *>(tasks[task_index]);
+                worker_tasks.push_back(rt);
                 break;
             }
         }
 
         worker_tasks_map.emplace(worker_index,worker_tasks);
     }
-    for (std::pair<int,std::vector<task>> element : worker_tasks_map)
+    for (std::pair<int,std::vector<task*>> element : worker_tasks_map)
     {
-        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first,WORKER_TASK_SUBJECT[element.first]);
+        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first+1,WORKER_TASK_SUBJECT[element.first]);
         for(auto task:element.second){
-            queue->publish_task(&task);
+            switch (task->t_type){
+                case WRITE_TASK:{
+                    write_task *wt= static_cast<write_task *>(task);
+                    queue->publish_task(wt);
+                    break;
+                }
+                case READ_TASK:{
+                    read_task *rt= static_cast<read_task *>(task);
+                    queue->publish_task(rt);
+                    break;
+                }
+            }
+
         }
     }
 }

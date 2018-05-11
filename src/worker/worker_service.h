@@ -40,6 +40,7 @@ public:
     int run();
 
     int calculate_worker_score();
+    int update_capacity();
 };
 
 

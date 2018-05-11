@@ -43,13 +43,18 @@ int NatsImpl::get_queue_size() {
 }
 
 int NatsImpl::get_queue_count() {
-    int count_of_queue;
-    natsSubscription_GetPending(sub,&count_of_queue,NULL);
-    return count_of_queue;
+    int* count_of_queue=new int();
+    natsSubscription_GetStats(sub,count_of_queue,NULL,NULL,NULL,NULL,NULL);
+    int queue_count=*count_of_queue;
+    delete(count_of_queue);
+    return queue_count;
 }
 
 int NatsImpl::get_queue_count_limit() {
-    int count_of_queue;
-    natsSubscription_GetPendingLimits(sub,&count_of_queue,NULL);
+    int *max_queue = new int();
+    natsSubscription_GetStats(sub, NULL, NULL, max_queue, NULL, NULL, NULL);
+    int count_of_queue = *max_queue;
+    delete (max_queue);
+    if(count_of_queue==0) count_of_queue=INT_MAX;
     return count_of_queue;
 }

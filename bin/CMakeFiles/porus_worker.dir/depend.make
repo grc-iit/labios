@@ -1075,6 +1075,7 @@ CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/nats.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/nats/nats.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/nats/status.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: /opt/install/include/nats/version.h
+CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/aetrio_system.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/client_interface/distributed_hashmap.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/client_interface/distributed_queue.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/constants.h
@@ -1083,7 +1084,9 @@ CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/enumerations.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/exceptions.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/external_clients/memcached_impl.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/external_clients/nats_impl.h
+CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/external_clients/rocksdb_impl.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/external_clients/serialization_manager.h
+CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/solver/solver.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/common/timer.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/task_scheduler/task_scheduler_service.h
 CMakeFiles/porus_worker.dir/src/worker/main.cpp.o: ../src/worker/main.cpp

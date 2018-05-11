@@ -8,14 +8,15 @@
 
 #include "../client_interface/distributed_hashmap.h"
 #include <libmemcached/memcached.h>
+#include <cstring>
 
 class MemcacheDImpl: public distributed_hashmap {
 private:
     memcached_st * mem_client;
     int application_id;
 public:
-    MemcacheDImpl(service service,std::string config_string,int server):distributed_hashmap(service),application_id(server){
-        mem_client = memcached(config_string.c_str(), config_string.length());
+    MemcacheDImpl(service service,const std::string config_string,int server):distributed_hashmap(service),application_id(server){
+       mem_client = memcached(config_string.c_str(), config_string.size());
     }
     int put(table table_name,std::string key,std::string value) override ;
     std::string get(table table_name, std::string key) override ;

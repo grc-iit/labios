@@ -92,13 +92,15 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     auto tsk=write_task(file(filename,offset,size*count),file());
     std::vector<write_task> write_tasks=task_m->build_task_write(tsk,static_cast<char *>(ptr));
     std::string id;
+    int index=0;
+    std::string data((char*)ptr);
     for(auto task:write_tasks){
         task_m->submit(&task);
         id=task.destination.filename;
+        if(index==0) data_m->put(id, data);
+        index++;
     }
     mdm->update_write_task_info(write_tasks,filename);
-    std::string data((char*)ptr);
-    data_m->put(id, data);
     auto map=aetrio_system::getInstance(LIB)->map_client;
     map->put(table::DATASPACE_DB,"count",id);
     return size*count;

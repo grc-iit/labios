@@ -7,7 +7,7 @@
 #include "../../aetrio_system.h"
 
 int posix_client::read(read_task task) {
-    FILE* fh=fopen(task.source.filename.c_str(),"r+");
+    FILE* fh=fopen(task.source.filename.c_str(),"rb+");
     char* data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     fseek(fh,task.source.offset,SEEK_SET);
     fread(data,task.source.size, sizeof(char),fh);
@@ -20,10 +20,11 @@ int posix_client::read(read_task task) {
 
 int posix_client::write(write_task task) {
     std::shared_ptr<distributed_hashmap> map=aetrio_system::getInstance(WORKER)->map_client;
-    std::string data=map->get(DATASPACE_DB,task.source.filename);
-    FILE* fh=fopen(task.destination.filename.c_str(),"r+");
-    fseek(fh,task.destination.offset,SEEK_SET);
-    fwrite(data.c_str(),task.destination.size, sizeof(char),fh);
+    std::string data=map->get(DATASPACE_DB,task.destination.filename);
+    FILE* fh=fopen(task.source.filename.c_str(),"r+");
+    if(fh==NULL) fh=fopen(task.source.filename.c_str(),"w+");
+    fseek(fh,task.source.offset,SEEK_SET);
+    fwrite(data.c_str(),task.source.size, sizeof(char),fh);
     //TODO:update MedataManager of write
     fclose(fh);
     return 0;
@@ -36,8 +37,8 @@ int posix_client::delete_file(delete_task task) {
 }
 
 int posix_client::flush_file(flush_task task) {
-    FILE* fh_source=fopen(task.source.filename.c_str(),"r+");
-    FILE* fh_destination=fopen(task.destination.filename.c_str(),"r+");
+    FILE* fh_source=fopen(task.source.filename.c_str(),"rb+");
+    FILE* fh_destination=fopen(task.destination.filename.c_str(),"rb+");
     char* data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     fseek(fh_source,task.source.offset,SEEK_SET);
     fread(data,task.source.size, sizeof(char),fh_source);

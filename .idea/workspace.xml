@@ -19,31 +19,14 @@
     <list default="true" id="1d98b859-b25b-47e6-9e30-8b87bba0f4c5" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/depend.make" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/external_libs/cereal/archives/json.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/archives/json.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/external_libs/cereal/external/rapidjson/document.h" beforeDir="false" afterPath="$PROJECT_DIR$/external_libs/cereal/external/rapidjson/document.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/aetrio_system.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/aetrio_system.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/aetrio_system.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/aetrio_system.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/client_interface/distributed_queue.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/client_interface/distributed_queue.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/common/constants.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/constants.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/data_structures.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/data_structures.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/enumerations.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/enumerations.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/common/external_clients/memcached_impl.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/external_clients/memcached_impl.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/common/external_clients/nats_impl.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/external_clients/nats_impl.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/external_clients/nats_impl.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/external_clients/nats_impl.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/external_clients/serialization_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/external_clients/serialization_manager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/external_clients/serialization_manager.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/external_clients/serialization_manager.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/task_handler/task_handler.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/task_handler/task_handler.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/common/task_handler/task_handler.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/common/task_handler/task_handler.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/driver.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/driver.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/posix.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/posix.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/task_scheduler/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/main.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/worker/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/worker/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/worker/program_repo/posix_client.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/worker/program_repo/posix_client.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/worker/worker_service.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/worker/worker_service.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/worker/worker_service.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/worker/worker_service.h" afterDir="false" />
     </list>
@@ -59,68 +42,47 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="serialization_manager.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/external_clients/serialization_manager.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="260">
-              <caret line="76" selection-start-line="76" selection-end-line="76" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="main.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/task_scheduler/main.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="319">
-              <caret line="11" selection-start-line="11" selection-end-line="11" />
-              <folding>
-                <element signature="e#3#19#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="worker_service.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/worker/worker_service.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="666">
-              <caret line="28" column="11" selection-start-line="28" selection-start-column="8" selection-end-line="28" selection-end-column="11" />
-              <folding>
-                <element signature="e#116#169#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="worker_service.cpp" pinned="false" current-in-tab="true">
+      <file leaf-file-name="worker_service.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/worker/worker_service.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1044">
-              <caret line="39" column="57" selection-start-line="39" selection-start-column="57" selection-end-line="39" selection-end-column="57" />
+            <state relative-caret-position="260">
+              <caret line="20" selection-start-line="20" selection-end-line="20" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="nats_impl.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/external_clients/nats_impl.cpp">
+      <file leaf-file-name="io_client.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/worker/program_repo/io_client.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="491">
-              <caret line="51" column="7" selection-start-line="51" selection-start-column="7" selection-end-line="51" selection-end-column="7" />
-              <folding>
-                <element signature="e#43#65#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="319">
+              <caret line="11" column="16" selection-start-line="11" selection-start-column="16" selection-end-line="11" selection-end-column="16" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/README.md">
-          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-            <state split_layout="SPLIT">
-              <first_editor relative-caret-position="499">
-                <caret line="36" column="43" selection-start-line="36" selection-start-column="43" selection-end-line="36" selection-end-column="43" />
-              </first_editor>
-              <second_editor />
+      <file leaf-file-name="posix_client.cpp" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/worker/program_repo/posix_client.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="403">
+              <caret line="23" selection-start-line="23" selection-end-line="23" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="driver.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="405">
+              <caret line="82" column="16" selection-start-line="82" selection-start-column="16" selection-end-line="82" selection-end-column="16" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="posix.cpp" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/lib/posix.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="476">
+              <caret line="102" column="54" selection-start-line="102" selection-start-column="54" selection-end-line="102" selection-end-column="54" />
             </state>
           </provider>
         </entry>
@@ -128,8 +90,8 @@
       <file leaf-file-name="task_scheduler_service.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="608">
-              <caret line="37" column="5" lean-forward="true" selection-start-line="18" selection-start-column="4" selection-end-line="37" selection-end-column="5" />
+            <state relative-caret-position="260">
+              <caret line="154" selection-start-line="154" selection-end-line="154" />
               <folding>
                 <element signature="e#43#78#0" expanded="true" />
               </folding>
@@ -137,29 +99,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <file leaf-file-name="task_scheduler_service.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-632">
-              <caret line="10" column="52" lean-forward="true" selection-start-line="10" selection-start-column="52" selection-end-line="10" selection-end-column="52" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="distributed_queue.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/client_interface/distributed_queue.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="665">
-              <caret line="43" column="39" selection-start-line="43" selection-start-column="12" selection-end-line="43" selection-end-column="39" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="nats_impl.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/common/external_clients/nats_impl.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="588">
-              <caret line="27" column="22" selection-start-line="27" selection-start-column="22" selection-end-line="27" selection-end-column="22" />
+            <state relative-caret-position="303">
+              <caret line="17" column="22" selection-start-line="17" selection-start-column="22" selection-end-line="17" selection-end-column="22" />
             </state>
           </provider>
         </entry>
@@ -191,7 +135,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/task_scheduler/solver/test.cpp" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/knapsack.c" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/GreedySolver.cpp" />
         <option value="$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" />
@@ -213,10 +156,8 @@
         <option value="$PROJECT_DIR$/src/common/data_manager/data_manager.h" />
         <option value="$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.h" />
         <option value="$PROJECT_DIR$/src/system.h" />
-        <option value="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.h" />
         <option value="$PROJECT_DIR$/src/porus_system.h" />
         <option value="$PROJECT_DIR$/src/worker/program_repo/io_client.h" />
-        <option value="$PROJECT_DIR$/src/worker/program_repo/posix_client.cpp" />
         <option value="$PROJECT_DIR$/src/worker/program_repo/posix_client.h" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp" />
@@ -224,7 +165,6 @@
         <option value="$PROJECT_DIR$/src/worker/main.cpp" />
         <option value="$PROJECT_DIR$/src/aetrio_system.cpp" />
         <option value="$PROJECT_DIR$/src/aetrio_system.h" />
-        <option value="$PROJECT_DIR$/src/common/constants.h" />
         <option value="$PROJECT_DIR$/external_libs/cereal/archives/json.hpp" />
         <option value="$PROJECT_DIR$/external_libs/cereal/external/rapidjson/document.h" />
         <option value="$PROJECT_DIR$/src/common/enumerations.h" />
@@ -232,16 +172,20 @@
         <option value="$PROJECT_DIR$/src/common/data_structures.h" />
         <option value="$PROJECT_DIR$/src/common/task_handler/task_handler.cpp" />
         <option value="$PROJECT_DIR$/src/common/task_handler/task_handler.h" />
-        <option value="$PROJECT_DIR$/src/lib/posix.cpp" />
         <option value="$PROJECT_DIR$/src/common/external_clients/serialization_manager.h" />
-        <option value="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp" />
         <option value="$PROJECT_DIR$/src/common/external_clients/serialization_manager.cpp" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/src/common/client_interface/distributed_queue.h" />
         <option value="$PROJECT_DIR$/src/common/external_clients/nats_impl.h" />
         <option value="$PROJECT_DIR$/src/common/external_clients/nats_impl.cpp" />
+        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/src/worker/worker_service.h" />
         <option value="$PROJECT_DIR$/src/worker/worker_service.cpp" />
+        <option value="$PROJECT_DIR$/src/common/constants.h" />
+        <option value="$PROJECT_DIR$/src/common/external_clients/memcached_impl.h" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.h" />
+        <option value="$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp" />
+        <option value="$PROJECT_DIR$/src/lib/posix.cpp" />
+        <option value="$PROJECT_DIR$/src/worker/program_repo/posix_client.cpp" />
       </list>
     </option>
   </component>
@@ -275,6 +219,11 @@
             <path>
               <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
               <item name="aetrio" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
+              <item name="aetrio" type="462c0819:PsiDirectoryNode" />
+              <item name="bin" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="porus_main" type="b2602c69:ProjectViewProjectNode" />
@@ -361,16 +310,30 @@
     <configuration name="porus_lib" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_lib" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_lib" />
     <configuration name="porus_server" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_server" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker" />
     <configuration name="porus_task_scheduler" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_task_scheduler" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_task_scheduler" />
-    <configuration name="porus_worker" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker" />
+    <configuration name="porus_worker1" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="1" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker" />
+    <configuration name="porus_worker2" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="2" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker" />
+    <configuration name="porus_worker3" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="3" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker" />
+    <configuration name="porus_worker4" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="4" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker" />
     <configuration name="porus_worker_manager" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="porus_main" TARGET_NAME="porus_worker_manager" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="porus_main" RUN_TARGET_NAME="porus_worker_manager" />
+    <configuration name="Aetrio" type="CompoundRunConfigurationType" factoryName="Compound Run Configuration">
+      <toRun type="CMakeRunConfiguration" name="porus_task_scheduler" targetId="CMakeBuildProfile:Debug" />
+      <toRun type="CMakeRunConfiguration" name="porus_worker1" targetId="CMakeBuildProfile:Debug" />
+      <toRun type="CMakeRunConfiguration" name="porus_worker2" targetId="CMakeBuildProfile:Debug" />
+      <toRun type="CMakeRunConfiguration" name="porus_worker3" targetId="CMakeBuildProfile:Debug" />
+      <toRun type="CMakeRunConfiguration" name="porus_worker4" targetId="CMakeBuildProfile:Debug" />
+    </configuration>
     <list>
+      <item itemvalue="Application.porus_worker1" />
+      <item itemvalue="Application.porus_worker2" />
+      <item itemvalue="Application.porus_worker3" />
+      <item itemvalue="Application.porus_worker4" />
       <item itemvalue="Application.Build All" />
       <item itemvalue="Application.porus_client" />
       <item itemvalue="Application.porus_lib" />
       <item itemvalue="Application.porus_server" />
       <item itemvalue="Application.porus_task_scheduler" />
-      <item itemvalue="Application.porus_worker" />
       <item itemvalue="Application.porus_worker_manager" />
+      <item itemvalue="Compound.Aetrio" />
     </list>
   </component>
   <component name="SvnConfiguration">
@@ -407,7 +370,9 @@
       <workItem from="1525880083281" duration="1823000" />
       <workItem from="1525957063854" duration="9885000" />
       <workItem from="1525972008071" duration="11520000" />
-      <workItem from="1525997532191" duration="10803000" />
+      <workItem from="1525997532191" duration="15614000" />
+      <workItem from="1526063246716" duration="523000" />
+      <workItem from="1526064198092" duration="3494000" />
     </task>
     <task id="LOCAL-00001" summary="made some cool changes">
       <created>1524060178418</created>
@@ -507,17 +472,23 @@
       <option name="project" value="LOCAL" />
       <updated>1525983576122</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="worker code compiling :)">
+      <created>1526052091820</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1526052091821</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="75893000" />
+    <option name="totallyTimeSpent" value="84721000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="121" y="1" width="2440" height="1600" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15266223" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15266223" />
       <window_info anchor="bottom" id="TODO" order="5" />
       <window_info anchor="bottom" id="Messages" order="10" weight="0.3252841" />
       <window_info anchor="bottom" id="CMake" order="6" sideWeight="0.49907675" weight="0.2215909" />
@@ -525,9 +496,9 @@
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32457387" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="9" weight="0.3487216" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" visible="true" weight="0.3487216" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Debug" order="11" visible="true" weight="0.390625" />
+      <window_info anchor="bottom" id="Debug" order="11" weight="0.390625" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="4" weight="0.4" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -548,13 +519,13 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Messages" order="11" visible="true" weight="0.3299389" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.32998326" />
       <window_info anchor="bottom" id="Event Log" order="8" sideWeight="0.5009232" side_tool="true" weight="0.3305416" />
       <window_info anchor="bottom" id="Version Control" order="9" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="CMake" order="10" sideWeight="0.49907675" weight="0.3305416" />
       <window_info id="Favorites" order="2" side_tool="true" />
     </layout-to-restore>
@@ -583,34 +554,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/lib/driver.cpp</url>
-          <line>43</line>
-          <option name="timeStamp" value="15" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/worker/worker_service.cpp</url>
-          <line>35</line>
-          <option name="timeStamp" value="22" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp</url>
-          <line>25</line>
-          <option name="timeStamp" value="39" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp</url>
-          <line>62</line>
-          <option name="timeStamp" value="42" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp</url>
-          <line>73</line>
-          <option name="timeStamp" value="43" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="44" />
+      <option name="time" value="68" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -648,38 +592,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.h" />
-    <entry file="file://$PROJECT_DIR$/src/task_scheduler/solver/DPSolver.cpp" />
-    <entry file="file://$PROJECT_DIR$/src/common/solver/dp_solver.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
-          <caret line="7" selection-start-line="7" selection-end-line="7" />
-          <folding>
-            <element signature="e#104#143#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/solver/greedy_solver.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="319">
-          <caret line="11" column="33" selection-start-line="11" selection-start-column="33" selection-end-line="11" selection-end-column="33" />
-          <folding>
-            <element signature="e#113#132#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/solver/dp_solver.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="116">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
-          <folding>
-            <element signature="e#43#64#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/include/c++/5/memory">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2349">
@@ -728,34 +640,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/worker/program_repo/io_client.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="406">
-          <caret line="14" column="37" selection-start-line="14" selection-start-column="27" selection-end-line="14" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/worker/program_repo/posix_client.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="406">
-          <caret line="34" column="13" selection-start-line="34" selection-start-column="13" selection-end-line="34" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/worker/program_repo/posix_client.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="377">
           <caret line="13" column="31" selection-start-line="13" selection-start-column="31" selection-end-line="13" selection-end-column="31" />
-          <folding>
-            <element signature="e#112#153#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="14" column="28" selection-start-line="14" selection-start-column="6" selection-end-line="14" selection-end-column="28" />
         </state>
       </provider>
     </entry>
@@ -766,16 +654,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/worker/main.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/include/c++/5/bits/basic_string.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="273">
@@ -783,31 +661,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/aetrio_system.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="348">
-          <caret line="60" column="3" selection-start-line="60" selection-start-column="3" selection-end-line="60" selection-end-column="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/constants.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-7">
-          <caret line="14" column="55" selection-start-line="14" selection-start-column="55" selection-end-line="14" selection-end-column="55" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/common/metadata_manager/metadata_manager.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="406">
           <caret line="143" selection-start-line="143" selection-end-line="143" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/aetrio_system.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="395">
-          <caret line="33" selection-start-line="33" selection-end-line="33" />
         </state>
       </provider>
     </entry>
@@ -822,13 +679,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="47676">
           <caret line="1644" selection-start-line="1644" selection-end-line="1644" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/enumerations.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="231">
-          <caret line="37" column="2" lean-forward="true" selection-start-line="37" selection-start-column="2" selection-end-line="37" selection-end-column="2" />
         </state>
       </provider>
     </entry>
@@ -853,13 +703,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/lib/posix.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="672">
-          <caret line="91" column="65" selection-start-line="91" selection-start-column="65" selection-end-line="91" selection-end-column="65" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/common/data_structures.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-957">
@@ -881,9 +724,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="638">
           <caret line="22" column="9" selection-start-line="22" selection-start-column="9" selection-end-line="22" selection-end-column="9" />
-          <folding>
-            <element signature="e#131#162#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -891,13 +731,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="246">
           <caret line="639" selection-start-line="639" selection-end-line="639" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="43" selection-start-line="43" selection-end-line="43" />
         </state>
       </provider>
     </entry>
@@ -915,13 +748,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-632">
-          <caret line="10" column="52" lean-forward="true" selection-start-line="10" selection-start-column="52" selection-end-line="10" selection-end-column="52" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/task_scheduler/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="319">
@@ -932,23 +758,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="499">
-            <caret line="36" column="43" selection-start-line="36" selection-start-column="43" selection-end-line="36" selection-end-column="43" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/common/client_interface/distributed_queue.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="665">
-          <caret line="43" column="39" selection-start-line="43" selection-start-column="12" selection-end-line="43" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/nats_impl.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="588">
@@ -956,40 +765,172 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/worker/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="174">
+          <caret line="6" selection-start-line="6" selection-end-line="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/client_interface/distributed_queue.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="317">
+          <caret line="40" column="16" selection-start-line="40" selection-start-column="16" selection-end-line="40" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="383">
+            <caret line="30" column="25" lean-forward="true" selection-start-line="30" selection-start-column="25" selection-end-line="30" selection-end-column="25" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/common/external_clients/nats_impl.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="491">
-          <caret line="51" column="7" selection-start-line="51" selection-start-column="7" selection-end-line="51" selection-end-column="7" />
+        <state relative-caret-position="549">
+          <caret line="57" selection-start-line="57" selection-end-line="57" />
           <folding>
             <element signature="e#43#65#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="608">
-          <caret line="37" column="5" lean-forward="true" selection-start-line="18" selection-start-column="4" selection-end-line="37" selection-end-column="5" />
-          <folding>
-            <element signature="e#43#78#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/worker/worker_service.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="666">
-          <caret line="28" column="11" selection-start-line="28" selection-start-column="8" selection-end-line="28" selection-end-column="11" />
+        <state relative-caret-position="491">
+          <caret line="42" column="23" selection-start-line="42" selection-start-column="23" selection-end-line="42" selection-end-column="23" />
           <folding>
             <element signature="e#116#169#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/enumerations.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1537">
+          <caret line="53" column="19" selection-start-line="53" selection-start-column="4" selection-end-line="53" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/aetrio_system.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="754">
+          <caret line="26" selection-start-line="26" selection-end-line="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/solver/knapsack.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8439">
+          <caret line="291" selection-start-line="291" selection-end-line="291" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1740">
+          <caret line="60" column="48" selection-start-line="60" selection-start-column="40" selection-end-line="60" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/aetrio_system.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="406">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../install/include/libmemcached-1.0/struct/memcached.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="273">
+          <caret line="39" column="7" selection-start-line="39" selection-start-column="7" selection-end-line="39" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../install/include/libmemcached-1.0/memcached.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="137" column="23" selection-start-line="137" selection-start-column="23" selection-end-line="137" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/constants.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="609">
+          <caret line="23" column="17" selection-start-line="23" selection-start-column="17" selection-end-line="23" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/external_clients/memcached_impl.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="522">
+          <caret line="18" column="73" selection-start-line="18" selection-start-column="73" selection-end-line="18" selection-end-column="73" />
+          <folding>
+            <element signature="e#114#166#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/common/external_clients/memcached_impl.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="667">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="303">
+          <caret line="17" column="22" selection-start-line="17" selection-start-column="22" selection-end-line="17" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/worker/program_repo/io_client.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="319">
+          <caret line="11" column="16" selection-start-line="11" selection-start-column="16" selection-end-line="11" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lib/driver.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="405">
+          <caret line="82" column="16" selection-start-line="82" selection-start-column="16" selection-end-line="82" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/task_scheduler/task_scheduler_service.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="154" selection-start-line="154" selection-end-line="154" />
+          <folding>
+            <element signature="e#43#78#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/worker/worker_service.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1044">
-          <caret line="39" column="57" selection-start-line="39" selection-start-column="57" selection-end-line="39" selection-end-column="57" />
+        <state relative-caret-position="260">
+          <caret line="20" selection-start-line="20" selection-end-line="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lib/posix.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="476">
+          <caret line="102" column="54" selection-start-line="102" selection-start-column="54" selection-end-line="102" selection-end-column="54" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/worker/program_repo/posix_client.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="403">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
         </state>
       </provider>
     </entry>
