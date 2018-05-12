@@ -70,6 +70,6 @@ int worker_service::calculate_worker_score() {
 }
 
 int worker_service::update_capacity() {
-    int worker_capacity=5;
+    int worker_capacity=5*1024*1024;
     map->put(table::WORKER_CAPACITY,std::to_string(worker_index),std::to_string(worker_capacity));
 }

@@ -5,7 +5,7 @@
 #include "memcached_impl.h"
 
 int MemcacheDImpl::put(table table_name, std::string key, std::string value) {
-    key=std::to_string(application_id)+KEY_SEPARATOR+std::to_string(table_name)+KEY_SEPARATOR+key;
+    key=std::to_string(table_name)+KEY_SEPARATOR+key;
 
     memcached_return_t rc= memcached_set(mem_client,
                                                 key.c_str(),
@@ -20,7 +20,7 @@ int MemcacheDImpl::put(table table_name, std::string key, std::string value) {
 std::string MemcacheDImpl::get(table table_name, std::string key) {
     char *return_value;
     size_t size;
-    key=std::to_string(application_id)+KEY_SEPARATOR+std::to_string(table_name)+KEY_SEPARATOR+key;
+    key=std::to_string(table_name)+KEY_SEPARATOR+key;
     return_value = memcached_get(mem_client,
                                  key.c_str(),
                                  key.length(),
@@ -34,7 +34,7 @@ std::string MemcacheDImpl::get(table table_name, std::string key) {
 }
 
 std::string MemcacheDImpl::remove(table table_name, std::string key) {
-    key=std::to_string(application_id)+KEY_SEPARATOR+std::to_string(table_name)+KEY_SEPARATOR+key;
+    key=std::to_string(table_name)+KEY_SEPARATOR+key;
     size_t size;
     std::string value=memcached_get(mem_client,
                                     key.c_str(),

@@ -13,9 +13,8 @@
 class MemcacheDImpl: public distributed_hashmap {
 private:
     memcached_st * mem_client;
-    int application_id;
 public:
-    MemcacheDImpl(service service,const std::string config_string,int server):distributed_hashmap(service),application_id(server){
+    MemcacheDImpl(service service,const std::string config_string,int server):distributed_hashmap(service){
        mem_client = memcached(config_string.c_str(), config_string.size());
     }
     int put(table table_name,std::string key,std::string value) override ;

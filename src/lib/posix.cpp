@@ -95,9 +95,10 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     int index=0;
     std::string data((char*)ptr);
     for(auto task:write_tasks){
-        task_m->submit(&task);
         id=task.destination.filename;
-        if(index==0) data_m->put(id, data);
+        std::string temp_data=data.substr(task.source.offset,task.destination.size);
+        data_m->put(id, temp_data);
+        task_m->submit(&task);
         index++;
     }
     mdm->update_write_task_info(write_tasks,filename);

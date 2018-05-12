@@ -39,7 +39,7 @@ int task_scheduler_service::run() {
     while(!kill){
         usleep(10);
         int status=-1;
-        task* task_i= queue->subscribe_task(status);
+        task* task_i= queue->subscribe_task_with_timeout(status);
         if(status!=-1){
             count++;
             switch (task_i->t_type){
@@ -63,7 +63,7 @@ int task_scheduler_service::run() {
             schedule_tasks(task_list,write_count,read_count);
             count=0;
             t.startTime();
-            task_list.empty();
+            task_list.clear();
         }
     }
     return 0;

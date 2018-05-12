@@ -20,12 +20,11 @@
 
 
 ##Setup Porus
-#####add to $PATH
 ### Memcached
 #### Client
-`memcached -p 11211 -l localhost -d`
+`memcached -p 11211 -l localhost -d  -I 4M`
 #### Server
-`memcached -p 11212 -l localhost -d`
+`memcached -p 11212 -l localhost -d  -I 4M`
 ### NATS
 #### Client
 `gnatsd -p 4222 -a localhost -DV -m 8222 -l ~/nats_client.log &`

@@ -15,7 +15,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=MULTI_WRITE;
+test_case testCase=SIMPLE_WRITE;
 /*
  * function definitions
  */
@@ -58,10 +58,24 @@ int main(int argc, char** argv){
     porus::MPI_Finalize();
     return return_val;
 }
+void gen_random(char *s, const int len) {
+    static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    s[len] = 0;
+}
 int simple_write(){
     FILE* fh=porus::fopen("test","weight+");
-    char* t="hello";
-    porus::fwrite(t,1,5,fh);
+    size_t size_of_io=4 * 1024 * 1024;
+    char* t= static_cast<char *>(malloc(size_of_io));
+    gen_random(t,size_of_io);
+    porus::fwrite(t,1,size_of_io,fh);
     porus::fclose(fh);
     std::cout << "write data: "<< t <<std::endl;
     return 0;
