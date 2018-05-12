@@ -1,22 +1,17 @@
 # README #
 
-##TODO
-* Organize the code
-    * Make consider_after_a generic abstract (pure virtual) interface in 
-    common/client_interface.
-    * Make all external client implement the abstract class.
-* Implement Porus Client Service(Future task)
-    * simply route all calls through this guy
-* Finish Porus lib 
-    * application registration
-    * test write and read to and from Porus Client (Memcached and NATS)
-* Complete Task Scheduler
-    * Decide on strategies for Task Scheduler
-    * finalize code for how to do pick up task and put in worker queue
-* Complete Worker Programs
-    * Integrate worker programs into code
-
-* Run end to end test
+##TODO CODE
+* IDs everywhere
+* Debugged with many cases for logical bugs
+* Metadata updates and creation
+* Task scheduling with greedy
+* code cleanup
+* add daemon for SS and WS
+##TODO INVESTIGATION
+* Investigate worker suspension
+* Investigate read simulation
+* Automated server bootstrapping
+* Cluster environment: 1 Lib, 1 TaskSched, 2 worker
 
 
 ##Setup Porus
