@@ -16,7 +16,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/aetrio/src/common/solver/dp_solver.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/common/solver/dp_solver.cpp.o"
   "/opt/projects/aetrio/src/common/solver/greedy_solver.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/common/solver/greedy_solver.cpp.o"
   "/opt/projects/aetrio/src/common/solver/knapsack.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.o"
-  "/opt/projects/aetrio/src/common/task_handler/task_handler.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o"
+  "/opt/projects/aetrio/src/common/task_builder/task_builder.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/common/task_builder/task_builder.cpp.o"
   "/opt/projects/aetrio/src/common/timer.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/common/timer.cpp.o"
   "/opt/projects/aetrio/src/task_scheduler/main.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/main.cpp.o"
   "/opt/projects/aetrio/src/task_scheduler/task_scheduler_service.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.o"

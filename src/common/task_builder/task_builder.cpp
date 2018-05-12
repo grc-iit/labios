@@ -3,17 +3,13 @@
 //
 
 #include <cmath>
-#include "task_handler.h"
+#include "task_builder.h"
 #include "../data_structures.h"
 #include "../metadata_manager/metadata_manager.h"
 
-std::shared_ptr<task_handler> task_handler::instance = nullptr;
+std::shared_ptr<task_builder> task_builder::instance = nullptr;
 
-int task_handler::submit(task *task_t){
-    return dq->publish_task(task_t);
-}
-
-std::vector<write_task> task_handler::build_task_write(write_task task,std::string data) {
+std::vector<write_task> task_builder::build_task_write(write_task task,std::string data) {
     std::vector<write_task> tasks=std::vector<write_task>();
     serialization_manager sm=serialization_manager();
     file source=task.source;
@@ -85,7 +81,7 @@ std::vector<write_task> task_handler::build_task_write(write_task task,std::stri
     return tasks;
 }
 
-std::vector<read_task> task_handler::build_task_read(read_task task) {
+std::vector<read_task> task_builder::build_task_read(read_task task) {
     std::vector<read_task> tasks=std::vector<read_task>();
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     auto chunks=mdm->fetch_chunks(task);

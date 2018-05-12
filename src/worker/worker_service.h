@@ -7,11 +7,11 @@
 
 
 #include "../task_scheduler/task_scheduler_service.h"
-#include "program_repo/io_client.h"
+#include "api/io_client.h"
 #include "../common/external_clients/memcached_impl.h"
-#include "program_repo/posix_client.h"
+#include "api/posix_client.h"
 #include "../aetrio_system.h"
-#include "program_repo/posix_client.h"
+#include "api/posix_client.h"
 
 class worker_service {
 private:
@@ -30,6 +30,8 @@ private:
 
     }
 
+    int calculate_worker_score();
+    int update_capacity();
     int update_score();
 public:
     int kill;
@@ -38,9 +40,6 @@ public:
                                   : instance;
     }
     int run();
-
-    int calculate_worker_score();
-    int update_capacity();
 };
 
 

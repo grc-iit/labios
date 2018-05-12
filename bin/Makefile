@@ -746,47 +746,47 @@ src/common/solver/knapsack.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.s
 .PHONY : src/common/solver/knapsack.cpp.s
 
-src/common/task_handler/task_handler.o: src/common/task_handler/task_handler.cpp.o
+src/common/task_builder/task_builder.o: src/common/task_builder/task_builder.cpp.o
 
-.PHONY : src/common/task_handler/task_handler.o
+.PHONY : src/common/task_builder/task_builder.o
 
 # target to build an object file
-src/common/task_handler/task_handler.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.o
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.o
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.o
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.o
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.o
-.PHONY : src/common/task_handler/task_handler.cpp.o
+src/common/task_builder/task_builder.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_builder/task_builder.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_builder/task_builder.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_builder/task_builder.cpp.o
+.PHONY : src/common/task_builder/task_builder.cpp.o
 
-src/common/task_handler/task_handler.i: src/common/task_handler/task_handler.cpp.i
+src/common/task_builder/task_builder.i: src/common/task_builder/task_builder.cpp.i
 
-.PHONY : src/common/task_handler/task_handler.i
+.PHONY : src/common/task_builder/task_builder.i
 
 # target to preprocess a source file
-src/common/task_handler/task_handler.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.i
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.i
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.i
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.i
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.i
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.i
-.PHONY : src/common/task_handler/task_handler.cpp.i
+src/common/task_builder/task_builder.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_builder/task_builder.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_builder/task_builder.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_builder/task_builder.cpp.i
+.PHONY : src/common/task_builder/task_builder.cpp.i
 
-src/common/task_handler/task_handler.s: src/common/task_handler/task_handler.cpp.s
+src/common/task_builder/task_builder.s: src/common/task_builder/task_builder.cpp.s
 
-.PHONY : src/common/task_handler/task_handler.s
+.PHONY : src/common/task_builder/task_builder.s
 
 # target to generate assembly for a file
-src/common/task_handler/task_handler.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_handler/task_handler.cpp.s
-	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_handler/task_handler.cpp.s
-	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_handler/task_handler.cpp.s
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.s
-	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.s
-	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_handler/task_handler.cpp.s
-.PHONY : src/common/task_handler/task_handler.cpp.s
+src/common/task_builder/task_builder.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/task_builder/task_builder.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/task_builder/task_builder.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/task_builder/task_builder.cpp.s
+.PHONY : src/common/task_builder/task_builder.cpp.s
 
 src/common/timer.o: src/common/timer.cpp.o
 
@@ -992,6 +992,33 @@ src/task_scheduler/task_scheduler_service.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/task_scheduler/task_scheduler_service.cpp.s
 .PHONY : src/task_scheduler/task_scheduler_service.cpp.s
 
+src/worker/api/posix_client.o: src/worker/api/posix_client.cpp.o
+
+.PHONY : src/worker/api/posix_client.o
+
+# target to build an object file
+src/worker/api/posix_client.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/api/posix_client.cpp.o
+.PHONY : src/worker/api/posix_client.cpp.o
+
+src/worker/api/posix_client.i: src/worker/api/posix_client.cpp.i
+
+.PHONY : src/worker/api/posix_client.i
+
+# target to preprocess a source file
+src/worker/api/posix_client.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/api/posix_client.cpp.i
+.PHONY : src/worker/api/posix_client.cpp.i
+
+src/worker/api/posix_client.s: src/worker/api/posix_client.cpp.s
+
+.PHONY : src/worker/api/posix_client.s
+
+# target to generate assembly for a file
+src/worker/api/posix_client.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/api/posix_client.cpp.s
+.PHONY : src/worker/api/posix_client.cpp.s
+
 src/worker/main.o: src/worker/main.cpp.o
 
 .PHONY : src/worker/main.o
@@ -1018,33 +1045,6 @@ src/worker/main.s: src/worker/main.cpp.s
 src/worker/main.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/main.cpp.s
 .PHONY : src/worker/main.cpp.s
-
-src/worker/program_repo/posix_client.o: src/worker/program_repo/posix_client.cpp.o
-
-.PHONY : src/worker/program_repo/posix_client.o
-
-# target to build an object file
-src/worker/program_repo/posix_client.cpp.o:
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.o
-.PHONY : src/worker/program_repo/posix_client.cpp.o
-
-src/worker/program_repo/posix_client.i: src/worker/program_repo/posix_client.cpp.i
-
-.PHONY : src/worker/program_repo/posix_client.i
-
-# target to preprocess a source file
-src/worker/program_repo/posix_client.cpp.i:
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.i
-.PHONY : src/worker/program_repo/posix_client.cpp.i
-
-src/worker/program_repo/posix_client.s: src/worker/program_repo/posix_client.cpp.s
-
-.PHONY : src/worker/program_repo/posix_client.s
-
-# target to generate assembly for a file
-src/worker/program_repo/posix_client.cpp.s:
-	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/worker/program_repo/posix_client.cpp.s
-.PHONY : src/worker/program_repo/posix_client.cpp.s
 
 src/worker/program_repo/statistics.o: src/worker/program_repo/statistics.cpp.o
 
@@ -1183,9 +1183,9 @@ help:
 	@echo "... src/common/solver/knapsack.o"
 	@echo "... src/common/solver/knapsack.i"
 	@echo "... src/common/solver/knapsack.s"
-	@echo "... src/common/task_handler/task_handler.o"
-	@echo "... src/common/task_handler/task_handler.i"
-	@echo "... src/common/task_handler/task_handler.s"
+	@echo "... src/common/task_builder/task_builder.o"
+	@echo "... src/common/task_builder/task_builder.i"
+	@echo "... src/common/task_builder/task_builder.s"
 	@echo "... src/common/timer.o"
 	@echo "... src/common/timer.i"
 	@echo "... src/common/timer.s"
@@ -1207,12 +1207,12 @@ help:
 	@echo "... src/task_scheduler/task_scheduler_service.o"
 	@echo "... src/task_scheduler/task_scheduler_service.i"
 	@echo "... src/task_scheduler/task_scheduler_service.s"
+	@echo "... src/worker/api/posix_client.o"
+	@echo "... src/worker/api/posix_client.i"
+	@echo "... src/worker/api/posix_client.s"
 	@echo "... src/worker/main.o"
 	@echo "... src/worker/main.i"
 	@echo "... src/worker/main.s"
-	@echo "... src/worker/program_repo/posix_client.o"
-	@echo "... src/worker/program_repo/posix_client.i"
-	@echo "... src/worker/program_repo/posix_client.s"
 	@echo "... src/worker/program_repo/statistics.o"
 	@echo "... src/worker/program_repo/statistics.i"
 	@echo "... src/worker/program_repo/statistics.s"

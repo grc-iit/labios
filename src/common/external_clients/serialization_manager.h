@@ -12,6 +12,7 @@
 #include <cereal/cereal.hpp>
 class serialization_manager {
 public:
+    //TODO: explore binary with NATS and memcached
     std::string serialise_file_stat(file_stat stat);
 
     chunk_meta deserialise_chunk(std::string chunk_str);

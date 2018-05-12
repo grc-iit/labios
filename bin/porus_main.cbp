@@ -582,7 +582,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/aetrio/src/common/task_handler/task_handler.cpp">
+      <Unit filename="/opt/projects/aetrio/src/common/task_builder/task_builder.cpp">
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
          <Option target="porus_lib"/>
@@ -590,7 +590,7 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
-      <Unit filename="/opt/projects/aetrio/src/common/task_handler/task_handler.h">
+      <Unit filename="/opt/projects/aetrio/src/common/task_builder/task_builder.h">
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>
          <Option target="porus_lib"/>
@@ -649,13 +649,16 @@
       <Unit filename="/opt/projects/aetrio/src/task_scheduler/task_scheduler_service.h">
          <Option target="porus_task_scheduler"/>
       </Unit>
+      <Unit filename="/opt/projects/aetrio/src/worker/api/io_client.h">
+         <Option target="porus_worker"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/worker/api/posix_client.cpp">
+         <Option target="porus_worker"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/worker/api/posix_client.h">
+         <Option target="porus_worker"/>
+      </Unit>
       <Unit filename="/opt/projects/aetrio/src/worker/main.cpp">
-         <Option target="porus_worker"/>
-      </Unit>
-      <Unit filename="/opt/projects/aetrio/src/worker/program_repo/posix_client.cpp">
-         <Option target="porus_worker"/>
-      </Unit>
-      <Unit filename="/opt/projects/aetrio/src/worker/program_repo/posix_client.h">
          <Option target="porus_worker"/>
       </Unit>
       <Unit filename="/opt/projects/aetrio/src/worker/program_repo/statistics.cpp">

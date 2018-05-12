@@ -7,7 +7,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o"
   "CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o"
-  "CMakeFiles/porus_server.dir/src/common/task_handler/task_handler.cpp.o"
+  "CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o"

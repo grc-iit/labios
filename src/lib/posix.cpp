@@ -54,7 +54,8 @@ int porus::fseek(FILE *stream, long int offset, int origin) {
 
 size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT));
+    auto client_queue=aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT);
+    std::shared_ptr<task_builder> task_m=task_builder::getInstance(LIB);
     std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     auto offset=mdm->get_fp(filename);
@@ -66,7 +67,7 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
         char * data;
         switch(task.source.dest_t){
             case FILE_LOC:{
-                task_m->submit(&task);
+                client_queue->publish_task(&task);
                 //TODO: add logic to wait from Buffer
                 break;
             }
@@ -84,7 +85,8 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 
 size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    std::shared_ptr<task_handler> task_m=task_handler::getInstance(LIB,aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT));
+    auto client_queue=aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT);
+    std::shared_ptr<task_builder> task_m=task_builder::getInstance(LIB);
     std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     auto offset=mdm->get_fp(filename);
@@ -98,7 +100,7 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
         id=task.destination.filename;
         std::string temp_data=data.substr(task.source.offset,task.destination.size);
         data_m->put(id, temp_data);
-        task_m->submit(&task);
+        client_queue->publish_task(&task);
         index++;
     }
     mdm->update_write_task_info(write_tasks,filename);

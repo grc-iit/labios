@@ -249,28 +249,28 @@ CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o.provides: CMakeFiles/porus_c
 CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o
 
 
-CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o: CMakeFiles/porus_client.dir/flags.make
-CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o: ../src/common/task_handler/task_handler.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o -c /opt/projects/aetrio/src/common/task_handler/task_handler.cpp
+CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o: CMakeFiles/porus_client.dir/flags.make
+CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o: ../src/common/task_builder/task_builder.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o -c /opt/projects/aetrio/src/common/task_builder/task_builder.cpp
 
-CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/task_handler/task_handler.cpp > CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.i
+CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/task_builder/task_builder.cpp > CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.i
 
-CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/task_handler/task_handler.cpp -o CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.s
+CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/task_builder/task_builder.cpp -o CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.s
 
-CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.requires:
+CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.requires:
 
-.PHONY : CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.requires
+.PHONY : CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.requires
 
-CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.provides: CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.requires
-	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.provides.build
-.PHONY : CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.provides
+CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.provides: CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.provides
 
-CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o
+CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.provides.build: CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o
 
 
 CMakeFiles/porus_client.dir/src/common/client_interface/distributed_queue.cpp.o: CMakeFiles/porus_client.dir/flags.make
@@ -451,7 +451,7 @@ porus_client_OBJECTS = \
 "CMakeFiles/porus_client.dir/src/common/client_interface/distributed_hashmap.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o" \
 "CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o" \
-"CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o" \
+"CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/client_interface/distributed_queue.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o" \
 "CMakeFiles/porus_client.dir/src/common/external_clients/rocksdb_impl.cpp.o" \
@@ -471,7 +471,7 @@ porus_client: CMakeFiles/porus_client.dir/src/common/data_manager/data_manager.c
 porus_client: CMakeFiles/porus_client.dir/src/common/client_interface/distributed_hashmap.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o
-porus_client: CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o
+porus_client: CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/client_interface/distributed_queue.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o
 porus_client: CMakeFiles/porus_client.dir/src/common/external_clients/rocksdb_impl.cpp.o
@@ -499,7 +499,7 @@ CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/dat
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/client_interface/distributed_hashmap.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o.requires
-CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/task_handler/task_handler.cpp.o.requires
+CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/client_interface/distributed_queue.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/serialization_manager.cpp.o.requires
 CMakeFiles/porus_client.dir/requires: CMakeFiles/porus_client.dir/src/common/external_clients/rocksdb_impl.cpp.o.requires
