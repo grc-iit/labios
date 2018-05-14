@@ -2,6 +2,7 @@
 // Created by hariharan on 2/16/18.
 //
 #include "posix.h"
+#include "../common/task_builder/task_builder.h"
 
 FILE *porus::fopen(const char *filename, const char *mode) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);

@@ -6,7 +6,7 @@
 #define PORUS_MAIN_SYSTEM_MANAGER_SERVICE_H
 
 
-#include <bits/shared_ptr.h>
+#include <memory>
 #include "../common/enumerations.h"
 
 class system_manager_service {

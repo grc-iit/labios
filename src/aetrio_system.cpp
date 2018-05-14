@@ -12,7 +12,7 @@ std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
 int aetrio_system::init(service service) {
     MPI_Comm_rank(MPI_COMM_SELF,&rank);
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_server= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,MEMCACHED_URL_SERVER,0));
+        map_server= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,configuration_manager::get_instance()->MEMCACHED_URL_SERVER,0));
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_server=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_server));
     }
@@ -53,7 +53,7 @@ int aetrio_system::init(service service) {
     }
 
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_client= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,MEMCACHED_URL_CLIENT,application_id));
+        map_client= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,configuration_manager::get_instance()->MEMCACHED_URL_CLIENT,application_id));
 
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_client=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_client));

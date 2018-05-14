@@ -368,6 +368,48 @@ src/common/client_interface/distributed_queue.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/client_interface/distributed_queue.cpp.s
 .PHONY : src/common/client_interface/distributed_queue.cpp.s
 
+src/common/configuration_manager.o: src/common/configuration_manager.cpp.o
+
+.PHONY : src/common/configuration_manager.o
+
+# target to build an object file
+src/common/configuration_manager.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/configuration_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/configuration_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/configuration_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/configuration_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/configuration_manager.cpp.o
+.PHONY : src/common/configuration_manager.cpp.o
+
+src/common/configuration_manager.i: src/common/configuration_manager.cpp.i
+
+.PHONY : src/common/configuration_manager.i
+
+# target to preprocess a source file
+src/common/configuration_manager.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/configuration_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/configuration_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/configuration_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/configuration_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/configuration_manager.cpp.i
+.PHONY : src/common/configuration_manager.cpp.i
+
+src/common/configuration_manager.s: src/common/configuration_manager.cpp.s
+
+.PHONY : src/common/configuration_manager.s
+
+# target to generate assembly for a file
+src/common/configuration_manager.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/configuration_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/configuration_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/configuration_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/configuration_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/configuration_manager.cpp.s
+.PHONY : src/common/configuration_manager.cpp.s
+
 src/common/data_manager/data_manager.o: src/common/data_manager/data_manager.cpp.o
 
 .PHONY : src/common/data_manager/data_manager.o
@@ -1210,6 +1252,9 @@ help:
 	@echo "... src/common/client_interface/distributed_queue.o"
 	@echo "... src/common/client_interface/distributed_queue.i"
 	@echo "... src/common/client_interface/distributed_queue.s"
+	@echo "... src/common/configuration_manager.o"
+	@echo "... src/common/configuration_manager.i"
+	@echo "... src/common/configuration_manager.s"
 	@echo "... src/common/data_manager/data_manager.o"
 	@echo "... src/common/data_manager/data_manager.i"
 	@echo "... src/common/data_manager/data_manager.s"

@@ -16,6 +16,7 @@
 #include "common/client_interface/distributed_queue.h"
 #include "common/solver/solver.h"
 #include "common/external_clients/nats_impl.h"
+#include "common/configuration_manager.h"
 #include <mpi.h>
 #include <string>
 class aetrio_system {
@@ -30,10 +31,10 @@ private:
     int init(service service);
 public:
     inline std::shared_ptr<distributed_queue> get_queue_client(std::string subject){
-        return std::shared_ptr<NatsImpl>(new NatsImpl(service_i,NATS_URL_CLIENT,CLIENT_TASK_SUBJECT));
+        return std::shared_ptr<NatsImpl>(new NatsImpl(service_i,configuration_manager::get_instance()->NATS_URL_CLIENT,CLIENT_TASK_SUBJECT));
     }
     inline std::shared_ptr<distributed_queue> get_worker_queue(int worker_index, std::string subject){
-        return std::shared_ptr<NatsImpl>(new NatsImpl(service_i,NATS_URL_SERVER,WORKER_TASK_SUBJECT[worker_index]));
+        return std::shared_ptr<NatsImpl>(new NatsImpl(service_i,configuration_manager::get_instance()->NATS_URL_SERVER,WORKER_TASK_SUBJECT[worker_index]));
     }
     std::shared_ptr<solver> solver_i;
     std::shared_ptr<distributed_hashmap> map_client,map_server;

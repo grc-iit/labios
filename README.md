@@ -4,6 +4,7 @@
 * IDs everywhere
 * Debugged with many cases for logical bugs
 * Metadata updates and creation
+* build configuration manager to change ip and ports on command line.
 * task_builder alogorithm for building read and write task
     * case 1: new write:
         * if write > 64KB && <2MB then build 1 task

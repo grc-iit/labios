@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <cstring>
 #include "mpi.h"
-#include "../common/task_handler/task_builder.h"
 #include "../common/metadata_manager/metadata_manager.h"
 #include "../common/data_manager/data_manager.h"
 #include "../aetrio_system.h"

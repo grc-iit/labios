@@ -7,6 +7,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/aetrio/src/aetrio_system.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/aetrio_system.cpp.o"
   "/opt/projects/aetrio/src/common/client_interface/distributed_hashmap.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_hashmap.cpp.o"
   "/opt/projects/aetrio/src/common/client_interface/distributed_queue.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/client_interface/distributed_queue.cpp.o"
+  "/opt/projects/aetrio/src/common/configuration_manager.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/configuration_manager.cpp.o"
   "/opt/projects/aetrio/src/common/data_manager/data_manager.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/data_manager/data_manager.cpp.o"
   "/opt/projects/aetrio/src/common/external_clients/memcached_impl.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/external_clients/memcached_impl.cpp.o"
   "/opt/projects/aetrio/src/common/external_clients/nats_impl.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/external_clients/nats_impl.cpp.o"

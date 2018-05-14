@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/porus_worker_manager.dir/src/common/configuration_manager.cpp.o"
   "CMakeFiles/porus_worker_manager.dir/src/common/solver/dp_solver.cpp.o"
   "CMakeFiles/porus_worker_manager.dir/src/common/solver/greedy_solver.cpp.o"
   "CMakeFiles/porus_worker_manager.dir/src/common/solver/knapsack.cpp.o"
