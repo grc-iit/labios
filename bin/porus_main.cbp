@@ -640,6 +640,12 @@
       <Unit filename="/opt/projects/aetrio/src/system_manager/main.cpp">
          <Option target="porus_server"/>
       </Unit>
+      <Unit filename="/opt/projects/aetrio/src/system_manager/system_manager_service.cpp">
+         <Option target="porus_server"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/system_manager/system_manager_service.h">
+         <Option target="porus_server"/>
+      </Unit>
       <Unit filename="/opt/projects/aetrio/src/task_scheduler/main.cpp">
          <Option target="porus_task_scheduler"/>
       </Unit>
@@ -674,6 +680,12 @@
          <Option target="porus_worker"/>
       </Unit>
       <Unit filename="/opt/projects/aetrio/src/worker_manager/main.cpp">
+         <Option target="porus_worker_manager"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/worker_manager/worker_manager_service.cpp">
+         <Option target="porus_worker_manager"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/worker_manager/worker_manager_service.h">
          <Option target="porus_worker_manager"/>
       </Unit>
       <Unit filename="/opt/projects/aetrio/CMakeLists.txt">

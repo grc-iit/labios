@@ -938,6 +938,33 @@ src/system_manager/main.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system_manager/main.cpp.s
 .PHONY : src/system_manager/main.cpp.s
 
+src/system_manager/system_manager_service.o: src/system_manager/system_manager_service.cpp.o
+
+.PHONY : src/system_manager/system_manager_service.o
+
+# target to build an object file
+src/system_manager/system_manager_service.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o
+.PHONY : src/system_manager/system_manager_service.cpp.o
+
+src/system_manager/system_manager_service.i: src/system_manager/system_manager_service.cpp.i
+
+.PHONY : src/system_manager/system_manager_service.i
+
+# target to preprocess a source file
+src/system_manager/system_manager_service.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.i
+.PHONY : src/system_manager/system_manager_service.cpp.i
+
+src/system_manager/system_manager_service.s: src/system_manager/system_manager_service.cpp.s
+
+.PHONY : src/system_manager/system_manager_service.s
+
+# target to generate assembly for a file
+src/system_manager/system_manager_service.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.s
+.PHONY : src/system_manager/system_manager_service.cpp.s
+
 src/task_scheduler/main.o: src/task_scheduler/main.cpp.o
 
 .PHONY : src/task_scheduler/main.o
@@ -1127,6 +1154,33 @@ src/worker_manager/main.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/worker_manager/main.cpp.s
 .PHONY : src/worker_manager/main.cpp.s
 
+src/worker_manager/worker_manager_service.o: src/worker_manager/worker_manager_service.cpp.o
+
+.PHONY : src/worker_manager/worker_manager_service.o
+
+# target to build an object file
+src/worker_manager/worker_manager_service.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/worker_manager/worker_manager_service.cpp.o
+.PHONY : src/worker_manager/worker_manager_service.cpp.o
+
+src/worker_manager/worker_manager_service.i: src/worker_manager/worker_manager_service.cpp.i
+
+.PHONY : src/worker_manager/worker_manager_service.i
+
+# target to preprocess a source file
+src/worker_manager/worker_manager_service.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/worker_manager/worker_manager_service.cpp.i
+.PHONY : src/worker_manager/worker_manager_service.cpp.i
+
+src/worker_manager/worker_manager_service.s: src/worker_manager/worker_manager_service.cpp.s
+
+.PHONY : src/worker_manager/worker_manager_service.s
+
+# target to generate assembly for a file
+src/worker_manager/worker_manager_service.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/worker_manager/worker_manager_service.cpp.s
+.PHONY : src/worker_manager/worker_manager_service.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1201,6 +1255,9 @@ help:
 	@echo "... src/system_manager/main.o"
 	@echo "... src/system_manager/main.i"
 	@echo "... src/system_manager/main.s"
+	@echo "... src/system_manager/system_manager_service.o"
+	@echo "... src/system_manager/system_manager_service.i"
+	@echo "... src/system_manager/system_manager_service.s"
 	@echo "... src/task_scheduler/main.o"
 	@echo "... src/task_scheduler/main.i"
 	@echo "... src/task_scheduler/main.s"
@@ -1222,6 +1279,9 @@ help:
 	@echo "... src/worker_manager/main.o"
 	@echo "... src/worker_manager/main.i"
 	@echo "... src/worker_manager/main.s"
+	@echo "... src/worker_manager/worker_manager_service.o"
+	@echo "... src/worker_manager/worker_manager_service.i"
+	@echo "... src/worker_manager/worker_manager_service.s"
 .PHONY : help
 
 

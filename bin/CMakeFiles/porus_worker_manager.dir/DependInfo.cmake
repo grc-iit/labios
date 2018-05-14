@@ -19,6 +19,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/aetrio/src/common/task_builder/task_builder.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/task_builder/task_builder.cpp.o"
   "/opt/projects/aetrio/src/common/timer.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/common/timer.cpp.o"
   "/opt/projects/aetrio/src/worker_manager/main.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/worker_manager/main.cpp.o"
+  "/opt/projects/aetrio/src/worker_manager/worker_manager_service.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir/src/worker_manager/worker_manager_service.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -14,6 +14,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o"
   "CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o"
   "CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o"
+  "CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o"
   "porus_server.pdb"
   "porus_server"
 )

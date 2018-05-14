@@ -14,6 +14,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/porus_worker_manager.dir/src/common/external_clients/memcached_impl.cpp.o"
   "CMakeFiles/porus_worker_manager.dir/src/common/external_clients/nats_impl.cpp.o"
   "CMakeFiles/porus_worker_manager.dir/src/worker_manager/main.cpp.o"
+  "CMakeFiles/porus_worker_manager.dir/src/worker_manager/worker_manager_service.cpp.o"
   "porus_worker_manager.pdb"
   "porus_worker_manager"
 )
