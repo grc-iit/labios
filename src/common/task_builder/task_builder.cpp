@@ -14,13 +14,11 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
     serialization_manager sm=serialization_manager();
     file source=task.source;
     int number_of_tasks= static_cast<int>(ceil((float)(source.offset + source.size) / io_unit_max));
-    auto map=aetrio_system::getInstance(service_i)->map_client;
-    auto value=map->get(table::DATASPACE_DB,"count");
-    int dataspace_id=0;
-    if(strcmp(value.c_str(),"")!=0){
-        dataspace_id=atoi(value.c_str());
-        dataspace_id++;
-    }
+    auto map_client=aetrio_system::getInstance(service_i)->map_client;
+    auto map_server=aetrio_system::getInstance(service_i)->map_server;
+    int dataspace_id = static_cast<int>(duration_cast< milliseconds >(
+                system_clock::now().time_since_epoch()
+        ).count());
 
     size_t chunk_index=(source.offset/ io_unit_max);
     size_t base_offset=chunk_index*io_unit_max+source.offset%io_unit_max;
@@ -28,13 +26,16 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
     size_t left=source.size;
     for(int i=0;i<number_of_tasks;i++){
         write_task sub_task=write_task(task);
+        sub_task.task_id= static_cast<uint64_t>(duration_cast< milliseconds >(
+                        system_clock::now().time_since_epoch()
+                ).count());
         if(base_offset!=i*io_unit_max){
-            std::string chunk_str=map->get(table::CHUNK_DB, source.filename +std::to_string(base_offset));
+            std::string chunk_str=map_client->get(table::CHUNK_DB, source.filename +std::to_string(base_offset));
             chunk_meta chunk_meta=sm.deserialise_chunk(chunk_str);
             if(chunk_meta.destination.dest_t==source_type::DATASPACE_LOC){
-                auto chunk_value=map->get(table::DATASPACE_DB,chunk_meta.destination.filename);
+                auto chunk_value=map_client->get(table::DATASPACE_DB,chunk_meta.destination.filename);
                 chunk_value.replace(base_offset,io_unit_max-base_offset,data.substr(data_offset,io_unit_max-base_offset));
-                map->put(table::DATASPACE_DB,chunk_meta.destination.filename,chunk_value);
+                map_client->put(table::DATASPACE_DB,chunk_meta.destination.filename,chunk_value);
 
                 sub_task.destination.size=io_unit_max-base_offset;
                 sub_task.destination.offset=0;
@@ -84,9 +85,13 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
 std::vector<read_task> task_builder::build_task_read(read_task task) {
     std::vector<read_task> tasks=std::vector<read_task>();
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
+    auto map_server=aetrio_system::getInstance(service_i)->map_server;
     auto chunks=mdm->fetch_chunks(task);
     for(auto chunk:chunks){
         read_task rt;
+        rt.task_id=static_cast<uint64_t>(duration_cast< milliseconds >(
+                system_clock::now().time_since_epoch()
+        ).count());
         rt.source=chunk.destination;
         tasks.push_back(rt);
     }

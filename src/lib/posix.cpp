@@ -105,8 +105,6 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
         index++;
     }
     mdm->update_write_task_info(write_tasks,filename);
-    auto map=aetrio_system::getInstance(LIB)->map_client;
-    map->put(table::DATASPACE_DB,"count",id);
     return size*count;
 }
 

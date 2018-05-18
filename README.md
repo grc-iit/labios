@@ -21,7 +21,7 @@
     * approach 2: make customized greedy
 * Worker Manager Service
     * Perform automated task balancing of worker.
-    * Build a sorted list of worker scores
+    * Build a sorted list of worker scores.
     * Wake and sleep workers (based on events using nats(WORKER_MANAGER tasks))
 * System Manager Service
     * Setup Application registrations

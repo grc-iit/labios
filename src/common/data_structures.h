@@ -86,12 +86,13 @@ struct file_stat{
 
 struct task {
     task_type t_type=DUMMY;
+    uint64_t task_id;
     task(task_type t_type):t_type(t_type){}
     task(const task &t_other):t_type(t_other.t_type){}
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type );
+        archive( this->t_type,this->task_id );
     }
 };
 struct write_task:public task{

@@ -6,7 +6,6 @@
 
 int MemcacheDImpl::put(table table_name, std::string key, std::string value) {
     key=std::to_string(table_name)+KEY_SEPARATOR+key;
-
     memcached_return_t rc= memcached_set(mem_client,
                                                 key.c_str(),
                                                 key.length(),
@@ -45,3 +44,4 @@ std::string MemcacheDImpl::remove(table table_name, std::string key) {
     memcached_delete(mem_client, key.c_str(), key.length(), (time_t)0);
     return value;
 }
+
