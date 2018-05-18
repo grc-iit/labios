@@ -1,14 +1,14 @@
 # README #
 
 ##TODO CODE
-* IDs everywhere
+* IDs everywhere (done ID= timestamp)
 * Debugged with many cases for logical bugs
 * Metadata updates and creation
-* build configuration manager to change ip and ports on command line.
+* build configuration manager to change ip and ports on command line. (done)
 * task_builder alogorithm for building read and write task
     * case 1: new write:
-        * if write > 64KB && <2MB then build 1 task
-        * if write > 2MB then chunk into 2 MB tasks
+        * if write > 64KB && <2MB then build 1 task (done)
+        * if write > 2MB then chunk into 2 MB tasks (done)
         * if write < 64KB put into small I/O
     * case 2: update written data:
         * if prev write is still in client queue/written into disk
