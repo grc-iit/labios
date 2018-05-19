@@ -30,21 +30,22 @@ int posix_client::write(write_task task) {
         /*
          * New I/O
          */
-        int file_id=int file_id=static_cast<int>(duration_cast< milliseconds >(
+        int file_id=static_cast<int>(duration_cast< milliseconds >(
                 system_clock::now().time_since_epoch()
         ).count());
-        FILE* fh=fopen(std::to_string(file_id).c_str(),"w+");
+        std::string file_path=dir+std::to_string(file_id);
+        FILE* fh=fopen(file_path.c_str(),"w+");
         fwrite(data.c_str(),task.source.size, sizeof(char),fh);
         fclose(fh);
         chunk_meta1.actual_user_chunk=task.source;
-        chunk_meta1.destination.filename=std::to_string(file_id);
+        chunk_meta1.destination.filename=file_path;
         chunk_meta1.destination.offset=0;
         chunk_meta1.destination.size=task.source.size;
         chunk_meta1.destination.worker=worker_index;
         chunk_str=sm.serialise_chunk(chunk_meta1);
         map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(base_offset),chunk_str);
     }else{
-        /*
+        /*cd
          * existing I/O
          */
         FILE* fh=fopen(chunk_meta1.destination.filename.c_str(),"r+");

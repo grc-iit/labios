@@ -40,6 +40,8 @@ public:
                                   : instance;
     }
     int run();
+
+    void setup_working_dir();
 };
 
 

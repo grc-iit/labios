@@ -7,7 +7,7 @@
 std::shared_ptr<worker_service> worker_service::instance = nullptr;
 
 int worker_service::run() {
-
+    setup_working_dir();
     while(!kill){
         update_score();
         update_capacity();
@@ -72,4 +72,11 @@ int worker_service::calculate_worker_score() {
 int worker_service::update_capacity() {
     int worker_capacity=5*1024*1024;
     map->put(table::WORKER_CAPACITY,std::to_string(worker_index),std::to_string(worker_capacity));
+}
+
+void worker_service::setup_working_dir() {
+    std::string cmd="mkdir -p "+WORKER_PATH+"/"+std::to_string(worker_index)+"/";
+    system(cmd.c_str());
+    cmd="rm -rf "+WORKER_PATH+"/"+std::to_string(worker_index)+"/*";
+    system(cmd.c_str());
 }

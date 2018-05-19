@@ -31,7 +31,7 @@ struct file{
     std::string filename;
     int64_t offset;
     int64_t size;
-    int worker=-1;
+    int64_t worker=-1;
     file(std::string filename,
             long long int offset,
             long long int file_size):filename(filename),offset(offset),size(file_size),dest_t(DATASPACE_LOC){}
@@ -87,7 +87,7 @@ struct file_stat{
 
 struct task {
     task_type t_type=DUMMY;
-    uint64_t task_id;
+    int64_t task_id;
     task(task_type t_type):t_type(t_type){}
     task(const task &t_other):t_type(t_other.t_type){}
     template<class Archive>

@@ -12,8 +12,9 @@
 using namespace std::chrono;
 
 class posix_client:public io_client {
+    std::string dir;
 public:
-    posix_client(int worker_index):io_client(worker_index){}
+    posix_client(int worker_index):io_client(worker_index),dir(WORKER_PATH+"/"+std::to_string(worker_index)+"/"){}
     int write(write_task task) override ;
     int read(read_task task) override ;
     int delete_file(delete_task task) override ;

@@ -34,5 +34,6 @@ const size_t MAX_TASK_TIMER_MS=MAX_TASK_TIMER*1000;
 const size_t MAX_TASK_TIMER_MS_MAX=MAX_TASK_TIMER*1000000;
 const size_t WORKER_MANAGER_INTERVAL=5;
 const size_t SYSTEM_MANAGER_INTERVAL=5;
+const std::string WORKER_PATH="/home/hdevarajan/temp";
 
 #endif //PORUS_MAIN_CONSTANTS_H

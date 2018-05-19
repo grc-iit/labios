@@ -43,7 +43,7 @@
 #### Client
 `gnatsd -p 4222 -a localhost -DV -m 8222 -l ~/nats_client.log &`
 #### Server
-`gnatsd -p 4223 -a localhost -l -DV -m 8223 -l ~/nats_server.log &`
+`d bin   -l ~/nats_server.log &`
 
 
 
