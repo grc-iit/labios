@@ -23,6 +23,8 @@
     * Perform automated task balancing of worker.
     * Build a sorted list of worker scores.
     * Wake and sleep workers (based on events using nats(WORKER_MANAGER tasks))
+* Worker Service
+    * Update worker scores
 * System Manager Service
     * Setup Application registrations
 * code cleanup
