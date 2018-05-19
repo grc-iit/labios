@@ -168,10 +168,12 @@ struct solver_input{
     int num_task;
     int64_t *task_size;
     int64_t *worker_capacity;
+    int *worker_energy;
     solver_input(int num_task,int num_workers){
         worker_score=new int[num_workers];
         worker_capacity=new int64_t[num_workers];
         task_size=new int64_t[num_task];
+        worker_energy=new int[num_workers];
     }
     ~solver_input(){
         //delete(worker_score,worker_capacity,task_size);

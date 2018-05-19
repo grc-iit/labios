@@ -15,6 +15,7 @@ solver_output DPSolver::solve(solver_input input) {
         input.task_size[t]=input.task_size[t]/(1024*1024);
         std::cout<<" task_size:"<<input.task_size[t]<<std::endl;
     }*/
+
     for (auto i = 1; i <= MAX_WORKER_COUNT; i++) {
         solver_output solver_output_temp(input.num_task);
         int * p=calculate_values(input, i);
@@ -62,8 +63,7 @@ int *DPSolver::calculate_values(solver_input input, int num_bins) {
         if(input.task_size[i]>=1024*1024 && input.task_size[i]<=2048*1024) size_category=5;
         /*if(input.task_size[i]>=1 && input.task_size[i]<=2) size_category=5;*/
         for (int j = 0; j < num_bins; j++) {
-            int val = ((5*input.worker_score[j])/size_category - WORKER_ENERGY[j]
-            );
+            int val = 5+input.worker_score[j] - input.worker_energy[j];
             if (j == 0) p[i] = val;
             else if (p[i] > val) p[i] = val;
         }

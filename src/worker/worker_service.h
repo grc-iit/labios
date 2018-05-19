@@ -30,9 +30,11 @@ private:
 
     }
 
-    int calculate_worker_score();
+    int calculate_worker_score(bool before_sleeping);
     int update_capacity();
-    int update_score();
+    int64_t get_total_capacity();
+    int64_t get_current_capacity();
+    int update_score(bool before_sleeping);
 public:
     int kill;
     inline static std::shared_ptr<worker_service> getInstance(service service,int worker_index){

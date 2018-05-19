@@ -51,10 +51,5 @@ int NatsImpl::get_queue_count() {
 }
 
 int NatsImpl::get_queue_count_limit() {
-    int *max_queue = new int();
-    natsSubscription_GetStats(sub, NULL, NULL, max_queue, NULL, NULL, NULL);
-    int count_of_queue = *max_queue;
-    delete (max_queue);
-    if(count_of_queue==0) count_of_queue=INT_MAX;
-    return count_of_queue;
+    return INT_MAX;
 }

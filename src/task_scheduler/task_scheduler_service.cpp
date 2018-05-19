@@ -2,6 +2,7 @@
 // Created by hdevarajan on 5/9/18.
 //
 
+#include <algorithm>
 #include "task_scheduler_service.h"
 #include "../common/external_clients/memcached_impl.h"
 #include "../aetrio_system.h"
@@ -106,15 +107,27 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
         actual_index++;
     }
     std::shared_ptr<distributed_hashmap> map=aetrio_system::getInstance(service_i)->map_server;
+    std::vector<std::pair<int,int>> sorted_workers=std::vector<std::pair<int,int>>();
+    int original_index=0;
     for(int worker_index=0;worker_index<MAX_WORKER_COUNT;worker_index++){
-        std::string val=map->get(table::WORKER_SCORE,std::to_string(worker_index+1));
-        input.worker_score[worker_index]=atoi(val.c_str());
-        val=map->get(table::WORKER_CAPACITY,std::to_string(worker_index+1));
-        input.worker_capacity[worker_index]=atoi(val.c_str());
-        std::cout<<"worker:"<<worker_index<<" capacity:"<<input.worker_capacity[worker_index]<<" score:"<<input.worker_score[worker_index]<<std::endl;
+        std::string val=map->get(table::WORKER_CAPACITY,std::to_string(worker_index+1));
+        sorted_workers.push_back(std::make_pair(atoi(val.c_str()),original_index++));
+    }
+    std::sort(sorted_workers.begin(), sorted_workers.end());
+    int new_index=0;
+    for(auto pair:sorted_workers){
+        std::string val=map->get(table::WORKER_SCORE,std::to_string(pair.second+1));
+        input.worker_score[new_index]=atoi(val.c_str());
+        input.worker_capacity[new_index]=pair.first;
+        input.worker_energy[new_index]=WORKER_ENERGY[pair.second];
+        std::cout<<"worker:"<<pair.second+1<<" capacity:"<<input.worker_capacity[new_index]<<" score:"<<input.worker_score[new_index]<<std::endl;
+        new_index++;
     }
     std::shared_ptr<solver> solver_i=aetrio_system::getInstance(service_i)->solver_i;
     solver_output output=solver_i->solve(input);
+    for(int t=0;t<input.num_task;t++){
+        output.solution[t]=sorted_workers[output.solution[t]-1].second;
+    }
     for(int task_index=0;task_index<tasks.size();task_index++){
         auto read_iter=static_task_solver.find(task_index);
         int worker_index=-1;
@@ -155,8 +168,8 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
     }
     for (std::pair<int,std::vector<task*>> element : worker_tasks_map)
     {
-        std::cout<<"add to worker:"<<element.first-1<<std::endl;
-        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first);
+        std::cout<<"add to worker:"<<element.first+1<<std::endl;
+        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first+1);
         for(auto task:element.second){
             switch (task->t_type){
                 case task_type::WRITE_TASK:{
