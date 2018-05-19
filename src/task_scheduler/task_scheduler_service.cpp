@@ -61,7 +61,7 @@ int task_scheduler_service::run() {
             }
         }
         auto time_elapsed= t.endTimeWithoutPrint("");
-        if(task_list.size() >0 && (count>MAX_TASK || time_elapsed>MAX_TASK_TIMER)){
+        if(task_list.size() >0 && (count>MAX_TASK /*|| time_elapsed>MAX_TASK_TIMER*/)){
             schedule_tasks(task_list,write_count,read_count);
             count=0;
             t.startTime();
@@ -155,8 +155,8 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
     }
     for (std::pair<int,std::vector<task*>> element : worker_tasks_map)
     {
-        std::cout<<"add to worker:"<<element.first<<std::endl;
-        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first+1,WORKER_TASK_SUBJECT[element.first]);
+        std::cout<<"add to worker:"<<element.first-1<<std::endl;
+        std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first);
         for(auto task:element.second){
             switch (task->t_type){
                 case task_type::WRITE_TASK:{

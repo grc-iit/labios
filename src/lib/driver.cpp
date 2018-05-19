@@ -16,7 +16,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=SIMPLE_MIXED;
+test_case testCase=SIMPLE_WRITE;
 /*
  * function definitions
  */
@@ -76,7 +76,7 @@ void gen_random(char *s, const int len) {
 }
 int simple_write(){
     FILE* fh=porus::fopen("test","w+");
-    size_t size_of_io=4 * 1024 * 1024;
+    size_t size_of_io=16 * 1024 * 1024;
     char* t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
     porus::fwrite(t,1,size_of_io,fh);

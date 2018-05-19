@@ -166,12 +166,12 @@ struct delete_task:public task{
 struct solver_input{
     int *worker_score;
     int num_task;
-    int *task_size;
-    int *worker_capacity;
+    int64_t *task_size;
+    int64_t *worker_capacity;
     solver_input(int num_task,int num_workers){
         worker_score=new int[num_workers];
-        worker_capacity=new int[num_workers];
-        task_size=new int[num_task];
+        worker_capacity=new int64_t[num_workers];
+        task_size=new int64_t[num_task];
     }
     ~solver_input(){
         //delete(worker_score,worker_capacity,task_size);

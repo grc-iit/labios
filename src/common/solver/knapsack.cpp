@@ -100,9 +100,9 @@
    ====================================================================== */
 
 typedef int boolean; /* logical variable         */
-typedef long ntype;   /* number of states         */
-typedef short itype;   /* item profits and weights */
-typedef long stype;   /* sum of pofit or weight   */
+typedef int64_t ntype;   /* number of states         */
+typedef int64_t itype;   /* item profits and weights */
+typedef int64_t stype;   /* sum of pofit or weight   */
 typedef float ftype;   /* product type (sufficient precision) */
 typedef double ptype;   /* product type (sufficient precision) */
 typedef signed char mtype;   /* number of knapsacks      */
@@ -1579,7 +1579,7 @@ static void mulbranch(allinfo *a, stype *c1) {
                                 mulknap
    ====================================================================== */
 
-static int mulknap(int n, int m, int *p, int *w, int *x, int *c) {
+static int mulknap(int n, int m, int *p, int64_t *w, int *x, int64_t *c) {
     register ntype i, l;
     register item *j, *k;
     allinfo a;
