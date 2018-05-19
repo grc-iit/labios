@@ -16,15 +16,17 @@
     * case 3: read_task: (done)
         * if data in data pool just read and return
         * if data in disk and make read request specifically from that worker.
-* Task scheduling with greedy
-    * approach 1: make current dp greedy
-    * approach 2: make customized greedy
+* Task scheduling 
+    * fixed scheduling with read data (done)
+    * with greedy
+        * approach 1: make current dp greedy
+        * approach 2: make customized greedy
 * Worker Manager Service
     * Perform automated task balancing of worker.
     * Build a sorted list of worker scores.
     * Wake and sleep workers (based on events using nats(WORKER_MANAGER tasks))
 * Worker Service
-    * Update worker scores
+    * Update worker scores (done)
 * System Manager Service
     * Setup Application registrations
 * code cleanup
