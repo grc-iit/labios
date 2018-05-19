@@ -17,6 +17,8 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/opt/projects/aetrio/src/common/solver/dp_solver.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o"
   "/opt/projects/aetrio/src/common/solver/greedy_solver.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o"
   "/opt/projects/aetrio/src/common/solver/knapsack.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o"
+  "/opt/projects/aetrio/src/common/solver/random_solver.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o"
+  "/opt/projects/aetrio/src/common/solver/round_robin_solver.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o"
   "/opt/projects/aetrio/src/common/task_builder/task_builder.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o"
   "/opt/projects/aetrio/src/common/timer.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/common/timer.cpp.o"
   "/opt/projects/aetrio/src/lib/driver.cpp" "/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o"

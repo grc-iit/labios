@@ -68,7 +68,7 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     for(auto task:read_tasks){
         char * data;
         switch(task.source.dest_t){
-            case FILE_LOC:{
+            case BUFFER_LOC:{
                 client_queue->publish_task(&task);
                 while(!data_m->exists(task.destination.filename)) usleep(20);
                 data = const_cast<char *>(data_m->get(task.destination.filename).c_str());

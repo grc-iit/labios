@@ -6,6 +6,8 @@
 #include "common/external_clients/nats_impl.h"
 #include "common/solver/dp_solver.h"
 #include "common/solver/greedy_solver.h"
+#include "common/solver/random_solver.h"
+#include "common/solver/round_robin_solver.h"
 
 std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
 
@@ -20,6 +22,10 @@ int aetrio_system::init(service service) {
         solver_i=std::shared_ptr<DPSolver>(new DPSolver(service));
     }else if(solver_impl_type_t==solver_impl_type::GREEDY){
         solver_i=std::shared_ptr<GreedySolver>(new GreedySolver(service));
+    }else if(solver_impl_type_t==solver_impl_type::RANDOM_SELECT){
+        solver_i=std::shared_ptr<random_solver>(new random_solver(service));
+    }else if(solver_impl_type_t==solver_impl_type::ROUND_ROBIN){
+        solver_i=round_robin_solver::getInstance(service_i);
     }
     switch(service){
         case LIB:{

@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/porus_lib.dir/src/common/configuration_manager.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o"
+  "CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o"
+  "CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o"
   "CMakeFiles/porus_lib.dir/src/common/timer.cpp.o"

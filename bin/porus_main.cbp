@@ -590,6 +590,38 @@
          <Option target="porus_server"/>
          <Option target="porus_task_scheduler"/>
       </Unit>
+      <Unit filename="/opt/projects/aetrio/src/common/solver/random_solver.cpp">
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/common/solver/random_solver.h">
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/common/solver/round_robin_solver.cpp">
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
+      <Unit filename="/opt/projects/aetrio/src/common/solver/round_robin_solver.h">
+         <Option target="porus_worker"/>
+         <Option target="porus_worker_manager"/>
+         <Option target="porus_lib"/>
+         <Option target="porus_client"/>
+         <Option target="porus_server"/>
+         <Option target="porus_task_scheduler"/>
+      </Unit>
       <Unit filename="/opt/projects/aetrio/src/common/solver/solver.h">
          <Option target="porus_worker"/>
          <Option target="porus_worker_manager"/>

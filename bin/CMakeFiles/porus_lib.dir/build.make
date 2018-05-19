@@ -105,9 +105,57 @@ CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o.provides: CMakeFiles/
 CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o.provides.build: CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o
 
 
+CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o: CMakeFiles/porus_lib.dir/flags.make
+CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o: ../src/common/solver/random_solver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o -c /opt/projects/aetrio/src/common/solver/random_solver.cpp
+
+CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/solver/random_solver.cpp > CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.i
+
+CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/solver/random_solver.cpp -o CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.s
+
+CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.requires
+
+CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.provides: CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.provides
+
+CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.provides.build: CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o
+
+
+CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o: CMakeFiles/porus_lib.dir/flags.make
+CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/solver/round_robin_solver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o -c /opt/projects/aetrio/src/common/solver/round_robin_solver.cpp
+
+CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/solver/round_robin_solver.cpp > CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.i
+
+CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/solver/round_robin_solver.cpp -o CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.s
+
+CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.requires:
+
+.PHONY : CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.requires
+
+CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.provides: CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.requires
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.provides.build
+.PHONY : CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.provides
+
+CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.provides.build: CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o
+
+
 CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o: ../src/common/solver/greedy_solver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o -c /opt/projects/aetrio/src/common/solver/greedy_solver.cpp
 
 CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.i: cmake_force
@@ -131,7 +179,7 @@ CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o.provides.build: C
 
 CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o: ../src/common/solver/knapsack.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o -c /opt/projects/aetrio/src/common/solver/knapsack.cpp
 
 CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.i: cmake_force
@@ -155,7 +203,7 @@ CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o.provides.build: CMakeF
 
 CMakeFiles/porus_lib.dir/src/common/timer.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/timer.cpp.o: ../src/common/timer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_lib.dir/src/common/timer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_lib.dir/src/common/timer.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/timer.cpp.o -c /opt/projects/aetrio/src/common/timer.cpp
 
 CMakeFiles/porus_lib.dir/src/common/timer.cpp.i: cmake_force
@@ -179,7 +227,7 @@ CMakeFiles/porus_lib.dir/src/common/timer.cpp.o.provides.build: CMakeFiles/porus
 
 CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/data_manager/data_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o -c /opt/projects/aetrio/src/common/data_manager/data_manager.cpp
 
 CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.i: cmake_force
@@ -203,7 +251,7 @@ CMakeFiles/porus_lib.dir/src/common/data_manager/data_manager.cpp.o.provides.bui
 
 CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.o: ../src/common/client_interface/distributed_hashmap.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.o -c /opt/projects/aetrio/src/common/client_interface/distributed_hashmap.cpp
 
 CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.i: cmake_force
@@ -227,7 +275,7 @@ CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_hashmap.cpp.o.p
 
 CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/metadata_manager/metadata_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o -c /opt/projects/aetrio/src/common/metadata_manager/metadata_manager.cpp
 
 CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.i: cmake_force
@@ -251,7 +299,7 @@ CMakeFiles/porus_lib.dir/src/common/metadata_manager/metadata_manager.cpp.o.prov
 
 CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o: ../src/aetrio_system.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o -c /opt/projects/aetrio/src/aetrio_system.cpp
 
 CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.i: cmake_force
@@ -275,7 +323,7 @@ CMakeFiles/porus_lib.dir/src/aetrio_system.cpp.o.provides.build: CMakeFiles/poru
 
 CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o: ../src/common/task_builder/task_builder.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o -c /opt/projects/aetrio/src/common/task_builder/task_builder.cpp
 
 CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.i: cmake_force
@@ -299,7 +347,7 @@ CMakeFiles/porus_lib.dir/src/common/task_builder/task_builder.cpp.o.provides.bui
 
 CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.o: ../src/common/client_interface/distributed_queue.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.o -c /opt/projects/aetrio/src/common/client_interface/distributed_queue.cpp
 
 CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.i: cmake_force
@@ -323,7 +371,7 @@ CMakeFiles/porus_lib.dir/src/common/client_interface/distributed_queue.cpp.o.pro
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o: ../src/common/external_clients/serialization_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o -c /opt/projects/aetrio/src/common/external_clients/serialization_manager.cpp
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.i: cmake_force
@@ -347,7 +395,7 @@ CMakeFiles/porus_lib.dir/src/common/external_clients/serialization_manager.cpp.o
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.o: ../src/common/external_clients/rocksdb_impl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.o -c /opt/projects/aetrio/src/common/external_clients/rocksdb_impl.cpp
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.i: cmake_force
@@ -371,7 +419,7 @@ CMakeFiles/porus_lib.dir/src/common/external_clients/rocksdb_impl.cpp.o.provides
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.o: ../src/common/external_clients/memcached_impl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.o -c /opt/projects/aetrio/src/common/external_clients/memcached_impl.cpp
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.i: cmake_force
@@ -395,7 +443,7 @@ CMakeFiles/porus_lib.dir/src/common/external_clients/memcached_impl.cpp.o.provid
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.o: ../src/common/external_clients/nats_impl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.o -c /opt/projects/aetrio/src/common/external_clients/nats_impl.cpp
 
 CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.i: cmake_force
@@ -419,7 +467,7 @@ CMakeFiles/porus_lib.dir/src/common/external_clients/nats_impl.cpp.o.provides.bu
 
 CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o: ../src/lib/driver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o -c /opt/projects/aetrio/src/lib/driver.cpp
 
 CMakeFiles/porus_lib.dir/src/lib/driver.cpp.i: cmake_force
@@ -443,7 +491,7 @@ CMakeFiles/porus_lib.dir/src/lib/driver.cpp.o.provides.build: CMakeFiles/porus_l
 
 CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o: ../src/lib/posix.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o -c /opt/projects/aetrio/src/lib/posix.cpp
 
 CMakeFiles/porus_lib.dir/src/lib/posix.cpp.i: cmake_force
@@ -467,7 +515,7 @@ CMakeFiles/porus_lib.dir/src/lib/posix.cpp.o.provides.build: CMakeFiles/porus_li
 
 CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o: CMakeFiles/porus_lib.dir/flags.make
 CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o: ../src/lib/mpi.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o"
 	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o -c /opt/projects/aetrio/src/lib/mpi.cpp
 
 CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.i: cmake_force
@@ -493,6 +541,8 @@ CMakeFiles/porus_lib.dir/src/lib/mpi.cpp.o.provides.build: CMakeFiles/porus_lib.
 porus_lib_OBJECTS = \
 "CMakeFiles/porus_lib.dir/src/common/configuration_manager.cpp.o" \
 "CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o" \
+"CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o" \
+"CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o" \
 "CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o" \
 "CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o" \
 "CMakeFiles/porus_lib.dir/src/common/timer.cpp.o" \
@@ -515,6 +565,8 @@ porus_lib_EXTERNAL_OBJECTS =
 
 porus_lib: CMakeFiles/porus_lib.dir/src/common/configuration_manager.cpp.o
 porus_lib: CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o
+porus_lib: CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o
+porus_lib: CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o
 porus_lib: CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o
 porus_lib: CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o
 porus_lib: CMakeFiles/porus_lib.dir/src/common/timer.cpp.o
@@ -535,7 +587,7 @@ porus_lib: CMakeFiles/porus_lib.dir/build.make
 porus_lib: /opt/install/lib/libmpicxx.so
 porus_lib: /opt/install/lib/libmpi.so
 porus_lib: CMakeFiles/porus_lib.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Linking CXX executable porus_lib"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Linking CXX executable porus_lib"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/porus_lib.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -545,6 +597,8 @@ CMakeFiles/porus_lib.dir/build: porus_lib
 
 CMakeFiles/porus_lib.dir/requires: CMakeFiles/porus_lib.dir/src/common/configuration_manager.cpp.o.requires
 CMakeFiles/porus_lib.dir/requires: CMakeFiles/porus_lib.dir/src/common/solver/dp_solver.cpp.o.requires
+CMakeFiles/porus_lib.dir/requires: CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o.requires
+CMakeFiles/porus_lib.dir/requires: CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o.requires
 CMakeFiles/porus_lib.dir/requires: CMakeFiles/porus_lib.dir/src/common/solver/greedy_solver.cpp.o.requires
 CMakeFiles/porus_lib.dir/requires: CMakeFiles/porus_lib.dir/src/common/solver/knapsack.cpp.o.requires
 CMakeFiles/porus_lib.dir/requires: CMakeFiles/porus_lib.dir/src/common/timer.cpp.o.requires

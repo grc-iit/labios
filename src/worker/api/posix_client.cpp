@@ -11,9 +11,30 @@ int posix_client::read(read_task task) {
     char* data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     fseek(fh,task.source.offset,SEEK_SET);
     fread(data,task.source.size, sizeof(char),fh);
-    std::shared_ptr<distributed_hashmap> map=aetrio_system::getInstance(WORKER)->map_client;
-    map->put(DATASPACE_DB,task.destination.filename,data);
+    std::shared_ptr<distributed_hashmap> map_client=aetrio_system::getInstance(WORKER)->map_client;
+    serialization_manager sm=serialization_manager();
+    map_client->put(DATASPACE_DB,task.destination.filename,data);
     fclose(fh);
+    if(task.local_copy){
+        int file_id=static_cast<int>(duration_cast< milliseconds >(
+                system_clock::now().time_since_epoch()
+        ).count());
+        std::string file_path=dir+std::to_string(file_id);
+        FILE* fh=fopen(file_path.c_str(),"w+");
+        fwrite(data,task.source.size, sizeof(char),fh);
+        fclose(fh);
+        size_t chunk_index=(task.source.offset/ io_unit_max);
+        size_t base_offset=chunk_index*io_unit_max+task.source.offset%io_unit_max;
+        chunk_meta chunk_meta1;
+        chunk_meta1.actual_user_chunk=task.source;
+        chunk_meta1.destination.dest_t=BUFFER_LOC;
+        chunk_meta1.destination.filename=file_path;
+        chunk_meta1.destination.offset=0;
+        chunk_meta1.destination.size=task.source.size;
+        chunk_meta1.destination.worker=worker_index;
+        std::string chunk_str=sm.serialise_chunk(chunk_meta1);
+        map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(base_offset),chunk_str);
+    }
     return 0;
 }
 
@@ -49,7 +70,7 @@ int posix_client::write(write_task task) {
         fclose(fh);
     }
     chunk_meta1.actual_user_chunk=task.source;
-    chunk_meta1.destination.dest_t=FILE_LOC;
+    chunk_meta1.destination.dest_t=BUFFER_LOC;
     chunk_meta1.destination.filename=file_path;
     chunk_meta1.destination.offset=0;
     chunk_meta1.destination.size=task.source.size;

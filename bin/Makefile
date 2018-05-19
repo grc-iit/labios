@@ -788,6 +788,90 @@ src/common/solver/knapsack.cpp.s:
 	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/knapsack.cpp.s
 .PHONY : src/common/solver/knapsack.cpp.s
 
+src/common/solver/random_solver.o: src/common/solver/random_solver.cpp.o
+
+.PHONY : src/common/solver/random_solver.o
+
+# target to build an object file
+src/common/solver/random_solver.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/random_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/random_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/random_solver.cpp.o
+.PHONY : src/common/solver/random_solver.cpp.o
+
+src/common/solver/random_solver.i: src/common/solver/random_solver.cpp.i
+
+.PHONY : src/common/solver/random_solver.i
+
+# target to preprocess a source file
+src/common/solver/random_solver.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/random_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/random_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/random_solver.cpp.i
+.PHONY : src/common/solver/random_solver.cpp.i
+
+src/common/solver/random_solver.s: src/common/solver/random_solver.cpp.s
+
+.PHONY : src/common/solver/random_solver.s
+
+# target to generate assembly for a file
+src/common/solver/random_solver.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/random_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/random_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/random_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/random_solver.cpp.s
+.PHONY : src/common/solver/random_solver.cpp.s
+
+src/common/solver/round_robin_solver.o: src/common/solver/round_robin_solver.cpp.o
+
+.PHONY : src/common/solver/round_robin_solver.o
+
+# target to build an object file
+src/common/solver/round_robin_solver.cpp.o:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/round_robin_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/round_robin_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/round_robin_solver.cpp.o
+.PHONY : src/common/solver/round_robin_solver.cpp.o
+
+src/common/solver/round_robin_solver.i: src/common/solver/round_robin_solver.cpp.i
+
+.PHONY : src/common/solver/round_robin_solver.i
+
+# target to preprocess a source file
+src/common/solver/round_robin_solver.cpp.i:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/round_robin_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/round_robin_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.i
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/round_robin_solver.cpp.i
+.PHONY : src/common/solver/round_robin_solver.cpp.i
+
+src/common/solver/round_robin_solver.s: src/common/solver/round_robin_solver.cpp.s
+
+.PHONY : src/common/solver/round_robin_solver.s
+
+# target to generate assembly for a file
+src/common/solver/round_robin_solver.cpp.s:
+	$(MAKE) -f CMakeFiles/porus_worker.dir/build.make CMakeFiles/porus_worker.dir/src/common/solver/round_robin_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_worker_manager.dir/build.make CMakeFiles/porus_worker_manager.dir/src/common/solver/round_robin_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_lib.dir/build.make CMakeFiles/porus_lib.dir/src/common/solver/round_robin_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_client.dir/build.make CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_server.dir/build.make CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.s
+	$(MAKE) -f CMakeFiles/porus_task_scheduler.dir/build.make CMakeFiles/porus_task_scheduler.dir/src/common/solver/round_robin_solver.cpp.s
+.PHONY : src/common/solver/round_robin_solver.cpp.s
+
 src/common/task_builder/task_builder.o: src/common/task_builder/task_builder.cpp.o
 
 .PHONY : src/common/task_builder/task_builder.o
@@ -1282,6 +1366,12 @@ help:
 	@echo "... src/common/solver/knapsack.o"
 	@echo "... src/common/solver/knapsack.i"
 	@echo "... src/common/solver/knapsack.s"
+	@echo "... src/common/solver/random_solver.o"
+	@echo "... src/common/solver/random_solver.i"
+	@echo "... src/common/solver/random_solver.s"
+	@echo "... src/common/solver/round_robin_solver.o"
+	@echo "... src/common/solver/round_robin_solver.i"
+	@echo "... src/common/solver/round_robin_solver.s"
 	@echo "... src/common/task_builder/task_builder.o"
 	@echo "... src/common/task_builder/task_builder.i"
 	@echo "... src/common/task_builder/task_builder.s"

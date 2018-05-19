@@ -25,8 +25,9 @@ enum map_type{
     META_CHUNK=1
 };
 enum source_type{
-    FILE_LOC=0,
-    DATASPACE_LOC=1
+    BUFFER_LOC=0,
+    DATASPACE_LOC=1,
+    PFS_LOC=1
 };
 enum service{
     LIB=0,
@@ -63,7 +64,9 @@ enum queue_impl_type{
 };
 enum solver_impl_type{
     DP=0,
-    GREEDY=1
+    GREEDY=1,
+    ROUND_ROBIN=2,
+    RANDOM_SELECT=3
 };
 enum io_client_type{
     POSIX=0

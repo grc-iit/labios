@@ -123,12 +123,13 @@ struct read_task:public task{
               file destination):task(task_type::READ_TASK),source(source),destination(destination){}
 
     bool meta_updated;
+    bool local_copy;
     file source;
     file destination;
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type,this->task_id,this->source,this->destination,this->meta_updated);
+        archive( this->t_type,this->task_id,this->source,this->destination,this->meta_updated,this->local_copy);
     }
 };
 

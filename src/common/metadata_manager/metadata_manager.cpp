@@ -223,10 +223,23 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
     std::vector<chunk_meta> chunks=std::vector<chunk_meta>();
     while(left>0){
         std::string chunk_str=map->get(table::CHUNK_DB, task.source.filename+std::to_string(base_offset));
-        chunk_meta cm=sm.deserialise_chunk(chunk_str);
-        chunks.push_back(cm);
-        left-=cm.actual_user_chunk.size;
-        base_offset+=cm.actual_user_chunk.size;
+        if(chunk_str==""){
+            chunk_meta cm=sm.deserialise_chunk(chunk_str);
+            chunks.push_back(cm);
+            left-=cm.actual_user_chunk.size;
+            base_offset+=cm.actual_user_chunk.size;
+        }else{
+            chunk_meta cm;
+            cm.actual_user_chunk=task.source;
+            cm.destination.dest_t=source_type::PFS_LOC;
+            cm.destination.size=cm.actual_user_chunk.size;
+            cm.destination.filename=cm.actual_user_chunk.filename;
+            cm.destination.offset=cm.actual_user_chunk.offset;
+            cm.destination.worker=rand()%MAX_WORKER_COUNT;
+            chunks.push_back(cm);
+            left-=cm.actual_user_chunk.size;
+            base_offset+=cm.actual_user_chunk.size;
+        }
     }
     return chunks;
 }

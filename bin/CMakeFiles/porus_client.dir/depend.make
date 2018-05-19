@@ -135,6 +135,8 @@ CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o: ../src/common/external_clie
 CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o: ../src/common/external_clients/serialization_manager.h
 CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o: ../src/common/solver/dp_solver.h
 CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o: ../src/common/solver/greedy_solver.h
+CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o: ../src/common/solver/random_solver.h
+CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o: ../src/common/solver/round_robin_solver.h
 CMakeFiles/porus_client.dir/src/aetrio_system.cpp.o: ../src/common/solver/solver.h
 
 CMakeFiles/porus_client.dir/src/client/client.cpp.o: ../external_libs/cereal/access.hpp
@@ -961,6 +963,48 @@ CMakeFiles/porus_client.dir/src/common/solver/greedy_solver.cpp.o: ../src/common
 CMakeFiles/porus_client.dir/src/common/solver/greedy_solver.cpp.o: ../src/common/solver/solver.h
 
 CMakeFiles/porus_client.dir/src/common/solver/knapsack.cpp.o: ../src/common/solver/knapsack.cpp
+
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/access.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/cereal.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/details/helpers.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/details/polymorphic_impl.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/details/polymorphic_impl_fwd.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/details/static_object.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/details/traits.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/details/util.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/macros.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/types/base_class.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/types/common.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/types/memory.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/types/polymorphic.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../external_libs/cereal/types/string.hpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../src/common/constants.h
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../src/common/data_structures.h
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../src/common/enumerations.h
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../src/common/solver/random_solver.cpp
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../src/common/solver/random_solver.h
+CMakeFiles/porus_client.dir/src/common/solver/random_solver.cpp.o: ../src/common/solver/solver.h
+
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/access.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/cereal.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/details/helpers.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/details/polymorphic_impl.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/details/polymorphic_impl_fwd.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/details/static_object.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/details/traits.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/details/util.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/macros.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/types/base_class.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/types/common.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/types/memory.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/types/polymorphic.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../external_libs/cereal/types/string.hpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/constants.h
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/data_structures.h
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/enumerations.h
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/solver/round_robin_solver.cpp
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/solver/round_robin_solver.h
+CMakeFiles/porus_client.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/solver/solver.h
 
 CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o: ../external_libs/cereal/access.hpp
 CMakeFiles/porus_client.dir/src/common/task_builder/task_builder.cpp.o: ../external_libs/cereal/archives/json.hpp
