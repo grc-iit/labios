@@ -40,6 +40,7 @@ public:
     int update_on_seek(std::string basic_string,size_t offset, size_t origin);
     int update_read_task_info(std::vector<read_task> task_k,std::string filename);
     int update_write_task_info(std::vector<write_task> task_ks,std::string filename);
+    int update_write_task_info(write_task task_ks,std::string filename);
     std::vector<chunk_meta> fetch_chunks(read_task task);
     void update_on_read(std::string filename, size_t size);
 

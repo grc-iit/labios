@@ -36,7 +36,7 @@ enum service{
     WORKER=4,
     WORKER_MANAGER=5
 };
-enum task_type{
+enum class task_type:int64_t{
     READ_TASK=0,
     WRITE_TASK=1,
     FLUSH_TASK=2,

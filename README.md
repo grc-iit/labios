@@ -2,7 +2,7 @@
 
 ##TODO CODE
 * IDs everywhere (done ID= timestamp)
-* Debugged with many cases for logical bugs
+* Debugged with many cases for logical bugs (done)
 * Metadata updates and creation (done)
 * build configuration manager to change ip and ports on command line. (done)
 * task_builder alogorithm for building read and write task
@@ -43,9 +43,9 @@
 `memcached -p 11212 -l localhost -d  -I 4M`
 ### NATS
 #### Client
-`gnatsd -p 4222 -a localhost -DV -m 8222 -l ~/nats_client.log &`
+`gnatsd -p 4222 -a localhost -DV -l ~/nats_client.log &`
 #### Server
-`d bin   -l ~/nats_server.log &`
+`gnatsd -p 4223 -a localhost -DV -l ~/nats_server.log &`
 
 
 

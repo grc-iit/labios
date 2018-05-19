@@ -25,8 +25,8 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
     size_t data_offset=0;
     size_t left=source.size;
     for(int i=0;i<number_of_tasks;i++){
-        write_task sub_task=write_task(task);
-        sub_task.task_id= static_cast<uint64_t>(duration_cast< milliseconds >(
+        write_task* sub_task=new write_task(task);
+        sub_task->task_id= static_cast<int64_t>(duration_cast< milliseconds >(
                         system_clock::now().time_since_epoch()
                 ).count());
         /*
@@ -49,26 +49,26 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                 /*
                  * build new  task
                  */
-                sub_task.destination.size=chunk_meta.destination.size;
-                sub_task.destination.offset=0;
-                sub_task.source.offset=source.offset;
-                sub_task.source.size=sub_task.destination.size;
-                sub_task.source.filename=source.filename;
-                sub_task.destination.dest_t=source_type::DATASPACE_LOC;
-                sub_task.destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);;
+                sub_task->destination.size=chunk_meta.destination.size;
+                sub_task->destination.offset=0;
+                sub_task->source.offset=source.offset;
+                sub_task->source.size=sub_task->destination.size;
+                sub_task->source.filename=source.filename;
+                sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);;
             }else{
                 /*
                  * chunk in file
                  */
-                sub_task.destination.worker=chunk_meta.destination.worker;
-                sub_task.destination.size=io_unit_max-base_offset;
-                sub_task.destination.offset=0;
-                sub_task.source.offset=source.offset;
-                sub_task.source.size=sub_task.destination.size;
-                sub_task.source.filename=source.filename;
-                sub_task.destination.dest_t=source_type::DATASPACE_LOC;
-                sub_task.destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
-                sub_task.meta_updated=true;
+                sub_task->destination.worker=chunk_meta.destination.worker;
+                sub_task->destination.size=io_unit_max-base_offset;
+                sub_task->destination.offset=0;
+                sub_task->source.offset=source.offset;
+                sub_task->source.size=sub_task->destination.size;
+                sub_task->source.filename=source.filename;
+                sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
+                sub_task->meta_updated=true;
             }
             base_offset+=(io_unit_max-base_offset);
             left-=(io_unit_max-base_offset);
@@ -81,13 +81,13 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
              */
             if(left<io_unit_max){
                 if(!map_client->exists(table::CHUNK_DB, source.filename +std::to_string(base_offset))){
-                    sub_task.destination.size=left;
-                    sub_task.destination.offset=0;
-                    sub_task.source.offset=base_offset;
-                    sub_task.source.size=sub_task.destination.size;
-                    sub_task.source.filename=source.filename;
-                    sub_task.destination.dest_t=source_type::DATASPACE_LOC;
-                    sub_task.destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
+                    sub_task->destination.size=left;
+                    sub_task->destination.offset=0;
+                    sub_task->source.offset=base_offset;
+                    sub_task->source.size=sub_task->destination.size;
+                    sub_task->source.filename=source.filename;
+                    sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                    sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
                 }else{
                     std::string chunk_str=map_client->get(table::CHUNK_DB, source.filename +std::to_string(base_offset));
                     chunk_meta chunk_meta=sm.deserialise_chunk(chunk_str);
@@ -104,26 +104,26 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                         /*
                          * build new  task
                          */
-                        sub_task.destination.size=chunk_meta.destination.size;
-                        sub_task.destination.offset=0;
-                        sub_task.source.offset=source.offset;
-                        sub_task.source.size=sub_task.destination.size;
-                        sub_task.source.filename=source.filename;
-                        sub_task.destination.dest_t=source_type::DATASPACE_LOC;
-                        sub_task.destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);;
+                        sub_task->destination.size=chunk_meta.destination.size;
+                        sub_task->destination.offset=0;
+                        sub_task->source.offset=source.offset;
+                        sub_task->source.size=sub_task->destination.size;
+                        sub_task->source.filename=source.filename;
+                        sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                        sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);;
                     }else{
                         /*
                          * chunk in file
                          */
-                        sub_task.destination.worker=chunk_meta.destination.worker;
-                        sub_task.destination.size=io_unit_max-base_offset;
-                        sub_task.destination.offset=0;
-                        sub_task.source.offset=source.offset;
-                        sub_task.source.size=sub_task.destination.size;
-                        sub_task.source.filename=source.filename;
-                        sub_task.destination.dest_t=source_type::DATASPACE_LOC;
-                        sub_task.destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
-                        sub_task.meta_updated=true;
+                        sub_task->destination.worker=chunk_meta.destination.worker;
+                        sub_task->destination.size=io_unit_max-base_offset;
+                        sub_task->destination.offset=0;
+                        sub_task->source.offset=source.offset;
+                        sub_task->source.size=sub_task->destination.size;
+                        sub_task->source.filename=source.filename;
+                        sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                        sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
+                        sub_task->meta_updated=true;
                     }
                 }
 
@@ -133,19 +133,19 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                 /*
                  * left >= 2MB
                  */
-                sub_task.destination.size=io_unit_max;
-                sub_task.destination.offset=0;
-                sub_task.source.offset=base_offset;
-                sub_task.source.size=sub_task.destination.size;
-                sub_task.source.filename=source.filename;
-                sub_task.destination.dest_t=source_type::DATASPACE_LOC;
-                sub_task.destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
+                sub_task->destination.size=io_unit_max;
+                sub_task->destination.offset=0;
+                sub_task->source.offset=base_offset;
+                sub_task->source.size=sub_task->destination.size;
+                sub_task->source.filename=source.filename;
+                sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
                 base_offset+=io_unit_max;
                 left-=io_unit_max;
             }
 
         }
-        tasks.push_back(sub_task);
+        tasks.push_back(*sub_task);
     }
     return tasks;
 }
@@ -156,15 +156,15 @@ std::vector<read_task> task_builder::build_task_read(read_task task) {
     auto map_server=aetrio_system::getInstance(service_i)->map_server;
     auto chunks=mdm->fetch_chunks(task);
     for(auto chunk:chunks){
-        read_task rt;
-        rt.task_id=static_cast<uint64_t>(duration_cast< milliseconds >(
+        read_task* rt=new read_task();
+        rt->task_id=static_cast<int64_t>(duration_cast< milliseconds >(
                 system_clock::now().time_since_epoch()
         ).count());
-        rt.source=chunk.destination;
-        rt.destination.filename=std::to_string(static_cast<uint64_t>(duration_cast< milliseconds >(
+        rt->source=chunk.destination;
+        rt->destination.filename=std::to_string(static_cast<uint64_t>(duration_cast< milliseconds >(
                 system_clock::now().time_since_epoch()
         ).count()));
-        tasks.push_back(rt);
+        tasks.push_back(*rt);
     }
     return tasks;
 }

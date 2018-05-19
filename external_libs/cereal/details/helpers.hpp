@@ -33,7 +33,7 @@
 #include <type_traits>
 #include <cstdint>
 #include <utility>
-#include <cereal/types/memory.hpp>
+#include <memory>
 #include <unordered_map>
 #include <stdexcept>
 

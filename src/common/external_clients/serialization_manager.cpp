@@ -37,7 +37,7 @@ std::string serialization_manager::serialise_chunk(chunk_meta meta) {
 
 std::string serialization_manager::serialise_task(task* task) {
     switch (task->t_type){
-        case task_type ::WRITE_TASK:{
+        case task_type::WRITE_TASK:{
             write_task *wt= static_cast<write_task *>(task);
             std::stringstream ss; // any stream can be used
 
@@ -47,7 +47,7 @@ std::string serialization_manager::serialise_task(task* task) {
             }
             return ss.str();
         }
-        case task_type ::READ_TASK:{
+        case task_type::READ_TASK:{
             read_task *rt= static_cast<read_task *>(task);
             std::stringstream ss; // any stream can be used
 
@@ -63,20 +63,20 @@ std::string serialization_manager::serialise_task(task* task) {
 
 
 task* serialization_manager::deserialise_task(std::string string) {
-    task cm(DUMMY);
+    task cm(task_type::DUMMY);
     {
         std::stringstream ss(string);
         cereal::JSONInputArchive iarchive(ss); // Create an input archive
         iarchive(cm);
         switch (cm.t_type){
-            case task_type ::WRITE_TASK:{
+            case task_type::WRITE_TASK:{
                 write_task* wt=new write_task();
                 std::stringstream ss(string);
                 cereal::JSONInputArchive iarchive(ss);
                 iarchive(*wt);
                 return wt;
             }
-            case task_type ::READ_TASK:{
+            case task_type::READ_TASK:{
                 read_task* wt=new read_task();
                 std::stringstream ss(string);
                 cereal::JSONInputArchive iarchive(ss);

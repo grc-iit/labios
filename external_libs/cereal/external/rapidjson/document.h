@@ -1072,10 +1072,10 @@ public:
 
     //! Const member iterator
     /*! \pre IsObject() == true */
-    ConstMemberIterator MemberBegin() const {  return ConstMemberIterator(GetMembersPointer()); }
+    ConstMemberIterator MemberBegin() const { CEREAL_RAPIDJSON_ASSERT(IsObject()); return ConstMemberIterator(GetMembersPointer()); }
     //! Const \em past-the-end member iterator
     /*! \pre IsObject() == true */
-    ConstMemberIterator MemberEnd() const   {  return ConstMemberIterator(GetMembersPointer() + data_.o.size); }
+    ConstMemberIterator MemberEnd() const   { CEREAL_RAPIDJSON_ASSERT(IsObject()); return ConstMemberIterator(GetMembersPointer() + data_.o.size); }
     //! Member iterator
     /*! \pre IsObject() == true */
     MemberIterator MemberBegin()            { CEREAL_RAPIDJSON_ASSERT(IsObject()); return MemberIterator(GetMembersPointer()); }
@@ -1644,8 +1644,7 @@ public:
 
     int GetInt() const          { CEREAL_RAPIDJSON_ASSERT(data_.f.flags & kIntFlag);   return data_.n.i.i;   }
     unsigned GetUint() const    { CEREAL_RAPIDJSON_ASSERT(data_.f.flags & kUintFlag);  return data_.n.u.u;   }
-    int64_t GetInt64() const    {
-        return data_.n.i64; }
+    int64_t GetInt64() const    { CEREAL_RAPIDJSON_ASSERT(data_.f.flags & kInt64Flag); return data_.n.i64; }
     uint64_t GetUint64() const  { CEREAL_RAPIDJSON_ASSERT(data_.f.flags & kUint64Flag); return data_.n.u64; }
 
     //! Get the value as double type.

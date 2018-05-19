@@ -11,6 +11,7 @@
 #include "enumerations.h"
 #include "constants.h"
 #include <cereal/types/string.hpp>
+#include <cereal/types/common.hpp>
 
 struct message_key{
     message_type m_type;
@@ -86,10 +87,10 @@ struct file_stat{
 };
 
 struct task {
-    task_type t_type=DUMMY;
-    int64_t task_id;
-    task(task_type t_type):t_type(t_type){}
-    task(const task &t_other):t_type(t_other.t_type){}
+    task_type t_type;
+    int64_t task_id=0;
+    task( task_type t_type):t_type(t_type){}
+    task(const task &t_other):t_type(t_other.t_type),task_id(t_other.task_id){}
     template<class Archive>
     void serialize(Archive & archive)
     {
@@ -97,10 +98,10 @@ struct task {
     }
 };
 struct write_task:public task{
-    write_task():task(WRITE_TASK){}
+    write_task():task( task_type::WRITE_TASK){}
     write_task(file source,
-               file destination):task(WRITE_TASK),source(source),destination(destination){}
-    write_task(const write_task &write_task_t):task(WRITE_TASK),
+               file destination):task(task_type::WRITE_TASK),source(source),destination(destination){}
+    write_task(const write_task &write_task_t):task(task_type::WRITE_TASK),
                                         source(write_task_t.source),
                                         destination(write_task_t.destination){}
     file source;
@@ -110,16 +111,16 @@ struct write_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( cereal::base_class<task>( this ),this->source,this->destination,this->meta_updated);
+        archive( this->t_type,this->task_id,this->source,this->destination,this->meta_updated);
     }
 };
 struct read_task:public task{
-    read_task():task(READ_TASK){}
-    read_task(const read_task &read_task_t):task(READ_TASK),
+    read_task():task(task_type::READ_TASK){}
+    read_task(const read_task &read_task_t):task(task_type::READ_TASK),
                                         source(read_task_t.source),
                                         destination(read_task_t.destination){}
     read_task(file source,
-              file destination):task(WRITE_TASK),source(source),destination(destination){}
+              file destination):task(task_type::READ_TASK),source(source),destination(destination){}
 
     bool meta_updated;
     file source;
@@ -127,38 +128,38 @@ struct read_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( cereal::base_class<task>( this ),this->source,this->destination,this->meta_updated);
+        archive( this->t_type,this->task_id,this->source,this->destination,this->meta_updated);
     }
 };
 
 struct flush_task:public task{
-    flush_task():task(FLUSH_TASK){}
-    flush_task(const flush_task &flush_task_t):task(FLUSH_TASK),
+    flush_task():task(task_type::FLUSH_TASK){}
+    flush_task(const flush_task &flush_task_t):task(task_type::FLUSH_TASK),
             source(flush_task_t.source),
             destination(flush_task_t.destination){}
     flush_task(file source,
             file destination,
             source_type dest_t,
-            std::string datasource_id):task(FLUSH_TASK),source(source),destination(destination){}
+            std::string datasource_id):task(task_type::FLUSH_TASK),source(source),destination(destination){}
 
     file source;
     file destination;
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( cereal::base_class<task>( this ),this->source,this->destination);
+        archive(this->t_type,this->task_id,this->source,this->destination);
     }
 };
 
 struct delete_task:public task{
-    delete_task():task(DELETE_TASK){}
-    delete_task(const delete_task &delete_task_i):task(DELETE_TASK),source(delete_task_i.source){}
-    delete_task(file source):task(DELETE_TASK),source(source){}
+    delete_task():task(task_type::DELETE_TASK){}
+    delete_task(const delete_task &delete_task_i):task(task_type::DELETE_TASK),source(delete_task_i.source){}
+    delete_task(file source):task(task_type::DELETE_TASK),source(source){}
     file source;
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( cereal::base_class<task>( this ),this->source);
+        archive(this->t_type,this->task_id,this->source);
     }
 };
 

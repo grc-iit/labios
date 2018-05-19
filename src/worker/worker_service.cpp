@@ -16,23 +16,24 @@ int worker_service::run() {
         task* task_i= queue->subscribe_task(status);
         if(status!=-1){
            switch (task_i->t_type){
-                case WRITE_TASK:{
+                case task_type::WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task_i);
                     std::cout<< serialization_manager().serialise_task(wt) << std::endl;
                     client->write(*wt);
                     break;
                 }
-                case READ_TASK:{
+                case task_type::READ_TASK:{
                     read_task *rt= static_cast<read_task *>(task_i);
+                    std::cout<< serialization_manager().serialise_task(rt) << std::endl;
                     client->read(*rt);
                     break;
                 }
-                case FLUSH_TASK:{
+                case task_type::FLUSH_TASK:{
                     flush_task *ft= static_cast<flush_task *>(task_i);
                     client->flush_file(*ft);
                     break;
                 }
-                case DELETE_TASK:{
+                case task_type::DELETE_TASK:{
                     delete_task *dt= static_cast<delete_task *>(task_i);
                     client->delete_file(*dt);
                     break;

@@ -2,6 +2,7 @@
  * Created by hariharan on 3/3/18.
  */
 #include <mpi.h>
+#include <zconf.h>
 #include "posix.h"
 enum test_case{
     SIMPLE_WRITE=0,
@@ -15,7 +16,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=SIMPLE_WRITE;
+test_case testCase=SIMPLE_MIXED;
 /*
  * function definitions
  */
@@ -37,6 +38,9 @@ int main(int argc, char** argv){
         }
         case SIMPLE_MIXED:{
             return_val=simple_write();
+            sleep(5);
+            return_val=simple_write();
+            //sleep(2);
             return_val=simple_read();
             break;
         }
@@ -71,7 +75,7 @@ void gen_random(char *s, const int len) {
     s[len] = 0;
 }
 int simple_write(){
-    FILE* fh=porus::fopen("test","weight+");
+    FILE* fh=porus::fopen("test","w+");
     size_t size_of_io=4 * 1024 * 1024;
     char* t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
@@ -83,8 +87,9 @@ int simple_write(){
 
 int simple_read(){
     FILE* fh=porus::fopen("test","r+");
-    char* t= static_cast<char *>(malloc(5));
-    porus::fread(t,1,5,fh);
+    size_t size_of_io=4 * 1024 * 1024;
+    char* t= static_cast<char *>(malloc(size_of_io));
+    porus::fread(t,1,size_of_io,fh);
     std::cout << "read data: "<< t <<std::endl;
     porus::fclose(fh);
     return 0;

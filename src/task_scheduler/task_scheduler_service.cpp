@@ -18,18 +18,19 @@ int task_scheduler_service::run() {
 
     int status=-1;
     task* task_i= queue->subscribe_task(status);
-    if(status!=-1){
+    if(status!=-1 && task_i!= nullptr){
         count++;
         switch (task_i->t_type){
-            case WRITE_TASK:{
+            case task_type::WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(task_i);
                 std::cout<< serialization_manager().serialise_task(wt) << std::endl;
                 task_list.push_back(wt);
                 write_count++;
                 break;
             }
-            case READ_TASK:{
+            case task_type::READ_TASK:{
                 read_task *rt= static_cast<read_task *>(task_i);
+                std::cout<< serialization_manager().serialise_task(rt) << std::endl;
                 task_list.push_back(rt);
                 read_count++;
                 break;
@@ -40,18 +41,19 @@ int task_scheduler_service::run() {
         usleep(10);
         int status=-1;
         task* task_i= queue->subscribe_task_with_timeout(status);
-        if(status!=-1){
+        if(status!=-1 && task_i!= nullptr){
             count++;
             switch (task_i->t_type){
-                case WRITE_TASK:{
+                case task_type::WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task_i);
                     std::cout<< serialization_manager().serialise_task(wt) << std::endl;
                     task_list.push_back(wt);
                     write_count++;
                     break;
                 }
-                case READ_TASK:{
+                case task_type::READ_TASK:{
                     read_task *rt= static_cast<read_task *>(task_i);
+                    std::cout<< serialization_manager().serialise_task(rt) << std::endl;
                     task_list.push_back(rt);
                     read_count++;
                     break;
@@ -80,7 +82,7 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
     for(auto task_t:tasks){
 
         switch (task_t->t_type){
-            case WRITE_TASK:{
+            case task_type::WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(task_t);
                 if(wt->destination.worker==-1){
                     input.task_size[write_index]=wt->source.size;
@@ -90,14 +92,13 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
                     /*
                      * update exiting file
                      */
-                    static_task_solver.emplace(actual_index,wt->destination.worker);
+                    static_task_solver.emplace(actual_index,wt->destination.worker-1);
                 }
                 break;
             }
-            case READ_TASK:{
-                int worker_index=0;
+            case task_type::READ_TASK:{
                 read_task *rt= static_cast<read_task *>(task_t);
-                static_task_solver.emplace(actual_index,rt->destination.worker);
+                static_task_solver.emplace(actual_index,rt->source.worker-1);
                 read_index++;
                 break;
             }
@@ -138,12 +139,12 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
         }
         task* task_i=tasks[task_index];
         switch (task_i->t_type){
-            case WRITE_TASK:{
+            case task_type::WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(tasks[task_index]);
                 worker_tasks.push_back(wt);
                 break;
             }
-            case READ_TASK:{
+            case task_type::READ_TASK:{
                 read_task *rt= static_cast<read_task *>(tasks[task_index]);
                 worker_tasks.push_back(rt);
                 break;
@@ -154,15 +155,16 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
     }
     for (std::pair<int,std::vector<task*>> element : worker_tasks_map)
     {
+        std::cout<<"add to worker:"<<element.first<<std::endl;
         std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first+1,WORKER_TASK_SUBJECT[element.first]);
         for(auto task:element.second){
             switch (task->t_type){
-                case WRITE_TASK:{
+                case task_type::WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task);
                     queue->publish_task(wt);
                     break;
                 }
-                case READ_TASK:{
+                case task_type::READ_TASK:{
                     read_task *rt= static_cast<read_task *>(task);
                     queue->publish_task(rt);
                     break;

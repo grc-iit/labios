@@ -105,10 +105,11 @@ size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
         id=task.destination.filename;
         std::string temp_data=data.substr(task.source.offset,task.destination.size);
         data_m->put(id, temp_data);
+        mdm->update_write_task_info(task,filename);
         client_queue->publish_task(&task);
         index++;
     }
-    mdm->update_write_task_info(write_tasks,filename);
+//mdm->update_write_task_info(write_tasks,filename);
     return size*count;
 }
 

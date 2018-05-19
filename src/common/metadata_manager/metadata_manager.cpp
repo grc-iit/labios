@@ -230,3 +230,24 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
     }
     return chunks;
 }
+
+int metadata_manager::update_write_task_info(write_task task_k, std::string filename) {
+    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
+    serialization_manager sm=serialization_manager();
+    file_stat fs;
+    auto iter=file_map.find(filename);
+    if(iter!=file_map.end()) fs=iter->second;
+    update_on_write(task_k.source.filename,task_k.source.size);
+    if(!task_k.meta_updated){
+        size_t chunk_index=(task_k.source.offset/ io_unit_max);
+        size_t base_offset=chunk_index*io_unit_max+task_k.source.offset%io_unit_max;
+        chunk_meta cm=chunk_meta();
+        cm.actual_user_chunk=task_k.source;
+        cm.destination=task_k.destination;
+        std::string chunk_str=sm.serialise_chunk(cm);
+        map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str);
+    }
+    std::string fs_str=sm.serialise_file_stat(fs);
+    map->put(table::FILE_DB,filename,fs_str);
+    return 0;
+}

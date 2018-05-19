@@ -31,7 +31,7 @@
 #define CEREAL_TYPES_SHARED_PTR_HPP_
 
 #include "cereal/cereal.hpp"
-#include <cereal/types/memory.hpp>
+#include <memory>
 #include <cstring>
 
 // Work around MSVC not having alignof

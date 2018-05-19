@@ -7,7 +7,7 @@
 #include "../../aetrio_system.h"
 
 int posix_client::read(read_task task) {
-    FILE* fh=fopen(task.source.filename.c_str(),"rb+");
+    FILE* fh=fopen(task.source.filename.c_str(),"r+");
     char* data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     fseek(fh,task.source.offset,SEEK_SET);
     fread(data,task.source.size, sizeof(char),fh);
@@ -26,6 +26,7 @@ int posix_client::write(write_task task) {
     std::string chunk_str=map_client->get(table::CHUNK_DB, task.source.filename +std::to_string(base_offset));
     chunk_meta chunk_meta1=sm.deserialise_chunk(chunk_str);
     std::string data=map_client->get(DATASPACE_DB,task.destination.filename);
+    std::string file_path;
     if(chunk_meta1.destination.dest_t==source_type::DATASPACE_LOC){
         /*
          * New I/O
@@ -33,26 +34,29 @@ int posix_client::write(write_task task) {
         int file_id=static_cast<int>(duration_cast< milliseconds >(
                 system_clock::now().time_since_epoch()
         ).count());
-        std::string file_path=dir+std::to_string(file_id);
+        file_path=dir+std::to_string(file_id);
         FILE* fh=fopen(file_path.c_str(),"w+");
         fwrite(data.c_str(),task.source.size, sizeof(char),fh);
         fclose(fh);
-        chunk_meta1.actual_user_chunk=task.source;
-        chunk_meta1.destination.filename=file_path;
-        chunk_meta1.destination.offset=0;
-        chunk_meta1.destination.size=task.source.size;
-        chunk_meta1.destination.worker=worker_index;
-        chunk_str=sm.serialise_chunk(chunk_meta1);
-        map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(base_offset),chunk_str);
-    }else{
+        }else{
         /*cd
          * existing I/O
          */
+        file_path=chunk_meta1.destination.filename;
         FILE* fh=fopen(chunk_meta1.destination.filename.c_str(),"r+");
         fseek(fh,task.source.offset-base_offset,SEEK_SET);
         fwrite(data.c_str(),task.source.size, sizeof(char),fh);
         fclose(fh);
     }
+    chunk_meta1.actual_user_chunk=task.source;
+    chunk_meta1.destination.dest_t=FILE_LOC;
+    chunk_meta1.destination.filename=file_path;
+    chunk_meta1.destination.offset=0;
+    chunk_meta1.destination.size=task.source.size;
+    chunk_meta1.destination.worker=worker_index;
+    chunk_str=sm.serialise_chunk(chunk_meta1);
+    map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(base_offset),chunk_str);
+
     map_client->remove(DATASPACE_DB,task.destination.filename);
     return 0;
 }
