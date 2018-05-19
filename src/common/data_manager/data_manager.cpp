@@ -13,3 +13,11 @@ int data_manager::put(std::string key, std::string data) {
 
     return aetrio_system::getInstance(service_i)->map_client->put(DATASPACE_DB,key,data);;
 }
+
+bool data_manager::exists(std::string key) {
+    return  aetrio_system::getInstance(service_i)->map_client->exists(DATASPACE_DB,key);
+}
+
+std::string data_manager::remove(table table_name, std::string key) {
+    return aetrio_system::getInstance(service_i)->map_client->remove(DATASPACE_DB,key);
+}

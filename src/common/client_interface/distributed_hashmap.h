@@ -27,6 +27,9 @@ public:
     virtual std::string remove(table table_name, std::string key){
         throw NotImplementedException("remove");
     }
+    virtual bool exists(table table_name, std::string key){
+        throw NotImplementedException("remove");
+    }
 };
 
 

@@ -20,6 +20,8 @@ public:
     int put(table table_name,std::string key,std::string value) override ;
     std::string get(table table_name, std::string key) override ;
     std::string remove(table table_name, std::string key) override ;
+
+    bool exists(table table_name, std::string key) override;
 };
 
 

@@ -8,10 +8,12 @@
 
 #include "../../common/data_structures.h"
 #include "io_client.h"
+#include <chrono>
+using namespace std::chrono;
 
 class posix_client:public io_client {
 public:
-    posix_client():io_client(){}
+    posix_client(int worker_index):io_client(worker_index){}
     int write(write_task task) override ;
     int read(read_task task) override ;
     int delete_file(delete_task task) override ;

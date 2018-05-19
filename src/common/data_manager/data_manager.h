@@ -25,6 +25,8 @@ public:
     }
     std::string get(std::string);
     int put(std::string, std::string data);
+    bool exists(std::string key);
+    std::string remove(table table_name, std::string key);
     ~data_manager(){
     }
 };

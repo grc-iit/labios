@@ -75,23 +75,29 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
     int write_index=0,read_index=0,actual_index=0;
     std::unordered_map<int,std::vector<task*>> worker_tasks_map=std::unordered_map<int,std::vector<task*>>();
     std::unordered_map<int,int> write_task_solver=std::unordered_map<int,int>();
-    std::unordered_map<int,int> read_task_solver=std::unordered_map<int,int>();
+    std::unordered_map<int,int> static_task_solver=std::unordered_map<int,int>();
     int i=0;
     for(auto task_t:tasks){
 
         switch (task_t->t_type){
             case WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(task_t);
-                input.task_size[write_index]=wt->source.size;
-                write_task_solver.emplace(actual_index,write_index);
-                write_index++;
+                if(wt->destination.worker==-1){
+                    input.task_size[write_index]=wt->source.size;
+                    write_task_solver.emplace(actual_index,write_index);
+                    write_index++;
+                }else{
+                    /*
+                     * update exiting file
+                     */
+                    static_task_solver.emplace(actual_index,wt->destination.worker);
+                }
                 break;
             }
             case READ_TASK:{
                 int worker_index=0;
                 read_task *rt= static_cast<read_task *>(task_t);
-                //TODO:calculate which worker has data from MDM
-                read_task_solver.emplace(actual_index,worker_index);
+                static_task_solver.emplace(actual_index,rt->destination.worker);
                 read_index++;
                 break;
             }
@@ -109,9 +115,9 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
     std::shared_ptr<solver> solver_i=aetrio_system::getInstance(service_i)->solver_i;
     solver_output output=solver_i->solve(input);
     for(int task_index=0;task_index<tasks.size();task_index++){
-        auto read_iter=read_task_solver.find(task_index);
+        auto read_iter=static_task_solver.find(task_index);
         int worker_index=-1;
-        if(read_iter==read_task_solver.end()){
+        if(read_iter==static_task_solver.end()){
             auto write_iter=write_task_solver.find(task_index);
             if(write_iter==write_task_solver.end()){
                 printf("Error");

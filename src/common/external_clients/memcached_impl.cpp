@@ -45,3 +45,9 @@ std::string MemcacheDImpl::remove(table table_name, std::string key) {
     return value;
 }
 
+bool MemcacheDImpl::exists(table table_name, std::string key) {
+    key=std::to_string(table_name)+KEY_SEPARATOR+key;
+    memcached_return_t rc= memcached_exist(mem_client,key.c_str(),key.size());
+    return rc == memcached_return_t::MEMCACHED_SUCCESS;
+}
+

@@ -31,16 +31,17 @@ struct file{
     std::string filename;
     int64_t offset;
     int64_t size;
+    int worker=-1;
     file(std::string filename,
             long long int offset,
             long long int file_size):filename(filename),offset(offset),size(file_size),dest_t(DATASPACE_LOC){}
-    file(const file &file_t):filename(file_t.filename),offset(file_t.offset),size(file_t.size),dest_t(file_t.dest_t){}
+    file(const file &file_t):filename(file_t.filename),offset(file_t.offset),size(file_t.size),dest_t(file_t.dest_t),worker(file_t.worker){}
 
     file(){};
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->filename,this->offset,this->size,this->dest_t);
+        archive( this->filename,this->offset,this->size,this->dest_t,this->worker);
     }
 };
 struct chunk_meta{

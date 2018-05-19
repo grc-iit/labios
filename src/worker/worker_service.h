@@ -23,7 +23,7 @@ private:
     std::shared_ptr<io_client> client;
     worker_service(service service,int worker_index):service_i(service),kill(false),worker_index(worker_index){
         if(io_client_type_t==io_client_type::POSIX){
-            client= std::shared_ptr<posix_client>(new posix_client());
+            client= std::shared_ptr<posix_client>(new posix_client(worker_index));
         }
         queue=aetrio_system::getInstance(service_i)->get_worker_queue(worker_index,WORKER_TASK_SUBJECT[worker_index]);
         map=aetrio_system::getInstance(service_i)->map_server;

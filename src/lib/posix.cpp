@@ -1,6 +1,7 @@
 //
 // Created by hariharan on 2/16/18.
 //
+#include <zconf.h>
 #include "posix.h"
 #include "../common/task_builder/task_builder.h"
 
@@ -69,15 +70,18 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
         switch(task.source.dest_t){
             case FILE_LOC:{
                 client_queue->publish_task(&task);
-                //TODO: add logic to wait from Buffer
+                while(!data_m->exists(task.destination.filename)) usleep(20);
+                data = const_cast<char *>(data_m->get(task.destination.filename).c_str());
+                data_m->remove(DATASPACE_DB,task.destination.filename);
                 break;
             }
             case DATASPACE_LOC:{
+                data = const_cast<char *>(data_m->get(task.source.filename).c_str());
                 break;
             }
 
         }
-        data = const_cast<char *>(data_m->get(task.source.filename).c_str());
+
         memcpy(ptr+ptr_pos,data+task.source.offset,task.source.size);
     }
     mdm->update_read_task_info(read_tasks,filename);
