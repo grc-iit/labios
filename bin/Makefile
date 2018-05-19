@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /opt/projects/aetrio
+CMAKE_SOURCE_DIR = /home/cc/nfs/aetrio
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /opt/projects/aetrio/bin
+CMAKE_BINARY_DIR = /home/cc/nfs/aetrio/bin
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /opt/projects/aetrio/bin/CMakeFiles /opt/projects/aetrio/bin/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cc/nfs/aetrio/bin/CMakeFiles /home/cc/nfs/aetrio/bin/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /opt/projects/aetrio/bin/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cc/nfs/aetrio/bin/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

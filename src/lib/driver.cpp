@@ -81,7 +81,7 @@ int simple_write(){
     gen_random(t,size_of_io);
     porus::fwrite(t,1,size_of_io,fh);
     porus::fclose(fh);
-    std::cout << "write data: "<< t <<std::endl;
+    //std::cout << "write data: "<< t <<std::endl;
     return 0;
 }
 

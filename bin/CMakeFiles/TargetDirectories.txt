@@ -1,8 +1,8 @@
-/opt/projects/aetrio/bin/CMakeFiles/rebuild_cache.dir
-/opt/projects/aetrio/bin/CMakeFiles/porus_worker.dir
-/opt/projects/aetrio/bin/CMakeFiles/porus_worker_manager.dir
-/opt/projects/aetrio/bin/CMakeFiles/edit_cache.dir
-/opt/projects/aetrio/bin/CMakeFiles/porus_lib.dir
-/opt/projects/aetrio/bin/CMakeFiles/porus_client.dir
-/opt/projects/aetrio/bin/CMakeFiles/porus_server.dir
-/opt/projects/aetrio/bin/CMakeFiles/porus_task_scheduler.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/rebuild_cache.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/porus_worker.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/porus_worker_manager.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/edit_cache.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/porus_lib.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/porus_client.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/porus_server.dir
+/home/cc/nfs/aetrio/bin/CMakeFiles/porus_task_scheduler.dir

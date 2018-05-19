@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /opt/projects/aetrio
+CMAKE_SOURCE_DIR = /home/cc/nfs/aetrio
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /opt/projects/aetrio/bin
+CMAKE_BINARY_DIR = /home/cc/nfs/aetrio/bin
 
 # Include any dependencies generated for this target.
 include CMakeFiles/porus_server.dir/depend.make
@@ -59,16 +59,16 @@ include CMakeFiles/porus_server.dir/flags.make
 
 CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o: ../src/common/configuration_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o -c /opt/projects/aetrio/src/common/configuration_manager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o -c /home/cc/nfs/aetrio/src/common/configuration_manager.cpp
 
 CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/configuration_manager.cpp > CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/configuration_manager.cpp > CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/configuration_manager.cpp -o CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/configuration_manager.cpp -o CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o.requires:
 
@@ -83,16 +83,16 @@ CMakeFiles/porus_server.dir/src/common/configuration_manager.cpp.o.provides.buil
 
 CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o: ../src/common/solver/dp_solver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o -c /opt/projects/aetrio/src/common/solver/dp_solver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o -c /home/cc/nfs/aetrio/src/common/solver/dp_solver.cpp
 
 CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/solver/dp_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/solver/dp_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/solver/dp_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/solver/dp_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o.requires:
 
@@ -107,16 +107,16 @@ CMakeFiles/porus_server.dir/src/common/solver/dp_solver.cpp.o.provides.build: CM
 
 CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o: ../src/common/solver/random_solver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o -c /opt/projects/aetrio/src/common/solver/random_solver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o -c /home/cc/nfs/aetrio/src/common/solver/random_solver.cpp
 
 CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/solver/random_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/solver/random_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/solver/random_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/solver/random_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o.requires:
 
@@ -131,16 +131,16 @@ CMakeFiles/porus_server.dir/src/common/solver/random_solver.cpp.o.provides.build
 
 CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o: ../src/common/solver/round_robin_solver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o -c /opt/projects/aetrio/src/common/solver/round_robin_solver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o -c /home/cc/nfs/aetrio/src/common/solver/round_robin_solver.cpp
 
 CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/solver/round_robin_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/solver/round_robin_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/solver/round_robin_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/solver/round_robin_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o.requires:
 
@@ -155,16 +155,16 @@ CMakeFiles/porus_server.dir/src/common/solver/round_robin_solver.cpp.o.provides.
 
 CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o: ../src/common/solver/greedy_solver.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o -c /opt/projects/aetrio/src/common/solver/greedy_solver.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o -c /home/cc/nfs/aetrio/src/common/solver/greedy_solver.cpp
 
 CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/solver/greedy_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/solver/greedy_solver.cpp > CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/solver/greedy_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/solver/greedy_solver.cpp -o CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o.requires:
 
@@ -179,16 +179,16 @@ CMakeFiles/porus_server.dir/src/common/solver/greedy_solver.cpp.o.provides.build
 
 CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o: ../src/common/solver/knapsack.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o -c /opt/projects/aetrio/src/common/solver/knapsack.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o -c /home/cc/nfs/aetrio/src/common/solver/knapsack.cpp
 
 CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/solver/knapsack.cpp > CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/solver/knapsack.cpp > CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/solver/knapsack.cpp -o CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/solver/knapsack.cpp -o CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o.requires:
 
@@ -203,16 +203,16 @@ CMakeFiles/porus_server.dir/src/common/solver/knapsack.cpp.o.provides.build: CMa
 
 CMakeFiles/porus_server.dir/src/common/timer.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/timer.cpp.o: ../src/common/timer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_server.dir/src/common/timer.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/timer.cpp.o -c /opt/projects/aetrio/src/common/timer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/porus_server.dir/src/common/timer.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/timer.cpp.o -c /home/cc/nfs/aetrio/src/common/timer.cpp
 
 CMakeFiles/porus_server.dir/src/common/timer.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/timer.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/timer.cpp > CMakeFiles/porus_server.dir/src/common/timer.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/timer.cpp > CMakeFiles/porus_server.dir/src/common/timer.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/timer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/timer.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/timer.cpp -o CMakeFiles/porus_server.dir/src/common/timer.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/timer.cpp -o CMakeFiles/porus_server.dir/src/common/timer.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/timer.cpp.o.requires:
 
@@ -227,16 +227,16 @@ CMakeFiles/porus_server.dir/src/common/timer.cpp.o.provides.build: CMakeFiles/po
 
 CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o: ../src/common/data_manager/data_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o -c /opt/projects/aetrio/src/common/data_manager/data_manager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o -c /home/cc/nfs/aetrio/src/common/data_manager/data_manager.cpp
 
 CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/data_manager/data_manager.cpp > CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/data_manager/data_manager.cpp > CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/data_manager/data_manager.cpp -o CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/data_manager/data_manager.cpp -o CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o.requires:
 
@@ -251,16 +251,16 @@ CMakeFiles/porus_server.dir/src/common/data_manager/data_manager.cpp.o.provides.
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o: ../src/common/client_interface/distributed_hashmap.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o -c /opt/projects/aetrio/src/common/client_interface/distributed_hashmap.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o -c /home/cc/nfs/aetrio/src/common/client_interface/distributed_hashmap.cpp
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/client_interface/distributed_hashmap.cpp > CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/client_interface/distributed_hashmap.cpp > CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/client_interface/distributed_hashmap.cpp -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/client_interface/distributed_hashmap.cpp -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.o.requires:
 
@@ -275,16 +275,16 @@ CMakeFiles/porus_server.dir/src/common/client_interface/distributed_hashmap.cpp.
 
 CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o: ../src/common/metadata_manager/metadata_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o -c /opt/projects/aetrio/src/common/metadata_manager/metadata_manager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o -c /home/cc/nfs/aetrio/src/common/metadata_manager/metadata_manager.cpp
 
 CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/metadata_manager/metadata_manager.cpp > CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/metadata_manager/metadata_manager.cpp > CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/metadata_manager/metadata_manager.cpp -o CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/metadata_manager/metadata_manager.cpp -o CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o.requires:
 
@@ -299,16 +299,16 @@ CMakeFiles/porus_server.dir/src/common/metadata_manager/metadata_manager.cpp.o.p
 
 CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o: ../src/aetrio_system.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o -c /opt/projects/aetrio/src/aetrio_system.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o -c /home/cc/nfs/aetrio/src/aetrio_system.cpp
 
 CMakeFiles/porus_server.dir/src/aetrio_system.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/aetrio_system.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/aetrio_system.cpp > CMakeFiles/porus_server.dir/src/aetrio_system.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/aetrio_system.cpp > CMakeFiles/porus_server.dir/src/aetrio_system.cpp.i
 
 CMakeFiles/porus_server.dir/src/aetrio_system.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/aetrio_system.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/aetrio_system.cpp -o CMakeFiles/porus_server.dir/src/aetrio_system.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/aetrio_system.cpp -o CMakeFiles/porus_server.dir/src/aetrio_system.cpp.s
 
 CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o.requires:
 
@@ -323,16 +323,16 @@ CMakeFiles/porus_server.dir/src/aetrio_system.cpp.o.provides.build: CMakeFiles/p
 
 CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o: ../src/common/task_builder/task_builder.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o -c /opt/projects/aetrio/src/common/task_builder/task_builder.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o -c /home/cc/nfs/aetrio/src/common/task_builder/task_builder.cpp
 
 CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/task_builder/task_builder.cpp > CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/task_builder/task_builder.cpp > CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/task_builder/task_builder.cpp -o CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/task_builder/task_builder.cpp -o CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o.requires:
 
@@ -347,16 +347,16 @@ CMakeFiles/porus_server.dir/src/common/task_builder/task_builder.cpp.o.provides.
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o: ../src/common/client_interface/distributed_queue.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o -c /opt/projects/aetrio/src/common/client_interface/distributed_queue.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o -c /home/cc/nfs/aetrio/src/common/client_interface/distributed_queue.cpp
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/client_interface/distributed_queue.cpp > CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/client_interface/distributed_queue.cpp > CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/client_interface/distributed_queue.cpp -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/client_interface/distributed_queue.cpp -o CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o.requires:
 
@@ -371,16 +371,16 @@ CMakeFiles/porus_server.dir/src/common/client_interface/distributed_queue.cpp.o.
 
 CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o: ../src/common/external_clients/serialization_manager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o -c /opt/projects/aetrio/src/common/external_clients/serialization_manager.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o -c /home/cc/nfs/aetrio/src/common/external_clients/serialization_manager.cpp
 
 CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/external_clients/serialization_manager.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/external_clients/serialization_manager.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/external_clients/serialization_manager.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/external_clients/serialization_manager.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cpp.o.requires:
 
@@ -395,16 +395,16 @@ CMakeFiles/porus_server.dir/src/common/external_clients/serialization_manager.cp
 
 CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o: ../src/common/external_clients/rocksdb_impl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o -c /opt/projects/aetrio/src/common/external_clients/rocksdb_impl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o -c /home/cc/nfs/aetrio/src/common/external_clients/rocksdb_impl.cpp
 
 CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/external_clients/rocksdb_impl.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/external_clients/rocksdb_impl.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/external_clients/rocksdb_impl.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/external_clients/rocksdb_impl.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o.requires:
 
@@ -419,16 +419,16 @@ CMakeFiles/porus_server.dir/src/common/external_clients/rocksdb_impl.cpp.o.provi
 
 CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o: ../src/common/external_clients/memcached_impl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o -c /opt/projects/aetrio/src/common/external_clients/memcached_impl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o -c /home/cc/nfs/aetrio/src/common/external_clients/memcached_impl.cpp
 
 CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/external_clients/memcached_impl.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/external_clients/memcached_impl.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/external_clients/memcached_impl.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/external_clients/memcached_impl.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o.requires:
 
@@ -443,16 +443,16 @@ CMakeFiles/porus_server.dir/src/common/external_clients/memcached_impl.cpp.o.pro
 
 CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o: ../src/common/external_clients/nats_impl.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o -c /opt/projects/aetrio/src/common/external_clients/nats_impl.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o -c /home/cc/nfs/aetrio/src/common/external_clients/nats_impl.cpp
 
 CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/common/external_clients/nats_impl.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/common/external_clients/nats_impl.cpp > CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.i
 
 CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/common/external_clients/nats_impl.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/common/external_clients/nats_impl.cpp -o CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.s
 
 CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o.requires:
 
@@ -467,16 +467,16 @@ CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.cpp.o.provides
 
 CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o: ../src/system_manager/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o -c /opt/projects/aetrio/src/system_manager/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o -c /home/cc/nfs/aetrio/src/system_manager/main.cpp
 
 CMakeFiles/porus_server.dir/src/system_manager/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/system_manager/main.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/system_manager/main.cpp > CMakeFiles/porus_server.dir/src/system_manager/main.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/system_manager/main.cpp > CMakeFiles/porus_server.dir/src/system_manager/main.cpp.i
 
 CMakeFiles/porus_server.dir/src/system_manager/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/system_manager/main.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/system_manager/main.cpp -o CMakeFiles/porus_server.dir/src/system_manager/main.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/system_manager/main.cpp -o CMakeFiles/porus_server.dir/src/system_manager/main.cpp.s
 
 CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o.requires:
 
@@ -491,16 +491,16 @@ CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o.provides.build: CMakeF
 
 CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o: CMakeFiles/porus_server.dir/flags.make
 CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o: ../src/system_manager/system_manager_service.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o -c /opt/projects/aetrio/src/system_manager/system_manager_service.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o -c /home/cc/nfs/aetrio/src/system_manager/system_manager_service.cpp
 
 CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /opt/projects/aetrio/src/system_manager/system_manager_service.cpp > CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cc/nfs/aetrio/src/system_manager/system_manager_service.cpp > CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.i
 
 CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /opt/projects/aetrio/src/system_manager/system_manager_service.cpp -o CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cc/nfs/aetrio/src/system_manager/system_manager_service.cpp -o CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.s
 
 CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o.requires:
 
@@ -558,10 +558,10 @@ porus_server: CMakeFiles/porus_server.dir/src/common/external_clients/nats_impl.
 porus_server: CMakeFiles/porus_server.dir/src/system_manager/main.cpp.o
 porus_server: CMakeFiles/porus_server.dir/src/system_manager/system_manager_service.cpp.o
 porus_server: CMakeFiles/porus_server.dir/build.make
-porus_server: /opt/install/lib/libmpicxx.so
-porus_server: /opt/install/lib/libmpi.so
+porus_server: /home/cc/main/install/lib/libmpicxx.so
+porus_server: /home/cc/main/install/lib/libmpi.so
 porus_server: CMakeFiles/porus_server.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/opt/projects/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Linking CXX executable porus_server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cc/nfs/aetrio/bin/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Linking CXX executable porus_server"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/porus_server.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -596,6 +596,6 @@ CMakeFiles/porus_server.dir/clean:
 .PHONY : CMakeFiles/porus_server.dir/clean
 
 CMakeFiles/porus_server.dir/depend:
-	cd /opt/projects/aetrio/bin && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /opt/projects/aetrio /opt/projects/aetrio /opt/projects/aetrio/bin /opt/projects/aetrio/bin /opt/projects/aetrio/bin/CMakeFiles/porus_server.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/cc/nfs/aetrio/bin && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cc/nfs/aetrio /home/cc/nfs/aetrio /home/cc/nfs/aetrio/bin /home/cc/nfs/aetrio/bin /home/cc/nfs/aetrio/bin/CMakeFiles/porus_server.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/porus_server.dir/depend
 

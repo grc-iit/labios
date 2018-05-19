@@ -126,7 +126,11 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
     std::shared_ptr<solver> solver_i=aetrio_system::getInstance(service_i)->solver_i;
     solver_output output=solver_i->solve(input);
     for(int t=0;t<input.num_task;t++){
-        output.solution[t]=sorted_workers[output.solution[t]-1].second;
+        if(output.solution[t]-1 < 0 || output.solution[t]-1 > MAX_WORKER_COUNT){
+		std::cout<<"No Solution found"<<std::endl;
+		return;
+	}
+	output.solution[t]=sorted_workers[output.solution[t]-1].second;
     }
     for(int task_index=0;task_index<tasks.size();task_index++){
         auto read_iter=static_task_solver.find(task_index);

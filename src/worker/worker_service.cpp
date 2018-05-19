@@ -12,7 +12,7 @@ int worker_service::run() {
     while(!kill){
         update_score(false);
         update_capacity();
-        usleep(10);
+        usleep(10100);
         int status=-1;
         task* task_i= queue->subscribe_task(status);
         if(status!=-1){
