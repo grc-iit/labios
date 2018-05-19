@@ -12,9 +12,9 @@ class configuration_manager {
 private:
     static std::shared_ptr<configuration_manager> instance;
     configuration_manager():NATS_URL_CLIENT("nats://aetrio-1:4222/"),
-            NATS_URL_SERVER("nats://aetrio-1:4223/"),
+            NATS_URL_SERVER("nats://aetrio-3:4223/"),
             MEMCACHED_URL_CLIENT("--SERVER=aetrio-1:11211"),
-            MEMCACHED_URL_SERVER("--SERVER=aetrio-1:11212"){}
+            MEMCACHED_URL_SERVER("--SERVER=aetrio-3:11212"){}
 public:
     std::string NATS_URL_CLIENT;
     std::string NATS_URL_SERVER;
