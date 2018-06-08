@@ -127,7 +127,7 @@ int PorusClient::listen_request() {
                 }
             }
             case DATASPACE:{
-                MPI_Probe(source, MPI_ANY_TAG, MPI_ANY_TAG, &status);
+                MPI_Probe(source, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 int char_count;
                 MPI_Get_count(&status, MPI_CHAR, &char_count);
                 char* data= static_cast<char *>(malloc(char_count));

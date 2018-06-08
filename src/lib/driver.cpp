@@ -16,7 +16,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=SIMPLE_WRITE;
+test_case testCase=MULTI_WRITE;
 /*
  * function definitions
  */
@@ -25,6 +25,7 @@ int simple_read();
 int multi_write();
 int multi_read();
 int main(int argc, char** argv){
+
     porus::MPI_Init(&argc,&argv);
     int return_val;
     switch(testCase){
@@ -96,9 +97,10 @@ int simple_read(){
 }
 int multi_write(){
     FILE* fh=porus::fopen("test","weight+");
-    size_t size_of_io=16 * 1024 * 1024;
-    char* t= static_cast<char *>(calloc(size_of_io, 1));
-    for(int i=0;i<1024;i++){
+    size_t size_of_io=32 * 1024 * 1024;
+    char* t= static_cast<char *>(malloc(size_of_io));
+    gen_random(t,size_of_io);
+    for(int i=0;i<2;i++){
         porus::fwrite(t,1,size_of_io,fh);
     }
     porus::fclose(fh);

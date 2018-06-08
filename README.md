@@ -36,18 +36,65 @@
 * Automated server bootstrapping
 * Cluster environment: 1 Lib, 1 TaskSched, 2 worker
 
+#VCS management
+##Make sure we work on local versions for constants.h
+`cd aetrio/`
 
-##Setup Porus
-### Memcached
+`git update-index --assume-unchanged src/common/constants.h`
+
+`git update-index --assume-unchanged src/common/configuration_manager.h`
+
+`git update-index --assume-unchanged src/common/configuration_manager.cpp`
+
+`git update-index --assume-unchanged CMakeLists.txt`
+
+##Undo commands:
+`cd aetrio/`
+
+`git update-index --no-assume-unchanged src/common/constants.h`
+
+`git update-index --no-assume-unchanged src/common/configuration_manager.h`
+
+`git update-index --no-assume-unchanged src/common/configuration_manager.cpp`
+
+`git update-index --no-assume-unchanged CMakeLists.txt`
+
+
+
+
+#Setup Porus
+
+## Memcached
+###Install memached and libmemcached from normal sources
+###Run memcached
 #### Client
 `memcached -p 11211 -l localhost -d  -I 4M`
 #### Server
 `memcached -p 11212 -l localhost -d  -I 4M`
-### NATS
-#### Client
+
+##NATS
+###Install
+Download from https://nats.io/download/
+
+#####Install first the server by simply copying gnatsd to /usr/local/bin
+
+#####For C client:
+`mkdir build && cd build`
+
+`cmake ../`
+
+`make && sudo make install`
+###Run NATS with logging
+#### Client 
 `gnatsd -p 4222 -a localhost -DV -l ~/nats_client.log &`
 #### Server
 `gnatsd -p 4223 -a localhost -DV -l ~/nats_server.log &`
+
+###Run NATS without logging
+#### Client 
+`gnatsd -p 4222 -a localhost -DV &`
+#### Server
+`gnatsd -p 4223 -a localhost -DV &`
 
 
 
