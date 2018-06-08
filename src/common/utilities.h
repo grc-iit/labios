@@ -53,17 +53,7 @@ static int parse_opts(int argc, char *argv[]){
                 exit (EXIT_FAILURE);
         }
     }
-}
-static int64_t S64(const char *s) {
-    int64_t i;
-    char c ;
-    int scanned = sscanf(s, "%" SCNd64 "%c", &i, &c);
-    if (scanned == 1) return i;
-    if (scanned > 1) {
-        // TBD about extra data found
-        return i;
-    }
-    // TBD failed to scan;
     return 0;
 }
+
 #endif //PORUS_MAIN_UTILITY_H
