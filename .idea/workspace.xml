@@ -16,63 +16,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1d98b859-b25b-47e6-9e30-8b87bba0f4c5" name="Default" comment="fixed todos">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeCache.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeCache.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/CMakeDirectoryInformation.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/CMakeDirectoryInformation.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/CMakeOutput.log" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/CMakeOutput.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/Makefile.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/Makefile.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/Makefile2" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/Makefile2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/TargetDirectories.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/TargetDirectories.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.c" beforeDir="false" afterPath="$PROJECT_DIR$/bin/CMakeFiles/feature_tests.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/DependInfo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/build.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/cmake_clean.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/depend.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/flags.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/link.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_client.dir/progress.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/DependInfo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/build.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/cmake_clean.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/depend.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/flags.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/link.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_lib.dir/progress.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/DependInfo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/build.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/cmake_clean.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/depend.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/flags.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/link.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_server.dir/progress.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/DependInfo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/build.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/cmake_clean.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/depend.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/flags.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/link.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_task_scheduler.dir/progress.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/DependInfo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/build.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/cmake_clean.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/depend.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/flags.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/link.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker.dir/progress.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/DependInfo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/build.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/cmake_clean.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/depend.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/flags.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/link.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/CMakeFiles/porus_worker_manager.dir/progress.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bin/cmake_install.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/bin/cmake_install.cmake" afterDir="false" />
-    </list>
+    <list default="true" id="1d98b859-b25b-47e6-9e30-8b87bba0f4c5" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/bin/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -85,20 +29,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
+      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="630">
-              <caret line="20" column="188" lean-forward="true" selection-start-line="20" selection-start-column="188" selection-end-line="20" selection-end-column="188" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/.gitignore">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="1" column="7" lean-forward="true" selection-start-line="1" selection-start-column="7" selection-end-line="1" selection-end-column="7" />
+            <state relative-caret-position="870">
+              <caret line="28" column="44" lean-forward="true" selection-start-line="28" selection-start-column="44" selection-end-line="28" selection-end-column="44" />
             </state>
           </provider>
         </entry>
@@ -360,7 +295,7 @@
       <workItem from="1526707263462" duration="25618000" />
       <workItem from="1528211970950" duration="574000" />
       <workItem from="1528470409761" duration="234000" />
-      <workItem from="1528470703827" duration="742000" />
+      <workItem from="1528470703827" duration="1005000" />
     </task>
     <task id="LOCAL-00001" summary="made some cool changes">
       <created>1524060178418</created>
@@ -565,24 +500,30 @@
       <option name="project" value="LOCAL" />
       <updated>1526756420489</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="fixed cmakelist to reflect name change">
+      <created>1528471542714</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1528471542714</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="142984000" />
+    <option name="totallyTimeSpent" value="143247000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="929" width="3840" height="2027" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.13785847" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13785847" />
       <window_info anchor="bottom" id="TODO" order="5" />
-      <window_info anchor="bottom" id="CMake" order="6" sideWeight="0.49907675" visible="true" weight="0.33984375" />
+      <window_info anchor="bottom" id="CMake" order="6" sideWeight="0.49907675" weight="0.33984375" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.5009232" side_tool="true" weight="0.3305416" />
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.32457387" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Terminal" order="9" weight="0.3487216" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" visible="true" weight="0.3482143" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="11" weight="0.390625" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -648,7 +589,8 @@
     <MESSAGE value="fixed task schedulers" />
     <MESSAGE value="fixed coring of workers and task schedular dp algo" />
     <MESSAGE value="fixed todos" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed todos" />
+    <MESSAGE value="fixed cmakelist to reflect name change" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed cmakelist to reflect name change" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1127,17 +1069,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="630">
-          <caret line="20" column="188" lean-forward="true" selection-start-line="20" selection-start-column="188" selection-end-line="20" selection-end-column="188" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
           <caret line="1" column="7" lean-forward="true" selection-start-line="1" selection-start-column="7" selection-end-line="1" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="870">
+          <caret line="28" column="44" lean-forward="true" selection-start-line="28" selection-start-column="44" selection-end-line="28" selection-end-column="44" />
         </state>
       </provider>
     </entry>
