@@ -40,24 +40,14 @@
 ##Make sure we work on local versions for constants.h
 `cd aetrio/`
 
-`git update-index --assume-unchanged src/common/constants.h`
-
-`git update-index --assume-unchanged src/common/configuration_manager.h`
-
-`git update-index --assume-unchanged src/common/configuration_manager.cpp`
-
-`git update-index --assume-unchanged CMakeLists.txt`
+`git update-index --assume-unchanged src/common/constants.h 
+src/common/configuration_manager.h src/common/configuration_manager.cpp CMakeLists.txt`
 
 ##Undo commands:
 `cd aetrio/`
 
-`git update-index --no-assume-unchanged src/common/constants.h`
-
-`git update-index --no-assume-unchanged src/common/configuration_manager.h`
-
-`git update-index --no-assume-unchanged src/common/configuration_manager.cpp`
-
-`git update-index --no-assume-unchanged CMakeLists.txt`
+`git update-index --no-assume-unchanged src/common/constants.h 
+ src/common/configuration_manager.h src/common/configuration_manager.cpp CMakeLists.txt`
 
 
 
