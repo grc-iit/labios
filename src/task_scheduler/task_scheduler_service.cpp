@@ -24,14 +24,14 @@ int task_scheduler_service::run() {
         switch (task_i->t_type){
             case task_type::WRITE_TASK:{
                 write_task *wt= static_cast<write_task *>(task_i);
-                std::cout<< serialization_manager().serialise_task(wt) << std::endl;
+                std::cout<< serialization_manager().serialize_task(wt) << std::endl;
                 task_list.push_back(wt);
                 write_count++;
                 break;
             }
             case task_type::READ_TASK:{
                 read_task *rt= static_cast<read_task *>(task_i);
-                std::cout<< serialization_manager().serialise_task(rt) << std::endl;
+                std::cout<< serialization_manager().serialize_task(rt) << std::endl;
                 task_list.push_back(rt);
                 read_count++;
                 break;
@@ -39,30 +39,34 @@ int task_scheduler_service::run() {
         }
     }
     while(!kill){
-        usleep(10);
-        int status=-1;
-        task* task_i= queue->subscribe_task_with_timeout(status);
+        usleep(10);//NOTE: Why usleep here?
+        status=-1;
+        task_i= queue->subscribe_task_with_timeout(status);
         if(status!=-1 && task_i!= nullptr){
             count++;
             switch (task_i->t_type){
                 case task_type::WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task_i);
-                    std::cout<< serialization_manager().serialise_task(wt) << std::endl;
+                    std::cout<< serialization_manager().serialize_task(wt) << std::endl;
                     task_list.push_back(wt);
                     write_count++;
                     break;
                 }
                 case task_type::READ_TASK:{
                     read_task *rt= static_cast<read_task *>(task_i);
-                    std::cout<< serialization_manager().serialise_task(rt) << std::endl;
+                    std::cout<< serialization_manager().serialize_task(rt) << std::endl;
                     task_list.push_back(rt);
                     read_count++;
                     break;
                 }
+                default:
+                    std::cout <<"run(): Error in task type\n";
+                    break;
             }
         }
         auto time_elapsed= t.endTimeWithoutPrint("");
-        if(task_list.size() >0 && (count>MAX_TASK /*|| time_elapsed>MAX_TASK_TIMER*/)){
+        if(!task_list.empty() && (count>MAX_TASK ||
+                                  time_elapsed>MAX_TASK_TIMER)){
             schedule_tasks(task_list,write_count,read_count);
             count=0;
             t.startTime();
@@ -74,17 +78,18 @@ int task_scheduler_service::run() {
 
 void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_count,int read_count) {
     solver_input input(write_count,MAX_WORKER_COUNT);
-    input.num_task=write_count;
+    //input.num_task=write_count;
     int write_index=0,read_index=0,actual_index=0;
-    std::unordered_map<int,std::vector<task*>> worker_tasks_map=std::unordered_map<int,std::vector<task*>>();
+    /*std::unordered_map<int,std::vector<task*>>
+            worker_tasks_map=std::unordered_map<int,std::vector<task*>>();*/
     std::unordered_map<int,int> write_task_solver=std::unordered_map<int,int>();
     std::unordered_map<int,int> static_task_solver=std::unordered_map<int,int>();
-    int i=0;
+    //int i=0;
     for(auto task_t:tasks){
 
         switch (task_t->t_type){
             case task_type::WRITE_TASK:{
-                write_task *wt= static_cast<write_task *>(task_t);
+                auto *wt= static_cast<write_task *>(task_t);
                 if(wt->destination.worker==-1){
                     input.task_size[write_index]=wt->source.size;
                     write_task_solver.emplace(actual_index,write_index);
@@ -98,11 +103,14 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
                 break;
             }
             case task_type::READ_TASK:{
-                read_task *rt= static_cast<read_task *>(task_t);
+                auto *rt= static_cast<read_task *>(task_t);
                 static_task_solver.emplace(actual_index,rt->source.worker-1);
                 read_index++;
                 break;
             }
+            default:
+                std::cout <<"schedule_tasks(): Error in task type\n";
+                break;
         }
         actual_index++;
     }
@@ -140,19 +148,19 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
             if(write_iter==write_task_solver.end()){
                 printf("Error");
             }else{
-                int write_index=write_iter->second;
+                write_index=write_iter->second;
                 worker_index=output.solution[write_index];
             }
         }else{
             worker_index=read_iter->second;
         }
-        auto worker_task_iter=worker_tasks_map.find(worker_index);
+        auto worker_task_iter=output.worker_task_map.find(worker_index);
         std::vector<task*> worker_tasks;
-        if(worker_task_iter==worker_tasks_map.end()){
+        if(worker_task_iter==output.worker_task_map.end()){
             worker_tasks=std::vector<task*>();
         }else{
             worker_tasks=worker_task_iter->second;
-            worker_tasks_map.erase(worker_task_iter);
+            output.worker_task_map.erase(worker_task_iter);
         }
         task* task_i=tasks[task_index];
         switch (task_i->t_type){
@@ -168,9 +176,9 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
             }
         }
 
-        worker_tasks_map.emplace(worker_index,worker_tasks);
+        output.worker_task_map.emplace(worker_index,worker_tasks);
     }
-    for (std::pair<int,std::vector<task*>> element : worker_tasks_map)
+    for (std::pair<int,std::vector<task*>> element : output.worker_task_map)
     {
         std::cout<<"add to worker:"<<element.first+1<<std::endl;
         std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_worker_queue(element.first+1);

@@ -2,8 +2,8 @@
 // Created by hdevarajan on 5/7/18.
 //
 
-#ifndef PORUS_MAIN_NATSCLIENT_H
-#define PORUS_MAIN_NATSCLIENT_H
+#ifndef AETRIO_MAIN_NATSCLIENT_H
+#define AETRIO_MAIN_NATSCLIENT_H
 
 
 #include "../client_interface/distributed_queue.h"
@@ -11,11 +11,12 @@
 
 class NatsImpl: public distributed_queue {
 private:
-    natsConnection      *nc  = NULL;
-    natsSubscription    *sub = NULL;
+    natsConnection      *nc  = nullptr;
+    natsSubscription    *sub = nullptr;
     std::string subject;
 public:
-    NatsImpl(service service,std::string url,std::string subject): distributed_queue(service),subject(subject) {
+    NatsImpl(service service,std::string url,std::string subject):
+            distributed_queue(service),subject(subject) {
         natsConnection_ConnectTo(&nc, url.c_str());
         natsConnection_SubscribeSync(&sub, nc, subject.c_str());
     }
@@ -29,4 +30,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_NATSCLIENT_H
+#endif //AETRIO_MAIN_NATSCLIENT_H

@@ -19,13 +19,13 @@ int worker_service::run() {
            switch (task_i->t_type){
                 case task_type::WRITE_TASK:{
                     write_task *wt= static_cast<write_task *>(task_i);
-                    std::cout<< serialization_manager().serialise_task(wt) << std::endl;
+                    std::cout<< serialization_manager().serialize_task(wt) << std::endl;
                     client->write(*wt);
                     break;
                 }
                 case task_type::READ_TASK:{
                     read_task *rt= static_cast<read_task *>(task_i);
-                    std::cout<< serialization_manager().serialise_task(rt) << std::endl;
+                    std::cout<< serialization_manager().serialize_task(rt) << std::endl;
                     client->read(*rt);
                     break;
                 }

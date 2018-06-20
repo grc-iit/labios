@@ -2,8 +2,8 @@
 // Created by hdevarajan on 5/8/18.
 //
 
-#ifndef PORUS_MAIN_GREEDYSOLVER_H
-#define PORUS_MAIN_GREEDYSOLVER_H
+#ifndef AETRIO_MAIN_GREEDYSOLVER_H
+#define AETRIO_MAIN_GREEDYSOLVER_H
 
 
 #include "solver.h"
@@ -16,4 +16,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_GREEDYSOLVER_H
+#endif //AETRIO_MAIN_GREEDYSOLVER_H

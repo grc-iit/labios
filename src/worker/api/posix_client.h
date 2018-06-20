@@ -2,8 +2,8 @@
 // Created by hdevarajan on 5/10/18.
 //
 
-#ifndef PORUS_MAIN_POSIXCLIENT_H
-#define PORUS_MAIN_POSIXCLIENT_H
+#ifndef AETRIO_MAIN_POSIXCLIENT_H
+#define AETRIO_MAIN_POSIXCLIENT_H
 
 
 #include "../../common/data_structures.h"
@@ -22,4 +22,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_POSIXCLIENT_H
+#endif //AETRIO_MAIN_POSIXCLIENT_H

@@ -2,8 +2,8 @@
 // Created by hariharan on 2/23/18.
 //
 
-#ifndef PORUS_MAIN_DISTRIBUTEDHASHMAP_H
-#define PORUS_MAIN_DISTRIBUTEDHASHMAP_H
+#ifndef AETRIO_MAIN_DISTRIBUTEDHASHMAP_H
+#define AETRIO_MAIN_DISTRIBUTEDHASHMAP_H
 
 
 #include <cereal/types/memory.hpp>
@@ -33,4 +33,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_DISTRIBUTEDHASHMAP_H
+#endif //AETRIO_MAIN_DISTRIBUTEDHASHMAP_H

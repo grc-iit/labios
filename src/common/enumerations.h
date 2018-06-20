@@ -2,8 +2,8 @@
 // Created by hariharan on 2/16/18.
 //
 
-#ifndef PORUS_MAIN_ENUMERATION_H
-#define PORUS_MAIN_ENUMERATION_H
+#ifndef AETRIO_MAIN_ENUMERATION_H
+#define AETRIO_MAIN_ENUMERATION_H
 
 enum request_status{
     COMPLETED = 0,
@@ -73,4 +73,4 @@ enum io_client_type{
     POSIX=0
 };
 
-#endif //PORUS_MAIN_ENUMERATION_H
+#endif //AETRIO_MAIN_ENUMERATION_H

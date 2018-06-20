@@ -35,7 +35,7 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
         if(base_offset!=i*io_unit_max){
 
             std::string chunk_str=map_client->get(table::CHUNK_DB, source.filename +std::to_string(base_offset));
-            chunk_meta chunk_meta=sm.deserialise_chunk(chunk_str);
+            chunk_meta chunk_meta= sm.deserialize_chunk(chunk_str);
             /*
              * chunk in dataspace
              */
@@ -90,7 +90,7 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                     sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
                 }else{
                     std::string chunk_str=map_client->get(table::CHUNK_DB, source.filename +std::to_string(base_offset));
-                    chunk_meta chunk_meta=sm.deserialise_chunk(chunk_str);
+                    chunk_meta chunk_meta= sm.deserialize_chunk(chunk_str);
                     /*
                      * chunk in dataspace
                      */

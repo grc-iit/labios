@@ -4,13 +4,13 @@
 #include "mpi.h"
 #include "../common/utilities.h"
 
-int porus::MPI_Init(int *argc, char ***argv) {
+int aetrio::MPI_Init(int *argc, char ***argv) {
   parse_opts(*argc,*argv);
   PMPI_Init(argc,argv);
   aetrio_system::getInstance(service::LIB);
   return 0;
 }
 
-void porus::MPI_Finalize() {
+void aetrio::MPI_Finalize() {
   PMPI_Finalize();
 }

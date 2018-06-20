@@ -10,7 +10,7 @@
 
 class default_solver: public solver {
 public:
-    default_solver(service service);
+    explicit default_solver(service service);
 
     solver_output solve(solver_input input) override;
 };

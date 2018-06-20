@@ -2,8 +2,8 @@
 // Created by hariharan on 2/16/18.
 //
 
-#ifndef PORUS_MAIN_POSIX_H
-#define PORUS_MAIN_POSIX_H
+#ifndef AETRIO_MAIN_POSIX_H
+#define AETRIO_MAIN_POSIX_H
 
 
 #include <cstdio>
@@ -12,7 +12,7 @@
 #include "../common/metadata_manager/metadata_manager.h"
 #include "../common/data_manager/data_manager.h"
 #include "../aetrio_system.h"
-namespace porus{
+namespace aetrio{
     FILE *fopen(const char *filename, const char *mode);
 
     int fclose(FILE *stream);
@@ -26,4 +26,4 @@ namespace porus{
 }
 
 
-#endif //PORUS_MAIN_POSIX_H
+#endif //AETRIO_MAIN_POSIX_H

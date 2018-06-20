@@ -2,8 +2,8 @@
 // Created by hdevarajan on 5/10/18.
 //
 
-#ifndef PORUS_MAIN_WORKERSERVICE_H
-#define PORUS_MAIN_WORKERSERVICE_H
+#ifndef AETRIO_MAIN_WORKERSERVICE_H
+#define AETRIO_MAIN_WORKERSERVICE_H
 
 
 #include "../task_scheduler/task_scheduler_service.h"
@@ -47,4 +47,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_WORKERSERVICE_H
+#endif //AETRIO_MAIN_WORKERSERVICE_H

@@ -2,8 +2,8 @@
 // Created by hariharan on 2/16/18.
 //
 
-#ifndef PORUS_MAIN_SYSTEM_H
-#define PORUS_MAIN_SYSTEM_H
+#ifndef AETRIO_MAIN_SYSTEM_H
+#define AETRIO_MAIN_SYSTEM_H
 
 
 #include <memory>
@@ -19,29 +19,40 @@
 #include "common/configuration_manager.h"
 #include <mpi.h>
 #include <string>
+
 class aetrio_system {
 private:
     static std::shared_ptr<aetrio_system> instance;
     int application_id;
     service service_i;
-    aetrio_system(service service):service_i(service){
-        init(service);
+    explicit aetrio_system(service service)
+            :service_i(service),application_id(),
+             client_comm(),client_rank(),rank(){
+        init(service_i);
     }
 
-    int init(service service);
+    void init(service service);
+
 public:
-    inline std::shared_ptr<distributed_queue> get_queue_client(std::string subject){
-        return std::shared_ptr<NatsImpl>(new NatsImpl(service_i,configuration_manager::get_instance()->NATS_URL_CLIENT,CLIENT_TASK_SUBJECT));
+    inline std::shared_ptr<distributed_queue>
+            get_queue_client(const std::string &subject){
+        return std::make_shared<NatsImpl>
+                (service_i, configuration_manager::get_instance()
+                        ->NATS_URL_CLIENT,CLIENT_TASK_SUBJECT);
     }
-    inline std::shared_ptr<distributed_queue> get_worker_queue(int worker_index){
-        return std::shared_ptr<NatsImpl>(new NatsImpl(service_i,configuration_manager::get_instance()->NATS_URL_SERVER,WORKER_TASK_SUBJECT[worker_index]));
+    inline std::shared_ptr<distributed_queue>
+            get_worker_queue(const int &worker_index){
+        return std::make_shared<NatsImpl>
+                (service_i,configuration_manager::get_instance()
+                        ->NATS_URL_SERVER,WORKER_TASK_SUBJECT[worker_index]);
     }
     std::shared_ptr<solver> solver_i;
     std::shared_ptr<distributed_hashmap> map_client,map_server;
     int rank,client_rank;
     MPI_Comm client_comm;
     inline static std::shared_ptr<aetrio_system> getInstance(service service){
-        return instance== nullptr ? instance=std::shared_ptr<aetrio_system>(new aetrio_system(service))
+        return instance== nullptr ? instance=std::shared_ptr<aetrio_system>
+                (new aetrio_system(service))
                                   : instance;
     }
 
@@ -51,4 +62,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_SYSTEM_H
+#endif //AETRIO_MAIN_SYSTEM_H

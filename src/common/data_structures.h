@@ -2,16 +2,15 @@
 // Created by hariharan on 2/17/18.
 //
 
-#ifndef PORUS_MAIN_STRUCTURE_H
-#define PORUS_MAIN_STRUCTURE_H
-
-
+#ifndef AETRIO_MAIN_STRUCTURE_H
+#define AETRIO_MAIN_STRUCTURE_H
 
 #include <cereal/types/memory.hpp>
 #include "enumerations.h"
 #include "constants.h"
 #include <cereal/types/string.hpp>
 #include <cereal/types/common.hpp>
+
 
 struct message_key{
     message_type m_type;
@@ -89,7 +88,7 @@ struct file_stat{
 struct task {
     task_type t_type;
     int64_t task_id=0;
-    task( task_type t_type):t_type(t_type){}
+    task(task_type t_type):t_type(t_type){}
     task(const task &t_other):t_type(t_other.t_type),task_id(t_other.task_id){}
     template<class Archive>
     void serialize(Archive & archive)
@@ -98,11 +97,11 @@ struct task {
     }
 };
 struct write_task:public task{
-    write_task():task( task_type::WRITE_TASK){}
-    write_task(file source,
-               file destination):task(task_type::WRITE_TASK),source(source),destination(destination){}
-    write_task(const write_task &write_task_t):task(task_type::WRITE_TASK),
-                                        source(write_task_t.source),
+    write_task():task(task_type::WRITE_TASK){}
+    write_task(file source, file destination)
+            :task(task_type::WRITE_TASK),source(source),destination(destination){}
+    write_task(const write_task &write_task_t)
+            :task(task_type::WRITE_TASK), source(write_task_t.source),
                                         destination(write_task_t.destination){}
     file source;
     file destination;
@@ -171,24 +170,25 @@ struct solver_input{
     int64_t *worker_capacity;
     int *worker_energy;
     solver_input(int num_task,int num_workers){
+        this->num_task = num_task;
         worker_score=new int[num_workers];
         worker_capacity=new int64_t[num_workers];
         task_size=new int64_t[num_task];
         worker_energy=new int[num_workers];
     }
-    ~solver_input(){
-        //delete(worker_score,worker_capacity,task_size);
-    }
+
+    virtual ~solver_input() {}
+//    ~solver_input(){delete(worker_score,worker_capacity,task_size,worker_energy);}
 };
 struct solver_output{
     int max_value;
     int* solution;
-    std::unordered_map<int,std::vector<int>> worker_task_map;
-    solver_output(int num_task):worker_task_map(){
+    std::unordered_map<int,std::vector<task*>> worker_task_map;
+    explicit solver_output(int num_task):worker_task_map(){
         solution=new int[num_task];
     }
-    ~solver_output(){
-        delete(solution);
-    }
+
+    virtual ~solver_output() {}
+//    ~solver_output(){delete(solution);}
 };
-#endif //PORUS_MAIN_STRUCTURE_H
+#endif //AETRIO_MAIN_STRUCTURE_H

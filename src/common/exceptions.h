@@ -2,8 +2,8 @@
 // Created by hariharan on 3/3/18.
 //
 
-#ifndef PORUS_MAIN_EXCEPTION_H
-#define PORUS_MAIN_EXCEPTION_H
+#ifndef AETRIO_MAIN_EXCEPTION_H
+#define AETRIO_MAIN_EXCEPTION_H
 
 #include <stdexcept>
 
@@ -14,4 +14,4 @@ public:
 
     virtual char const * what()  const noexcept override { return "Function not yet implemented."; }
 };
-#endif //PORUS_MAIN_EXCEPTION_H
+#endif //AETRIO_MAIN_EXCEPTION_H

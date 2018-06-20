@@ -5,40 +5,36 @@
 #include "nats_impl.h"
 #include "../../aetrio_system.h"
 
-int NatsImpl::publish_task(task *task_t) {
-    std::string msg;
-    serialization_manager sm=serialization_manager();
-    msg=sm.serialise_task(task_t);
-    std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
+int NatsImpl::publish_task(task* task_t) {
+    auto msg=serialization_manager().serialize_task(task_t);
+    //std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
     natsConnection_PublishString(nc, subject.c_str(), msg.c_str());
     return 0;
 }
 
 task*  NatsImpl::subscribe_task_with_timeout(int &status) {
-    std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
-    serialization_manager sm=serialization_manager();
-    natsMsg *msg = NULL;
+    //std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
+    natsMsg *msg = nullptr;
     natsSubscription_NextMsg(&msg, sub, MAX_TASK_TIMER_MS);
-    if(msg==NULL) return nullptr;
-    task* t=sm.deserialise_task(natsMsg_GetData(msg));
+    if(msg==nullptr) return nullptr;
+    task* task= serialization_manager().deserialize_task(natsMsg_GetData(msg));
     status=0;
-    return t;
+    return task;
 }
 
 task* NatsImpl::subscribe_task(int &status) {
-    std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
-    serialization_manager sm=serialization_manager();
-    natsMsg *msg = NULL;
+    //std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
+    natsMsg *msg = nullptr;
     natsSubscription_NextMsg(&msg, sub, MAX_TASK_TIMER_MS_MAX);
-    if(msg==NULL) return nullptr;
-    task* t=sm.deserialise_task(natsMsg_GetData(msg));
+    if(msg==nullptr) return nullptr;
+    task* task= serialization_manager().deserialize_task(natsMsg_GetData(msg));
     status=0;
-    return t;
+    return task;
 }
 
 int NatsImpl::get_queue_size() {
     int size_of_queue;
-    natsSubscription_GetPending(sub,NULL,&size_of_queue);
+    natsSubscription_GetPending(sub,nullptr,&size_of_queue);
     return size_of_queue;
 }
 

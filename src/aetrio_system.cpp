@@ -12,31 +12,35 @@
 
 std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
 
-int aetrio_system::init(service service) {
+void aetrio_system::init(service service) {
     MPI_Comm_rank(MPI_COMM_SELF,&rank);
+
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_server= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,configuration_manager::get_instance()->MEMCACHED_URL_SERVER,0));
+        map_server= std::make_shared<MemcacheDImpl>
+                (service, configuration_manager::get_instance()
+                        ->MEMCACHED_URL_SERVER,0);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
-        map_server=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_server));
+        map_server=  std::make_shared<RocksDBImpl>(service,kDBPath_server);
     }
+
     if(solver_impl_type_t==solver_impl_type::DP){
-        solver_i=std::shared_ptr<DPSolver>(new DPSolver(service));
+        solver_i=std::make_shared<DPSolver>(service);
     }else if(solver_impl_type_t==solver_impl_type::GREEDY){
-        solver_i=std::shared_ptr<GreedySolver>(new GreedySolver(service));
+        solver_i=std::make_shared<GreedySolver>(service);
     }else if(solver_impl_type_t==solver_impl_type::RANDOM_SELECT){
-        solver_i=std::shared_ptr<random_solver>(new random_solver(service));
+        solver_i=std::make_shared<random_solver>(service);
     }else if(solver_impl_type_t==solver_impl_type::ROUND_ROBIN){
-        solver_i=round_robin_solver::getInstance(service_i);
+        solver_i=round_robin_solver::getInstance(service);
     }else if(solver_impl_type_t==solver_impl_type::DEFAULT){
-        solver_i=std::shared_ptr<DPSolver>(new default_solver(service_i));
+        solver_i=std::make_shared<default_solver>(service);
     }
     switch(service){
         case LIB:{
             if(rank==0){
                 auto value=map_server->get(table::SYSTEM_REG,"app_no");
                 int curr=0;
-                if(strcmp(value.c_str(),"")!=0){
-                    curr=atoi(value.c_str());
+                if(!value.empty()){
+                    curr = std::stoi(value);
                     curr++;
                 }
                 application_id=curr;
@@ -62,12 +66,13 @@ int aetrio_system::init(service service) {
     }
 
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_client= std::shared_ptr<MemcacheDImpl>(new MemcacheDImpl(service,configuration_manager::get_instance()->MEMCACHED_URL_CLIENT,application_id));
+        map_client= std::make_shared<MemcacheDImpl>
+                (service,configuration_manager::get_instance()
+                        ->MEMCACHED_URL_CLIENT,application_id);
 
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
-        map_client=  std::shared_ptr<RocksDBImpl>(new RocksDBImpl(service,kDBPath_client));
+        map_client=  std::make_shared<RocksDBImpl>(service,kDBPath_client);
     }
-    return 0;
 }
 
 int aetrio_system::build_message_key(MPI_Datatype &message) {

@@ -2,8 +2,8 @@
 // Created by hariharan on 2/23/18.
 //
 
-#ifndef PORUS_MAIN_TASK_HANDLER_H
-#define PORUS_MAIN_TASK_HANDLER_H
+#ifndef AETRIO_MAIN_TASK_HANDLER_H
+#define AETRIO_MAIN_TASK_HANDLER_H
 
 
 #include <memory>
@@ -27,4 +27,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_TASK_HANDLER_H
+#endif //AETRIO_MAIN_TASK_HANDLER_H

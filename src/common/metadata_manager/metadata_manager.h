@@ -2,8 +2,8 @@
 // Created by hariharan on 2/16/18.
 //
 
-#ifndef PORUS_MAIN_METADATA_MANAGER_H
-#define PORUS_MAIN_METADATA_MANAGER_H
+#ifndef AETRIO_MAIN_METADATA_MANAGER_H
+#define AETRIO_MAIN_METADATA_MANAGER_H
 
 
 #include <cstdio>
@@ -49,4 +49,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_METADATA_MANAGER_H
+#endif //AETRIO_MAIN_METADATA_MANAGER_H

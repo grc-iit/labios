@@ -5,11 +5,13 @@
 #include "posix.h"
 #include "../common/task_builder/task_builder.h"
 
-FILE *porus::fopen(const char *filename, const char *mode) {
+FILE *aetrio::fopen(const char *filename, const char *mode) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     FILE* fh;
     if(!mdm->is_created(filename)){
-        if(strcmp(mode,"r")==0 || strcmp(mode,"weight")==0 || strcmp(mode,"consider_after_a")==0){
+        if(strcmp(mode,"r")==0
+           || strcmp(mode,"weight")==0
+           || strcmp(mode,"consider_after_a")==0){
             return nullptr;
         }else{
             mdm->create(filename,mode,fh);
@@ -22,13 +24,13 @@ FILE *porus::fopen(const char *filename, const char *mode) {
     return fh;
 }
 
-int porus::fclose(FILE *stream) {
+int aetrio::fclose(FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     if(!mdm->is_opened(stream)) return -1;
     return mdm->update_on_close(stream);
 }
 
-int porus::fseek(FILE *stream, long int offset, int origin) {
+int aetrio::fseek(FILE *stream, long int offset, int origin) {
 
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
@@ -51,10 +53,11 @@ int porus::fseek(FILE *stream, long int offset, int origin) {
             return -1;
     }
     if(!mdm->is_opened(stream)) return -1;
-    return mdm->update_on_seek(filename, offset, origin);
+    return mdm->update_on_seek(filename, static_cast<size_t>(offset),
+                               static_cast<size_t>(origin));
 }
 
-size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
+size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     auto client_queue=aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT);
     std::shared_ptr<task_builder> task_m=task_builder::getInstance(LIB);
@@ -88,7 +91,7 @@ size_t porus::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     return size*count;
 }
 
-size_t porus::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
+size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
     auto client_queue=aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT);
     std::shared_ptr<task_builder> task_m=task_builder::getInstance(LIB);

@@ -9,16 +9,17 @@
 #include "../aetrio_system.h"
 #include "../common/data_structures.h"
 
-int PorusClient::init() {
-    MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(PORUS_CLIENT_PORT.c_str()));
+int AetrioClient::init() {
+    MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(AETRIO_CLIENT_PORT.c_str
+            ()));
     MPI_Comm_rank(MPI_COMM_SELF,&rank);
     MPI_Intercomm_merge(MPI_COMM_SELF, 0, &applications_comms);
 }
 
-int PorusClient::listen_application_connections() {
+int AetrioClient::listen_application_connections() {
     while(true){
         MPI_Comm application_comm;
-        MPI_Comm_accept(PORUS_CLIENT_PORT.c_str(), MPI_INFO_NULL, rank, MPI_COMM_SELF, &application_comm);
+        MPI_Comm_accept(AETRIO_CLIENT_PORT.c_str(), MPI_INFO_NULL, rank, MPI_COMM_SELF, &application_comm);
         int client_rank;
         MPI_Comm_rank(applications_comms,&client_rank);
         MPI_Ssend(&client_rank,1,MPI_INT,1, MPI_ANY_TAG,application_comm);
@@ -27,19 +28,19 @@ int PorusClient::listen_application_connections() {
         MPI_Intercomm_merge(application_comm, 0, &applications_comms);
         if (!async_handle.valid()) {
             async_handle = std::async(std::launch::async,
-                                      &PorusClient::initialize_application,
+                                      &AetrioClient::initialize_application,
                                       this,
                                       count);
         }
     }
 }
 
-int PorusClient::initialize_application(size_t application_id) {
+int AetrioClient::initialize_application(size_t application_id) {
 
     return 0;
 }
 
-int PorusClient::listen_request() {
+int AetrioClient::listen_request() {
     message msg;
     message_key key;
     MPI_Datatype message_key;
@@ -142,34 +143,34 @@ int PorusClient::listen_request() {
     return 0;
 }
 
-int PorusClient::update_file(file_meta f,std::string key) {
+int AetrioClient::update_file(file_meta f,std::string key) {
     return 0;
 }
 
-int PorusClient::update_dataspace(size_t id, dataspace data) {
+int AetrioClient::update_dataspace(size_t id, dataspace data) {
     return 0;
 }
 
-int PorusClient::get_file(file_meta &f,std::string key) {
+int AetrioClient::get_file(file_meta &f,std::string key) {
     return 0;
 }
 
-int PorusClient::get_dataspace(size_t id, dataspace &data) {
+int AetrioClient::get_dataspace(size_t id, dataspace &data) {
     return 0;
 }
 
-int PorusClient::get_chunk(file_meta &f,std::string key) {
+int AetrioClient::get_chunk(file_meta &f,std::string key) {
     return 0;
 }
 
-int PorusClient::delete_file(file_meta &f,std::string key) {
+int AetrioClient::delete_file(file_meta &f,std::string key) {
     return 0;
 }
 
-int PorusClient::delete_chunk(file_meta &f,std::string key) {
+int AetrioClient::delete_chunk(file_meta &f,std::string key) {
     return 0;
 }
 
-int PorusClient::update_chunk(file_meta f,std::string key) {
+int AetrioClient::update_chunk(file_meta f,std::string key) {
     return 0;
 }

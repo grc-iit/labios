@@ -16,7 +16,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=MULTI_WRITE;
+test_case testCase=SIMPLE_WRITE;
 /*
  * function definitions
  */
@@ -26,7 +26,7 @@ int multi_write();
 int multi_read();
 int main(int argc, char** argv){
 
-    porus::MPI_Init(&argc,&argv);
+    aetrio::MPI_Init(&argc,&argv);
     int return_val;
     switch(testCase){
         case SIMPLE_WRITE:{
@@ -60,7 +60,7 @@ int main(int argc, char** argv){
         }
 
     }
-    porus::MPI_Finalize();
+    aetrio::MPI_Finalize();
     return return_val;
 }
 void gen_random(char *s, const int len) {
@@ -76,43 +76,47 @@ void gen_random(char *s, const int len) {
     s[len] = 0;
 }
 int simple_write(){
-    FILE* fh=porus::fopen("test","w+");
+    FILE* fh=aetrio::fopen("test","w+");
     size_t size_of_io=16 * 1024 * 1024;
     char* t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
-    porus::fwrite(t,1,size_of_io,fh);
-    porus::fclose(fh);
+    aetrio::fwrite(t,1,size_of_io,fh);
+    aetrio::fclose(fh);
+    free(t);
     //std::cout << "write data: "<< t <<std::endl;
     return 0;
 }
 
 int simple_read(){
-    FILE* fh=porus::fopen("test","r+");
+    FILE* fh=aetrio::fopen("test","r+");
     size_t size_of_io=4 * 1024 * 1024;
     char* t= static_cast<char *>(malloc(size_of_io));
-    porus::fread(t,1,size_of_io,fh);
+    aetrio::fread(t,1,size_of_io,fh);
     std::cout << "read data: "<< t <<std::endl;
-    porus::fclose(fh);
+    aetrio::fclose(fh);
+    free(t);
     return 0;
 }
 int multi_write(){
-    FILE* fh=porus::fopen("test","weight+");
+    FILE* fh=aetrio::fopen("test","weight+");
     size_t size_of_io=32 * 1024 * 1024;
     char* t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
     for(int i=0;i<2;i++){
-        porus::fwrite(t,1,size_of_io,fh);
+        aetrio::fwrite(t,1,size_of_io,fh);
     }
-    porus::fclose(fh);
+    aetrio::fclose(fh);
+    free(t);
     return 0;
 }
 int multi_read(){
-    FILE* fh=porus::fopen("test","r+");
+    FILE* fh=aetrio::fopen("test","r+");
     size_t size_of_io=16 * 1024 * 1024;
     char* t= static_cast<char *>(malloc(size_of_io));
     for(int i=0;i<1024;i++){
-        porus::fwrite(t,1,size_of_io,fh);
+        aetrio::fwrite(t,1,size_of_io,fh);
     }
-    porus::fclose(fh);
+    aetrio::fclose(fh);
+    free(t);
     return 0;
 }

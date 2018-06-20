@@ -1,5 +1,13 @@
 # README #
 
+##TODO LIST
+* Default solver
+* Small I/O cache
+* Wake up and suspend workers
+
+##Notes
+* Timeout task scheduling. line#66
+
 ##TODO CODE
 * IDs everywhere (done ID= timestamp)
 * Debugged with many cases for logical bugs (done)
@@ -50,9 +58,7 @@ src/common/configuration_manager.h src/common/configuration_manager.cpp CMakeLis
  src/common/configuration_manager.h src/common/configuration_manager.cpp CMakeLists.txt`
 
 
-
-
-#Setup Porus
+#Setup Aetrio
 
 ## Memcached
 ###Install memached and libmemcached from normal sources

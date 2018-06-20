@@ -2,8 +2,8 @@
 // Created by hariharan on 2/23/18.
 //
 
-#ifndef PORUS_MAIN_DISTRIBUTEDQUEUUE_H
-#define PORUS_MAIN_DISTRIBUTEDQUEUUE_H
+#ifndef AETRIO_MAIN_DISTRIBUTEDQUEUE_H
+#define AETRIO_MAIN_DISTRIBUTEDQUEUE_H
 
 
 #include <memory>
@@ -18,10 +18,7 @@ private:
 
 protected:
     service service_i;
-    distributed_queue(service service):service_i(service){
-
-
-    }
+    explicit distributed_queue(service service):service_i(service){}
 public:
 
     virtual int publish_task(task *task_t){
@@ -47,4 +44,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_DISTRIBUTEDQUEUUE_H
+#endif //AETRIO_MAIN_DISTRIBUTEDQUEUE_H

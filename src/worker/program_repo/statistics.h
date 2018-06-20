@@ -3,8 +3,8 @@
 // CREATE DATE: 12/17/2017
 // ===============================
 
-#ifndef PORUS_STATISTICS_H
-#define PORUS_STATISTICS_H
+#ifndef AETRIO_STATISTICS_H
+#define AETRIO_STATISTICS_H
 
 #include <vector>
 #include <string>
@@ -54,4 +54,4 @@ private:
     static unsigned long totalSize(std::vector<calculations> &data);
 };
 
-#endif //PORUS_STATISTICS_H
+#endif //AETRIO_STATISTICS_H

@@ -32,7 +32,7 @@ int posix_client::read(read_task task) {
         chunk_meta1.destination.offset=0;
         chunk_meta1.destination.size=task.source.size;
         chunk_meta1.destination.worker=worker_index;
-        std::string chunk_str=sm.serialise_chunk(chunk_meta1);
+        std::string chunk_str= sm.serialize_chunk(chunk_meta1);
         map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(base_offset),chunk_str);
     }
     return 0;
@@ -45,7 +45,7 @@ int posix_client::write(write_task task) {
     size_t chunk_index=(source.offset/ io_unit_max);
     size_t base_offset=chunk_index*io_unit_max+source.offset%io_unit_max;
     std::string chunk_str=map_client->get(table::CHUNK_DB, task.source.filename +std::to_string(base_offset));
-    chunk_meta chunk_meta1=sm.deserialise_chunk(chunk_str);
+    chunk_meta chunk_meta1= sm.deserialize_chunk(chunk_str);
     std::string data=map_client->get(DATASPACE_DB,task.destination.filename);
     std::string file_path;
     if(chunk_meta1.destination.dest_t==source_type::DATASPACE_LOC){
@@ -75,7 +75,7 @@ int posix_client::write(write_task task) {
     chunk_meta1.destination.offset=0;
     chunk_meta1.destination.size=task.source.size;
     chunk_meta1.destination.worker=worker_index;
-    chunk_str=sm.serialise_chunk(chunk_meta1);
+    chunk_str= sm.serialize_chunk(chunk_meta1);
     map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(base_offset),chunk_str);
 
     map_client->remove(DATASPACE_DB,task.destination.filename);

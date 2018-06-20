@@ -2,8 +2,8 @@
 // Created by hariharan on 3/2/18.
 //
 
-#ifndef PORUS_MAIN_ROCKSDBIMPL_H
-#define PORUS_MAIN_ROCKSDBIMPL_H
+#ifndef AETRIO_MAIN_ROCKSDBIMPL_H
+#define AETRIO_MAIN_ROCKSDBIMPL_H
 
 
 #include "../client_interface/distributed_hashmap.h"
@@ -28,4 +28,4 @@ public:
 };
 
 
-#endif //PORUS_MAIN_ROCKSDBIMPL_H
+#endif //AETRIO_MAIN_ROCKSDBIMPL_H

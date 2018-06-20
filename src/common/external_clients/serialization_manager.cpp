@@ -4,7 +4,7 @@
 
 #include "serialization_manager.h"
 
-std::string serialization_manager::serialise_file_stat(file_stat stat) {
+std::string serialization_manager::serialize_file_stat(file_stat stat) {
     std::stringstream ss; // any stream can be used
 
     {
@@ -14,7 +14,7 @@ std::string serialization_manager::serialise_file_stat(file_stat stat) {
     return ss.str();
 }
 
-chunk_meta serialization_manager::deserialise_chunk(std::string chunk_str) {
+chunk_meta serialization_manager::deserialize_chunk(std::string chunk_str) {
     chunk_meta cm;
     {
         std::stringstream ss(chunk_str);
@@ -24,7 +24,7 @@ chunk_meta serialization_manager::deserialise_chunk(std::string chunk_str) {
     return cm;
 }
 
-std::string serialization_manager::serialise_chunk(chunk_meta meta) {
+std::string serialization_manager::serialize_chunk(chunk_meta meta) {
     std::stringstream ss; // any stream can be used
 
     {
@@ -35,7 +35,7 @@ std::string serialization_manager::serialise_chunk(chunk_meta meta) {
     return serialized_str;
 }
 
-std::string serialization_manager::serialise_task(task* task) {
+std::string serialization_manager::serialize_task(task *task) {
     switch (task->t_type){
         case task_type::WRITE_TASK:{
             write_task *wt= static_cast<write_task *>(task);
@@ -62,7 +62,7 @@ std::string serialization_manager::serialise_task(task* task) {
 }
 
 
-task* serialization_manager::deserialise_task(std::string string) {
+task* serialization_manager::deserialize_task(std::string string) {
     task cm(task_type::DUMMY);
     {
         std::stringstream ss(string);

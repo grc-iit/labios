@@ -17,12 +17,12 @@ bool metadata_manager::is_created(std::string filename) {
 
 int metadata_manager::create(std::string filename, std::string mode, FILE *&fh) {
     std::shared_ptr<distributed_hashmap> map=aetrio_system::getInstance(service_i)->map_client;
-    serialization_manager sm=serialization_manager();
+
     if(filename.length() > FILENAME_MAX)
         return -1;
     file_stat stat;
     stat.file_size=0;
-    fh=fmemopen(NULL, 1, mode.c_str());
+    fh=fmemopen(nullptr, 1, mode.c_str());
     stat.fh=fh;
     stat.file_pointer=0;
     stat.is_open=true;
@@ -31,7 +31,7 @@ int metadata_manager::create(std::string filename, std::string mode, FILE *&fh) 
     if(iter!=file_map.end()) file_map.erase(iter);
     fh_map.emplace(fh,filename);
     file_map.emplace(filename,stat);
-    std::string fs_str=sm.serialise_file_stat(stat);
+    std::string fs_str= serialization_manager().serialize_file_stat(stat);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
@@ -67,7 +67,7 @@ int metadata_manager::update_on_open(std::string filename, std::string mode, FIL
     if(iter!=file_map.end()) file_map.erase(iter);
     fh_map.emplace(fh,filename);
     file_map.emplace(filename,stat);
-    std::string fs_str=sm.serialise_file_stat(stat);
+    std::string fs_str= sm.serialize_file_stat(stat);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
@@ -126,7 +126,7 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
-    std::string fs_str=sm.serialise_file_stat(fs);
+    std::string fs_str= sm.serialize_file_stat(fs);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
@@ -146,15 +146,16 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
             chunk_meta cm=chunk_meta();
             cm.actual_user_chunk=task_k.source;
             cm.destination=task_k.destination;
-            std::string chunk_str=sm.serialise_chunk(cm);
+            std::string chunk_str= sm.serialize_chunk(cm);
             map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str);
         }
     }
-    std::string fs_str=sm.serialise_file_stat(fs);
+    std::string fs_str= sm.serialize_file_stat(fs);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
-int metadata_manager::update_on_seek(std::string filename,size_t offset, size_t origin){
+int metadata_manager::update_on_seek(std::string filename,
+                                     size_t offset, size_t origin){
     std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
@@ -178,7 +179,7 @@ int metadata_manager::update_on_seek(std::string filename,size_t offset, size_t 
                 }
                 break;
             }
-            std::string fs_str=sm.serialise_file_stat(iter->second);
+            std::string fs_str= sm.serialize_file_stat(iter->second);
             map->put(table::FILE_DB,filename,fs_str);
         }
     }
@@ -195,7 +196,7 @@ void metadata_manager::update_on_read(std::string filename, size_t size) {
             fs.file_size=fs.file_pointer+size;
         }
         fs.file_pointer+=size;
-        std::string fs_str=sm.serialise_file_stat(fs);
+        std::string fs_str= sm.serialize_file_stat(fs);
         map->put(table::FILE_DB,filename,fs_str);
     }
 }
@@ -210,7 +211,7 @@ void metadata_manager::update_on_write(std::string filename, size_t size) {
             fs.file_size=fs.file_pointer+size;
         }
         fs.file_pointer+=size;
-        std::string fs_str=sm.serialise_file_stat(fs);
+        std::string fs_str= sm.serialize_file_stat(fs);
         map->put(table::FILE_DB,filename,fs_str);
     }
 }
@@ -224,7 +225,7 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
     while(left>0){
         std::string chunk_str=map->get(table::CHUNK_DB, task.source.filename+std::to_string(base_offset));
         if(chunk_str==""){
-            chunk_meta cm=sm.deserialise_chunk(chunk_str);
+            chunk_meta cm= sm.deserialize_chunk(chunk_str);
             chunks.push_back(cm);
             left-=cm.actual_user_chunk.size;
             base_offset+=cm.actual_user_chunk.size;
@@ -257,10 +258,10 @@ int metadata_manager::update_write_task_info(write_task task_k, std::string file
         chunk_meta cm=chunk_meta();
         cm.actual_user_chunk=task_k.source;
         cm.destination=task_k.destination;
-        std::string chunk_str=sm.serialise_chunk(cm);
+        std::string chunk_str= sm.serialize_chunk(cm);
         map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str);
     }
-    std::string fs_str=sm.serialise_file_stat(fs);
+    std::string fs_str= sm.serialize_file_stat(fs);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }

@@ -2,8 +2,9 @@
 // Created by hariharan on 2/23/18.
 //
 
-#ifndef PORUS_MAIN_UTILITY_H
-#define PORUS_MAIN_UTILITY_H
+#ifndef AETRIO_MAIN_UTILITY_H
+#define AETRIO_MAIN_UTILITY_H
+
 #include <string>
 #include <vector>
 #include <cstring>
@@ -56,4 +57,4 @@ static int parse_opts(int argc, char *argv[]){
     return 0;
 }
 
-#endif //PORUS_MAIN_UTILITY_H
+#endif //AETRIO_MAIN_UTILITY_H
