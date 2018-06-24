@@ -6,6 +6,7 @@
 #include "task_builder.h"
 #include "../data_structures.h"
 #include "../metadata_manager/metadata_manager.h"
+#include <memory>
 
 std::shared_ptr<task_builder> task_builder::instance = nullptr;
 
@@ -13,26 +14,24 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
     std::vector<write_task> tasks=std::vector<write_task>();
     serialization_manager sm=serialization_manager();
     file source=task.source;
-    int number_of_tasks= static_cast<int>(ceil((float)(source.offset + source.size) / io_unit_max));
+    int number_of_tasks= static_cast<int>(ceil((float)(source.offset + source.size) / MAX_IO_UNIT));
     auto map_client=aetrio_system::getInstance(service_i)->map_client;
     auto map_server=aetrio_system::getInstance(service_i)->map_server;
-    int dataspace_id = static_cast<int>(duration_cast< milliseconds >(
-                system_clock::now().time_since_epoch()
-        ).count());
+    int dataspace_id = static_cast<int>(duration_cast<microseconds>
+            (system_clock::now().time_since_epoch()).count());
 
-    size_t chunk_index=(source.offset/ io_unit_max);
-    size_t base_offset=chunk_index*io_unit_max+source.offset%io_unit_max;
+    size_t chunk_index=(source.offset/ MAX_IO_UNIT);
+    size_t base_offset=chunk_index*MAX_IO_UNIT+source.offset%MAX_IO_UNIT;
     size_t data_offset=0;
     size_t left=source.size;
     for(int i=0;i<number_of_tasks;i++){
         write_task* sub_task=new write_task(task);
-        sub_task->task_id= static_cast<int64_t>(duration_cast< milliseconds >(
-                        system_clock::now().time_since_epoch()
-                ).count());
+        sub_task->task_id= static_cast<int64_t>(duration_cast<microseconds>
+                (system_clock::now().time_since_epoch()).count());
         /*
          * write not aligned to 2 MB offsets
          */
-        if(base_offset!=i*io_unit_max){
+        if(base_offset!=i*MAX_IO_UNIT){
 
             std::string chunk_str=map_client->get(table::CHUNK_DB, source.filename +std::to_string(base_offset));
             chunk_meta chunk_meta= sm.deserialize_chunk(chunk_str);
@@ -44,7 +43,7 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                  * update new data in dataspace
                  */
                 auto chunk_value=map_client->get(table::DATASPACE_DB,chunk_meta.destination.filename);
-                chunk_value.replace(base_offset,io_unit_max-base_offset,data.substr(data_offset,io_unit_max-base_offset));
+                chunk_value.replace(base_offset,MAX_IO_UNIT-base_offset,data.substr(data_offset,MAX_IO_UNIT-base_offset));
                 map_client->put(table::DATASPACE_DB,std::to_string(dataspace_id)+"_"+std::to_string(i),chunk_value);
                 /*
                  * build new  task
@@ -61,7 +60,7 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                  * chunk in file
                  */
                 sub_task->destination.worker=chunk_meta.destination.worker;
-                sub_task->destination.size=io_unit_max-base_offset;
+                sub_task->destination.size=MAX_IO_UNIT-base_offset;
                 sub_task->destination.offset=0;
                 sub_task->source.offset=source.offset;
                 sub_task->source.size=sub_task->destination.size;
@@ -70,8 +69,8 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                 sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
                 sub_task->meta_updated=true;
             }
-            base_offset+=(io_unit_max-base_offset);
-            left-=(io_unit_max-base_offset);
+            base_offset+=(MAX_IO_UNIT-base_offset);
+            left-=(MAX_IO_UNIT-base_offset);
         }else{
             /*
              * chunk aligns 2MB offsets
@@ -79,7 +78,7 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
             /*
              * left I/O is less than 2 MB
              */
-            if(left<io_unit_max){
+            if(left<MAX_IO_UNIT){
                 if(!map_client->exists(table::CHUNK_DB, source.filename +std::to_string(base_offset))){
                     sub_task->destination.size=left;
                     sub_task->destination.offset=0;
@@ -99,7 +98,7 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                          * update new data in dataspace
                          */
                         auto chunk_value=map_client->get(table::DATASPACE_DB,chunk_meta.destination.filename);
-                        chunk_value.replace(base_offset,io_unit_max-base_offset,data.substr(data_offset,io_unit_max-base_offset));
+                        chunk_value.replace(base_offset,MAX_IO_UNIT-base_offset,data.substr(data_offset,MAX_IO_UNIT-base_offset));
                         map_client->put(table::DATASPACE_DB,std::to_string(dataspace_id)+"_"+std::to_string(i),chunk_value);
                         /*
                          * build new  task
@@ -116,7 +115,7 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                          * chunk in file
                          */
                         sub_task->destination.worker=chunk_meta.destination.worker;
-                        sub_task->destination.size=io_unit_max-base_offset;
+                        sub_task->destination.size=MAX_IO_UNIT-base_offset;
                         sub_task->destination.offset=0;
                         sub_task->source.offset=source.offset;
                         sub_task->source.size=sub_task->destination.size;
@@ -133,15 +132,15 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
                 /*
                  * left >= 2MB
                  */
-                sub_task->destination.size=io_unit_max;
+                sub_task->destination.size=MAX_IO_UNIT;
                 sub_task->destination.offset=0;
                 sub_task->source.offset=base_offset;
                 sub_task->source.size=sub_task->destination.size;
                 sub_task->source.filename=source.filename;
                 sub_task->destination.dest_t=source_type::DATASPACE_LOC;
                 sub_task->destination.filename=std::to_string(dataspace_id)+"_"+std::to_string(i);
-                base_offset+=io_unit_max;
-                left-=io_unit_max;
+                base_offset+=MAX_IO_UNIT;
+                left-=MAX_IO_UNIT;
             }
 
         }
@@ -151,20 +150,20 @@ std::vector<write_task> task_builder::build_task_write(write_task task,std::stri
 }
 
 std::vector<read_task> task_builder::build_task_read(read_task task) {
-    std::vector<read_task> tasks=std::vector<read_task>();
-    std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    auto map_server=aetrio_system::getInstance(service_i)->map_server;
-    auto chunks=mdm->fetch_chunks(task);
+    auto tasks = std::vector<read_task>();
+    auto mdm = metadata_manager::getInstance(LIB);
+    auto map_server = aetrio_system::getInstance(service_i)->map_server;
+    auto chunks = mdm->fetch_chunks(task);
     for(auto chunk:chunks){
-        read_task* rt=new read_task();
-        rt->task_id=static_cast<int64_t>(duration_cast< milliseconds >(
-                system_clock::now().time_since_epoch()
-        ).count());
-        rt->source=chunk.destination;
-        rt->destination.filename=std::to_string(static_cast<uint64_t>(duration_cast< milliseconds >(
-                system_clock::now().time_since_epoch()
-        ).count()));
+        auto rt = new read_task();
+        rt->task_id = static_cast<int64_t>(duration_cast<microseconds>
+                (system_clock::now().time_since_epoch()).count());
+        rt->source = chunk.destination;
+        rt->destination.filename = std::to_string(static_cast<uint64_t>
+                (duration_cast<microseconds>
+                        (system_clock::now().time_since_epoch()).count()));
         tasks.push_back(*rt);
+        delete(rt);
     }
     return tasks;
 }

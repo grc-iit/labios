@@ -11,11 +11,11 @@
 
 class DPSolver : public solver {
 private:
-    int* calculate_values(solver_input input,int num_bins);
+    int* calculate_values(solver_input_dp input,int num_bins);
 
 public:
     explicit DPSolver(service service):solver(service){}
-    solver_output solve(solver_input input) override;
+    solver_output_dp solve(solver_input_dp input) override;
 };
 
 

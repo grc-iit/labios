@@ -9,8 +9,8 @@ default_solver::default_solver(service service) : solver(service) {
 
 }
 
-solver_output default_solver::solve(solver_input input) {
+solver_output_dp default_solver::solve(solver_input_dp input) {
 
 
-    return solver_output(0);
+    return solver_output_dp(0);
 }

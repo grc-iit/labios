@@ -6,7 +6,7 @@
 #include "../common/task_builder/task_builder.h"
 
 FILE *aetrio::fopen(const char *filename, const char *mode) {
-    std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
+    auto mdm = metadata_manager::getInstance(LIB);
     FILE* fh;
     if(!mdm->is_created(filename)){
         if(strcmp(mode,"r")==0
@@ -58,17 +58,19 @@ int aetrio::fseek(FILE *stream, long int offset, int origin) {
 }
 
 size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
-    std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    auto client_queue=aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT);
-    std::shared_ptr<task_builder> task_m=task_builder::getInstance(LIB);
-    std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
-    auto filename=mdm->get_filename(stream);
-    auto offset=mdm->get_fp(filename);
+    auto mdm = metadata_manager::getInstance(LIB);
+    auto client_queue = aetrio_system::getInstance(LIB)
+            ->get_queue_client(CLIENT_TASK_SUBJECT);
+    auto task_m = task_builder::getInstance(LIB);
+    auto data_m = data_manager::getInstance(LIB);
+    auto filename = mdm->get_filename(stream);
+    auto offset = mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
-    std::vector<read_task> read_tasks=task_m->build_task_read(read_task(file(filename,offset,size*count),file()));
+    auto tasks = task_m->build_task_read
+            (read_task(file(filename, offset, size*count), file()));
     int ptr_pos=0;
 
-    for(auto task:read_tasks){
+    for(auto task:tasks){
         char * data;
         switch(task.source.dest_t){
             case BUFFER_LOC:{
@@ -82,25 +84,24 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
                 data = const_cast<char *>(data_m->get(task.source.filename).c_str());
                 break;
             }
-
         }
-
         memcpy(ptr+ptr_pos,data+task.source.offset,task.source.size);
     }
-    mdm->update_read_task_info(read_tasks,filename);
+    mdm->update_read_task_info(tasks,filename);
     return size*count;
 }
 
 size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
-    std::shared_ptr<metadata_manager> mdm=metadata_manager::getInstance(LIB);
-    auto client_queue=aetrio_system::getInstance(LIB)->get_queue_client(CLIENT_TASK_SUBJECT);
-    std::shared_ptr<task_builder> task_m=task_builder::getInstance(LIB);
-    std::shared_ptr<data_manager> data_m=data_manager::getInstance(LIB);
+    auto mdm = metadata_manager::getInstance(LIB);
+    auto client_queue = aetrio_system::getInstance(LIB)->get_queue_client
+            (CLIENT_TASK_SUBJECT);
+    auto task_m=task_builder::getInstance(LIB);
+    auto data_m=data_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     auto offset=mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
     auto tsk=write_task(file(filename,offset,size*count),file());
-    std::vector<write_task> write_tasks=task_m->build_task_write(tsk,static_cast<char *>(ptr));
+    auto write_tasks=task_m->build_task_write(tsk,static_cast<char *>(ptr));
     std::string id;
     int index=0;
     std::string data((char*)ptr);
@@ -112,7 +113,6 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
         client_queue->publish_task(&task);
         index++;
     }
-//mdm->update_write_task_info(write_tasks,filename);
     return size*count;
 }
 

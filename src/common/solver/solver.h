@@ -12,6 +12,6 @@ protected:
     service service_i;
 public:
     explicit solver(service service) : service_i(service){}
-    virtual solver_output solve(solver_input input)=0;
+    virtual solver_output_dp solve(solver_input_dp input)=0;
 };
 #endif //AETRIO_MAIN_SOLVER_H

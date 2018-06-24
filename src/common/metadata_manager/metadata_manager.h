@@ -36,7 +36,7 @@ public:
     std::string get_filename(FILE* fh);
     std::size_t get_filesize(std::string basic_string);
     std::string get_mode(std::string basic_string);
-    std::size_t get_fp(std::string basic_string);
+    long long int get_fp(const std::string &basic_string);
     int update_on_seek(std::string basic_string,size_t offset, size_t origin);
     int update_read_task_info(std::vector<read_task> task_k,std::string filename);
     int update_write_task_info(std::vector<write_task> task_ks,std::string filename);

@@ -4,6 +4,6 @@
 
 #include "greedy_solver.h"
 
-solver_output GreedySolver::solve(solver_input input) {
-    return solver_output(input.num_task);
+solver_output_dp GreedySolver::solve(solver_input_dp input) {
+    return solver_output_dp(input.num_task);
 }

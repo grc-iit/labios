@@ -10,6 +10,7 @@
 #include "constants.h"
 #include <cereal/types/string.hpp>
 #include <cereal/types/common.hpp>
+#include <utility>
 
 
 struct message_key{
@@ -30,14 +31,19 @@ struct file{
     source_type dest_t;
     std::string filename;
     int64_t offset;
-    int64_t size;
+    std::size_t size;
     int64_t worker=-1;
-    file(std::string filename,
-            long long int offset,
-            long long int file_size):filename(filename),offset(offset),size(file_size),dest_t(DATASPACE_LOC){}
-    file(const file &file_t):filename(file_t.filename),offset(file_t.offset),size(file_t.size),dest_t(file_t.dest_t),worker(file_t.worker){}
+    file(std::string filename, long long int offset, size_t file_size)
+            :filename(std::move(filename)),offset(offset),size(file_size),
+             dest_t(DATASPACE_LOC){}
 
-    file(){};
+    //file(const file &file_t) = default;
+    file(const file &file_t)
+            :filename(file_t.filename),offset(file_t.offset),size(file_t.size),dest_t(file_t.dest_t),worker(file_t.worker){}
+    //file() {};
+
+    file() : dest_t(DATASPACE_LOC), filename(""), offset(0), size(0){}
+
     template<class Archive>
     void serialize(Archive & archive)
     {
@@ -74,7 +80,7 @@ struct dataspace{
 
 struct file_stat{
     FILE* fh;
-    size_t file_pointer;
+    long long int file_pointer;
     size_t file_size;
     std::string mode;
     bool is_open;
@@ -88,12 +94,14 @@ struct file_stat{
 struct task {
     task_type t_type;
     int64_t task_id=0;
-    task(task_type t_type):t_type(t_type){}
-    task(const task &t_other):t_type(t_other.t_type),task_id(t_other.task_id){}
+    int8_t need_solving;
+    explicit task(task_type t_type):t_type(t_type),need_solving(1){}
+    task(const task &t_other):t_type(t_other.t_type),task_id(t_other.task_id)
+            ,need_solving(t_other.need_solving){}
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type,this->task_id );
+        archive( this->t_type,this->task_id,this->need_solving );
     }
 };
 struct write_task:public task{
@@ -105,30 +113,32 @@ struct write_task:public task{
                                         destination(write_task_t.destination){}
     file source;
     file destination;
-    bool meta_updated;
+    bool meta_updated = false;
 
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type,this->task_id,this->source,this->destination,this->meta_updated);
+        archive( this->t_type,this->task_id,this->need_solving,this->source,
+                 this->destination,this->meta_updated);
     }
 };
 struct read_task:public task{
-    read_task():task(task_type::READ_TASK){}
-    read_task(const read_task &read_task_t):task(task_type::READ_TASK),
-                                        source(read_task_t.source),
-                                        destination(read_task_t.destination){}
-    read_task(file source,
-              file destination):task(task_type::READ_TASK),source(source),destination(destination){}
-
-    bool meta_updated;
-    bool local_copy;
     file source;
     file destination;
+    bool meta_updated = false;
+    bool local_copy = false;
+    read_task(const file &source, const file &destination)
+            :task(task_type::READ_TASK),source(source),destination(destination){}
+    read_task():task(task_type::READ_TASK){}
+    read_task(const read_task &read_task_t)
+            :task(task_type::READ_TASK), source(read_task_t.source),
+                                        destination(read_task_t.destination){}
+
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type,this->task_id,this->source,this->destination,this->meta_updated,this->local_copy);
+        archive( this->t_type,this->task_id,this->need_solving,this->source,
+                 this->destination,this->meta_updated,this->local_copy);
     }
 };
 
@@ -147,7 +157,7 @@ struct flush_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive(this->t_type,this->task_id,this->source,this->destination);
+        archive(this->t_type,this->task_id,this->need_solving,this->source,this->destination);
     }
 };
 
@@ -159,17 +169,17 @@ struct delete_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive(this->t_type,this->task_id,this->source);
+        archive(this->t_type,this->task_id,this->need_solving,this->source);
     }
 };
 
-struct solver_input{
+struct solver_input_dp{
     int *worker_score;
     int num_task;
     int64_t *task_size;
     int64_t *worker_capacity;
     int *worker_energy;
-    solver_input(int num_task,int num_workers){
+    solver_input_dp(int num_task,int num_workers){
         this->num_task = num_task;
         worker_score=new int[num_workers];
         worker_capacity=new int64_t[num_workers];
@@ -177,18 +187,43 @@ struct solver_input{
         worker_energy=new int[num_workers];
     }
 
+    virtual ~solver_input_dp() = default;
+};
+struct solver_output_dp{
+    int max_value=0;
+    int* solution;
+    //workerID->list of taks
+    std::unordered_map<int,std::vector<task*>> worker_task_map;
+
+    explicit solver_output_dp(int num_task):worker_task_map(){
+        solution=new int[num_task];
+    }
+
+    virtual ~solver_output_dp() = default;
+};
+
+struct solver_input{
+    int num_task;
+    int64_t *task_size;
+
+    solver_input(int num_task,int num_workers){
+        this->num_task = num_task;
+        task_size=new int64_t[num_task];
+    }
+
     virtual ~solver_input() {}
-//    ~solver_input(){delete(worker_score,worker_capacity,task_size,worker_energy);}
 };
 struct solver_output{
-    int max_value;
     int* solution;
+    //workerID->list of taks
     std::unordered_map<int,std::vector<task*>> worker_task_map;
+
     explicit solver_output(int num_task):worker_task_map(){
         solution=new int[num_task];
     }
 
     virtual ~solver_output() {}
-//    ~solver_output(){delete(solution);}
 };
+
+
 #endif //AETRIO_MAIN_STRUCTURE_H

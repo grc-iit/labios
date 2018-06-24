@@ -12,7 +12,7 @@ class random_solver: public solver {
 public:
     explicit random_solver(service service) : solver(service) {}
 
-    solver_output solve(solver_input input) override;
+    solver_output_dp solve(solver_input_dp input) override;
 
 };
 

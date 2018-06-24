@@ -27,7 +27,7 @@ enum map_type{
 enum source_type{
     BUFFER_LOC=0,
     DATASPACE_LOC=1,
-    PFS_LOC=1
+    PFS_LOC=2
 };
 enum service{
     LIB=0,

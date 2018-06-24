@@ -26,7 +26,7 @@ std::string MemcacheDImpl::get(table table_name, std::string key) {
                                  &size ,
                                  (time_t)0,
                                  (uint32_t)0);
-    if(return_value==NULL){
+    if(return_value== nullptr){
         return "";
     }
     return return_value;

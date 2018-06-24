@@ -5,19 +5,12 @@
 #include "dp_solver.h"
 #include "knapsack.cpp"
 
-solver_output DPSolver::solve(solver_input input) {
-    solver_output solver_output_i(input.num_task);
-    /*for(auto t=0;t<MAX_WORKER_COUNT;t++){
-        input.worker_capacity[t]=input.worker_capacity[t]/(1024*1024);
-        std::cout<<"capacity:"<<input.worker_capacity[t]<<std::endl;
-    }
-    for(auto t = 0; t < input.num_task; t++){
-        input.task_size[t]=input.task_size[t]/(1024*1024);
-        std::cout<<" task_size:"<<input.task_size[t]<<std::endl;
-    }*/
+solver_output_dp DPSolver::solve(solver_input_dp input) {
+    solver_output_dp solver_output_i(input.num_task);
+
 
     for (auto i = 1; i <= MAX_WORKER_COUNT; i++) {
-        solver_output solver_output_temp(input.num_task);
+        solver_output_dp solver_output_temp(input.num_task);
         int * p=calculate_values(input, i);
         solver_output_i.max_value=-1;
         int val = mulknap(input.num_task,
@@ -52,7 +45,7 @@ solver_output DPSolver::solve(solver_input input) {
     return solver_output_i;
 }
 
-int *DPSolver::calculate_values(solver_input input, int num_bins) {
+int *DPSolver::calculate_values(solver_input_dp input, int num_bins) {
     int *p = new int[input.num_task];
     for (int i = 0; i < input.num_task; i++) {
         int size_category;

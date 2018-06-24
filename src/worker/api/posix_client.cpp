@@ -23,8 +23,8 @@ int posix_client::read(read_task task) {
         FILE* fh=fopen(file_path.c_str(),"w+");
         fwrite(data,task.source.size, sizeof(char),fh);
         fclose(fh);
-        size_t chunk_index=(task.source.offset/ io_unit_max);
-        size_t base_offset=chunk_index*io_unit_max+task.source.offset%io_unit_max;
+        size_t chunk_index=(task.source.offset/ MAX_IO_UNIT);
+        size_t base_offset=chunk_index*MAX_IO_UNIT+task.source.offset%MAX_IO_UNIT;
         chunk_meta chunk_meta1;
         chunk_meta1.actual_user_chunk=task.source;
         chunk_meta1.destination.dest_t=BUFFER_LOC;
@@ -42,8 +42,8 @@ int posix_client::write(write_task task) {
     std::shared_ptr<distributed_hashmap> map_client=aetrio_system::getInstance(WORKER)->map_client;
     serialization_manager sm=serialization_manager();
     auto source=task.source;
-    size_t chunk_index=(source.offset/ io_unit_max);
-    size_t base_offset=chunk_index*io_unit_max+source.offset%io_unit_max;
+    size_t chunk_index=(source.offset/ MAX_IO_UNIT);
+    size_t base_offset=chunk_index*MAX_IO_UNIT+source.offset%MAX_IO_UNIT;
     std::string chunk_str=map_client->get(table::CHUNK_DB, task.source.filename +std::to_string(base_offset));
     chunk_meta chunk_meta1= sm.deserialize_chunk(chunk_str);
     std::string data=map_client->get(DATASPACE_DB,task.destination.filename);

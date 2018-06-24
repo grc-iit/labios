@@ -12,7 +12,7 @@ class default_solver: public solver {
 public:
     explicit default_solver(service service);
 
-    solver_output solve(solver_input input) override;
+    solver_output_dp solve(solver_input_dp input) override;
 };
 
 

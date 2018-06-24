@@ -6,14 +6,12 @@
 #include "../../aetrio_system.h"
 
 int NatsImpl::publish_task(task* task_t) {
-    auto msg=serialization_manager().serialize_task(task_t);
-    //std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
+    auto msg = serialization_manager().serialize_task(task_t);
     natsConnection_PublishString(nc, subject.c_str(), msg.c_str());
     return 0;
 }
 
 task*  NatsImpl::subscribe_task_with_timeout(int &status) {
-    //std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
     natsMsg *msg = nullptr;
     natsSubscription_NextMsg(&msg, sub, MAX_TASK_TIMER_MS);
     if(msg==nullptr) return nullptr;
@@ -23,7 +21,6 @@ task*  NatsImpl::subscribe_task_with_timeout(int &status) {
 }
 
 task* NatsImpl::subscribe_task(int &status) {
-    //std::shared_ptr<aetrio_system> sys=aetrio_system::getInstance(service_i);
     natsMsg *msg = nullptr;
     natsSubscription_NextMsg(&msg, sub, MAX_TASK_TIMER_MS_MAX);
     if(msg==nullptr) return nullptr;

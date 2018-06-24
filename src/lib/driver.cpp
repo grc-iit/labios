@@ -16,7 +16,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=SIMPLE_WRITE;
+test_case testCase=SIMPLE_READ;
 /*
  * function definitions
  */
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
         case SIMPLE_MIXED:{
             return_val=simple_write();
             sleep(5);
-            return_val=simple_write();
+            //return_val=simple_write();
             //sleep(2);
             return_val=simple_read();
             break;
@@ -89,10 +89,12 @@ int simple_write(){
 
 int simple_read(){
     FILE* fh=aetrio::fopen("test","r+");
-    size_t size_of_io=4 * 1024 * 1024;
+    if(fh== nullptr) std::cerr << "file could not be opened\n";
+    size_t size_of_io=13 * 1024 * 1024;
     char* t= static_cast<char *>(malloc(size_of_io));
     aetrio::fread(t,1,size_of_io,fh);
-    std::cout << "read data: "<< t <<std::endl;
+    std::string s(t,8);
+    std::cout << "read data: "<< s <<std::endl;
     aetrio::fclose(fh);
     free(t);
     return 0;

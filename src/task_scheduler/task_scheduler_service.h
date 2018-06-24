@@ -17,7 +17,8 @@ private:
     static std::shared_ptr<task_scheduler_service> instance;
     service service_i;
     explicit task_scheduler_service(service service):service_i(service),kill(false){}
-    void schedule_tasks(std::vector<task*> tasks,int write_count,int read_count);
+    void schedule_tasks(std::vector<task *> &tasks, int write_count,
+                        int read_count);
 public:
     int kill;
     inline static std::shared_ptr<task_scheduler_service> getInstance(service service){

@@ -7,6 +7,8 @@
 
 ##Notes
 * Timeout task scheduling. line#66
+* check the usleep in task scheduler-> infinite looping
+* listener_thread-> scheduler_thread->1solver:2solver:3solver->1sender
 
 ##TODO CODE
 * IDs everywhere (done ID= timestamp)

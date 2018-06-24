@@ -10,63 +10,70 @@
 std::shared_ptr<task_scheduler_service> task_scheduler_service::instance = nullptr;
 
 int task_scheduler_service::run() {
-    int count=0, read_count=0, write_count=0;
 
-    std::shared_ptr<distributed_queue> queue=aetrio_system::getInstance(service_i)->get_queue_client(CLIENT_TASK_SUBJECT);
-    std::vector<task*> task_list=std::vector<task*>();
+    int count=0, read_count=0, write_count=0;
+    auto queue = aetrio_system::getInstance(service_i)
+                    ->get_queue_client(CLIENT_TASK_SUBJECT);
+    auto task_list = std::vector<task*>();
     Timer t=Timer();
     t.startTime();
-
     int status=-1;
-    task* task_i= queue->subscribe_task(status);
+
+    auto task_i = queue->subscribe_task(status);
+
     if(status!=-1 && task_i!= nullptr){
         count++;
         switch (task_i->t_type){
             case task_type::WRITE_TASK:{
-                write_task *wt= static_cast<write_task *>(task_i);
-                std::cout<< serialization_manager().serialize_task(wt) << std::endl;
+                auto *wt= reinterpret_cast<write_task *>(task_i);
+                std::cout<< serialization_manager().serialize_task(wt)<< std::endl;
                 task_list.push_back(wt);
                 write_count++;
                 break;
             }
             case task_type::READ_TASK:{
-                read_task *rt= static_cast<read_task *>(task_i);
-                std::cout<< serialization_manager().serialize_task(rt) << std::endl;
+                auto *rt= reinterpret_cast<read_task *>(task_i);
+                std::cout<< serialization_manager().serialize_task(rt)<<std::endl;
                 task_list.push_back(rt);
                 read_count++;
                 break;
             }
+            default:
+                std::cerr <<"run(): Error in task type\n";
+                return -1;
         }
     }
+
     while(!kill){
-        usleep(10);//NOTE: Why usleep here?
+        usleep(10);
         status=-1;
         task_i= queue->subscribe_task_with_timeout(status);
         if(status!=-1 && task_i!= nullptr){
             count++;
             switch (task_i->t_type){
                 case task_type::WRITE_TASK:{
-                    write_task *wt= static_cast<write_task *>(task_i);
-                    std::cout<< serialization_manager().serialize_task(wt) << std::endl;
+                    auto *wt= reinterpret_cast<write_task *>(task_i);
+                    std::cout<< serialization_manager().serialize_task(wt)<< std::endl;
                     task_list.push_back(wt);
                     write_count++;
                     break;
                 }
                 case task_type::READ_TASK:{
-                    read_task *rt= static_cast<read_task *>(task_i);
-                    std::cout<< serialization_manager().serialize_task(rt) << std::endl;
+                    auto *rt= reinterpret_cast<read_task *>(task_i);
+                    std::cout<< serialization_manager().serialize_task(rt)<< std::endl;
                     task_list.push_back(rt);
                     read_count++;
                     break;
                 }
                 default:
-                    std::cout <<"run(): Error in task type\n";
+                    std::cerr <<"run(): Error in task type\n";
                     break;
             }
         }
         auto time_elapsed= t.endTimeWithoutPrint("");
-        if(!task_list.empty() && (count>MAX_TASK ||
-                                  time_elapsed>MAX_TASK_TIMER)){
+
+        if(!task_list.empty() &&
+           (count>MAX_NUM_TASKS_IN_QUEUE ||time_elapsed>MAX_SCHEDULE_TIMER)){
             schedule_tasks(task_list,write_count,read_count);
             count=0;
             t.startTime();
@@ -75,36 +82,46 @@ int task_scheduler_service::run() {
     }
     return 0;
 }
+/**
+ * listener_thread-> scheduler_thread->1solver:2solver:3solver
+                                  ->1sender
+ */
 
-void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_count,int read_count) {
-    solver_input input(write_count,MAX_WORKER_COUNT);
-    //input.num_task=write_count;
+void task_scheduler_service::schedule_tasks(std::vector<task *> &tasks,
+                                            int write_count, int read_count) {
+    /**
+     * shuffle tasks to identify which ones need solving and which ones are
+     * static
+     * call solver to get a map of worker to list of tasks
+     * merge static with the solver solution
+     * publish to individual worker queue
+     *
+     */
+    solver_input_dp input(write_count,MAX_WORKER_COUNT);
+
     int write_index=0,read_index=0,actual_index=0;
-    /*std::unordered_map<int,std::vector<task*>>
-            worker_tasks_map=std::unordered_map<int,std::vector<task*>>();*/
-    std::unordered_map<int,int> write_task_solver=std::unordered_map<int,int>();
-    std::unordered_map<int,int> static_task_solver=std::unordered_map<int,int>();
-    //int i=0;
-    for(auto task_t:tasks){
+    auto solver_task_map=std::unordered_map<int,int>();
+    auto static_task_map=std::unordered_map<int,int>();
 
+    for(auto task_t:tasks){
         switch (task_t->t_type){
             case task_type::WRITE_TASK:{
                 auto *wt= static_cast<write_task *>(task_t);
                 if(wt->destination.worker==-1){
                     input.task_size[write_index]=wt->source.size;
-                    write_task_solver.emplace(actual_index,write_index);
+                    solver_task_map.emplace(actual_index,write_index);
                     write_index++;
                 }else{
                     /*
                      * update exiting file
                      */
-                    static_task_solver.emplace(actual_index,wt->destination.worker-1);
+                    static_task_map.emplace(actual_index,wt->destination.worker-1);
                 }
                 break;
             }
             case task_type::READ_TASK:{
                 auto *rt= static_cast<read_task *>(task_t);
-                static_task_solver.emplace(actual_index,rt->source.worker-1);
+                static_task_map.emplace(actual_index,rt->source.worker-1);
                 read_index++;
                 break;
             }
@@ -131,21 +148,31 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
         std::cout<<"worker:"<<pair.second+1<<" capacity:"<<input.worker_capacity[new_index]<<" score:"<<input.worker_score[new_index]<<std::endl;
         new_index++;
     }
+
+
     std::shared_ptr<solver> solver_i=aetrio_system::getInstance(service_i)->solver_i;
-    solver_output output=solver_i->solve(input);
+
+    solver_output_dp output=solver_i->solve(input);
+
+
+    //check if there is a solution for the DPSolver
     for(int t=0;t<input.num_task;t++){
         if(output.solution[t]-1 < 0 || output.solution[t]-1 > MAX_WORKER_COUNT){
-		std::cout<<"No Solution found"<<std::endl;
-		return;
-	}
-	output.solution[t]=sorted_workers[output.solution[t]-1].second;
+            std::cout<<"No Solution found"<<std::endl;
+            return;
+        }
+        output.solution[t]=sorted_workers[output.solution[t]-1].second;
     }
+    /**
+     * merge all tasks (read or write) in order based on what solver gave us
+     * or static info we already had
+     */
     for(int task_index=0;task_index<tasks.size();task_index++){
-        auto read_iter=static_task_solver.find(task_index);
+        auto read_iter=static_task_map.find(task_index);
         int worker_index=-1;
-        if(read_iter==static_task_solver.end()){
-            auto write_iter=write_task_solver.find(task_index);
-            if(write_iter==write_task_solver.end()){
+        if(read_iter==static_task_map.end()){
+            auto write_iter=solver_task_map.find(task_index);
+            if(write_iter==solver_task_map.end()){
                 printf("Error");
             }else{
                 write_index=write_iter->second;
@@ -178,6 +205,8 @@ void task_scheduler_service::schedule_tasks(std::vector<task*> tasks,int write_c
 
         output.worker_task_map.emplace(worker_index,worker_tasks);
     }
+
+
     for (std::pair<int,std::vector<task*>> element : output.worker_task_map)
     {
         std::cout<<"add to worker:"<<element.first+1<<std::endl;

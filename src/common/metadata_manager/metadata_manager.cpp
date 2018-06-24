@@ -4,6 +4,7 @@
 
 #include <mpi.h>
 #include <cstring>
+#include <random>
 #include "metadata_manager.h"
 #include "../external_clients/serialization_manager.h"
 #include "../utilities.h"
@@ -45,7 +46,7 @@ int metadata_manager::update_on_open(std::string filename, std::string mode, FIL
     if(filename.length() > FILENAME_MAX)
         return -1;
 
-    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
+    auto map=aetrio_system::getInstance(service_i)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     file_stat stat;
@@ -78,7 +79,6 @@ bool metadata_manager::is_opened(FILE *fh) {
         return iter!=file_map.end() && iter->second.is_open;
     }
     return false;
-
 }
 
 int metadata_manager::remove_chunks(std::string filename) {
@@ -114,19 +114,18 @@ std::string metadata_manager::get_mode(std::string filename) {
     return NULL;
 }
 
-std::size_t metadata_manager::get_fp(std::string filename) {
+long long int metadata_manager::get_fp(const std::string &filename) {
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) return iter->second.file_pointer;
     return -1;
 }
 
 int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::string filename) {
-    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
-    serialization_manager sm=serialization_manager();
+    auto map = aetrio_system::getInstance(service_i)->map_client;
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
-    std::string fs_str= sm.serialize_file_stat(fs);
+    std::string fs_str= serialization_manager().serialize_file_stat(fs);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
@@ -142,7 +141,7 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
             update_on_write(task_k.source.filename,task_k.source.size);
         }
         if(!task_k.meta_updated){
-            size_t base_offset=(task_k.destination.offset/io_unit_max)*io_unit_max;
+            size_t base_offset=(task_k.destination.offset/MAX_IO_UNIT)*MAX_IO_UNIT;
             chunk_meta cm=chunk_meta();
             cm.actual_user_chunk=task_k.source;
             cm.destination=task_k.destination;
@@ -202,7 +201,7 @@ void metadata_manager::update_on_read(std::string filename, size_t size) {
 }
 
 void metadata_manager::update_on_write(std::string filename, size_t size) {
-    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
+    auto map = aetrio_system::getInstance(service_i)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -217,30 +216,31 @@ void metadata_manager::update_on_write(std::string filename, size_t size) {
 }
 
 std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
-    std::shared_ptr<distributed_hashmap> map=aetrio_system::getInstance(service_i)->map_client;
-    serialization_manager sm=serialization_manager();
-    size_t base_offset=(task.source.offset/io_unit_max)*io_unit_max;
-    size_t left=task.source.size;
-    std::vector<chunk_meta> chunks=std::vector<chunk_meta>();
-    while(left>0){
-        std::string chunk_str=map->get(table::CHUNK_DB, task.source.filename+std::to_string(base_offset));
-        if(chunk_str==""){
-            chunk_meta cm= sm.deserialize_chunk(chunk_str);
-            chunks.push_back(cm);
-            left-=cm.actual_user_chunk.size;
-            base_offset+=cm.actual_user_chunk.size;
+    auto map = aetrio_system::getInstance(service_i)->map_client;
+    auto base_offset = (task.source.offset / MAX_IO_UNIT) * MAX_IO_UNIT;
+    auto remaining_data = task.source.size;
+    auto chunks = std::vector<chunk_meta>();
+    chunk_meta cm;
+    while(remaining_data>0){
+        auto chunk_str = map->get(table::CHUNK_DB,
+                task.source.filename+std::to_string(base_offset));
+        if(!chunk_str.empty()){
+            cm = serialization_manager().deserialize_chunk(chunk_str);
         }else{
-            chunk_meta cm;
-            cm.actual_user_chunk=task.source;
-            cm.destination.dest_t=source_type::PFS_LOC;
-            cm.destination.size=cm.actual_user_chunk.size;
-            cm.destination.filename=cm.actual_user_chunk.filename;
-            cm.destination.offset=cm.actual_user_chunk.offset;
-            cm.destination.worker=rand()%MAX_WORKER_COUNT;
-            chunks.push_back(cm);
-            left-=cm.actual_user_chunk.size;
-            base_offset+=cm.actual_user_chunk.size;
+            cm.actual_user_chunk = task.source;
+            cm.destination.dest_t = source_type::PFS_LOC;
+            cm.destination.size = cm.actual_user_chunk.size;
+            cm.destination.filename = cm.actual_user_chunk.filename;
+            cm.destination.offset = cm.actual_user_chunk.offset;
+            std::default_random_engine generator;
+            std::uniform_int_distribution<int> dist(1, MAX_WORKER_COUNT);
+            cm.destination.worker = dist(generator);
         }
+        chunks.push_back(cm);
+        if(remaining_data>=cm.actual_user_chunk.size) 
+            remaining_data -= cm.actual_user_chunk.size;
+        else remaining_data=0;
+        base_offset += cm.actual_user_chunk.size;
     }
     return chunks;
 }
@@ -253,8 +253,8 @@ int metadata_manager::update_write_task_info(write_task task_k, std::string file
     if(iter!=file_map.end()) fs=iter->second;
     update_on_write(task_k.source.filename,task_k.source.size);
     if(!task_k.meta_updated){
-        size_t chunk_index=(task_k.source.offset/ io_unit_max);
-        size_t base_offset=chunk_index*io_unit_max+task_k.source.offset%io_unit_max;
+        size_t chunk_index=(task_k.source.offset/ MAX_IO_UNIT);
+        size_t base_offset=chunk_index*MAX_IO_UNIT+task_k.source.offset%MAX_IO_UNIT;
         chunk_meta cm=chunk_meta();
         cm.actual_user_chunk=task_k.source;
         cm.destination=task_k.destination;
