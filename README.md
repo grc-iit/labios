@@ -94,6 +94,6 @@ Download from https://nats.io/download/
 #### Server
 `gnatsd -p 4223 -a localhost -DV &`
 
-
-
-
+## Other Dependencies
+###zlib
+`sudo apt-get install zlib1g-dev`
