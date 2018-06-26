@@ -1,15 +1,15 @@
-//
-// Created by hdevarajan on 5/9/18.
-//
-
+/******************************************************************************
+*include files
+******************************************************************************/
 #include <algorithm>
-#include "task_scheduler_service.h"
+#include "task_scheduler.h"
 #include "../common/external_clients/memcached_impl.h"
 #include "../aetrio_system.h"
-
-std::shared_ptr<task_scheduler_service> task_scheduler_service::instance = nullptr;
-
-int task_scheduler_service::run() {
+std::shared_ptr<task_scheduler> task_scheduler::instance = nullptr;
+/******************************************************************************
+*Interface
+******************************************************************************/
+int task_scheduler::run() {
 
     int count=0, read_count=0, write_count=0;
     auto queue = aetrio_system::getInstance(service_i)
@@ -70,7 +70,7 @@ int task_scheduler_service::run() {
                     break;
             }
         }
-        auto time_elapsed= t.endTimeWithoutPrint("");
+        auto time_elapsed= t.stopTime();
 
         if(!task_list.empty() &&
            (count>MAX_NUM_TASKS_IN_QUEUE ||time_elapsed>MAX_SCHEDULE_TIMER)){
@@ -87,7 +87,7 @@ int task_scheduler_service::run() {
                                   ->1sender
  */
 
-void task_scheduler_service::schedule_tasks(std::vector<task *> &tasks,
+void task_scheduler::schedule_tasks(std::vector<task *> &tasks,
                                             int write_count, int read_count) {
     /**
      * shuffle tasks to identify which ones need solving and which ones are

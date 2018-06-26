@@ -1,7 +1,6 @@
-//
-// Created by hariharan on 2/16/18.
-//
-
+/******************************************************************************
+*include files
+******************************************************************************/
 #include "aetrio_system.h"
 #include "common/external_clients/nats_impl.h"
 #include "common/solver/dp_solver.h"
@@ -11,16 +10,18 @@
 #include "common/solver/default_solver.h"
 
 std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
-
+/******************************************************************************
+*Interface
+******************************************************************************/
 void aetrio_system::init(service service) {
     MPI_Comm_rank(MPI_COMM_SELF,&rank);
-
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_server= std::make_shared<MemcacheDImpl>
-                (service, configuration_manager::get_instance()
-                        ->MEMCACHED_URL_SERVER,0);
+        map_server = std::make_shared<MemcacheDImpl>
+                (service,
+                 configuration_manager::get_instance()->MEMCACHED_URL_SERVER,
+                 0);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
-        map_server=  std::make_shared<RocksDBImpl>(service,kDBPath_server);
+        map_server = std::make_shared<RocksDBImpl>(service,kDBPath_server);
     }
 
     if(solver_impl_type_t==solver_impl_type::DP){
@@ -44,7 +45,9 @@ void aetrio_system::init(service service) {
                     curr++;
                 }
                 application_id=curr;
-                map_server->put(table::SYSTEM_REG,"app_no",std::to_string(curr));
+                map_server->put(
+                        table::SYSTEM_REG,"app_no",
+                        std::to_string(curr));
             }
             break;
         }
@@ -67,9 +70,9 @@ void aetrio_system::init(service service) {
 
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_client= std::make_shared<MemcacheDImpl>
-                (service,configuration_manager::get_instance()
-                        ->MEMCACHED_URL_CLIENT,application_id);
-
+                (service,
+                 configuration_manager::get_instance()->MEMCACHED_URL_CLIENT,
+                 application_id);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_client=  std::make_shared<RocksDBImpl>(service,kDBPath_client);
     }
@@ -101,3 +104,4 @@ int aetrio_system::build_message_chunk(MPI_Datatype &message_chunk) {
     MPI_Type_commit(&message_chunk);
     return 0;
 }
+

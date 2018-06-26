@@ -1,7 +1,6 @@
-//
-// Created by hariharan on 2/16/18.
-//
-
+/******************************************************************************
+*include files
+******************************************************************************/
 #include <mpi.h>
 #include <cstring>
 #include <random>
@@ -10,17 +9,17 @@
 #include "../utilities.h"
 
 std::shared_ptr<metadata_manager> metadata_manager::instance = nullptr;
-
+/******************************************************************************
+*Interface
+******************************************************************************/
 bool metadata_manager::is_created(std::string filename) {
     auto iter=file_map.find(filename);
     return iter!=file_map.end();
 }
 
 int metadata_manager::create(std::string filename, std::string mode, FILE *&fh) {
-    std::shared_ptr<distributed_hashmap> map=aetrio_system::getInstance(service_i)->map_client;
-
-    if(filename.length() > FILENAME_MAX)
-        return -1;
+    if(filename.length() > FILENAME_MAX) return -1;
+    auto map=aetrio_system::getInstance(service_i)->map_client;
     file_stat stat;
     stat.file_size=0;
     fh=fmemopen(nullptr, 1, mode.c_str());
@@ -43,16 +42,14 @@ bool metadata_manager::is_opened(std::string filename) {
 }
 
 int metadata_manager::update_on_open(std::string filename, std::string mode, FILE * &fh) {
-    if(filename.length() > FILENAME_MAX)
-        return -1;
+    if(filename.length() > FILENAME_MAX) return -1;
 
     auto map=aetrio_system::getInstance(service_i)->map_client;
-    serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     file_stat stat;
     stat.file_size=0;
     if(iter!=file_map.end()) stat=iter->second;
-    fh=fmemopen(NULL, 1, mode.c_str());
+    fh=fmemopen(nullptr, 1, mode.c_str());
     stat.fh=fh;
     stat.is_open=true;
     if(mode =="r" || mode=="r+"){
@@ -68,7 +65,7 @@ int metadata_manager::update_on_open(std::string filename, std::string mode, FIL
     if(iter!=file_map.end()) file_map.erase(iter);
     fh_map.emplace(fh,filename);
     file_map.emplace(filename,stat);
-    std::string fs_str= sm.serialize_file_stat(stat);
+    std::string fs_str= serialization_manager().serialize_file_stat(stat);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
@@ -81,11 +78,11 @@ bool metadata_manager::is_opened(FILE *fh) {
     return false;
 }
 
-int metadata_manager::remove_chunks(std::string filename) {
+int metadata_manager::remove_chunks(std::string &filename) {
     std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
     std::string chunks_str = map->remove(table::FILE_CHUNK_DB, filename);
     std::vector<std::string> chunks = string_split(chunks_str);
-    for (auto chunk :chunks) {
+    for (const auto& chunk :chunks) {
         map->remove(table::CHUNK_DB, chunk);
     }
 }
@@ -99,7 +96,7 @@ int metadata_manager::update_on_close(FILE *&fh) {
 std::string metadata_manager::get_filename(FILE *fh) {
     auto iter=fh_map.find(fh);
     if(iter!=fh_map.end()) return iter->second;
-    return NULL;
+    return nullptr;
 }
 
 std::size_t metadata_manager::get_filesize(std::string filename) {
@@ -111,7 +108,7 @@ std::size_t metadata_manager::get_filesize(std::string filename) {
 std::string metadata_manager::get_mode(std::string filename) {
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) return iter->second.mode;
-    return NULL;
+    return nullptr;
 }
 
 long long int metadata_manager::get_fp(const std::string &filename) {
@@ -130,8 +127,7 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
     return 0;
 }
 int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std::string filename) {
-    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
-    serialization_manager sm=serialization_manager();
+    auto  map=aetrio_system::getInstance(service_i)->map_client;
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
@@ -141,21 +137,22 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
             update_on_write(task_k.source.filename,task_k.source.size);
         }
         if(!task_k.meta_updated){
-            size_t base_offset=(task_k.destination.offset/MAX_IO_UNIT)*MAX_IO_UNIT;
-            chunk_meta cm=chunk_meta();
+            auto base_offset=(task_k.destination.offset/MAX_IO_UNIT)
+                    *MAX_IO_UNIT;
+            chunk_meta cm;
             cm.actual_user_chunk=task_k.source;
             cm.destination=task_k.destination;
-            std::string chunk_str= sm.serialize_chunk(cm);
+            std::string chunk_str= serialization_manager().serialize_chunk(cm);
             map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str);
         }
     }
-    std::string fs_str= sm.serialize_file_stat(fs);
+    std::string fs_str= serialization_manager().serialize_file_stat(fs);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
 int metadata_manager::update_on_seek(std::string filename,
                                      size_t offset, size_t origin){
-    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
+    auto map=aetrio_system::getInstance(service_i)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -178,9 +175,11 @@ int metadata_manager::update_on_seek(std::string filename,
                 }
                 break;
             }
-            std::string fs_str= sm.serialize_file_stat(iter->second);
-            map->put(table::FILE_DB,filename,fs_str);
+            default:
+                std::cerr << "fseek origin error\n";
         }
+        std::string fs_str= sm.serialize_file_stat(iter->second);
+        map->put(table::FILE_DB,filename,fs_str);
     }
     return 0;
 }
@@ -237,7 +236,7 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
             cm.destination.worker = dist(generator);
         }
         chunks.push_back(cm);
-        if(remaining_data>=cm.actual_user_chunk.size) 
+        if(remaining_data>=cm.actual_user_chunk.size)
             remaining_data -= cm.actual_user_chunk.size;
         else remaining_data=0;
         base_offset += cm.actual_user_chunk.size;
@@ -246,22 +245,23 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
 }
 
 int metadata_manager::update_write_task_info(write_task task_k, std::string filename) {
-    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client;
-    serialization_manager sm=serialization_manager();
+    auto map=aetrio_system::getInstance(service_i)->map_client;
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
     update_on_write(task_k.source.filename,task_k.source.size);
     if(!task_k.meta_updated){
-        size_t chunk_index=(task_k.source.offset/ MAX_IO_UNIT);
-        size_t base_offset=chunk_index*MAX_IO_UNIT+task_k.source.offset%MAX_IO_UNIT;
-        chunk_meta cm=chunk_meta();
+        auto chunk_index=(task_k.source.offset/ MAX_IO_UNIT);
+        auto base_offset=chunk_index*MAX_IO_UNIT+
+                task_k.source.offset%MAX_IO_UNIT;
+        chunk_meta cm;
         cm.actual_user_chunk=task_k.source;
         cm.destination=task_k.destination;
-        std::string chunk_str= sm.serialize_chunk(cm);
+        std::string chunk_str= serialization_manager().serialize_chunk(cm);
         map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str);
     }
-    std::string fs_str= sm.serialize_file_stat(fs);
+    std::string fs_str= serialization_manager().serialize_file_stat(fs);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
+

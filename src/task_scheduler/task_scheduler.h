@@ -1,62 +1,52 @@
 /*******************************************************************************
-* Created by hariharan on 2/23/18.
+* Created by hariharan on 5/9/18.
 * Updated by akougkas on 6/26/2018
 * Illinois Institute of Technology - SCS Lab
 * (C) 2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_DISTRIBUTEDQUEUE_H
-#define AETRIO_MAIN_DISTRIBUTEDQUEUE_H
+#ifndef AETRIO_MAIN_TASK_SCHEDULER_SERVICE_H
+#define AETRIO_MAIN_TASK_SCHEDULER_SERVICE_H
 /******************************************************************************
 *include files
 ******************************************************************************/
 #include <memory>
-#include "../enumerations.h"
-#include "../data_structures.h"
-#include <nats.h>
-#include "../external_clients/serialization_manager.h"
-#include "../exceptions.h"
+#include "../common/enumerations.h"
+#include <zconf.h>
+#include "../common/external_clients/nats_impl.h"
+#include "../common/timer.h"
 /******************************************************************************
 *Class
 ******************************************************************************/
-class distributed_queue {
-protected:
+class task_scheduler {
+private:
 /******************************************************************************
 *Variables and members
 ******************************************************************************/
+    static std::shared_ptr<task_scheduler> instance;
     service service_i;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit distributed_queue(service service):service_i(service){}
-public:
+    explicit task_scheduler(service service):service_i(service),kill(false){}
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    virtual int publish_task(task *task_t){
-        throw NotImplementedException("publish_task");
+    void schedule_tasks(std::vector<task *> &tasks, int write_count,
+                        int read_count);
+public:
+    int kill;
+    inline static std::shared_ptr<task_scheduler> getInstance(service service){
+        return instance== nullptr ? instance=
+                std::shared_ptr<task_scheduler>
+                        (new task_scheduler(service)) : instance;
     }
-    virtual task * subscribe_task_with_timeout( int &status){
-        throw NotImplementedException("subscribe_task_with_timeout");
-    }
-
-    virtual task * subscribe_task( int &status){
-        throw NotImplementedException("subscribe_task");
-    }
-
-    virtual int get_queue_size(){
-        throw NotImplementedException("get_queue_size");
-    }
-    virtual int get_queue_count(){
-        throw NotImplementedException("get_queue_count");
-    }
-    virtual int get_queue_count_limit(){
-        throw NotImplementedException("get_queue_count");
-    }
+    int run();
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~distributed_queue(){}
+    virtual ~task_scheduler(){}
+
 };
 
 
-#endif //AETRIO_MAIN_DISTRIBUTEDQUEUE_H
+#endif //AETRIO_MAIN_TASK_SCHEDULER_SERVICE_H

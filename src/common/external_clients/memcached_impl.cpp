@@ -1,9 +1,11 @@
-//
-// Created by hariharan on 3/2/18.
-//
-
+/******************************************************************************
+*include files
+******************************************************************************/
 #include "memcached_impl.h"
-
+#include "../return_codes.h"
+/******************************************************************************
+*Interface
+******************************************************************************/
 int MemcacheDImpl::put(table table_name, std::string key, std::string value) {
     key=std::to_string(table_name)+KEY_SEPARATOR+key;
     memcached_return_t rc= memcached_set(mem_client,
@@ -13,7 +15,7 @@ int MemcacheDImpl::put(table table_name, std::string key, std::string value) {
                                                 value.length()+1,
                                                 (time_t)0,
                                                 (uint32_t)0);
-    return 0;
+    return rc;
 }
 
 std::string MemcacheDImpl::get(table table_name, std::string key) {
@@ -23,7 +25,7 @@ std::string MemcacheDImpl::get(table table_name, std::string key) {
     return_value = memcached_get(mem_client,
                                  key.c_str(),
                                  key.length(),
-                                 &size ,
+                                 &size,
                                  (time_t)0,
                                  (uint32_t)0);
     if(return_value== nullptr){

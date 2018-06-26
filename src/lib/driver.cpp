@@ -1,6 +1,6 @@
-/*
- * Created by hariharan on 3/3/18.
- */
+/******************************************************************************
+*include files
+******************************************************************************/
 #include <mpi.h>
 #include <zconf.h>
 #include "posix.h"
@@ -16,7 +16,10 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=SIMPLE_READ;
+test_case testCase=SIMPLE_MIXED;
+/******************************************************************************
+*Interface
+******************************************************************************/
 /*
  * function definitions
  */

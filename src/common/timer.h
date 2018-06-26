@@ -11,8 +11,8 @@
 class Timer {
 public:
     void startTime();
-    double endTime(std::string fnName);
-    double endTimeWithoutPrint(std::string fnName);
+    double endTimeWithPrint(std::string fnName);
+    double stopTime();
 private:
     std::chrono::high_resolution_clock::time_point t1;
 };

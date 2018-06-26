@@ -10,7 +10,7 @@ void Timer::startTime() {
     t1 = std::chrono::high_resolution_clock::now();
 }
 
-double Timer::endTime(std::string fnName) {
+double Timer::endTimeWithPrint(std::string fnName) {
     auto t2 = std::chrono::high_resolution_clock::now();
     auto t =  std::chrono::duration_cast<std::chrono::nanoseconds>(
             t2 - t1).count()/1000000000.0;
@@ -20,9 +20,7 @@ double Timer::endTime(std::string fnName) {
     return t;
 }
 
-double Timer::endTimeWithoutPrint(std::string fnName) {
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto t =  std::chrono::duration_cast<std::chrono::nanoseconds>(
-            t2 - t1).count()/1000000000.0;
-    return t;
+double Timer::stopTime() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now()-t1).count()/1000.0;
 }

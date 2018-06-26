@@ -1,11 +1,11 @@
-//
-// Created by hdevarajan on 5/19/18.
-//
-
+/******************************************************************************
+*include files
+******************************************************************************/
 #include <random>
 #include "random_solver.h"
-
-
+/******************************************************************************
+*Interface
+******************************************************************************/
 solver_output_dp random_solver::solve(solver_input_dp input) {
     std::default_random_engine generator;
     std::uniform_int_distribution<int> dist(1, MAX_WORKER_COUNT);

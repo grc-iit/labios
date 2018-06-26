@@ -1,10 +1,12 @@
-//
-// Created by hariharan on 2/16/18.
-//
+/******************************************************************************
+*include files
+******************************************************************************/
 #include <zconf.h>
 #include "posix.h"
 #include "../common/task_builder/task_builder.h"
-
+/******************************************************************************
+*Interface
+******************************************************************************/
 FILE *aetrio::fopen(const char *filename, const char *mode) {
     auto mdm = metadata_manager::getInstance(LIB);
     FILE* fh;
@@ -66,8 +68,8 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     auto filename = mdm->get_filename(stream);
     auto offset = mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
-    auto tasks = task_m->build_task_read
-            (read_task(file(filename, offset, size*count), file()));
+    auto tasks = task_m->build_read_task
+            (read_task(file(filename, offset, size * count), file()));
     int ptr_pos=0;
 
     for(auto task:tasks){
@@ -101,7 +103,7 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     auto offset=mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
     auto tsk=write_task(file(filename,offset,size*count),file());
-    auto write_tasks=task_m->build_task_write(tsk,static_cast<char *>(ptr));
+    auto write_tasks= task_m->build_write_task(tsk, static_cast<char *>(ptr));
     std::string id;
     int index=0;
     std::string data((char*)ptr);

@@ -1,10 +1,11 @@
-//
-// Created by hdevarajan on 5/7/18.
-//
-
+/******************************************************************************
+*include files
+******************************************************************************/
 #include "nats_impl.h"
 #include "../../aetrio_system.h"
-
+/******************************************************************************
+*Interface
+******************************************************************************/
 int NatsImpl::publish_task(task* task_t) {
     auto msg = serialization_manager().serialize_task(task_t);
     natsConnection_PublishString(nc, subject.c_str(), msg.c_str());
