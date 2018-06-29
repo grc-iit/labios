@@ -3,6 +3,7 @@
 ******************************************************************************/
 #include <mpi.h>
 #include <zconf.h>
+#include <random>
 #include "posix.h"
 enum test_case{
     SIMPLE_WRITE=0,
@@ -11,7 +12,6 @@ enum test_case{
     MULTI_READ=3,
     SIMPLE_MIXED=4,
     MULTI_MIXED=5
-
 };
 /*
  * set test case
@@ -27,10 +27,12 @@ int simple_write();
 int simple_read();
 int multi_write();
 int multi_read();
+
+
 int main(int argc, char** argv){
 
     aetrio::MPI_Init(&argc,&argv);
-    int return_val;
+    int return_val=0;
     switch(testCase){
         case SIMPLE_WRITE:{
             return_val=simple_write();
@@ -42,9 +44,11 @@ int main(int argc, char** argv){
         }
         case SIMPLE_MIXED:{
             return_val=simple_write();
-            sleep(5);
-            //return_val=simple_write();
-            //sleep(2);
+            sleep(2);
+            return_val=simple_read();
+            sleep(2);
+            return_val=simple_write();
+            sleep(2);
             return_val=simple_read();
             break;
         }
@@ -58,46 +62,47 @@ int main(int argc, char** argv){
         }
         case MULTI_MIXED:{
             return_val=multi_write();
-            return_val=multi_read();
+            return_val+=multi_read();
             break;
         }
-
     }
     aetrio::MPI_Finalize();
     return return_val;
 }
-void gen_random(char *s, const int len) {
+void gen_random(char *s, std::size_t len) {
     static const char alphanum[] =
             "0123456789"
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz";
-
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> dist(1, 1000000);
     for (int i = 0; i < len; ++i) {
-        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+        s[i] = alphanum[dist(generator) % (sizeof(alphanum) - 1)];
     }
 
     s[len] = 0;
 }
 int simple_write(){
     FILE* fh=aetrio::fopen("test","w+");
-    size_t size_of_io=16 * 1024 * 1024;
-    char* t= static_cast<char *>(malloc(size_of_io));
+    size_t size_of_io=4 * 1024 * 1024;
+    auto t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
     aetrio::fwrite(t,1,size_of_io,fh);
     aetrio::fclose(fh);
+    std::string s(t,128);
+    std::cout << "write data:\t"<< s <<std::endl;
     free(t);
-    //std::cout << "write data: "<< t <<std::endl;
     return 0;
 }
 
 int simple_read(){
     FILE* fh=aetrio::fopen("test","r+");
     if(fh== nullptr) std::cerr << "file could not be opened\n";
-    size_t size_of_io=13 * 1024 * 1024;
-    char* t= static_cast<char *>(malloc(size_of_io));
+    size_t size_of_io=2 * 1024 * 1024;
+    auto t= static_cast<char *>(malloc(size_of_io));
     aetrio::fread(t,1,size_of_io,fh);
-    std::string s(t,8);
-    std::cout << "read data: "<< s <<std::endl;
+    std::string s(t,128);
+    std::cout << "read data:\t"<< s <<std::endl;
     aetrio::fclose(fh);
     free(t);
     return 0;
@@ -105,7 +110,7 @@ int simple_read(){
 int multi_write(){
     FILE* fh=aetrio::fopen("test","weight+");
     size_t size_of_io=32 * 1024 * 1024;
-    char* t= static_cast<char *>(malloc(size_of_io));
+    auto t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
     for(int i=0;i<2;i++){
         aetrio::fwrite(t,1,size_of_io,fh);
@@ -117,7 +122,7 @@ int multi_write(){
 int multi_read(){
     FILE* fh=aetrio::fopen("test","r+");
     size_t size_of_io=16 * 1024 * 1024;
-    char* t= static_cast<char *>(malloc(size_of_io));
+    auto t= static_cast<char *>(malloc(size_of_io));
     for(int i=0;i<1024;i++){
         aetrio::fwrite(t,1,size_of_io,fh);
     }
@@ -125,3 +130,4 @@ int multi_read(){
     free(t);
     return 0;
 }
+

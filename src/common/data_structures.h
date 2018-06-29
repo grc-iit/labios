@@ -118,8 +118,8 @@ struct dataspace{
 ******************************************************************************/
 struct file_stat{
     FILE* fh;
-    long long int file_pointer;
-    size_t file_size;
+    std::size_t file_pointer;
+    std::size_t file_size;
     std::string mode;
     bool is_open;
 /*******************
@@ -128,7 +128,7 @@ struct file_stat{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( /*this->fh,*/ this->file_pointer, this->file_size,this->mode,this->is_open );
+        archive(this->file_pointer, this->file_size,this->mode,this->is_open );
     }
 };
 /******************************************************************************
@@ -169,7 +169,7 @@ struct write_task:public task{
 *Constructors
 *******************/
     write_task():task(task_type::WRITE_TASK){}
-    write_task(file source, file destination)
+    write_task(const file &source, const file &destination)
             :task(task_type::WRITE_TASK),source(source),destination(destination){}
     write_task(const write_task &write_task_t)
             :task(task_type::WRITE_TASK), source(write_task_t.source),

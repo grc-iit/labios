@@ -45,6 +45,7 @@
     * Wake and sleep workers (based on events using nats(WORKER_MANAGER tasks))
 * Worker Service
     * Update worker scores (done)
+        * Worker interval or task count is used to trigger worker score updates
 * System Manager Service
     * Setup Application registrations
 
