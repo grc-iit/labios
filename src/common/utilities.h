@@ -9,7 +9,7 @@
 #include <vector>
 #include <cstring>
 #include <getopt.h>
-#include "configuration_manager.h"
+#include "config_manager.h"
 
 static std::vector<std::string> string_split(std::string value,std::string delimiter=","){
     char *token = strtok(const_cast<char *>(value.c_str()), delimiter.c_str());
@@ -22,7 +22,7 @@ static std::vector<std::string> string_split(std::string value,std::string delim
     return splits;
 }
 static int parse_opts(int argc, char *argv[]){
-    auto conf=configuration_manager::get_instance();
+    auto conf=config_manager::get_instance();
     int flags, opt;
     int nsecs, tfnd;
 

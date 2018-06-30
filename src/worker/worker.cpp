@@ -2,7 +2,6 @@
 *include files
 ******************************************************************************/
 #include "worker.h"
-#include "../common/utilities.h"
 #include "../common/return_codes.h"
 std::shared_ptr<worker> worker::instance = nullptr;
 /******************************************************************************
@@ -31,13 +30,13 @@ int worker::run() {
             switch (task_i->t_type){
                 case task_type::WRITE_TASK:{
                     auto *wt= reinterpret_cast<write_task *>(task_i);
-                    std::cout<< serialization_manager().serialize_task(wt) << std::endl;
+                    std::cout<<serialization_manager().serialize_task(wt)<<"\n";
                     client->write(*wt);
                     break;
                 }
                 case task_type::READ_TASK:{
                     auto *rt= reinterpret_cast<read_task *>(task_i);
-                    std::cout<< serialization_manager().serialize_task(rt) << std::endl;
+                    std::cout<<serialization_manager().serialize_task(rt)<<"\n";
                     client->read(*rt);
                     break;
                 }
@@ -116,7 +115,7 @@ int worker::update_capacity() {
             table::WORKER_CAPACITY,
             std::to_string(worker_index),
             std::to_string(get_remaining_capacity()))==MEMCACHED_SUCCESS){
-        std::cout<<"worker capacity: "<<(int)get_remaining_capacity()<<std::endl;
+        std::cout<<"worker capacity: "<<(int)get_remaining_capacity()<<"\n";
         return SUCCESS;
     }
     else return WORKER__UPDATE_CAPACITY_FAILED;
@@ -136,8 +135,11 @@ int64_t worker::get_total_capacity() {
 }
 
 int64_t worker::get_current_capacity() {
-    std::string cmd="du -s "+WORKER_PATH+"/"+std::to_string(worker_index)+"/"+" | awk {'print$1'}";
-    FILE *fp;
+    std::string cmd = "du -s " + WORKER_PATH
+                      +"/" +
+                      std::to_string(worker_index)
+                      +"/"+" | awk {'print$1'}";
+
     std::array<char, 128> buffer = std::array<char, 128>();
     std::string result;
     std::shared_ptr<FILE> pipe(popen(cmd.c_str(), "r"), pclose);

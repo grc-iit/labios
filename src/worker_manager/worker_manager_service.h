@@ -22,7 +22,7 @@ public:
         return instance== nullptr ? instance=std::shared_ptr<worker_manager_service>(new worker_manager_service(service))
                                   : instance;
     }
-    int run();
+    void run();
 };
 
 

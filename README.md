@@ -2,15 +2,16 @@
 
 #TODO LIST
 ##Immediate
-* Revisit task_builder
-* Move DP solver code
+* Revisit task_builder (done)
+* Move DP solver code (done)
+* Multithreaded task scheduler (done) //TODO: check the static stuff
 * Default solver
 * Small I/O cache
 * Wake up and suspend workers
-* Task dependecy
+* Delete and flush tasks
 
 ##Future
-* Multithreaded task scheduler
+* Task dependecies
 * Metadata persistent store (flush at the end)
 * Automated server bootstrapping
 * Investigate read simulation
@@ -54,13 +55,13 @@
 `cd aetrio/`
 
 `git update-index --assume-unchanged src/common/constants.h 
-src/common/configuration_manager.h src/common/configuration_manager.cpp CMakeLists.txt`
+src/common/config_manager.h src/common/config_manager.cpp CMakeLists.txt`
 
 ##Undo commands:
 `cd aetrio/`
 
 `git update-index --no-assume-unchanged src/common/constants.h 
- src/common/configuration_manager.h src/common/configuration_manager.cpp CMakeLists.txt`
+ src/common/config_manager.h src/common/config_manager.cpp CMakeLists.txt`
 
 
 #Setup Aetrio

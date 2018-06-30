@@ -322,14 +322,40 @@ struct solver_output_dp{
 *solver_input structure
 ******************************************************************************/
 struct solver_input{
-    int num_task;
+    std::vector<task*> tasks;
+    int num_tasks;
     int64_t *task_size;
+    int64_t total_io_size=0;
 /*******************
 *Constructors
 *******************/
-    solver_input(int num_task,int num_workers){
-        this->num_task = num_task;
-        task_size=new int64_t[num_task];
+    explicit solver_input(std::vector<task*> &task_list){
+        this->tasks = task_list;
+        this->num_tasks = static_cast<int>(task_list.size());
+        task_size=new int64_t[num_tasks];
+        int index = 0;
+        for(auto t:tasks) {
+            switch(t->t_type) {
+                case task_type::WRITE_TASK: {
+                    auto *wt = reinterpret_cast<write_task *>(t);
+                    task_size[index]=wt->source.size;
+                    index++;
+                    total_io_size+=wt->source.size;
+                    break;
+                }
+                case task_type::READ_TASK: {
+                    auto *rt = reinterpret_cast<read_task *>(t);
+                    task_size[index]=rt->source.size;
+                    index++;
+                    total_io_size+=rt->source.size;
+                    break;
+                }
+                default:
+                    task_size[index]=0;
+                    index++;
+                    break;
+            }
+        }
     }
 /*******************
 *Destructor

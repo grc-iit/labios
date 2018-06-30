@@ -2,9 +2,7 @@
 *include files
 ******************************************************************************/
 #include "aetrio_system.h"
-#include "common/external_clients/nats_impl.h"
 #include "common/solver/dp_solver.h"
-#include "common/solver/greedy_solver.h"
 #include "common/solver/random_solver.h"
 #include "common/solver/round_robin_solver.h"
 #include "common/solver/default_solver.h"
@@ -18,7 +16,7 @@ void aetrio_system::init(service service) {
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_server = std::make_shared<MemcacheDImpl>
                 (service,
-                 configuration_manager::get_instance()->MEMCACHED_URL_SERVER,
+                 config_manager::get_instance()->MEMCACHED_URL_SERVER,
                  0);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_server = std::make_shared<RocksDBImpl>(service,kDBPath_server);
@@ -26,8 +24,6 @@ void aetrio_system::init(service service) {
 
     if(solver_impl_type_t==solver_impl_type::DP){
         solver_i=std::make_shared<DPSolver>(service);
-    }else if(solver_impl_type_t==solver_impl_type::GREEDY){
-        solver_i=std::make_shared<GreedySolver>(service);
     }else if(solver_impl_type_t==solver_impl_type::RANDOM_SELECT){
         solver_i=std::make_shared<random_solver>(service);
     }else if(solver_impl_type_t==solver_impl_type::ROUND_ROBIN){
@@ -71,7 +67,7 @@ void aetrio_system::init(service service) {
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_client= std::make_shared<MemcacheDImpl>
                 (service,
-                 configuration_manager::get_instance()->MEMCACHED_URL_CLIENT,
+                 config_manager::get_instance()->MEMCACHED_URL_CLIENT,
                  application_id);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_client=  std::make_shared<RocksDBImpl>(service,kDBPath_client);

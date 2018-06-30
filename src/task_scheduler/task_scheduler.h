@@ -14,6 +14,8 @@
 #include <zconf.h>
 #include "../common/external_clients/nats_impl.h"
 #include "../common/timer.h"
+#include "../common/threadPool.h"
+#include "../common/config_manager.h"
 /******************************************************************************
 *Class
 ******************************************************************************/
@@ -23,29 +25,33 @@ private:
 *Variables and members
 ******************************************************************************/
     static std::shared_ptr<task_scheduler> instance;
-    service service_i;
+    static service service_i;
+    threadPool workers;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit task_scheduler(service service):service_i(service),kill(false){}
+    explicit task_scheduler(service service)
+            :kill(false),
+             workers(config_manager::get_instance()->TS_NUM_WORKER_THREADS){
+        workers.init();
+    }
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    void schedule_tasks(std::vector<task *> &tasks, int write_count,
-                        int read_count);
+    static void schedule_tasks(std::vector<task*> &tasks);
 public:
     int kill;
     inline static std::shared_ptr<task_scheduler> getInstance(service service){
-        return instance== nullptr ? instance=
-                std::shared_ptr<task_scheduler>
+        return instance== nullptr ? instance = std::shared_ptr<task_scheduler>
                         (new task_scheduler(service)) : instance;
     }
     int run();
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~task_scheduler(){}
-
+    virtual ~task_scheduler() {
+        workers.shutdown();
+    }
 };
 
 

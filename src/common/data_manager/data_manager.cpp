@@ -1,23 +1,28 @@
-//
-// Created by hariharan on 2/23/18.
-//
-
+/******************************************************************************
+*include files
+******************************************************************************/
 #include "data_manager.h"
-
 std::shared_ptr<data_manager> data_manager::instance = nullptr;
-std::string data_manager::get(std::string key) {
-    return aetrio_system::getInstance(service_i)->map_client->get(DATASPACE_DB,key);;
+/******************************************************************************
+*Interface
+******************************************************************************/
+std::string data_manager::get(const table &name, std::string key) {
+    return aetrio_system::getInstance(service_i)->map_client->get
+            (name,std::move(key));
 }
 
-int data_manager::put(std::string key, std::string data) {
-
-    return aetrio_system::getInstance(service_i)->map_client->put(DATASPACE_DB,key,data);;
+int data_manager::put(const table &name, std::string key, std::string
+data) {
+    return aetrio_system::getInstance(service_i)->map_client->put
+            (name,std::move(key),data);
 }
 
-bool data_manager::exists(std::string key) {
-    return  aetrio_system::getInstance(service_i)->map_client->exists(DATASPACE_DB,key);
+bool data_manager::exists(const table &name, std::string key) {
+    return  aetrio_system::getInstance(service_i)->map_client->exists
+            (name,std::move(key));
 }
 
-std::string data_manager::remove(table table_name, std::string key) {
-    return aetrio_system::getInstance(service_i)->map_client->remove(DATASPACE_DB,key);
+std::string data_manager::remove(const table &name, std::string key) {
+    return aetrio_system::getInstance(service_i)->map_client->remove
+            (name,std::move(key));
 }

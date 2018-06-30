@@ -8,10 +8,10 @@
 
 int posix_client::read(read_task task) {
     FILE* fh=fopen(task.source.filename.c_str(),"r+");
-    char* data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
+    auto data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     fseek(fh,task.source.offset,SEEK_SET);
     fread(data,task.source.size, sizeof(char),fh);
-    std::shared_ptr<distributed_hashmap> map_client=aetrio_system::getInstance(WORKER)->map_client;
+    auto map_client=aetrio_system::getInstance(WORKER)->map_client;
     serialization_manager sm=serialization_manager();
     map_client->put(DATASPACE_DB,task.destination.filename,data);
     fclose(fh);
@@ -20,9 +20,9 @@ int posix_client::read(read_task task) {
                 system_clock::now().time_since_epoch()
         ).count());
         std::string file_path=dir+std::to_string(file_id);
-        FILE* fh=fopen(file_path.c_str(),"w+");
-        fwrite(data,task.source.size, sizeof(char),fh);
-        fclose(fh);
+        FILE* fh1=fopen(file_path.c_str(),"w+");
+        fwrite(data,task.source.size, sizeof(char),fh1);
+        fclose(fh1);
         size_t chunk_index=(task.source.offset/ MAX_IO_UNIT);
         size_t base_offset=chunk_index*MAX_IO_UNIT+task.source.offset%MAX_IO_UNIT;
         chunk_meta chunk_meta1;

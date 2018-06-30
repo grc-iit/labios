@@ -12,7 +12,7 @@
 class system_manager_service {
     static std::shared_ptr<system_manager_service> instance;
     service service_i;
-    system_manager_service(service service):service_i(service),kill(false){}
+    explicit system_manager_service(service service):service_i(service),kill(false){}
     int check_applications_score();
 public:
     int kill;
@@ -21,7 +21,7 @@ public:
         return instance== nullptr ? instance=std::shared_ptr<system_manager_service>(new system_manager_service(service))
                                   : instance;
     }
-    int run();
+    void run();
 };
 
 

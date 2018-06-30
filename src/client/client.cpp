@@ -5,15 +5,15 @@
 #include <mpi.h>
 #include <cstring>
 #include "client.h"
-#include "../common/constants.h"
 #include "../aetrio_system.h"
-#include "../common/data_structures.h"
+#include "../common/return_codes.h"
 
 int AetrioClient::init() {
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(AETRIO_CLIENT_PORT.c_str
             ()));
     MPI_Comm_rank(MPI_COMM_SELF,&rank);
     MPI_Intercomm_merge(MPI_COMM_SELF, 0, &applications_comms);
+    return SUCCESS;
 }
 
 int AetrioClient::listen_application_connections() {

@@ -5,7 +5,6 @@
 #include <cstring>
 #include <random>
 #include "metadata_manager.h"
-#include "../external_clients/serialization_manager.h"
 #include "../utilities.h"
 #include "../return_codes.h"
 std::shared_ptr<metadata_manager> metadata_manager::instance = nullptr;
@@ -72,6 +71,7 @@ int metadata_manager::update_on_open(std::string filename,std::string mode,FILE 
     map->put(table::FILE_DB,filename,fs_str);
     return SUCCESS;
 }
+
 bool metadata_manager::is_opened(FILE *fh) {
     auto iter1=fh_map.find(fh);
     if(iter1!=fh_map.end()){
@@ -88,6 +88,7 @@ int metadata_manager::remove_chunks(std::string &filename) {
     for (const auto& chunk :chunks) {
         map->remove(table::CHUNK_DB, chunk);
     }
+    return SUCCESS;
 }
 
 int metadata_manager::update_on_close(FILE *&fh) {
@@ -116,7 +117,8 @@ std::string metadata_manager::get_mode(std::string filename) {
 
 long long int metadata_manager::get_fp(const std::string &filename) {
     auto iter=file_map.find(filename);
-    if(iter!=file_map.end()) return iter->second.file_pointer;
+    if(iter!=file_map.end())
+        return static_cast<long long int>(iter->second.file_pointer);
     return -1;
 }
 
@@ -129,6 +131,7 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
+
 int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std::string filename) {
     auto  map=aetrio_system::getInstance(service_i)->map_client;
     file_stat fs;
@@ -153,6 +156,7 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
 }
+
 int metadata_manager::update_on_seek(std::string filename,
                                      size_t offset, size_t origin){
     auto map=aetrio_system::getInstance(service_i)->map_client;

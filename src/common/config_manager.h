@@ -1,46 +1,52 @@
 /*******************************************************************************
-* Created by hariharan on 2/3/18.
+* Created by hariharan on 5/12/18.
 * Updated by akougkas on 6/26/2018
 * Illinois Institute of Technology - SCS Lab
 * (C) 2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_MEMCACHEDIMPL_H
-#define AETRIO_MAIN_MEMCACHEDIMPL_H
+#ifndef AETRIO_CONFIGURATION_MANAGER_H
+#define AETRIO_CONFIGURATION_MANAGER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "../client_interface/distributed_hashmap.h"
-#include <libmemcached/memcached.h>
-#include <cstring>
+#include <memory>
 /******************************************************************************
 *Class
 ******************************************************************************/
-class MemcacheDImpl: public distributed_hashmap {
-/******************************************************************************
-*Variables and members
-******************************************************************************/
+class config_manager {
 private:
-    memcached_st * mem_client;
-public:
+    static std::shared_ptr<config_manager> instance;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    MemcacheDImpl(service service,const std::string &config_string,int server)
-            :distributed_hashmap(service){
-       mem_client = memcached(config_string.c_str(), config_string.size());
-    }
+    config_manager():
+            NATS_URL_CLIENT("nats://localhost:4222/"),
+            NATS_URL_SERVER("nats://localhost:4223/"),
+            MEMCACHED_URL_CLIENT("--SERVER=localhost:11211"),
+            MEMCACHED_URL_SERVER("--SERVER=localhost:11212"),
+            ASSIGNMENT_POLICY("RANDOM"),
+            TS_NUM_WORKER_THREADS(1){}
+public:
 /******************************************************************************
-*Interface
+*Variables and members
 ******************************************************************************/
-    int put(const table &name,std::string key,const std::string &value) override;
-    std::string get(const table &name, std::string key) override;
-    std::string remove(const table &name, std::string key) override;
-    bool exists(const table &name, std::string key) override;
+    std::string NATS_URL_CLIENT;
+    std::string NATS_URL_SERVER;
+    std::string MEMCACHED_URL_CLIENT;
+    std::string MEMCACHED_URL_SERVER;
+    std::string ASSIGNMENT_POLICY;
+    int TS_NUM_WORKER_THREADS;
+    static std::shared_ptr<config_manager> get_instance(){
+        return instance== nullptr ? instance=std::shared_ptr<config_manager>
+                (new config_manager()) : instance;
+    }
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~MemcacheDImpl(){}
+    virtual ~config_manager(){}
 };
 
 
-#endif //AETRIO_MAIN_MEMCACHEDIMPL_H
+#endif //AETRIO_CONFIGURATION_MANAGER_H
+
+

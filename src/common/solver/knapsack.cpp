@@ -50,14 +50,7 @@
 #define MAXSTATES 5000000   /* max number of states in dyn prog for KP */
 #define SSSTATES  1000000   /* max number of states in dyn prog for SSP */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdarg.h>
-#include <values.h>
 #include <string.h>
-#include <math.h>
-#include <signal.h>
 
 
 /* ======================================================================
@@ -1276,7 +1269,7 @@ static void initvect(allinfo *a) {
 				findbreak
    ====================================================================== */
 
-static int findbreak(allinfo *a) {
+static void findbreak(allinfo *a) {
     register item *i, *m;
     register stype psum, wsum, c;
 

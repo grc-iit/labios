@@ -83,13 +83,16 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
         switch(task.source.dest_t){
             case BUFFER_LOC:{
                 client_queue->publish_task(&task);
-                while(!data_m->exists(task.destination.filename)) usleep(20);
-                data = const_cast<char *>(data_m->get(task.destination.filename).c_str());
+                while(!data_m->exists(DATASPACE_DB,task.destination.filename))
+                    usleep(20);
+                data = const_cast<char *>(data_m->get(DATASPACE_DB,
+                        task.destination.filename).c_str());
                 data_m->remove(DATASPACE_DB,task.destination.filename);
                 break;
             }
             case DATASPACE_LOC:{
-                data = const_cast<char *>(data_m->get(task.source.filename).c_str());
+                data = const_cast<char *>(data_m->get(DATASPACE_DB,
+                        task.source.filename).c_str());
                 break;
             }
         }
@@ -116,7 +119,7 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     std::string write_data(static_cast<char*>(ptr));
     for(auto task:write_tasks){
         auto data=write_data.substr(task.source.offset,task.destination.size);
-        data_m->put(task.destination.filename, data);
+        data_m->put(DATASPACE_DB, task.destination.filename, data);
         mdm->update_write_task_info(task,filename);
         client_queue->publish_task(&task);
         index++;

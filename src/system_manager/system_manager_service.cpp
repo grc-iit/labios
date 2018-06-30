@@ -10,7 +10,7 @@ int system_manager_service::check_applications_score() {
     return 0;
 }
 
-int system_manager_service::run() {
+void system_manager_service::run() {
     while(!kill) {
         sleep(SYSTEM_MANAGER_INTERVAL);
         check_applications_score();

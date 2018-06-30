@@ -19,7 +19,7 @@
 #include "common/client_interface/distributed_queue.h"
 #include "common/solver/solver.h"
 #include "common/external_clients/nats_impl.h"
-#include "common/configuration_manager.h"
+#include "common/config_manager.h"
 #include <mpi.h>
 #include <string>
 /******************************************************************************
@@ -55,13 +55,13 @@ public:
             (const std::string &subject){
         return std::make_shared<NatsImpl>(
                 service_i,
-                configuration_manager::get_instance()->NATS_URL_CLIENT,
+                config_manager::get_instance()->NATS_URL_CLIENT,
                 CLIENT_TASK_SUBJECT);}
     inline std::shared_ptr<distributed_queue>get_worker_queue
             (const int &worker_index){
         return std::make_shared<NatsImpl>(
                 service_i,
-                configuration_manager::get_instance()->NATS_URL_SERVER,
+                config_manager::get_instance()->NATS_URL_SERVER,
                 WORKER_TASK_SUBJECT[worker_index]);}
     int build_message_key(MPI_Datatype &message);
     int build_message_file(MPI_Datatype &message_file);
