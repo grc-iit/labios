@@ -3,12 +3,15 @@
 #TODO LIST
 ##Immediate
 * Revisit task_builder (done)
-* Move DP solver code (done)
-* Multithreaded task scheduler (done) //TODO: check the static stuff
+* Fix DP solver code (done) 
+* Multithreaded task scheduler (done)
+* Random solver (done)
+* Round robin (done)
 * Default solver
 * Small I/O cache
 * Wake up and suspend workers
 * Delete and flush tasks
+* Test tasks from PFS
 
 ##Future
 * Task dependecies

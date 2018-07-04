@@ -80,8 +80,8 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 
     for(auto task:tasks){
         char * data;
-        switch(task.source.dest_t){
-            case BUFFER_LOC:{
+        switch(task.source.location){
+            case BUFFERS:{
                 client_queue->publish_task(&task);
                 while(!data_m->exists(DATASPACE_DB,task.destination.filename))
                     usleep(20);
@@ -90,13 +90,14 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
                 data_m->remove(DATASPACE_DB,task.destination.filename);
                 break;
             }
-            case DATASPACE_LOC:{
+            case CACHE:{
                 data = const_cast<char *>(data_m->get(DATASPACE_DB,
                         task.source.filename).c_str());
                 break;
             }
         }
         memcpy(ptr+ptr_pos,data+task.source.offset,task.source.size);
+        ptr_pos+=task.source.size;
     }
     mdm->update_read_task_info(tasks,filename);
     return size*count;

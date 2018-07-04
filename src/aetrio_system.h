@@ -62,7 +62,7 @@ public:
         return std::make_shared<NatsImpl>(
                 service_i,
                 config_manager::get_instance()->NATS_URL_SERVER,
-                WORKER_TASK_SUBJECT[worker_index]);}
+                WORKER_TASK_SUBJECT[worker_index-1]);}
     int build_message_key(MPI_Datatype &message);
     int build_message_file(MPI_Datatype &message_file);
     int build_message_chunk(MPI_Datatype &message_chunk);

@@ -25,7 +25,7 @@ private:
             MEMCACHED_URL_CLIENT("--SERVER=localhost:11211"),
             MEMCACHED_URL_SERVER("--SERVER=localhost:11212"),
             ASSIGNMENT_POLICY("RANDOM"),
-            TS_NUM_WORKER_THREADS(1){}
+            TS_NUM_WORKER_THREADS(2){}
 public:
 /******************************************************************************
 *Variables and members

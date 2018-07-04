@@ -24,10 +24,10 @@ enum map_type{
     META_FH=0,
     META_CHUNK=1
 };
-enum source_type{
-    BUFFER_LOC=0,
-    DATASPACE_LOC=1,
-    PFS_LOC=2
+enum location_type{
+    BUFFERS=0,
+    CACHE=1,
+    PFS=2
 };
 enum service{
     LIB=0,

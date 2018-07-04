@@ -26,14 +26,14 @@ private:
 ******************************************************************************/
     static std::shared_ptr<task_scheduler> instance;
     static service service_i;
-    threadPool workers;
+    threadPool scheduling_threads;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
     explicit task_scheduler(service service)
             :kill(false),
-             workers(config_manager::get_instance()->TS_NUM_WORKER_THREADS){
-        workers.init();
+             scheduling_threads(config_manager::get_instance()->TS_NUM_WORKER_THREADS){
+        scheduling_threads.init();
     }
 /******************************************************************************
 *Interface
@@ -50,7 +50,7 @@ public:
 *Destructor
 ******************************************************************************/
     virtual ~task_scheduler() {
-        workers.shutdown();
+        scheduling_threads.shutdown();
     }
 };
 

@@ -38,20 +38,21 @@ struct message{
 *file structure
 ******************************************************************************/
 struct file{
-    source_type dest_t;
+    location_type location;
     std::string filename;
     int64_t offset;
     std::size_t size;
-    int64_t worker=-1;
+    int worker=-1;
 /*******************
 *Constructors
 *******************/
-    file(std::string filename, long long int offset, size_t file_size)
+    file(std::string filename, int64_t offset, std::size_t file_size)
             :filename(std::move(filename)),offset(offset),size(file_size),
-             dest_t(DATASPACE_LOC){}
+             location(CACHE){}
     file(const file &file_t)
-            :filename(file_t.filename),offset(file_t.offset),size(file_t.size),dest_t(file_t.dest_t),worker(file_t.worker){}
-    file() : dest_t(DATASPACE_LOC), filename(""), offset(0), size(0){}
+            :filename(file_t.filename),offset(file_t.offset),size(file_t.size),
+             location(file_t.location),worker(file_t.worker){}
+    file() : location(CACHE), filename(""), offset(0), size(0){}
 /*******************
 *Destructor
 *******************/
@@ -62,7 +63,7 @@ struct file{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->filename,this->offset,this->size,this->dest_t,this->worker);
+        archive( this->filename,this->offset,this->size,this->location,this->worker);
     }
 };
 /******************************************************************************
@@ -85,7 +86,7 @@ struct chunk_meta{
 *chunk_msg structure
 ******************************************************************************/
 struct chunk_msg{
-    source_type chunkType;
+    location_type chunkType;
     std::string dataspace_id;
     std::string filename;
     size_t offset;
@@ -137,14 +138,12 @@ struct file_stat{
 struct task {
     task_type t_type;
     int64_t task_id=0;
-    int8_t need_solving;
 /*******************
 *Constructors
 *******************/
-    explicit task(task_type t_type):t_type(t_type),need_solving(1){}
+    explicit task(task_type t_type):t_type(t_type){}
     task(const task &t_other)
-            :t_type(t_other.t_type),task_id(t_other.task_id),
-             need_solving(t_other.need_solving){}
+            :t_type(t_other.t_type),task_id(t_other.task_id){}
 /*******************
 *Destructor
 *******************/
@@ -155,7 +154,7 @@ struct task {
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type,this->task_id,this->need_solving );
+        archive(this->t_type,this->task_id);
     }
 };
 /******************************************************************************
@@ -184,7 +183,7 @@ struct write_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type,this->task_id,this->need_solving,this->source,
+        archive( this->t_type,this->task_id,this->source,
                  this->destination,this->meta_updated);
     }
 };
@@ -215,7 +214,7 @@ struct read_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->t_type,this->task_id,this->need_solving,this->source,
+        archive( this->t_type,this->task_id,this->source,
                  this->destination,this->meta_updated,this->local_copy);
     }
 };
@@ -234,7 +233,7 @@ struct flush_task:public task{
             destination(flush_task_t.destination){}
     flush_task(file source,
             file destination,
-            source_type dest_t,
+            location_type dest_t,
             std::string datasource_id):task(task_type::FLUSH_TASK),source(source),destination(destination){}
 /*******************
 *Destructor
@@ -246,7 +245,7 @@ struct flush_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive(this->t_type,this->task_id,this->need_solving,this->source,this->destination);
+        archive(this->t_type,this->task_id,this->source,this->destination);
     }
 };
 /******************************************************************************
@@ -272,51 +271,8 @@ struct delete_task:public task{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive(this->t_type,this->task_id,this->need_solving,this->source);
+        archive(this->t_type,this->task_id,this->source);
     }
-};
-/******************************************************************************
-*solver_input_dp structure
-******************************************************************************/
-struct solver_input_dp{
-    int *worker_score;
-    int num_task;
-    int64_t *task_size;
-    int64_t *worker_capacity;
-    int *worker_energy;
-/*******************
-*Constructors
-*******************/
-    solver_input_dp(int num_task,int num_workers){
-        this->num_task = num_task;
-        worker_score=new int[num_workers];
-        worker_capacity=new int64_t[num_workers];
-        task_size=new int64_t[num_task];
-        worker_energy=new int[num_workers];
-    }
-/*******************
-*Destructor
-*******************/
-    virtual ~solver_input_dp() = default;
-};
-/******************************************************************************
-*solver_output_dp structure
-******************************************************************************/
-struct solver_output_dp{
-    int max_value=0;
-    int* solution;
-    //workerID->list of taks
-    std::unordered_map<int,std::vector<task*>> worker_task_map;
-/*******************
-*Constructors
-*******************/
-    explicit solver_output_dp(int num_task):worker_task_map(){
-        solution=new int[num_task];
-    }
-/*******************
-*Destructor
-*******************/
-    virtual ~solver_output_dp() = default;
 };
 /******************************************************************************
 *solver_input structure
@@ -329,33 +285,10 @@ struct solver_input{
 /*******************
 *Constructors
 *******************/
-    explicit solver_input(std::vector<task*> &task_list){
+    explicit solver_input(std::vector<task*> &task_list, int num_tasks){
         this->tasks = task_list;
-        this->num_tasks = static_cast<int>(task_list.size());
+        this->num_tasks = num_tasks;
         task_size=new int64_t[num_tasks];
-        int index = 0;
-        for(auto t:tasks) {
-            switch(t->t_type) {
-                case task_type::WRITE_TASK: {
-                    auto *wt = reinterpret_cast<write_task *>(t);
-                    task_size[index]=wt->source.size;
-                    index++;
-                    total_io_size+=wt->source.size;
-                    break;
-                }
-                case task_type::READ_TASK: {
-                    auto *rt = reinterpret_cast<read_task *>(t);
-                    task_size[index]=rt->source.size;
-                    index++;
-                    total_io_size+=rt->source.size;
-                    break;
-                }
-                default:
-                    task_size[index]=0;
-                    index++;
-                    break;
-            }
-        }
     }
 /*******************
 *Destructor
@@ -367,7 +300,7 @@ struct solver_input{
 ******************************************************************************/
 struct solver_output{
     int* solution;
-    //workerID->list of taks
+    //workerID->list of tasks
     std::unordered_map<int,std::vector<task*>> worker_task_map;
 /*******************
 *Constructors
@@ -380,6 +313,5 @@ struct solver_output{
 *******************/
     virtual ~solver_output() {}
 };
-
 
 #endif //AETRIO_MAIN_STRUCTURE_H

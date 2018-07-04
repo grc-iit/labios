@@ -1602,7 +1602,7 @@ static int mulknap(int n, int m, int *p, int64_t *w, int *x, int64_t *c) {
         a.csum += c[i];
     }
     for (i = 0, l = n, j = a.fitem; i != l; i++, j++) {
-        j->x = 0;
+        j->x = -1;
         j->y = 0;
         j->a = 1;
         j->w = w[i];

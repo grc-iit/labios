@@ -46,10 +46,10 @@ int main(int argc, char** argv){
             return_val=simple_write();
             sleep(2);
             return_val=simple_read();
-            sleep(2);
-            return_val=simple_write();
-            sleep(2);
-            return_val=simple_read();
+//            sleep(2);
+//            return_val=simple_write();
+//            sleep(2);
+//            return_val=simple_read();
             break;
         }
         case MULTI_WRITE:{
@@ -84,7 +84,7 @@ void gen_random(char *s, std::size_t len) {
 }
 int simple_write(){
     FILE* fh=aetrio::fopen("test","w+");
-    size_t size_of_io=4 * 1024 * 1024;
+    size_t size_of_io=32 * 1024 * 1024;
     auto t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
     aetrio::fwrite(t,1,size_of_io,fh);
@@ -98,18 +98,23 @@ int simple_write(){
 int simple_read(){
     FILE* fh=aetrio::fopen("test","r+");
     if(fh== nullptr) std::cerr << "file could not be opened\n";
-    size_t size_of_io=2 * 1024 * 1024;
+
+    size_t size_of_io=4 * 1024 * 1024;
+    auto w= static_cast<char *>(malloc(size_of_io));
+    gen_random(w,size_of_io);
     auto t= static_cast<char *>(malloc(size_of_io));
     aetrio::fread(t,1,size_of_io,fh);
-    std::string s(t,128);
-    std::cout << "read data:\t"<< s <<std::endl;
+    std::string s(t);
+    std::string e(w);
+    if (s==w) std::cout << "read data:\t"<< s.substr(0,128) <<std::endl;
+    else std::cerr << "read data:\t"<< s.substr(0,128) <<std::endl;
     aetrio::fclose(fh);
     free(t);
     return 0;
 }
 int multi_write(){
     FILE* fh=aetrio::fopen("test","weight+");
-    size_t size_of_io=32 * 1024 * 1024;
+    size_t size_of_io=16 * 1024 * 1024;
     auto t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
     for(int i=0;i<2;i++){

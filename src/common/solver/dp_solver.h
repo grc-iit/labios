@@ -19,21 +19,16 @@ private:
 /******************************************************************************
 *Variables and members
 ******************************************************************************/
-    int* calculate_values(solver_input input,int num_bins);
-    int* worker_score;
-    int64_t* worker_capacity;
-    int* worker_energy;
-
+    int* calculate_values(solver_input input,
+                          int num_bins,
+                          const int* worker_score,
+                          const int* worker_energy);
 public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
     explicit DPSolver(service service)
-            :solver(service){
-        worker_score=new int[MAX_WORKER_COUNT];
-        worker_capacity=new int64_t[MAX_WORKER_COUNT];
-        worker_energy=new int[MAX_WORKER_COUNT];
-    }
+            :solver(service){}
 /******************************************************************************
 *Interface
 ******************************************************************************/

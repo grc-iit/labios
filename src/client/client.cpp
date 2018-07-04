@@ -108,7 +108,7 @@ int AetrioClient::listen_request() {
                                 get_chunk(f,key.key);
                                 chunk_msg msgs[f.chunks.size()];
                                 for(int i=0;i<f.chunks.size();++i){
-                                    msgs[i].chunkType=f.chunks[i].destination.dest_t;
+                                    msgs[i].chunkType=f.chunks[i].destination.location;
                                     msgs[i].dataspace_id=f.chunks[i].destination.filename;
                                     strcpy(const_cast<char *>(msgs[i].filename.c_str()), f.chunks[i].destination.filename.c_str());
                                     msgs[i].offset=f.chunks[i].destination.offset;

@@ -2,6 +2,7 @@
 // Created by hariharan on 3/2/18.
 //
 
+#ifdef ROCKS_P
 #ifndef AETRIO_MAIN_ROCKSDBIMPL_H
 #define AETRIO_MAIN_ROCKSDBIMPL_H
 
@@ -30,3 +31,7 @@ public:
 
 
 #endif //AETRIO_MAIN_ROCKSDBIMPL_H
+#else
+
+#endif
+

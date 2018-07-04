@@ -1,6 +1,7 @@
 /******************************************************************************
 *include files
 ******************************************************************************/
+#include <sys/stat.h>
 #include "worker.h"
 #include "../common/return_codes.h"
 std::shared_ptr<worker> worker::instance = nullptr;
@@ -11,13 +12,13 @@ int worker::run() {
     if(!setup_working_dir()==SUCCESS){
         throw std::runtime_error("worker::setup_working_dir() failed!");
     }
-    if(!update_score(false)==SUCCESS){
+    if(update_score(false)!=SUCCESS){
         throw std::runtime_error("worker::update_score() failed!");
     }
-    if(!update_capacity()==SUCCESS){
+    if(update_capacity()!=SUCCESS){
         throw std::runtime_error("worker::update_capacity() failed!");
     }
-    int task_count=0;
+    size_t task_count=0;
     Timer t=Timer();
     t.startTime();
 
@@ -55,9 +56,13 @@ int worker::run() {
                     throw std::runtime_error("worker::run() failed!");
             }
         }
-        if(t.stopTime()>WORKER_INTERVAL || task_count>MAX_WORKER_TASK_COUNT){
-            update_score(false);
-            update_capacity();
+        if(t.stopTime()>WORKER_INTERVAL || task_count>=MAX_WORKER_TASK_COUNT){
+            if(update_score(false)!=SUCCESS){
+                throw std::runtime_error("worker::update_score() failed!");
+            }
+            if(update_capacity()!=SUCCESS){
+                throw std::runtime_error("worker::update_capacity() failed!");
+            }
             t.startTime();
             task_count=0;
         }
@@ -69,11 +74,11 @@ int worker::run() {
 int worker::update_score(bool before_sleeping=false) {
     int worker_score = calculate_worker_score(before_sleeping);
     std::cout<<"worker score: "<<worker_score<<std::endl;
-    if(worker_score){
-        if(!map->put(
+    if(worker_score>0){
+        if(map->put(
                 table::WORKER_SCORE,
                 std::to_string(worker_index),
-                std::to_string(worker_score))==MEMCACHED_SUCCESS){
+                std::to_string(worker_score))!=MEMCACHED_SUCCESS){
             return WORKER__UPDATE_SCORE_FAILED;
         }
     }
@@ -95,39 +100,46 @@ int worker::calculate_worker_score(bool before_sleeping=false) {
 
     int worker_score=-1;
     if(score >= 0 && score < .20){
-        worker_score=5;//worker: relatively full, busy, slow, high-energy
+        worker_score= static_cast<int>(5*score * 100 + 100);//worker: 
+                // relatively full, busy, slow,
+                // high-energy
     }else if(score >= .20 && score < .40){
-        worker_score=4;
+        worker_score=static_cast<int>(4*score * 100 + 100);
     }else if(score >= .40 && score < .60){
-        worker_score=3;
+        worker_score=static_cast<int>(3*score * 100 + 100);
     }else if(score >= .60 && score < .80){
-        worker_score=2;
+        worker_score=static_cast<int>(2*score * 100 + 100);
     }else if(score >= .80 && score <= 1){
-        worker_score=1;//worker: relatively empty, not busy, speedy, efficient
-    }else{
-        worker_score=0;
+        worker_score=static_cast<int>(1*score * 100 + 100);//worker: 
+                // relatively empty, not busy, speedy, efficient
     }
     return worker_score;
 }
 
 int worker::update_capacity() {
+    auto remaining_cap=get_remaining_capacity();
     if(map->put(
             table::WORKER_CAPACITY,
             std::to_string(worker_index),
-            std::to_string(get_remaining_capacity()))==MEMCACHED_SUCCESS){
-        std::cout<<"worker capacity: "<<(int)get_remaining_capacity()<<"\n";
+            std::to_string(remaining_cap))==MEMCACHED_SUCCESS){
+        std::cout<<"worker capacity: "<<(int)remaining_cap<<"\n";
         return SUCCESS;
     }
     else return WORKER__UPDATE_CAPACITY_FAILED;
 }
 
 int worker::setup_working_dir() {
-    std::string cmd="mkdir -p "+WORKER_PATH+"/"+std::to_string(worker_index)+"/";
-    if(system(cmd.c_str())){
-        cmd="rm -rf "+WORKER_PATH+"/"+std::to_string(worker_index)+"/*";
-        if(system(cmd.c_str())) return SUCCESS;
-    }
-    return WORKER__SETTING_DIR_FAILED;
+    std::string cmd="mkdir -p "+WORKER_PATH+"/"+std::to_string(worker_index);
+    std::system(cmd.c_str());
+
+    cmd="rm -rf "+WORKER_PATH+"/"+std::to_string(worker_index)+"/*";
+    std::system(cmd.c_str());
+    struct stat info;
+    std::string path=WORKER_PATH+"/"+std::to_string(worker_index);
+    if( stat( path.c_str() , &info ) != 0 ){
+        std::cerr << "cannot access "<<path.c_str() <<"\n";
+        return WORKER__SETTING_DIR_FAILED;
+    }else return SUCCESS;
 }
 
 int64_t worker::get_total_capacity() {
@@ -148,9 +160,10 @@ int64_t worker::get_current_capacity() {
         if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
             result += buffer.data();
     }
-    return std::stoll(result);
+    return std::stoll(result)*KB;
 }
 
 float worker::get_remaining_capacity() {
+    if(get_total_capacity() <= get_current_capacity()) return 0;
     return (float)(get_total_capacity() - get_current_capacity());
 }

@@ -234,13 +234,11 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
             cm = serialization_manager().deserialize_chunk(chunk_str);
         }else{
             cm.actual_user_chunk = task.source;
-            cm.destination.dest_t = source_type::PFS_LOC;
+            cm.destination.location = location_type::PFS;
             cm.destination.size = cm.actual_user_chunk.size;
             cm.destination.filename = cm.actual_user_chunk.filename;
             cm.destination.offset = cm.actual_user_chunk.offset;
-            std::default_random_engine generator;
-            std::uniform_int_distribution<int> dist(1, MAX_WORKER_COUNT);
-            cm.destination.worker = dist(generator);
+            cm.destination.worker = -1;
         }
         chunks.push_back(cm);
         if(remaining_data>=cm.actual_user_chunk.size)

@@ -9,12 +9,17 @@
 int posix_client::read(read_task task) {
     FILE* fh=fopen(task.source.filename.c_str(),"r+");
     auto data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
-    fseek(fh,task.source.offset,SEEK_SET);
-    fread(data,task.source.size, sizeof(char),fh);
+    long long int pos=fseek(fh,task.source.offset,SEEK_SET);
+    if(pos!=task.source.offset) throw std::runtime_error("posix_client::read"
+                                                         "() seek failed");
+    size_t count=fread(data,sizeof(char),task.source.size,fh);
+    if(count!=task.source.size) throw std::runtime_error("posix_client::read"
+                                                         "() read failed");
     auto map_client=aetrio_system::getInstance(WORKER)->map_client;
     serialization_manager sm=serialization_manager();
     map_client->put(DATASPACE_DB,task.destination.filename,data);
     fclose(fh);
+    free(data);
     if(task.local_copy){
         int file_id=static_cast<int>(duration_cast< milliseconds >(
                 system_clock::now().time_since_epoch()
@@ -27,7 +32,7 @@ int posix_client::read(read_task task) {
         size_t base_offset=chunk_index*MAX_IO_UNIT+task.source.offset%MAX_IO_UNIT;
         chunk_meta chunk_meta1;
         chunk_meta1.actual_user_chunk=task.source;
-        chunk_meta1.destination.dest_t=BUFFER_LOC;
+        chunk_meta1.destination.location=BUFFERS;
         chunk_meta1.destination.filename=file_path;
         chunk_meta1.destination.offset=0;
         chunk_meta1.destination.size=task.source.size;
@@ -48,7 +53,7 @@ int posix_client::write(write_task task) {
     chunk_meta chunk_meta1= sm.deserialize_chunk(chunk_str);
     std::string data=map_client->get(DATASPACE_DB,task.destination.filename);
     std::string file_path;
-    if(chunk_meta1.destination.dest_t==source_type::DATASPACE_LOC){
+    if(chunk_meta1.destination.location==location_type::CACHE){
         /*
          * New I/O
          */
@@ -70,7 +75,7 @@ int posix_client::write(write_task task) {
         fclose(fh);
     }
     chunk_meta1.actual_user_chunk=task.source;
-    chunk_meta1.destination.dest_t=BUFFER_LOC;
+    chunk_meta1.destination.location=BUFFERS;
     chunk_meta1.destination.filename=file_path;
     chunk_meta1.destination.offset=0;
     chunk_meta1.destination.size=task.source.size;

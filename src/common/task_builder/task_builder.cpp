@@ -40,7 +40,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
             chunk_meta cm =
                     serialization_manager().deserialize_chunk(chunk_str);
 /*************************** chunk in dataspace ******************************/
-            if(cm.destination.dest_t == source_type::DATASPACE_LOC){
+            if(cm.destination.location == location_type::CACHE){
                 /********* update new data in dataspace **********/
                 auto chunk_value=map_client->get(
                         table::DATASPACE_DB,
@@ -60,7 +60,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
                 sub_task->source.offset=source.offset;
                 sub_task->source.size=sub_task->destination.size;
                 sub_task->source.filename=source.filename;
-                sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task->destination.location=location_type::CACHE;
                 sub_task->destination.filename =
                         std::to_string(dataspace_id) + "_" +
                         std::to_string(i);
@@ -72,7 +72,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
                 sub_task->source.offset=source.offset;
                 sub_task->source.size=sub_task->destination.size;
                 sub_task->source.filename=source.filename;
-                sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                sub_task->destination.location=location_type::CACHE;
                 sub_task->destination.filename =
                         std::to_string(dataspace_id) + "_" +
                         std::to_string(i);
@@ -93,7 +93,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
                     sub_task->source.offset = base_offset;
                     sub_task->source.size = sub_task->destination.size;
                     sub_task->source.filename = source.filename;
-                    sub_task->destination.dest_t = source_type::DATASPACE_LOC;
+                    sub_task->destination.location = location_type::CACHE;
                     sub_task->destination.filename =
                             std::to_string(dataspace_id) + "_" +
                             std::to_string(i);
@@ -104,7 +104,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
                     chunk_meta cm =
                             serialization_manager().deserialize_chunk(chunk_str);
                     /********* chunk in dataspace **********/
-                    if(cm.destination.dest_t == source_type::DATASPACE_LOC){
+                    if(cm.destination.location == location_type::CACHE){
                         //update new data in dataspace
                         auto chunk_value = map_client->get(
                                 table::DATASPACE_DB,
@@ -125,7 +125,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
                         sub_task->source.offset=source.offset;
                         sub_task->source.size=sub_task->destination.size;
                         sub_task->source.filename=source.filename;
-                        sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                        sub_task->destination.location=location_type::CACHE;
                         sub_task->destination.filename =
                                 std::to_string(dataspace_id) + "_" +
                                 std::to_string(i);
@@ -138,7 +138,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
                         sub_task->source.offset=source.offset;
                         sub_task->source.size=sub_task->destination.size;
                         sub_task->source.filename=source.filename;
-                        sub_task->destination.dest_t=source_type::DATASPACE_LOC;
+                        sub_task->destination.location=location_type::CACHE;
                         sub_task->destination.filename =
                                 std::to_string(dataspace_id) + "_" +
                                 std::to_string(i);
@@ -156,7 +156,7 @@ std::vector<write_task> task_builder::build_write_task(write_task task,
                 sub_task->source.offset = base_offset;
                 sub_task->source.size = sub_task->destination.size;
                 sub_task->source.filename = source.filename;
-                sub_task->destination.dest_t = source_type::DATASPACE_LOC;
+                sub_task->destination.location = location_type::CACHE;
                 sub_task->destination.filename =
                         std::to_string(dataspace_id) + "_" +
                         std::to_string(i);
@@ -178,6 +178,7 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
 
     for(auto chunk:chunks){
         auto rt = new read_task();
+
         rt->task_id = static_cast<int64_t>
                 (std::chrono::duration_cast<std::chrono::microseconds>
                 (std::chrono::system_clock::now().time_since_epoch()).count());
@@ -187,7 +188,6 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
                         (std::chrono::system_clock::now().time_since_epoch()).count()));
         tasks.push_back(*rt);
         delete(rt);
-
     }
     return tasks;
 }

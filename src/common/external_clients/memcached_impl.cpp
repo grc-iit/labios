@@ -42,7 +42,7 @@ std::string MemcacheDImpl::remove(const table &name, std::string key) {
                                     key.length(),
                                     &size ,
                                     (time_t)0,
-                                    (uint32_t)0);;
+                                    (uint32_t)0);
     memcached_delete(mem_client, key.c_str(), key.length(), (time_t)0);
     return value;
 }
