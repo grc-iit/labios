@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(aetrio)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 include_directories(external_libs/)
 #define ones we have installed
 set(MEMCACHED true)
@@ -12,14 +12,14 @@ set(LIB_DIR /usr/local/lib)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
 
 set(CMAKE_MODULE_PATH )
-set(COMMON_SRC "" src/common/solver/default_solver.cpp src/common/solver/default_solver.h src/common/configuration_manager.h src/common/configuration_manager.cpp src/common/solver/dp_solver.cpp src/common/solver/dp_solver.h src/common/solver/solver.h src/common/solver/random_solver.cpp src/common/solver/random_solver.h src/common/solver/round_robin_solver.cpp src/common/solver/round_robin_solver.h src/common/solver/greedy_solver.cpp src/common/solver/greedy_solver.h src/common/solver/knapsack.cpp external_libs/cereal/cereal.hpp src/common/timer.h src/common/timer.cpp src/common/enumerations.h src/common/exceptions.h src/common/data_structures.h src/common/data_manager/data_manager.cpp src/common/data_manager/data_manager.h src/common/client_interface/distributed_hashmap.cpp src/common/client_interface/distributed_hashmap.h src/common/utilities.h src/common/metadata_manager/metadata_manager.cpp src/common/metadata_manager/metadata_manager.h src/common/constants.h src/aetrio_system.cpp src/aetrio_system.h src/common/task_builder/task_builder.cpp src/common/task_builder/task_builder.h src/common/client_interface/distributed_hashmap.cpp src/common/client_interface/distributed_hashmap.h src/common/client_interface/distributed_queue.cpp src/common/client_interface/distributed_queue.h src/common/external_clients/serialization_manager.cpp src/common/external_clients/serialization_manager.h src/common/external_clients/rocksdb_impl.cpp src/common/external_clients/rocksdb_impl.h src/common/external_clients/memcached_impl.cpp src/common/external_clients/memcached_impl.h src/common/external_clients/nats_impl.cpp src/common/external_clients/nats_impl.h)
-set(AETRIO_LIB_SRC ${COMMON_SRC} src/lib/driver.cpp src/lib/posix.cpp src/lib/posix.h src/lib/mpi.h src/lib/mpi.cpp)
-set(AETRIO_CLIENT_SRC  ${COMMON_SRC} "src/client/main.cpp" src/client/client.cpp src/client/client.h src/common/exceptions.h include/aetrio.h)
-set(AETRIO_SERVER_SRC  ${COMMON_SRC} "src/system_manager/main.cpp" src/system_manager/system_manager_service.cpp src/system_manager/system_manager_service.h)
-set(AETRIO_TS_SRC  ${COMMON_SRC} src/task_scheduler/main.cpp src/task_scheduler/task_scheduler_service.cpp src/task_scheduler/task_scheduler_service.h)
-set(AETRIO_WM_SRC  ${COMMON_SRC} "src/worker_manager/main.cpp" src/worker_manager/worker_manager_service.cpp src/worker_manager/worker_manager_service.h)
-set(AETRIO_W_PROG_REPO src/worker/api/io_client.h src/worker/api/posix_client.cpp src/worker/api/posix_client.h src/worker/program_repo/statistics.h src/worker/program_repo/statistics.cpp)
-set(AETRIO_WS_SRC  ${COMMON_SRC} ${AETRIO_W_PROG_REPO} src/worker/main.cpp src/worker/worker_service.cpp src/worker/worker_service.h)
+set(COMMON_SRC "" src/common/solver/default_solver.cpp src/common/solver/default_solver.h src/common/config_manager.h src/common/config_manager.cpp src/common/solver/dp_solver.cpp src/common/solver/dp_solver.h src/common/solver/solver.h src/common/solver/random_solver.cpp src/common/solver/random_solver.h src/common/solver/round_robin_solver.cpp src/common/solver/round_robin_solver.h src/common/solver/knapsack.cpp external_libs/cereal/cereal.hpp src/common/timer.h src/common/timer.cpp src/common/enumerations.h src/common/exceptions.h src/common/data_structures.h src/common/data_manager/data_manager.cpp src/common/data_manager/data_manager.h src/common/client_interface/distributed_hashmap.cpp src/common/client_interface/distributed_hashmap.h src/common/utilities.h src/common/metadata_manager/metadata_manager.cpp src/common/metadata_manager/metadata_manager.h src/common/constants.h src/aetrio_system.cpp src/aetrio_system.h src/common/task_builder/task_builder.cpp src/common/task_builder/task_builder.h src/common/client_interface/distributed_hashmap.cpp src/common/client_interface/distributed_hashmap.h src/common/client_interface/distributed_queue.cpp src/common/client_interface/distributed_queue.h src/common/external_clients/serialization_manager.cpp src/common/external_clients/serialization_manager.h src/common/external_clients/rocksdb_impl.cpp src/common/external_clients/rocksdb_impl.h src/common/external_clients/memcached_impl.cpp src/common/external_clients/memcached_impl.h src/common/external_clients/nats_impl.cpp src/common/external_clients/nats_impl.h)
+set(AETRIO_LIB_SRC ${COMMON_SRC} src/lib/driver.cpp src/lib/posix.cpp src/lib/posix.h src/lib/mpi.h src/lib/mpi.cpp src/common/return_codes.h)
+set(AETRIO_CLIENT_SRC  ${COMMON_SRC} "src/client/main.cpp" src/client/client.cpp src/client/client.h src/common/exceptions.h include/aetrio.h src/common/return_codes.h)
+set(AETRIO_SERVER_SRC  ${COMMON_SRC} "src/system_manager/main.cpp" src/system_manager/system_manager_service.cpp src/system_manager/system_manager_service.h src/common/return_codes.h)
+set(AETRIO_TS_SRC  ${COMMON_SRC} src/task_scheduler/main.cpp src/task_scheduler/task_scheduler.cpp src/task_scheduler/task_scheduler.h src/common/return_codes.h)
+set(AETRIO_WM_SRC  ${COMMON_SRC} "src/worker_manager/main.cpp" src/worker_manager/worker_manager_service.cpp src/worker_manager/worker_manager_service.h src/common/return_codes.h)
+set(AETRIO_W_PROG_REPO src/worker/api/io_client.h src/worker/api/posix_client.cpp src/worker/api/posix_client.h src/worker/program_repo/statistics.h src/worker/program_repo/statistics.cpp src/common/return_codes.h)
+set(AETRIO_WS_SRC  ${COMMON_SRC} ${AETRIO_W_PROG_REPO} src/worker/main.cpp src/worker/worker.cpp src/worker/worker.h src/common/return_codes.h)
 
 
 if(DEFINED MPI)
