@@ -19,7 +19,7 @@ solver_output random_solver::solve(solver_input input) {
                 auto *wt = reinterpret_cast<write_task *>(input.tasks[i]);
                 if(wt->destination.worker==-1)
                     solution.solution[i]=static_cast<int>
-                        (dist(generator)%MAX_WORKER_COUNT+1);
+                        (dist(generator) % MAX_WORKER_COUNT+1);
                 else solution.solution[i] = wt->destination.worker;
                 break;
             }

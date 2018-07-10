@@ -137,13 +137,17 @@ struct file_stat{
 ******************************************************************************/
 struct task {
     task_type t_type;
-    int64_t task_id=0;
+    int64_t task_id;
+    bool publish;
+    bool addDataspace;
 /*******************
 *Constructors
 *******************/
-    explicit task(task_type t_type):t_type(t_type){}
+    explicit task(task_type t_type):t_type(t_type),task_id(0),publish(false),
+                                    addDataspace(true){}
     task(const task &t_other)
-            :t_type(t_other.t_type),task_id(t_other.task_id){}
+            :t_type(t_other.t_type),task_id(t_other.task_id),publish(t_other
+                                                                             .publish),addDataspace(t_other.addDataspace){}
 /*******************
 *Destructor
 *******************/

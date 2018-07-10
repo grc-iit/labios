@@ -94,7 +94,7 @@ int metadata_manager::remove_chunks(std::string &filename) {
 int metadata_manager::update_on_close(FILE *&fh) {
     auto iter=fh_map.find(fh);
     if(iter!=fh_map.end()) fh_map.erase(iter);
-    return 0;
+    return SUCCESS;
 }
 
 std::string metadata_manager::get_filename(FILE *fh) {
@@ -119,7 +119,7 @@ long long int metadata_manager::get_fp(const std::string &filename) {
     auto iter=file_map.find(filename);
     if(iter!=file_map.end())
         return static_cast<long long int>(iter->second.file_pointer);
-    return -1;
+    else return -1;
 }
 
 int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::string filename) {
@@ -140,7 +140,8 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
     for(int i=0;i<task_ks.size();++i){
         auto task_k=task_ks[i];
         if(i==0){
-            update_on_write(task_k.source.filename,task_k.source.size);
+            update_on_write(task_k.source.filename,task_k.source.size,task_k
+                    .source.offset);
         }
         if(!task_k.meta_updated){
             auto base_offset=(task_k.destination.offset/MAX_IO_UNIT)
@@ -184,11 +185,12 @@ int metadata_manager::update_on_seek(std::string filename,
             }
             default:
                 std::cerr << "fseek origin error\n";
+                return MDM__UPDATE_ON_FSEEK_FAILED;
         }
         std::string fs_str= sm.serialize_file_stat(iter->second);
         map->put(table::FILE_DB,filename,fs_str);
     }
-    return 0;
+    return SUCCESS;
 }
 
 void metadata_manager::update_on_read(std::string filename, size_t size) {
@@ -206,16 +208,17 @@ void metadata_manager::update_on_read(std::string filename, size_t size) {
     }
 }
 
-void metadata_manager::update_on_write(std::string filename, size_t size) {
+void metadata_manager::update_on_write(std::string filename, size_t size,size_t offset) {
     auto map = aetrio_system::getInstance(service_i)->map_client;
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
         file_stat fs=iter->second;
-        if(fs.file_size < fs.file_pointer+size){
-            fs.file_size=fs.file_pointer+size;
+        if(fs.file_size < offset+size){
+            fs.file_size=offset+size;
         }
-        fs.file_pointer+=size;
+        fs.file_pointer=offset+size;
+        file_map[filename]=fs;
         std::string fs_str= sm.serialize_file_stat(fs);
         map->put(table::FILE_DB,filename,fs_str);
     }
@@ -254,7 +257,7 @@ int metadata_manager::update_write_task_info(write_task task_k, std::string file
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
-    update_on_write(task_k.source.filename,task_k.source.size);
+    update_on_write(task_k.source.filename,task_k.source.size,task_k.source.offset);
     if(!task_k.meta_updated){
         auto chunk_index=(task_k.source.offset/ MAX_IO_UNIT);
         auto base_offset=chunk_index*MAX_IO_UNIT+

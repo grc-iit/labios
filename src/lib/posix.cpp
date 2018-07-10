@@ -35,15 +35,16 @@ FILE* aetrio::fopen(const char *filename, const char *mode) {
 
 int aetrio::fclose(FILE *stream) {
     auto mdm=metadata_manager::getInstance(LIB);
-    if(!mdm->is_opened(stream)) return -1;
-    return mdm->update_on_close(stream);
+    if(!mdm->is_opened(stream)) return LIB__FCLOSE_FAILED;
+    if(mdm->update_on_close(stream)!=SUCCESS) return LIB__FCLOSE_FAILED;
+    return SUCCESS;
 }
 
 int aetrio::fseek(FILE *stream, long int offset, int origin) {
     auto mdm=metadata_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
-    if( mdm->get_mode(filename)=="consider_after_a" ||
-        mdm->get_mode(filename)=="consider_after_a+") return 0;
+    if( mdm->get_mode(filename)=="a" ||
+        mdm->get_mode(filename)=="a+") return 0;
     auto size=mdm->get_filesize(filename);
     auto fp=mdm->get_fp(filename);
     switch(origin){
@@ -68,7 +69,7 @@ int aetrio::fseek(FILE *stream, long int offset, int origin) {
 size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     auto mdm = metadata_manager::getInstance(LIB);
     auto client_queue = aetrio_system::getInstance(LIB)
-            ->get_queue_client(CLIENT_TASK_SUBJECT);
+            ->get_client_queue(CLIENT_TASK_SUBJECT);
     auto task_m = task_builder::getInstance(LIB);
     auto data_m = data_manager::getInstance(LIB);
     auto filename = mdm->get_filename(stream);
@@ -104,8 +105,9 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 }
 
 size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
+
     auto mdm = metadata_manager::getInstance(LIB);
-    auto client_queue = aetrio_system::getInstance(LIB)->get_queue_client
+    auto client_queue = aetrio_system::getInstance(LIB)->get_client_queue
             (CLIENT_TASK_SUBJECT);
     auto task_m = task_builder::getInstance(LIB);
     auto data_m = data_manager::getInstance(LIB);
@@ -119,11 +121,15 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     int index=0;
     std::string write_data(static_cast<char*>(ptr));
     for(auto task:write_tasks){
-        auto data=write_data.substr(task.source.offset,task.destination.size);
-        data_m->put(DATASPACE_DB, task.destination.filename, data);
-        mdm->update_write_task_info(task,filename);
-        client_queue->publish_task(&task);
+        if(task->addDataspace){
+            auto data=write_data.substr(task->source.offset,task->destination.size);
+            data_m->put(DATASPACE_DB, task->destination.filename, data);
+        }
+        mdm->update_write_task_info(*task,filename);
+        if(task->publish)
+            client_queue->publish_task(task);
         index++;
+        delete(task);
     }
     return size*count;
 }

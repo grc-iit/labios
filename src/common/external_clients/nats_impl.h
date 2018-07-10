@@ -25,8 +25,9 @@ public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    NatsImpl(service service,std::string url,std::string subject):
-            distributed_queue(service),subject(subject) {
+    NatsImpl(service service, const std::string &url,
+             const std::string &subject)
+            :distributed_queue(service),subject(subject) {
         natsConnection_ConnectTo(&nc, url.c_str());
         natsConnection_SubscribeSync(&sub, nc, subject.c_str());
     }

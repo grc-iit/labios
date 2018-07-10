@@ -5,6 +5,8 @@
 #include <zconf.h>
 #include <random>
 #include "posix.h"
+#include "../common/return_codes.h"
+
 enum test_case{
     SIMPLE_WRITE=0,
     SIMPLE_READ=1,
@@ -16,7 +18,7 @@ enum test_case{
 /*
  * set test case
  */
-test_case testCase=SIMPLE_MIXED;
+test_case testCase=MULTI_WRITE;
 /******************************************************************************
 *Interface
 ******************************************************************************/
@@ -27,6 +29,7 @@ int simple_write();
 int simple_read();
 int multi_write();
 int multi_read();
+
 
 
 int main(int argc, char** argv){
@@ -67,6 +70,7 @@ int main(int argc, char** argv){
         }
     }
     aetrio::MPI_Finalize();
+
     return return_val;
 }
 void gen_random(char *s, std::size_t len) {
@@ -84,10 +88,10 @@ void gen_random(char *s, std::size_t len) {
 }
 int simple_write(){
     FILE* fh=aetrio::fopen("test","w+");
-    size_t size_of_io=32 * 1024 * 1024;
+    size_t size_of_io=512 * 1024 * 1024;
     auto t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
-    aetrio::fwrite(t,1,size_of_io,fh);
+    aetrio::fwrite(t,size_of_io,1,fh);
     aetrio::fclose(fh);
     std::string s(t,128);
     std::cout << "write data:\t"<< s <<std::endl;
@@ -103,7 +107,7 @@ int simple_read(){
     auto w= static_cast<char *>(malloc(size_of_io));
     gen_random(w,size_of_io);
     auto t= static_cast<char *>(malloc(size_of_io));
-    aetrio::fread(t,1,size_of_io,fh);
+    aetrio::fread(t,size_of_io,1,fh);
     std::string s(t);
     std::string e(w);
     if (s==w) std::cout << "read data:\t"<< s.substr(0,128) <<std::endl;
@@ -113,12 +117,17 @@ int simple_read(){
     return 0;
 }
 int multi_write(){
-    FILE* fh=aetrio::fopen("test","weight+");
-    size_t size_of_io=16 * 1024 * 1024;
+    FILE* fh=aetrio::fopen("akougkas_test","w+");
+    size_t size_of_io=64 * 1024;
     auto t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
-    for(int i=0;i<2;i++){
-        aetrio::fwrite(t,1,size_of_io,fh);
+    for(int i=0;i<128;i++){
+        //aetrio::fseek(fh,0,SEEK_SET);
+        std::size_t count = aetrio::fwrite(t,size_of_io,1,fh);
+        if(i%50==0){
+            std::cout << i <<"\twrite data:\t"<< count <<std::endl;
+        }
+        //usleep(100000);
     }
     aetrio::fclose(fh);
     free(t);

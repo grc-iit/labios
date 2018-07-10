@@ -31,7 +31,7 @@ int worker::run() {
             switch (task_i->t_type){
                 case task_type::WRITE_TASK:{
                     auto *wt= reinterpret_cast<write_task *>(task_i);
-                    std::cout<<serialization_manager().serialize_task(wt)<<"\n";
+                    std::cout<<wt->source.offset<<"\taccepted"<<"\n";
                     client->write(*wt);
                     break;
                 }
@@ -100,7 +100,7 @@ int worker::calculate_worker_score(bool before_sleeping=false) {
 
     int worker_score=-1;
     if(score >= 0 && score < .20){
-        worker_score= static_cast<int>(5*score * 100 + 100);//worker: 
+        worker_score= static_cast<int>(5*score * 100 + 100);//worker:
                 // relatively full, busy, slow,
                 // high-energy
     }else if(score >= .20 && score < .40){
@@ -110,7 +110,7 @@ int worker::calculate_worker_score(bool before_sleeping=false) {
     }else if(score >= .60 && score < .80){
         worker_score=static_cast<int>(2*score * 100 + 100);
     }else if(score >= .80 && score <= 1){
-        worker_score=static_cast<int>(1*score * 100 + 100);//worker: 
+        worker_score=static_cast<int>(1*score * 100 + 100);//worker:
                 // relatively empty, not busy, speedy, efficient
     }
     return worker_score;

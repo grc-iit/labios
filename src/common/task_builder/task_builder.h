@@ -36,7 +36,8 @@ public:
         return instance== nullptr ? instance=std::make_shared<task_builder>
                 (task_builder(service)) : instance;
     }
-    std::vector<write_task> build_write_task(write_task task, std::string data);
+    std::vector<write_task*> build_write_task(write_task task, std::string
+    data);
     std::vector<read_task> build_read_task(read_task task);
 /******************************************************************************
 *Destructor

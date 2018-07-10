@@ -51,7 +51,7 @@ public:
     inline static std::shared_ptr<aetrio_system> getInstance(service service){
         return instance== nullptr ? instance=std::shared_ptr<aetrio_system>
                 (new aetrio_system(service)) : instance;}
-    inline std::shared_ptr<distributed_queue>get_queue_client
+    inline std::shared_ptr<distributed_queue>get_client_queue
             (const std::string &subject){
         return std::make_shared<NatsImpl>(
                 service_i,

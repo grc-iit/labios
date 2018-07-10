@@ -56,7 +56,7 @@ public:
     int update_write_task_info(write_task task_ks,std::string filename);
     std::vector<chunk_meta> fetch_chunks(read_task task);
     void update_on_read(std::string filename, size_t size);
-    void update_on_write(std::string filename, size_t size);
+    void update_on_write(std::string filename, size_t size,size_t offset);
 /******************************************************************************
 *Destructor
 ******************************************************************************/

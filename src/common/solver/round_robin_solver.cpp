@@ -47,6 +47,9 @@ solver_output round_robin_solver::solve(solver_input input) {
                 std::cerr<<"round_robin_solver::solve()\t "
                            "task type invalid\n";
         }
+#ifdef DEBUG
+        std::cout << "Task#"<<i <<" Worker#"<<solution.solution[i]<<"\n";
+#endif
         auto it=solution.worker_task_map.find(solution.solution[i]);
         if(it==solution.worker_task_map.end()){
             worker_tasks = std::vector<task*>();
