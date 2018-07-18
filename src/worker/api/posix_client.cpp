@@ -49,7 +49,8 @@ int posix_client::write(write_task task) {
     auto source=task.source;
     size_t chunk_index=(source.offset/ MAX_IO_UNIT);
     size_t base_offset=chunk_index*MAX_IO_UNIT+source.offset%MAX_IO_UNIT;
-    std::string chunk_str=map_client->get(table::CHUNK_DB, task.source.filename +std::to_string(base_offset));
+    std::string chunk_str=map_client->get(table::CHUNK_DB, task.source
+            .filename + std::to_string(chunk_index * MAX_IO_UNIT));
     chunk_meta chunk_meta1= sm.deserialize_chunk(chunk_str);
     std::string data=map_client->get(DATASPACE_DB,task.destination.filename);
     std::string file_path;
@@ -57,14 +58,15 @@ int posix_client::write(write_task task) {
         /*
          * New I/O
          */
-        int file_id=static_cast<int>(duration_cast< milliseconds >(
-                system_clock::now().time_since_epoch()
-        ).count());
+        std::cout << "New file created "<<data.length()<<"\n";
+        auto file_id=static_cast<int64_t>
+        (std::chrono::duration_cast<std::chrono::microseconds>
+                        (std::chrono::system_clock::now().time_since_epoch()).count());
         file_path=dir+std::to_string(file_id);
         FILE* fh=fopen(file_path.c_str(),"w+");
-        fwrite(data.c_str(),task.source.size, sizeof(char),fh);
+        fwrite(data.c_str(),sizeof(char),task.destination.size,fh);
         fclose(fh);
-        }else{
+    }else{
         /*cd
          * existing I/O
          */
@@ -78,10 +80,10 @@ int posix_client::write(write_task task) {
     chunk_meta1.destination.location=BUFFERS;
     chunk_meta1.destination.filename=file_path;
     chunk_meta1.destination.offset=0;
-    chunk_meta1.destination.size=task.source.size;
+    chunk_meta1.destination.size=task.destination.size;
     chunk_meta1.destination.worker=worker_index;
     chunk_str= sm.serialize_chunk(chunk_meta1);
-    map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(base_offset),chunk_str);
+    map_client->put(table::CHUNK_DB, task.source.filename +std::to_string(chunk_index * MAX_IO_UNIT),chunk_str);
 
     map_client->remove(DATASPACE_DB,task.destination.filename);
     return 0;

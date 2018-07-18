@@ -7,14 +7,15 @@
 * Multithreaded task scheduler (done)
 * Random solver (done)
 * Round robin (done)
-* Default solver
-* Small I/O cache
-* Wake up and suspend workers
-* Delete and flush tasks
+* Default solver (pending)
+* Small I/O cache (done)
+* Wake up and suspend workers (manual testing)
+* Delete and flush tasks (don't care)
 * Test tasks from PFS
+* Memory leak
 
 ##Future
-* Task dependecies
+* Task dependecies (don't care)
 * Metadata persistent store (flush at the end)
 * Automated server bootstrapping
 * Investigate read simulation
@@ -104,3 +105,4 @@ Download from https://nats.io/download/
 ## Other Dependencies
 ###zlib
 `sudo apt-get install zlib1g-dev`
+

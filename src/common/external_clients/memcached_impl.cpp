@@ -36,15 +36,8 @@ std::string MemcacheDImpl::get(const table &name, std::string key) {
 
 std::string MemcacheDImpl::remove(const table &name, std::string key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
-    size_t size;
-    std::string value=memcached_get(mem_client,
-                                    key.c_str(),
-                                    key.length(),
-                                    &size ,
-                                    (time_t)0,
-                                    (uint32_t)0);
     memcached_delete(mem_client, key.c_str(), key.length(), (time_t)0);
-    return value;
+    return "";
 }
 
 bool MemcacheDImpl::exists(const table &name, std::string key) {

@@ -68,7 +68,7 @@ const std::size_t MAX_WORKER_TASK_COUNT = 50;
 /*******************
 *Scheduler
 *******************/
-const std::size_t MAX_NUM_TASKS_IN_QUEUE=20;
+const std::size_t MAX_NUM_TASKS_IN_QUEUE=10;
 const std::size_t MAX_SCHEDULE_TIMER=1;
 const std::size_t MAX_TASK_TIMER_MS=MAX_SCHEDULE_TIMER*1000;
 const std::size_t MAX_TASK_TIMER_MS_MAX=MAX_SCHEDULE_TIMER*1000000;

@@ -5,6 +5,8 @@
 #include "task_scheduler.h"
 #include "../common/external_clients/memcached_impl.h"
 #include "../aetrio_system.h"
+#include "../common/data_structures.h"
+
 std::shared_ptr<task_scheduler> task_scheduler::instance = nullptr;
 service task_scheduler::service_i = service();
 /******************************************************************************
@@ -64,4 +66,9 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
             }
         }
     }
+    for(auto task:tasks){
+        delete task;
+    }
+    delete input.task_size;
+    delete output.solution;
 }

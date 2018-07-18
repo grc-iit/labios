@@ -16,7 +16,8 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
     auto tasks = std::vector<write_task*>();
     file source = task.source;
 
-    auto number_of_tasks = static_cast<int>(std::ceil((float)(source.size) / MAX_IO_UNIT));
+    auto number_of_tasks = static_cast<int>(std::ceil(
+            (float)(source.size) / MAX_IO_UNIT));
     auto dataspace_id = static_cast<int64_t>
             (std::chrono::duration_cast<std::chrono::microseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count());
@@ -69,24 +70,20 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                     sub_task->publish=true;
                     sub_task->destination.size=MAX_IO_UNIT;
                     sub_task->destination.offset=0;
-                    sub_task->source.offset=0;
-                    sub_task->source.size=MAX_IO_UNIT;
+                    sub_task->source.offset=base_offset;
+                    sub_task->source.size=size_to_write;
                     sub_task->source.filename=source.filename;
                     sub_task->destination.location=location_type::CACHE;
-                    sub_task->destination.filename =
-                            std::to_string(dataspace_id) + "_" +
-                            std::to_string(i);
+                    sub_task->destination.filename =cm.destination.filename;
                 }else{
                     /********* build new task **********/
                     sub_task->destination.size=size_to_write;
                     sub_task->destination.offset=bucket_offset;
-                    sub_task->source.offset=bucket_offset;
+                    sub_task->source.offset=base_offset;
                     sub_task->source.size=size_to_write;
                     sub_task->source.filename=source.filename;
                     sub_task->destination.location=location_type::CACHE;
-                    sub_task->destination.filename =
-                            std::to_string(dataspace_id) + "_" +
-                            std::to_string(chunk_index);
+                    sub_task->destination.filename =cm.destination.filename;
                 }
 
 
@@ -102,7 +99,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 sub_task->destination.worker=cm.destination.worker;
                 sub_task->destination.size=size_to_write;
                 sub_task->destination.offset=bucket_offset;
-                sub_task->source.offset=bucket_offset;
+                sub_task->source.offset=base_offset;
                 sub_task->source.size=size_to_write;
                 sub_task->source.filename=source.filename;
                 sub_task->destination.location=location_type::CACHE;
@@ -128,11 +125,11 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
             if(remaining_data < MAX_IO_UNIT){
                 if(!map_client->exists(table::CHUNK_DB,
                                        source.filename +
-                                       std::to_string(base_offset))){
+                                       std::to_string(chunk_index * MAX_IO_UNIT))){
                     sub_task->publish=false;
                     sub_task->destination.size = remaining_data;
                     sub_task->destination.offset = bucket_offset;
-                    sub_task->source.offset = bucket_offset;
+                    sub_task->source.offset = base_offset;
                     sub_task->source.size = sub_task->destination.size;
                     sub_task->source.filename = source.filename;
                     sub_task->destination.location = location_type::CACHE;
@@ -171,13 +168,11 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                                 // .destination
                                 // .size;
                         sub_task->destination.offset=bucket_offset;
-                        sub_task->source.offset=bucket_offset;
+                        sub_task->source.offset=base_offset;
                         sub_task->source.size=remaining_data;
                         sub_task->source.filename=source.filename;
                         sub_task->destination.location=location_type::CACHE;
-                        sub_task->destination.filename =
-                                std::to_string(dataspace_id) + "_" +
-                                std::to_string(chunk_index);
+                        sub_task->destination.filename =cm.destination.filename;
                     }
                     /************ chunk in file *************/
                     else{
@@ -185,7 +180,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                         sub_task->destination.worker=cm.destination.worker;
                         sub_task->destination.size=remaining_data;
                         sub_task->destination.offset=bucket_offset;
-                        sub_task->source.offset=bucket_offset;
+                        sub_task->source.offset=base_offset;
                         sub_task->source.size=remaining_data;
                         sub_task->source.filename=source.filename;
                         sub_task->destination.location=location_type::CACHE;
@@ -205,7 +200,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 sub_task->publish=true;
                 sub_task->destination.size = MAX_IO_UNIT;
                 sub_task->destination.offset = bucket_offset;
-                sub_task->source.offset = bucket_offset;
+                sub_task->source.offset = base_offset;
                 sub_task->source.size = MAX_IO_UNIT;
                 sub_task->source.filename = source.filename;
                 sub_task->destination.location = location_type::CACHE;

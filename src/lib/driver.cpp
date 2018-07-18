@@ -91,6 +91,7 @@ int simple_write(){
     size_t size_of_io=512 * 1024 * 1024;
     auto t= static_cast<char *>(malloc(size_of_io));
     gen_random(t,size_of_io);
+    std::cout << strlen(t)<<"\n";
     aetrio::fwrite(t,size_of_io,1,fh);
     aetrio::fclose(fh);
     std::string s(t,128);
@@ -119,18 +120,20 @@ int simple_read(){
 int multi_write(){
     FILE* fh=aetrio::fopen("akougkas_test","w+");
     size_t size_of_io=64 * 1024;
-    auto t= static_cast<char *>(malloc(size_of_io));
-    gen_random(t,size_of_io);
-    for(int i=0;i<128;i++){
+
+    for(int i=0;i<4096;i++){
+        auto t= static_cast<char *>(malloc(size_of_io));
+        gen_random(t,size_of_io);
         //aetrio::fseek(fh,0,SEEK_SET);
         std::size_t count = aetrio::fwrite(t,size_of_io,1,fh);
         if(i%50==0){
             std::cout << i <<"\twrite data:\t"<< count <<std::endl;
         }
+        free(t);
         //usleep(100000);
     }
     aetrio::fclose(fh);
-    free(t);
+
     return 0;
 }
 int multi_read(){

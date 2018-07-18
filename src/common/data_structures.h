@@ -285,33 +285,40 @@ struct solver_input{
     std::vector<task*> tasks;
     int num_tasks;
     int64_t *task_size;
-    int64_t total_io_size=0;
 /*******************
 *Constructors
 *******************/
     explicit solver_input(std::vector<task*> &task_list, int num_tasks){
         this->tasks = task_list;
         this->num_tasks = num_tasks;
-        task_size=new int64_t[num_tasks];
+        task_size =  new int64_t[num_tasks];
     }
+    solver_input(const solver_input& other):tasks(other.tasks),
+                                      num_tasks(other.num_tasks),
+                                      task_size(other.task_size){}
 /*******************
 *Destructor
 *******************/
-    virtual ~solver_input() {}
+    virtual ~solver_input() {
+    }
 };
 /******************************************************************************
 *solver_output structure
 ******************************************************************************/
 struct solver_output{
     int* solution;
+    int num_task;
     //workerID->list of tasks
     std::unordered_map<int,std::vector<task*>> worker_task_map;
 /*******************
 *Constructors
 *******************/
-    explicit solver_output(int num_task):worker_task_map(){
-        solution=new int[num_task];
+    explicit solver_output(int num_task):worker_task_map(),num_task(num_task){
+        solution =  new int[num_task];
     }
+    solver_output(const solver_output& other)
+            :worker_task_map(other.worker_task_map),num_task(other.num_task),
+             solution(other.solution){}
 /*******************
 *Destructor
 *******************/

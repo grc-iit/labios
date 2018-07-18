@@ -252,12 +252,13 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
     return chunks;
 }
 
-int metadata_manager::update_write_task_info(write_task task_k, std::string filename) {
+int metadata_manager::update_write_task_info(write_task task_k, std::string
+filename, std::size_t io_size) {
     auto map=aetrio_system::getInstance(service_i)->map_client;
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
-    update_on_write(task_k.source.filename,task_k.source.size,task_k.source.offset);
+    update_on_write(task_k.source.filename,io_size,task_k.source.offset);
     if(!task_k.meta_updated){
         auto chunk_index=(task_k.source.offset/ MAX_IO_UNIT);
         auto base_offset=chunk_index*MAX_IO_UNIT+

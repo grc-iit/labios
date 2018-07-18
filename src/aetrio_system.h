@@ -43,8 +43,11 @@ private:
 public:
     std::shared_ptr<solver> solver_i;
     std::shared_ptr<distributed_hashmap> map_client,map_server;
+    std::shared_ptr<distributed_queue> client_queue,
+            worker_queues[MAX_WORKER_COUNT];
     int rank,client_rank;
     MPI_Comm client_comm;
+
 /******************************************************************************
 *Interface
 ******************************************************************************/
@@ -53,16 +56,21 @@ public:
                 (new aetrio_system(service)) : instance;}
     inline std::shared_ptr<distributed_queue>get_client_queue
             (const std::string &subject){
-        return std::make_shared<NatsImpl>(
-                service_i,
-                config_manager::get_instance()->NATS_URL_CLIENT,
-                CLIENT_TASK_SUBJECT);}
+        if(client_queue == nullptr) client_queue=std::make_shared<NatsImpl>(
+                    service_i,
+                    config_manager::get_instance()->NATS_URL_CLIENT,
+                    CLIENT_TASK_SUBJECT);
+        return client_queue;
+    }
     inline std::shared_ptr<distributed_queue>get_worker_queue
             (const int &worker_index){
-        return std::make_shared<NatsImpl>(
-                service_i,
-                config_manager::get_instance()->NATS_URL_SERVER,
-                WORKER_TASK_SUBJECT[worker_index-1]);}
+        if(worker_queues[worker_index] == nullptr)
+            worker_queues[worker_index]=std::make_shared<NatsImpl>(
+                    service_i,
+                    config_manager::get_instance()->NATS_URL_SERVER,
+                    WORKER_TASK_SUBJECT[worker_index-1]);
+        return worker_queues[worker_index];
+    }
     int build_message_key(MPI_Datatype &message);
     int build_message_file(MPI_Datatype &message_file);
     int build_message_chunk(MPI_Datatype &message_chunk);

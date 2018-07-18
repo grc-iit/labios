@@ -122,14 +122,20 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     std::string write_data(static_cast<char*>(ptr));
     for(auto task:write_tasks){
         if(task->addDataspace){
-            auto data=write_data.substr(task->source.offset,task->destination.size);
-            data_m->put(DATASPACE_DB, task->destination.filename, data);
+            if(write_data.length() >= task->source.offset + task->source.size){
+                auto data=write_data.substr(task->source.offset,
+                        task->source.size);
+                data_m->put(DATASPACE_DB, task->destination.filename, data);
+            }else{
+                data_m->put(DATASPACE_DB, task->destination.filename, write_data);
+            }
+
         }
-        mdm->update_write_task_info(*task,filename);
+        mdm->update_write_task_info(*task,filename,size*count);
         if(task->publish)
             client_queue->publish_task(task);
         index++;
-        delete(task);
+        delete task;
     }
     return size*count;
 }
