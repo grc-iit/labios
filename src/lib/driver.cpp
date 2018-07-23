@@ -3,9 +3,9 @@
 ******************************************************************************/
 #include <mpi.h>
 #include <random>
-#include <zconf.h>
 #include "posix.h"
 #include "../common/return_codes.h"
+#include "../../testing/trace_replayer.h"
 
 enum test_case{
     SIMPLE_WRITE=0,
@@ -13,12 +13,13 @@ enum test_case{
     MULTI_WRITE=2,
     MULTI_READ=3,
     SIMPLE_MIXED=4,
-    MULTI_MIXED=5
+    MULTI_MIXED=5,
+    REPLAY_TRACE=6
 };
 /*
  * set test case
  */
-test_case testCase=MULTI_WRITE;
+test_case testCase=REPLAY_TRACE;
 /******************************************************************************
 *Interface
 ******************************************************************************/
@@ -46,7 +47,6 @@ int main(int argc, char** argv){
         }
         case SIMPLE_MIXED:{
             return_val=simple_write();
-            sleep(2);
             return_val=simple_read();
             break;
         }
@@ -62,6 +62,17 @@ int main(int argc, char** argv){
             return_val=multi_write();
             return_val+=multi_read();
             break;
+        }
+        case REPLAY_TRACE:{
+            std::string path=argv[1];
+            std::string traceName=argv[2];
+            char *filename=argv[3];
+            int repetitions=atoi(argv[4]);
+            int rank;
+            MPI_Comm_rank(MPI_COMM_SELF,&rank);
+            trace_replayer replayer=trace_replayer();
+            replayer.prepare_data(path,traceName,filename,rank);
+            replayer.replay_trace(path,traceName,filename,repetitions,rank);
         }
     }
     aetrio::MPI_Finalize();
