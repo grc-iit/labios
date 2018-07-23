@@ -2,8 +2,8 @@
 *include files
 ******************************************************************************/
 #include <mpi.h>
-#include <zconf.h>
 #include <random>
+#include <zconf.h>
 #include "posix.h"
 #include "../common/return_codes.h"
 
@@ -22,16 +22,15 @@ test_case testCase=MULTI_WRITE;
 /******************************************************************************
 *Interface
 ******************************************************************************/
-/*
- * function definitions
- */
 int simple_write();
 int simple_read();
 int multi_write();
 int multi_read();
 
 
-
+/******************************************************************************
+*Main
+******************************************************************************/
 int main(int argc, char** argv){
 
     aetrio::MPI_Init(&argc,&argv);
@@ -49,10 +48,6 @@ int main(int argc, char** argv){
             return_val=simple_write();
             sleep(2);
             return_val=simple_read();
-//            sleep(2);
-//            return_val=simple_write();
-//            sleep(2);
-//            return_val=simple_read();
             break;
         }
         case MULTI_WRITE:{
@@ -99,7 +94,6 @@ int simple_write(){
     free(t);
     return 0;
 }
-
 int simple_read(){
     FILE* fh=aetrio::fopen("test","r+");
     if(fh== nullptr) std::cerr << "file could not be opened\n";
