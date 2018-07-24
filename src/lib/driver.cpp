@@ -60,19 +60,7 @@ void cm1_base(int argc, char** argv) {
     std::string filename=file_path+"/test.dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
-//    workload.push_back({4, 16});
-//    workload.push_back({160, 2});
-//    workload.push_back({480, 2});
-//    workload.push_back({240, 2});
-//    workload.push_back({160, 6});
-//    workload.push_back({28800, 18});
-//    workload.push_back({576000, 46});
-//    workload.push_back({28800, 1});
-//    workload.push_back({576000, 6});
-//    workload.push_back({28800, 1});
-//    workload.push_back({84489, 32});
     workload.push_back({1*1024*1024, 32});
-
     size_t current_offset=0;
     Timer global_timer=Timer();
     MPI_File outFile;
@@ -113,14 +101,9 @@ void cm1_tabios(int argc, char** argv) {
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    if(rank==0){
-        aetrio_system::getInstance(service::LIB)->map_client->purge();
-        aetrio_system::getInstance(service::LIB)->map_server->purge();
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
-    std::string filename=file_path+"/test"+std::to_string(rank)+".dat";
+    std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
     workload.push_back({1*1024*1024, 32});
@@ -128,7 +111,7 @@ void cm1_tabios(int argc, char** argv) {
     size_t current_offset=0;
     Timer global_timer=Timer();
     global_timer.resumeTime();
-    FILE* fh=aetrio::fopen(filename.c_str(),"+w");
+    FILE* fh=aetrio::fopen(filename.c_str(),"w+");
     global_timer.pauseTime();
     for(int i=0;i<iteration;++i){
         for(auto write:workload){
@@ -139,7 +122,7 @@ void cm1_tabios(int argc, char** argv) {
                 aetrio::fwrite(write_buf,sizeof(char),write[0],fh);
                 global_timer.pauseTime();
                 current_offset+=write[0];
-                usleep(1000);
+                //usleep(1000000);
             }
         }
     }
@@ -168,13 +151,201 @@ void montage_base(int argc, char** argv) {
 }
 
 void hacc_base(int argc, char** argv) {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_SELF,&rank);
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string file_path=argv[2];
+    int iteration=atoi(argv[3]);
+    std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
+    size_t io_per_teration=32*1024*1024;
+    std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+    workload.push_back({1*1024*1024, 32});
+
+    size_t current_offset=0;
+    Timer global_timer=Timer();
+    global_timer.resumeTime();
+    FILE* fh=std::fopen(filename.c_str(),"w+");
+    global_timer.pauseTime();
+    for(int i=0;i<iteration;++i){
+        for(auto write:workload){
+            for(int j=0;j<write[1];++j){
+                char write_buf[write[0]];
+                gen_random(write_buf,write[0]);
+                global_timer.resumeTime();
+                std::fwrite(write_buf,sizeof(char),write[0],fh);
+                global_timer.pauseTime();
+                current_offset+=write[0];
+                //usleep(1000000);
+            }
+        }
+    }
+
+    global_timer.resumeTime();
+    std::fclose(fh);
+    global_timer.pauseTime();
+    auto time=global_timer.elapsed_time;
+    double sum;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank == 0) {
+        printf("Time : %lf\n",mean);
+        std::cout << "TAPIOS,"
+                  << "average,"
+                  << std::setprecision(6)
+                  << mean
+                  << "\n";
+    }
 }
 
 void kmeans_base(int argc, char** argv) {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_SELF,&rank);
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string file_path=argv[2];
+    int iteration=atoi(argv[3]);
+    std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
+    size_t io_per_teration=32*1024*1024;
+    std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+    workload.push_back({16*1024, 32});
+
+    size_t current_offset=0;
+    Timer global_timer=Timer();
+    global_timer.resumeTime();
+    FILE* fh=std::fopen(filename.c_str(),"w+");
+    global_timer.pauseTime();
+    char* write_buf=new char[io_per_teration];
+    gen_random(write_buf,io_per_teration);
+    global_timer.resumeTime();
+    std::fwrite(write_buf,sizeof(char),io_per_teration,fh);
+    global_timer.pauseTime();
+    delete(write_buf);
+    for(int i=0;i<iteration;++i){
+        for(auto read:workload){
+            for(int j=0;j<read[1];++j){
+                int rand_offset = static_cast<int>(rand() % (io_per_teration - 32 * 1024));
+                char read_buf[read[0]];
+                global_timer.resumeTime();
+                std::fseek(fh,rand_offset,SEEK_SET);
+                std::fread(read_buf,sizeof(char),read[0],fh);
+                global_timer.pauseTime();
+                current_offset+=read[0];
+            }
+        }
+    }
+
+    global_timer.resumeTime();
+    std::fclose(fh);
+    global_timer.pauseTime();
+    auto time=global_timer.elapsed_time;
+    double sum;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank == 0) {
+        printf("Time : %lf\n",mean);
+        std::cout << "TAPIOS,"
+                  << "average,"
+                  << std::setprecision(6)
+                  << mean
+                  << "\n";
+    }
+}
+
+void hacc_tabios(int argc, char **argv) {
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string file_path=argv[2];
+    int iteration=atoi(argv[3]);
+    std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
+    size_t io_per_teration=32*1024*1024;
+    std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+    workload.push_back({1*1024*1024, 32});
+
+    size_t current_offset=0;
+    Timer global_timer=Timer();
+    global_timer.resumeTime();
+    FILE* fh=aetrio::fopen(filename.c_str(),"+w");
+    global_timer.pauseTime();
+    for(int i=0;i<iteration;++i){
+        for(auto write:workload){
+            for(int j=0;j<write[1];++j){
+                char write_buf[write[0]];
+                gen_random(write_buf,write[0]);
+                global_timer.resumeTime();
+                aetrio::fwrite(write_buf,sizeof(char),write[0],fh);
+                global_timer.pauseTime();
+                current_offset+=write[0];
+            }
+        }
+    }
+
+    global_timer.resumeTime();
+    aetrio::fclose(fh);
+    global_timer.pauseTime();
+    auto time=global_timer.elapsed_time;
+    double sum;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank == 0) {
+        printf("Time : %lf\n",mean);
+        std::cout << "TAPIOS,"
+                  << "average,"
+                  << std::setprecision(6)
+                  << mean
+                  << "\n";
+    }
+
+}
+
+void kmeans_tabios(int argc, char **argv) {
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string file_path=argv[2];
+    int iteration=atoi(argv[3]);
+    std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
+    size_t io_per_teration=32*1024*1024;
+    std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+    workload.push_back({16*1024, 32});
+
+    size_t current_offset=0;
+    Timer global_timer=Timer();
+    global_timer.resumeTime();
+    FILE* fh=aetrio::fopen(filename.c_str(),"w+");
+    global_timer.pauseTime();
+    char* write_buf=new char[io_per_teration];
+    gen_random(write_buf,io_per_teration);
+    aetrio::fwrite(write_buf,sizeof(char),io_per_teration,fh);
+    delete(write_buf);
+    for(int i=0;i<iteration;++i){
+        for(auto read:workload){
+            for(int j=0;j<read[1];++j){
+                int rand_offset = static_cast<int>(rand() % (io_per_teration - 32 * 1024));
+                char read_buf[read[0]];
+                global_timer.resumeTime();
+                aetrio::fseek(fh,rand_offset,SEEK_SET);
+                aetrio::fread(read_buf,sizeof(char),read[0],fh);
+                global_timer.pauseTime();
+                current_offset+=read[0];
+            }
+        }
+    }
+
+    global_timer.resumeTime();
+    aetrio::fclose(fh);
+    global_timer.pauseTime();
+    auto time=global_timer.elapsed_time;
+    double sum;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank == 0) {
+        printf("Time : %lf\n",mean);
+        std::cout << "TAPIOS,"
+                  << "average,"
+                  << std::setprecision(6)
+                  << mean
+                  << "\n";
+    }
 }
 
 /******************************************************************************
@@ -183,6 +354,14 @@ void kmeans_base(int argc, char** argv) {
 int main(int argc, char** argv){
 
     aetrio::MPI_Init(&argc,&argv);
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    if(rank==0){
+        aetrio_system::getInstance(service::LIB)->map_client->purge();
+        aetrio_system::getInstance(service::LIB)->map_server->purge();
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
     int return_val=0;
     if(argc > 1){
         testCase= static_cast<test_case>(atoi(argv[1]));
@@ -230,8 +409,16 @@ int main(int argc, char** argv){
             hacc_base(argc,argv);
             break;
         }
+        case HACC_TABIOS:{
+            hacc_tabios(argc,argv);
+            break;
+        }
         case KMEANS_BASE:{
             kmeans_base(argc,argv);
+            break;
+        }
+        case KMEANS_TABIOS:{
+            kmeans_tabios(argc,argv);
             break;
         }
     }

@@ -82,6 +82,7 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     for(auto task:tasks){
         char * data;
         switch(task.source.location){
+            case PFS:
             case BUFFERS:{
                 client_queue->publish_task(&task);
                 while(!data_m->exists(DATASPACE_DB,task.destination.filename))
