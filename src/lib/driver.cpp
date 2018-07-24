@@ -60,17 +60,18 @@ void cm1_base(int argc, char** argv) {
     std::string filename=file_path+"/test.dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
-    workload.push_back({4, 16});
-    workload.push_back({160, 2});
-    workload.push_back({480, 2});
-    workload.push_back({240, 2});
-    workload.push_back({160, 6});
-    workload.push_back({28800, 18});
-    workload.push_back({576000, 46});
-    workload.push_back({28800, 1});
-    workload.push_back({576000, 6});
-    workload.push_back({28800, 1});
-    workload.push_back({84489, 32});
+//    workload.push_back({4, 16});
+//    workload.push_back({160, 2});
+//    workload.push_back({480, 2});
+//    workload.push_back({240, 2});
+//    workload.push_back({160, 6});
+//    workload.push_back({28800, 18});
+//    workload.push_back({576000, 46});
+//    workload.push_back({28800, 1});
+//    workload.push_back({576000, 6});
+//    workload.push_back({28800, 1});
+//    workload.push_back({84489, 32});
+    workload.push_back({1*1024*1024, 32});
 
     size_t current_offset=0;
     Timer global_timer=Timer();
@@ -112,22 +113,17 @@ void cm1_tabios(int argc, char** argv) {
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    if(rank==0){
+        aetrio_system::getInstance(service::LIB)->map_client->purge();
+        aetrio_system::getInstance(service::LIB)->map_server->purge();
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
-    std::string filename=file_path+"/test.dat";
+    std::string filename=file_path+"/test"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
-    workload.push_back({4, 16});
-    workload.push_back({160, 2});
-    workload.push_back({480, 2});
-    workload.push_back({240, 2});
-    workload.push_back({160, 6});
-    workload.push_back({28800, 18});
-    workload.push_back({576000, 46});
-    workload.push_back({28800, 1});
-    workload.push_back({576000, 6});
-    workload.push_back({28800, 1});
-    workload.push_back({84489, 33});
+    workload.push_back({1*1024*1024, 32});
 
     size_t current_offset=0;
     Timer global_timer=Timer();
@@ -140,11 +136,10 @@ void cm1_tabios(int argc, char** argv) {
                 char write_buf[write[0]];
                 gen_random(write_buf,write[0]);
                 global_timer.resumeTime();
-                aetrio::fseek(fh,rank * io_per_teration + current_offset,SEEK_SET);
                 aetrio::fwrite(write_buf,sizeof(char),write[0],fh);
                 global_timer.pauseTime();
                 current_offset+=write[0];
-                usleep(1000000);
+                usleep(1000);
             }
         }
     }
@@ -188,8 +183,6 @@ void kmeans_base(int argc, char** argv) {
 int main(int argc, char** argv){
 
     aetrio::MPI_Init(&argc,&argv);
-    aetrio_system::getInstance(service::LIB)->map_client->purge();
-    aetrio_system::getInstance(service::LIB)->map_server->purge();
     int return_val=0;
     if(argc > 1){
         testCase= static_cast<test_case>(atoi(argv[1]));

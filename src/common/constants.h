@@ -24,7 +24,7 @@ const long long MAX_MESSAGE_SIZE = LLONG_MAX;
 const std::string ALL_KEYS = "ALL";
 const std::string kDBPath_client = "/tmp/rocksdb";
 const std::string kDBPath_server = "/tmp/rocksdb";
-const std::size_t MAX_IO_UNIT = 2 * 1024 * 1024;
+const std::size_t MAX_IO_UNIT = 1 * 1024 * 1024;
 const std::string CLIENT_TASK_SUBJECT = "TASK";
 /*******************
 *Configs
@@ -68,7 +68,7 @@ const std::size_t MAX_WORKER_TASK_COUNT = 50;
 /*******************
 *Scheduler
 *******************/
-const std::size_t MAX_NUM_TASKS_IN_QUEUE=10;
+const std::size_t MAX_NUM_TASKS_IN_QUEUE=50;
 const std::size_t MAX_SCHEDULE_TIMER=1;
 const std::size_t MAX_TASK_TIMER_MS=MAX_SCHEDULE_TIMER*1000;
 const std::size_t MAX_TASK_TIMER_MS_MAX=MAX_SCHEDULE_TIMER*1000000;

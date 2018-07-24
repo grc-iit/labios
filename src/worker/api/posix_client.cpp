@@ -69,7 +69,8 @@ int posix_client::write(write_task task) {
     }else{
         /*cd
          * existing I/O
-         */
+         */std::cout << "update file  "<<data.length()<<" chunk "
+                                                          "    index:"<<chunk_index <<" dataspaceId:"<<task.destination.filename <<"\n";
         file_path=chunk_meta1.destination.filename;
         FILE* fh=fopen(chunk_meta1.destination.filename.c_str(),"r+");
         fseek(fh,task.source.offset-base_offset,SEEK_SET);
