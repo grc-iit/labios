@@ -58,7 +58,7 @@ int posix_client::write(write_task task) {
         /*
          * New I/O
          */
-        std::cout << "New file created "<<data.length()<<"\n";
+        std::cout << "New file created "<<data.length()<<" chunk index:"<<chunk_index <<" dataspaceId:"<<task.destination.filename <<"\n";
         auto file_id=static_cast<int64_t>
         (std::chrono::duration_cast<std::chrono::microseconds>
                         (std::chrono::system_clock::now().time_since_epoch()).count());

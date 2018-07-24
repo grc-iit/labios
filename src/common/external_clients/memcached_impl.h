@@ -36,6 +36,7 @@ public:
     std::string get(const table &name, std::string key) override;
     std::string remove(const table &name, std::string key) override;
     bool exists(const table &name, std::string key) override;
+    bool purge() override;
 /******************************************************************************
 *Destructor
 ******************************************************************************/

@@ -131,9 +131,14 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
             }
 
         }
-        mdm->update_write_task_info(*task,filename,size*count);
-        if(task->publish)
+
+        if(task->publish){
+            mdm->update_write_task_info(*task,filename,size*count);
             client_queue->publish_task(task);
+        }else{
+            mdm->update_write_task_info(*task,filename,task->source.size);
+        }
+
         index++;
         delete task;
     }

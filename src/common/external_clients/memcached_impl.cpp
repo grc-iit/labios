@@ -46,3 +46,7 @@ bool MemcacheDImpl::exists(const table &name, std::string key) {
     return rc == memcached_return_t::MEMCACHED_SUCCESS;
 }
 
+bool MemcacheDImpl::purge() {
+    memcached_flush(mem_client,0);
+}
+

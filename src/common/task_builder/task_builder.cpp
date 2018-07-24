@@ -27,7 +27,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
     std::size_t data_offset = 0;
     std::size_t remaining_data = source.size;
 
-    for(int i=0;i<number_of_tasks;i++){
+    while(remaining_data > 0){
         std::size_t chunk_index = base_offset / MAX_IO_UNIT;
         auto sub_task = new write_task(task);
         sub_task->task_id = static_cast<int64_t>
@@ -53,13 +53,17 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 }else{
                     size_to_write=MAX_IO_UNIT;
                 }
+                if(remaining_data+bucket_offset > MAX_IO_UNIT){
+                    size_to_write=MAX_IO_UNIT - bucket_offset;
+                }
                 if(chunk_value.length() >= bucket_offset+size_to_write){
                     chunk_value.replace(bucket_offset,
                                         size_to_write,
                                         data.substr(data_offset,
                                                     bucket_offset));
                 }else{
-                    chunk_value=chunk_value.substr(0,bucket_offset)+data;
+                    chunk_value=chunk_value.substr(0,bucket_offset) + data.substr(data_offset,
+                                                                                  size_to_write);
                 }
                 map_client->put(
                         table::DATASPACE_DB,
@@ -77,10 +81,10 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                     sub_task->destination.filename =cm.destination.filename;
                 }else{
                     /********* build new task **********/
-                    sub_task->destination.size=size_to_write;
-                    sub_task->destination.offset=bucket_offset;
-                    sub_task->source.offset=base_offset;
-                    sub_task->source.size=size_to_write;
+                    sub_task->destination.size=chunk_value.length();
+                    sub_task->destination.offset=0;
+                    sub_task->source.offset=chunk_index * MAX_IO_UNIT;
+                    sub_task->source.size=chunk_value.length();
                     sub_task->source.filename=source.filename;
                     sub_task->destination.location=location_type::CACHE;
                     sub_task->destination.filename =cm.destination.filename;
@@ -95,6 +99,9 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 }else{
                     size_to_write=MAX_IO_UNIT;
                     sub_task->publish=true;
+                }
+                if(remaining_data+bucket_offset > MAX_IO_UNIT){
+                    size_to_write=MAX_IO_UNIT - bucket_offset;
                 }
                 sub_task->destination.worker=cm.destination.worker;
                 sub_task->destination.size=size_to_write;
@@ -113,6 +120,9 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 size_to_write=remaining_data;
             }else{
                 size_to_write=MAX_IO_UNIT;
+            }
+            if(remaining_data+bucket_offset > MAX_IO_UNIT){
+                size_to_write=MAX_IO_UNIT - bucket_offset;
             }
             base_offset+=size_to_write;
             data_offset+=size_to_write;
@@ -139,7 +149,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 }else{
                     std::string chunk_str = map_client->get(
                             table::CHUNK_DB,
-                            source.filename + std::to_string(base_offset));
+                            source.filename + std::to_string(chunk_index * MAX_IO_UNIT));
                     chunk_meta cm =
                             serialization_manager().deserialize_chunk(chunk_str);
                     /********* chunk in dataspace **********/
@@ -155,7 +165,8 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                                                         (data_offset,
                                                          remaining_data));
                         }else{
-                            chunk_value=chunk_value.substr(0,bucket_offset-1)+data;
+                            chunk_value=chunk_value.substr(0,bucket_offset-1)+data.substr(data_offset,
+                                                                                          remaining_data);
                         }
                         map_client->put(
                                 table::DATASPACE_DB,

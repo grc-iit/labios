@@ -44,6 +44,9 @@ public:
     virtual bool exists(const table &name, std::string key){
         throw NotImplementedException("remove");
     }
+    virtual bool purge(){
+        throw NotImplementedException("purge");
+    }
 /******************************************************************************
 *Destructor
 ******************************************************************************/

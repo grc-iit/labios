@@ -21,6 +21,16 @@ double Timer::endTimeWithPrint(std::string fnName) {
 }
 
 double Timer::stopTime() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::high_resolution_clock::now()-t1).count()/1000.0;
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::high_resolution_clock::now()-t1).count()/1000000000.0;
+}
+
+double Timer::pauseTime() {
+    elapsed_time+=std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::high_resolution_clock::now()-t1).count()/1000000000.0;
+    return elapsed_time;
+}
+
+void Timer::resumeTime() {
+    t1 = std::chrono::high_resolution_clock::now();
 }

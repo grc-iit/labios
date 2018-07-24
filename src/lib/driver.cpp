@@ -3,9 +3,12 @@
 ******************************************************************************/
 #include <mpi.h>
 #include <random>
+#include <iomanip>
+#include <zconf.h>
 #include "posix.h"
 #include "../common/return_codes.h"
 #include "../../testing/trace_replayer.h"
+#include "../common/timer.h"
 
 enum test_case{
     SIMPLE_WRITE=0,
@@ -14,12 +17,19 @@ enum test_case{
     MULTI_READ=3,
     SIMPLE_MIXED=4,
     MULTI_MIXED=5,
-    REPLAY_TRACE=6
+    CM1_BASE=6,
+    MONTAGE_BASE=7,
+    HACC_BASE=8,
+    KMEANS_BASE=9,
+    CM1_TABIOS=10,
+    MONTAGE_TABIOS=11,
+    HACC_TABIOS=12,
+    KMEANS_TABIOS=13,
 };
 /*
  * set test case
  */
-test_case testCase=REPLAY_TRACE;
+test_case testCase=MULTI_WRITE;
 /******************************************************************************
 *Interface
 ******************************************************************************/
@@ -27,7 +37,150 @@ int simple_write();
 int simple_read();
 int multi_write();
 int multi_read();
+void gen_random(char *s, std::size_t len) {
+    static const char alphanum[] =
+            "0123456789"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz";
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> dist(1, 1000000);
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[dist(generator) % (sizeof(alphanum) - 1)];
+    }
 
+    s[len] = 0;
+}
+
+void cm1_base(int argc, char** argv) {
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string file_path=argv[2];
+    int iteration=atoi(argv[3]);
+    std::string filename=file_path+"/test.dat";
+    size_t io_per_teration=32*1024*1024;
+    std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+    workload.push_back({4, 16});
+    workload.push_back({160, 2});
+    workload.push_back({480, 2});
+    workload.push_back({240, 2});
+    workload.push_back({160, 6});
+    workload.push_back({28800, 18});
+    workload.push_back({576000, 46});
+    workload.push_back({28800, 1});
+    workload.push_back({576000, 6});
+    workload.push_back({28800, 1});
+    workload.push_back({84489, 32});
+
+    size_t current_offset=0;
+    Timer global_timer=Timer();
+    MPI_File outFile;
+    global_timer.resumeTime();
+    MPI_File_open(MPI_COMM_WORLD, filename.c_str(), MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &outFile);
+    global_timer.pauseTime();
+    for(int i=0;i<iteration;++i){
+        for(auto write:workload){
+            for(int j=0;j<write[1];++j){
+                char write_buf[write[0]];
+                gen_random(write_buf,write[0]);
+                global_timer.resumeTime();
+                MPI_File_write_at_all(outFile, static_cast<MPI_Offset>(rank * io_per_teration + current_offset), write_buf,
+                                      static_cast<int>(write[0]), MPI_CHAR, MPI_STATUS_IGNORE);
+                global_timer.pauseTime();
+                current_offset+=write[0];
+            }
+        }
+    }
+    global_timer.resumeTime();
+    MPI_File_close(&outFile);
+    global_timer.pauseTime();
+    auto time=global_timer.elapsed_time;
+    double sum;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank == 0) {
+        printf("Time : %lf\n",mean);
+        std::cout << "MPIIOSHARED,"
+                  << "average,"
+                  << std::setprecision(6)
+                  << mean
+                  << "\n";
+    }
+}
+
+void cm1_tabios(int argc, char** argv) {
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string file_path=argv[2];
+    int iteration=atoi(argv[3]);
+    std::string filename=file_path+"/test.dat";
+    size_t io_per_teration=32*1024*1024;
+    std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+    workload.push_back({4, 16});
+    workload.push_back({160, 2});
+    workload.push_back({480, 2});
+    workload.push_back({240, 2});
+    workload.push_back({160, 6});
+    workload.push_back({28800, 18});
+    workload.push_back({576000, 46});
+    workload.push_back({28800, 1});
+    workload.push_back({576000, 6});
+    workload.push_back({28800, 1});
+    workload.push_back({84489, 33});
+
+    size_t current_offset=0;
+    Timer global_timer=Timer();
+    global_timer.resumeTime();
+    FILE* fh=aetrio::fopen(filename.c_str(),"+w");
+    global_timer.pauseTime();
+    for(int i=0;i<iteration;++i){
+        for(auto write:workload){
+            for(int j=0;j<write[1];++j){
+                char write_buf[write[0]];
+                gen_random(write_buf,write[0]);
+                global_timer.resumeTime();
+                aetrio::fseek(fh,rank * io_per_teration + current_offset,SEEK_SET);
+                aetrio::fwrite(write_buf,sizeof(char),write[0],fh);
+                global_timer.pauseTime();
+                current_offset+=write[0];
+                usleep(1000000);
+            }
+        }
+    }
+
+    global_timer.resumeTime();
+    aetrio::fclose(fh);
+    global_timer.pauseTime();
+    auto time=global_timer.elapsed_time;
+    double sum;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank == 0) {
+        printf("Time : %lf\n",mean);
+        std::cout << "TAPIOS,"
+                  << "average,"
+                  << std::setprecision(6)
+                  << mean
+                  << "\n";
+    }
+}
+
+
+void montage_base(int argc, char** argv) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_SELF,&rank);
+}
+
+void hacc_base(int argc, char** argv) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_SELF,&rank);
+}
+
+void kmeans_base(int argc, char** argv) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_SELF,&rank);
+}
 
 /******************************************************************************
 *Main
@@ -35,7 +188,12 @@ int multi_read();
 int main(int argc, char** argv){
 
     aetrio::MPI_Init(&argc,&argv);
+    aetrio_system::getInstance(service::LIB)->map_client->purge();
+    aetrio_system::getInstance(service::LIB)->map_server->purge();
     int return_val=0;
+    if(argc > 1){
+        testCase= static_cast<test_case>(atoi(argv[1]));
+    }
     switch(testCase){
         case SIMPLE_WRITE:{
             return_val=simple_write();
@@ -63,35 +221,33 @@ int main(int argc, char** argv){
             return_val+=multi_read();
             break;
         }
-        case REPLAY_TRACE:{
-            std::string path=argv[1];
-            std::string traceName=argv[2];
-            char *filename=argv[3];
-            int repetitions=atoi(argv[4]);
-            int rank;
-            MPI_Comm_rank(MPI_COMM_SELF,&rank);
-            trace_replayer replayer=trace_replayer();
-            replayer.prepare_data(path,traceName,filename,rank);
-            replayer.replay_trace(path,traceName,filename,repetitions,rank);
+        case CM1_BASE:{
+            cm1_base(argc,argv);
+            break;
+        }
+        case CM1_TABIOS:{
+            cm1_tabios(argc,argv);
+            break;
+        }
+        case MONTAGE_BASE:{
+            montage_base(argc,argv);
+            break;
+        }
+        case HACC_BASE:{
+            hacc_base(argc,argv);
+            break;
+        }
+        case KMEANS_BASE:{
+            kmeans_base(argc,argv);
+            break;
         }
     }
+
     aetrio::MPI_Finalize();
 
     return return_val;
 }
-void gen_random(char *s, std::size_t len) {
-    static const char alphanum[] =
-            "0123456789"
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            "abcdefghijklmnopqrstuvwxyz";
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> dist(1, 1000000);
-    for (int i = 0; i < len; ++i) {
-        s[i] = alphanum[dist(generator) % (sizeof(alphanum) - 1)];
-    }
 
-    s[len] = 0;
-}
 int simple_write(){
     FILE* fh=aetrio::fopen("test","w+");
     size_t size_of_io=512 * 1024 * 1024;
