@@ -5,8 +5,8 @@
 #include "../common/utilities.h"
 
 int aetrio::MPI_Init(int *argc, char ***argv) {
-  parse_opts(*argc,*argv);
   PMPI_Init(argc,argv);
+  parse_opts(*argc,*argv);
   aetrio_system::getInstance(service::LIB);
   return 0;
 }

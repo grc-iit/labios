@@ -22,6 +22,12 @@ static std::vector<std::string> string_split(std::string value,std::string delim
     return splits;
 }
 static int parse_opts(int argc, char *argv[]){
+    char* argv_cp[argc];
+    for(int i=0;i<argc;++i){
+        argv_cp[i]=new char[strlen(argv[i])+1];
+        strcpy(argv_cp[i],argv[i]);
+    }
+
     auto conf=config_manager::get_instance();
     int flags, opt;
     int nsecs, tfnd;
@@ -29,30 +35,34 @@ static int parse_opts(int argc, char *argv[]){
     nsecs = 0;
     tfnd = 0;
     flags = 0;
-    while ((opt = getopt (argc, argv, "qc:qs:mc:ms:")) != -1)
+    while ((opt = getopt (argc, argv_cp, "a:b:c:d:")) != -1)
     {
         switch (opt)
         {
-            case 'qc':{
+            case 'a':{
                 conf->NATS_URL_CLIENT=std::string(optarg);
                 break;
             }
-            case 'qs':{
+            case 'b':{
                 conf->NATS_URL_SERVER=std::string(optarg);
                 break;
             }
-            case 'mc':{
+            case 'c':{
                 conf->MEMCACHED_URL_CLIENT=std::string(optarg);
                 break;
             }
-            case 'ms':{
+            case 'd':{
                 conf->MEMCACHED_URL_SERVER=std::string(optarg);
                 break;
             }
-            default:               /* '?' */
-                fprintf (stderr, "Usage: %s [-qc nats client URL] [-qs nats server URL] [-mc memcached client URL] [-ms memcached server URL]\n", argv[0]);
-                exit (EXIT_FAILURE);
+            default:{
+break;
+            }
+
         }
+    }
+    for(int i=0;i<argc;++i){
+       delete(argv_cp[i]);
     }
     return 0;
 }

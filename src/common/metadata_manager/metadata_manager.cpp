@@ -105,7 +105,7 @@ std::string metadata_manager::get_filename(FILE *fh) {
 
 std::size_t metadata_manager::get_filesize(std::string filename) {
     auto iter=file_map.find(filename);
-    if(iter!=file_map.end()) iter->second.file_size;
+    if(iter!=file_map.end()) return iter->second.file_size;
     return 0;
 }
 
@@ -127,6 +127,11 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
+    for(int i=0;i<task_ks.size();++i){
+        auto task_k=task_ks[i];
+        update_on_read(filename,task_k.source.size);
+
+    }
     std::string fs_str= serialization_manager().serialize_file_stat(fs);
     map->put(table::FILE_DB,filename,fs_str);
     return 0;
@@ -139,10 +144,8 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
     if(iter!=file_map.end()) fs=iter->second;
     for(int i=0;i<task_ks.size();++i){
         auto task_k=task_ks[i];
-        if(i==0){
-            update_on_write(task_k.source.filename,task_k.source.size,task_k
-                    .source.offset);
-        }
+        update_on_write(task_k.source.filename,task_k.source.size,task_k
+                .source.offset);
         if(!task_k.meta_updated){
             auto base_offset=(task_k.destination.offset/MAX_IO_UNIT)
                              *MAX_IO_UNIT;
@@ -199,10 +202,8 @@ void metadata_manager::update_on_read(std::string filename, size_t size) {
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
         file_stat fs=iter->second;
-        if(fs.file_size < fs.file_pointer+size){
-            fs.file_size=fs.file_pointer+size;
-        }
         fs.file_pointer+=size;
+        file_map[filename]=fs;
         std::string fs_str= sm.serialize_file_stat(fs);
         map->put(table::FILE_DB,filename,fs_str);
     }
@@ -226,28 +227,44 @@ void metadata_manager::update_on_write(std::string filename, size_t size,size_t 
 
 std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
     auto map = aetrio_system::getInstance(service_i)->map_client;
-    auto base_offset = (task.source.offset / MAX_IO_UNIT) * MAX_IO_UNIT;
+
     auto remaining_data = task.source.size;
     auto chunks = std::vector<chunk_meta>();
     chunk_meta cm;
+    size_t source_offset=task.source.offset;
     while(remaining_data>0){
+        auto base_offset = (source_offset / MAX_IO_UNIT) * MAX_IO_UNIT;
         auto chunk_str = map->get(table::CHUNK_DB,
                                   task.source.filename+std::to_string(base_offset));
+        size_t size_to_read;
         if(!chunk_str.empty()){
             cm = serialization_manager().deserialize_chunk(chunk_str);
+            size_t bucket_offset=source_offset-base_offset;
+            cm.destination.offset=bucket_offset;
+
+            if(bucket_offset+remaining_data<=MAX_IO_UNIT){
+                size_to_read=remaining_data;
+            }else{
+                size_to_read=MAX_IO_UNIT-bucket_offset;
+            }
+            cm.destination.size=size_to_read;
         }else{
-            cm.actual_user_chunk = task.source;
+            cm.actual_user_chunk.offset=source_offset;
+            cm.actual_user_chunk.size=remaining_data;
+            cm.actual_user_chunk.filename=task.source.filename;
+            cm.actual_user_chunk.location=location_type::PFS;
             cm.destination.location = location_type::PFS;
             cm.destination.size = cm.actual_user_chunk.size;
             cm.destination.filename = cm.actual_user_chunk.filename;
             cm.destination.offset = cm.actual_user_chunk.offset;
             cm.destination.worker = -1;
+            size_to_read=cm.actual_user_chunk.size;
         }
         chunks.push_back(cm);
-        if(remaining_data>=cm.actual_user_chunk.size)
-            remaining_data -= cm.actual_user_chunk.size;
+        if(remaining_data>=size_to_read)
+            remaining_data -= size_to_read;
         else remaining_data=0;
-        base_offset += cm.actual_user_chunk.size;
+        source_offset += size_to_read;
     }
     return chunks;
 }

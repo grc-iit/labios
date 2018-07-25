@@ -10,7 +10,7 @@ int posix_client::read(read_task task) {
     FILE* fh=fopen(task.source.filename.c_str(),"r+");
     auto data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     long long int pos=fseek(fh,task.source.offset,SEEK_SET);
-    if(pos!=task.source.offset) throw std::runtime_error("posix_client::read"
+    if(pos!=0) throw std::runtime_error("posix_client::read"
                                                          "() seek failed");
     size_t count=fread(data,sizeof(char),task.source.size,fh);
     if(count!=task.source.size) throw std::runtime_error("posix_client::read"

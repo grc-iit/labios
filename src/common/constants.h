@@ -59,7 +59,7 @@ const int64_t WORKER_CAPACITY_MAX[MAX_WORKER_COUNT] =
          805306368,
          268435456};
 const std::string WORKER_PATH="/opt/temp";
-const std::string PFS_PATH="/home/hariharan/test";
+const std::string PFS_PATH="/home/anthony/temp";
 const size_t KB = 1024;
 const std::size_t WORKER_ATTRIBUTES_COUNT=5;
 const float POLICY_WEIGHT[WORKER_ATTRIBUTES_COUNT] = {.3,.2,.3,.1,.1};

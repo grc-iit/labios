@@ -16,8 +16,8 @@
 *Worker main
 ******************************************************************************/
 int main(int argc, char** argv) {
-    parse_opts(argc,argv);
     MPI_Init(&argc,&argv);
+    parse_opts(argc,argv);
     int worker_index=atoi(argv[1]);
     std::shared_ptr<worker> worker_service_i =
             worker::getInstance(service::WORKER, worker_index);

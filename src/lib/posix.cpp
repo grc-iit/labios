@@ -85,8 +85,7 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
             case PFS:
             case BUFFERS:{
                 client_queue->publish_task(&task);
-                while(!data_m->exists(DATASPACE_DB,task.destination.filename))
-                    usleep(20);
+                while(!data_m->exists(DATASPACE_DB,task.destination.filename)){}
                 data = const_cast<char *>(data_m->get(DATASPACE_DB,
                         task.destination.filename).c_str());
                 data_m->remove(DATASPACE_DB,task.destination.filename);
@@ -98,8 +97,8 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
                 break;
             }
         }
-        memcpy(ptr+ptr_pos,data+task.source.offset,task.source.size);
-        ptr_pos+=task.source.size;
+        memcpy(ptr+ptr_pos,data+task.destination.offset,task.destination.size);
+        ptr_pos+=task.destination.size;
     }
     mdm->update_read_task_info(tasks,filename);
     return size*count;
@@ -134,7 +133,10 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
         }
 
         if(task->publish){
-            mdm->update_write_task_info(*task,filename,size*count);
+            if(size*count < task->source.size)
+                mdm->update_write_task_info(*task,filename,size*count);
+            else
+                mdm->update_write_task_info(*task,filename,task->source.size);
             client_queue->publish_task(task);
         }else{
             mdm->update_write_task_info(*task,filename,task->source.size);

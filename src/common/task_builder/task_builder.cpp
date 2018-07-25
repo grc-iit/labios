@@ -234,14 +234,16 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
     auto mdm = metadata_manager::getInstance(LIB);
     auto map_server = aetrio_system::getInstance(service_i)->map_server;
     auto chunks = mdm->fetch_chunks(task);
-
+    size_t data_pointer=0;
     for(auto chunk:chunks){
         auto rt = new read_task();
-
         rt->task_id = static_cast<int64_t>
                 (std::chrono::duration_cast<std::chrono::microseconds>
                 (std::chrono::system_clock::now().time_since_epoch()).count());
         rt->source = chunk.destination;
+        rt->destination.offset=data_pointer;
+        rt->destination.size=rt->source.size;
+        data_pointer+=rt->destination.size;
         rt->destination.filename = std::to_string(static_cast<uint64_t>
                 (std::chrono::duration_cast<std::chrono::microseconds>
                         (std::chrono::system_clock::now().time_since_epoch()).count()));
