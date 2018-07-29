@@ -27,12 +27,10 @@ int task_scheduler::run() {
             task_list.push_back(task_i);
         }
         auto time_elapsed= t.stopTime();
-        //std::cout << "Num of tasks:\t"<<task_list.size()<<"\n";
         if(!task_list.empty() &&
-           (task_list.size()>MAX_NUM_TASKS_IN_QUEUE
-            ||time_elapsed>MAX_SCHEDULE_TIMER)){
+           (task_list.size()>=MAX_NUM_TASKS_IN_QUEUE
+            ||time_elapsed>=MAX_SCHEDULE_TIMER)){
             //scheduling_threads.submit(std::bind(schedule_tasks, task_list));
-            // NOLINT
             schedule_tasks(task_list);
             t.startTime();
             task_list.clear();

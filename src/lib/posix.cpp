@@ -116,8 +116,14 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     if(!mdm->is_opened(filename))
         throw std::runtime_error("aetrio::fwrite() file not opened!");
 
+
     auto w_task = write_task(file(filename,offset,size*count),file());
+
+
     auto write_tasks = task_m->build_write_task(w_task,static_cast<char*>(ptr));
+
+
+
     int index=0;
     std::string write_data(static_cast<char*>(ptr));
     for(auto task:write_tasks){

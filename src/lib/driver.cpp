@@ -142,7 +142,7 @@ void cm1_tabios(int argc, char** argv) {
     double mean = sum / comm_size;
     if(rank == 0) {
         printf("Time : %lf\n",mean);
-        std::cout << "TAPIOS,"
+        std::cout << "TABIOS,"
                   << "average,"
                   << std::setprecision(6)
                   << mean
@@ -203,7 +203,7 @@ void montage_base(int argc, char** argv) {
     double mean = sum / comm_size;
     if(rank == 0) {
         printf("Time : %lf\n",mean);
-        std::cout << "TAPIOS,"
+        std::cout << "TABIOS,"
                   << "average,"
                   << std::setprecision(6)
                   << mean
@@ -251,7 +251,7 @@ void hacc_base(int argc, char** argv) {
     double mean = sum / comm_size;
     if(rank == 0) {
         printf("Time : %lf\n",mean);
-        std::cout << "TAPIOS,"
+        std::cout << "TABIOS,"
                   << "average,"
                   << std::setprecision(6)
                   << mean
@@ -303,7 +303,7 @@ void kmeans_base(int argc, char** argv) {
     double mean = sum / comm_size;
     if(rank == 0) {
         printf("Time : %lf\n",mean);
-        std::cout << "TAPIOS,"
+        std::cout << "TABIOS,"
                   << "average,"
                   << std::setprecision(6)
                   << mean
@@ -350,7 +350,7 @@ void hacc_tabios(int argc, char **argv) {
     double mean = sum / comm_size;
     if(rank == 0) {
         printf("Time : %lf\n",mean);
-        std::cout << "TAPIOS,"
+        std::cout << "TABIOS,"
                   << "average,"
                   << std::setprecision(6)
                   << mean
@@ -409,7 +409,7 @@ void kmeans_tabios(int argc, char **argv) {
     double mean = sum / comm_size;
     if(rank == 0) {
         printf("Time : %lf\n",mean);
-        std::cout << "TAPIOS,"
+        std::cout << "TABIOS,"
                   << "average,"
                   << std::setprecision(6)
                   << mean
@@ -425,6 +425,8 @@ int main(int argc, char** argv){
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string log_name=std::string(argv[0])+"_"+std::to_string(rank)+".log";
+    freopen(log_name.c_str(), "w", stdout);
     if(rank==0){
         aetrio_system::getInstance(service::LIB)->map_client->purge();
         aetrio_system::getInstance(service::LIB)->map_server->purge();
@@ -555,7 +557,7 @@ void montage_tabios(int argc, char **argv) {
     double mean = sum / comm_size;
     if(rank == 0) {
         printf("Time : %lf\n",mean);
-        std::cout << "TAPIOS,"
+        std::cout << "TABIOS,"
                   << "average,"
                   << std::setprecision(6)
                   << mean
