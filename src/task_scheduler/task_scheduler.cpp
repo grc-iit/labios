@@ -26,12 +26,12 @@ int task_scheduler::run() {
         if(status!=-1 && task_i!= nullptr){
             task_list.push_back(task_i);
         }
-        auto time_elapsed= t.stopTime();
+        auto time_elapsed = t.stopTime();
         if(!task_list.empty() &&
            (task_list.size()>=MAX_NUM_TASKS_IN_QUEUE
             ||time_elapsed>=MAX_SCHEDULE_TIMER)){
-            //scheduling_threads.submit(std::bind(schedule_tasks, task_list));
-            schedule_tasks(task_list);
+            scheduling_threads.submit(std::bind(schedule_tasks, task_list));
+            //schedule_tasks(task_list);
             t.startTime();
             task_list.clear();
         }
@@ -41,6 +41,10 @@ int task_scheduler::run() {
 
 
 void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
+#ifdef TIMER
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     auto solver_i=aetrio_system::getInstance(service_i)->solver_i;
     solver_input input(tasks, static_cast<int>(tasks.size()));
     solver_output output=solver_i->solve(input);
@@ -49,11 +53,16 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
         auto queue=aetrio_system::getInstance(service_i)->
                 get_worker_queue(element.first);
         for(auto task:element.second){
+#ifdef DEBUG
+            std::cout << "threadID:" <<std::this_thread::get_id()
+                              << "\tTask#" << task->task_id
+                              << "\tWorker#" << element.first
+                              << "\n";
+#endif
             switch (task->t_type){
                 case task_type::WRITE_TASK:{
                     auto *wt= reinterpret_cast<write_task *>(task);
                     queue->publish_task(wt);
-
                     break;
                 }
                 case task_type::READ_TASK:{
@@ -69,4 +78,7 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
     }
     delete input.task_size;
     delete output.solution;
+#ifdef TIMER
+    std::cout<<"task_scheduler::schedule_tasks(),"<<t.pauseTime()<<"\n";
+#endif
 }

@@ -1,6 +1,10 @@
 # README #
-
 #TODO LIST
+##cluster
+* finish timers(done)
+* scripting for deployment
+* investigate timings first locally. Make TABIOS faster!
+
 ##Immediate
 * Revisit task_builder (done)
 * Fix DP solver code (done) 
@@ -68,8 +72,24 @@ src/common/config_manager.h src/common/config_manager.cpp CMakeLists.txt`
  src/common/config_manager.h src/common/config_manager.cpp CMakeLists.txt`
 
 
-#Setup Aetrio
+#Setup TABIOS
+#Memcached config
 
+##libevent is a dependency : apt-get install libevent-dev
+##Change in src code(forcing our own data distribution to specific server):
+##copy into libmemcached/get.cc:236
+    "master_server_key=atoi(group_key);"
+##copy into libmemcached/storage.cc:375
+    "uint32_t server_key=atoi(group_key);"
+##install from source
+    ./configure && make && sudo make install
+
+##How to use:
+###Specify group_key to be the actual number of the server.
+###Example: If you want to use server #0, you set the key to "0" and so on options to start servers:
+    -m: how much RAM to use for item storage (in megabytes) (min is 64MB)
+    -d: run it as daemon
+    -p: port that listens
 ## Memcached
 ###Install memached and libmemcached from normal sources
 ###Run memcached

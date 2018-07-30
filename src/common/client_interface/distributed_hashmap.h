@@ -32,16 +32,17 @@ public:
 ******************************************************************************/
     virtual int put(
             const table &name, std::string key,
-            const std::string &value){
+            const std::string &value,
+            std::string group_key){
         throw NotImplementedException("put");
     }
-    virtual std::string get(const table &name, std::string key){
+    virtual std::string get(const table &name, std::string key,std::string group_key){
         throw NotImplementedException("get");
     }
-    virtual std::string remove(const table &name, std::string key){
+    virtual std::string remove(const table &name, std::string key,std::string group_key){
         throw NotImplementedException("remove");
     }
-    virtual bool exists(const table &name, std::string key){
+    virtual bool exists(const table &name, std::string key,std::string group_key){
         throw NotImplementedException("remove");
     }
     virtual bool purge(){

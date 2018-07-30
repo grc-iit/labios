@@ -43,6 +43,7 @@ struct file{
     int64_t offset;
     std::size_t size;
     int worker=-1;
+    int server=-1;
 /*******************
 *Constructors
 *******************/
@@ -51,7 +52,7 @@ struct file{
              location(CACHE){}
     file(const file &file_t)
             :filename(file_t.filename),offset(file_t.offset),size(file_t.size),
-             location(file_t.location),worker(file_t.worker){}
+             location(file_t.location),worker(file_t.worker),server(file_t.server){}
     file() : location(CACHE), filename(""), offset(0), size(0){}
 /*******************
 *Destructor
@@ -63,7 +64,8 @@ struct file{
     template<class Archive>
     void serialize(Archive & archive)
     {
-        archive( this->filename,this->offset,this->size,this->location,this->worker);
+        archive( this->filename,this->offset,this->size,this->location,
+                 this->worker,this->server);
     }
 };
 /******************************************************************************

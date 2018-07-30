@@ -7,6 +7,8 @@
 #include "metadata_manager.h"
 #include "../utilities.h"
 #include "../return_codes.h"
+#include "../timer.h"
+
 std::shared_ptr<metadata_manager> metadata_manager::instance = nullptr;
 /******************************************************************************
 *Interface
@@ -26,7 +28,7 @@ int metadata_manager::create(std::string filename, std::string mode, FILE* &fh) 
     fh_map.emplace(fh,filename);
     file_map.emplace(filename,stat);
     std::string fs_str= serialization_manager().serialize_file_stat(stat);
-    map->put(table::FILE_DB,filename,fs_str);
+    map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
     /**
      * TODO: put in map for outstanding operations-> on fclose create a file
      * in the destination and flush buffer contents
@@ -40,6 +42,10 @@ bool metadata_manager::is_opened(std::string filename) {
 }
 
 int metadata_manager::update_on_open(std::string filename,std::string mode,FILE * &fh) {
+#ifdef TIMERMDM
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     if(filename.length() > FILENAME_MAX) return MDM__FILENAME_MAX_LENGTH;
     auto map = aetrio_system::getInstance(service_i)->map_client;
     auto iter = file_map.find(filename);
@@ -68,7 +74,10 @@ int metadata_manager::update_on_open(std::string filename,std::string mode,FILE 
     fh_map.emplace(fh,filename);
     file_map.emplace(filename,stat);
     std::string fs_str= serialization_manager().serialize_file_stat(stat);
-    map->put(table::FILE_DB,filename,fs_str);
+    map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
+#ifdef TIMERMDM
+    std::cout<<"metadata_manager::update_on_open(),"<<t.pauseTime()<<"\n";
+#endif
     return SUCCESS;
 }
 
@@ -83,10 +92,10 @@ bool metadata_manager::is_opened(FILE *fh) {
 
 int metadata_manager::remove_chunks(std::string &filename) {
     auto map=aetrio_system::getInstance(service_i)->map_client;
-    std::string chunks_str = map->remove(table::FILE_CHUNK_DB, filename);
+    std::string chunks_str = map->remove(table::FILE_CHUNK_DB, filename,std::to_string(0));
     std::vector<std::string> chunks = string_split(chunks_str);
     for (const auto& chunk :chunks) {
-        map->remove(table::CHUNK_DB, chunk);
+        map->remove(table::CHUNK_DB, chunk,std::to_string(0));
     }
     return SUCCESS;
 }
@@ -123,6 +132,10 @@ long long int metadata_manager::get_fp(const std::string &filename) {
 }
 
 int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::string filename) {
+#ifdef TIMERMDM
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     auto map = aetrio_system::getInstance(service_i)->map_client;
     file_stat fs;
     auto iter=file_map.find(filename);
@@ -133,7 +146,10 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
 
     }
     std::string fs_str= serialization_manager().serialize_file_stat(fs);
-    map->put(table::FILE_DB,filename,fs_str);
+    map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
+#ifdef TIMERMDM
+    std::cout<<"metadata_manager::update_read_task_info(),"<<t.pauseTime()<<"\n";
+#endif
     return 0;
 }
 
@@ -144,8 +160,7 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
     if(iter!=file_map.end()) fs=iter->second;
     for(int i=0;i<task_ks.size();++i){
         auto task_k=task_ks[i];
-        update_on_write(task_k.source.filename,task_k.source.size,task_k
-                .source.offset);
+        update_on_write(task_k.source.filename,task_k.source.size,task_k.source.offset);
         if(!task_k.meta_updated){
             auto base_offset=(task_k.destination.offset/MAX_IO_UNIT)
                              *MAX_IO_UNIT;
@@ -153,11 +168,11 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
             cm.actual_user_chunk=task_k.source;
             cm.destination=task_k.destination;
             std::string chunk_str= serialization_manager().serialize_chunk(cm);
-            map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str);
+            map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str,std::to_string(0));
         }
     }
     std::string fs_str= serialization_manager().serialize_file_stat(fs);
-    map->put(table::FILE_DB,filename,fs_str);
+    map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
     return 0;
 }
 
@@ -191,7 +206,7 @@ int metadata_manager::update_on_seek(std::string filename,
                 return MDM__UPDATE_ON_FSEEK_FAILED;
         }
         std::string fs_str= sm.serialize_file_stat(iter->second);
-        map->put(table::FILE_DB,filename,fs_str);
+        map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
     }
     return SUCCESS;
 }
@@ -205,7 +220,7 @@ void metadata_manager::update_on_read(std::string filename, size_t size) {
         fs.file_pointer+=size;
         file_map[filename]=fs;
         std::string fs_str= sm.serialize_file_stat(fs);
-        map->put(table::FILE_DB,filename,fs_str);
+        map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
     }
 }
 
@@ -221,11 +236,16 @@ void metadata_manager::update_on_write(std::string filename, size_t size,size_t 
         fs.file_pointer=offset+size;
         file_map[filename]=fs;
         std::string fs_str= sm.serialize_file_stat(fs);
-        map->put(table::FILE_DB,filename,fs_str);
+        map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
     }
+
 }
 
 std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
+#ifdef TIMERMDM
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     auto map = aetrio_system::getInstance(service_i)->map_client;
 
     auto remaining_data = task.source.size;
@@ -235,7 +255,8 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
     while(remaining_data>0){
         auto base_offset = (source_offset / MAX_IO_UNIT) * MAX_IO_UNIT;
         auto chunk_str = map->get(table::CHUNK_DB,
-                                  task.source.filename+std::to_string(base_offset));
+                                  task.source.filename+std::to_string
+                                          (base_offset),std::to_string(0));
         size_t size_to_read;
         if(!chunk_str.empty()){
             cm = serialization_manager().deserialize_chunk(chunk_str);
@@ -266,11 +287,18 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
         else remaining_data=0;
         source_offset += size_to_read;
     }
+#ifdef TIMERMDM
+    std::cout<<"metadata_manager::fetch_chunks(),"<<t.pauseTime()<<"\n";
+#endif
     return chunks;
 }
 
 int metadata_manager::update_write_task_info(write_task task_k, std::string
 filename, std::size_t io_size) {
+#ifdef TIMERMDM
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     auto map=aetrio_system::getInstance(service_i)->map_client;
     file_stat fs;
     auto iter=file_map.find(filename);
@@ -284,10 +312,13 @@ filename, std::size_t io_size) {
         cm.actual_user_chunk=task_k.source;
         cm.destination=task_k.destination;
         std::string chunk_str= serialization_manager().serialize_chunk(cm);
-        map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str);
+        map->put(table::CHUNK_DB, filename+std::to_string(base_offset),chunk_str,std::to_string(0));
     }
     std::string fs_str= serialization_manager().serialize_file_stat(fs);
-    map->put(table::FILE_DB,filename,fs_str);
+    map->put(table::FILE_DB,filename,fs_str,std::to_string(0));
+#ifdef TIMERMDM
+    std::cout<<"metadata_manager::update_write_task_info(),"<<t.pauseTime()<<"\n";
+#endif
     return 0;
 }
 

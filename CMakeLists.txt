@@ -10,7 +10,11 @@ set(MPI true)
 #set(ROCKS true)
 set(LIB_DIR /usr/local/lib)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -g")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTAPIOS")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIMERMDM")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIMER")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTABIOS")
 
 set(CMAKE_MODULE_PATH )
 set(COMMON_SRC "" src/common/solver/default_solver.cpp src/common/solver/default_solver.h src/common/config_manager.h src/common/config_manager.cpp src/common/solver/dp_solver.cpp src/common/solver/dp_solver.h src/common/solver/solver.h src/common/solver/random_solver.cpp src/common/solver/random_solver.h src/common/solver/round_robin_solver.cpp src/common/solver/round_robin_solver.h src/common/solver/knapsack.cpp external_libs/cereal/cereal.hpp src/common/timer.h src/common/timer.cpp src/common/enumerations.h src/common/exceptions.h src/common/data_structures.h src/common/data_manager/data_manager.cpp src/common/data_manager/data_manager.h src/common/client_interface/distributed_hashmap.cpp src/common/client_interface/distributed_hashmap.h src/common/utilities.h src/common/metadata_manager/metadata_manager.cpp src/common/metadata_manager/metadata_manager.h src/common/constants.h src/aetrio_system.cpp src/aetrio_system.h src/common/task_builder/task_builder.cpp src/common/task_builder/task_builder.h src/common/client_interface/distributed_hashmap.cpp src/common/client_interface/distributed_hashmap.h src/common/client_interface/distributed_queue.cpp src/common/client_interface/distributed_queue.h src/common/external_clients/serialization_manager.cpp src/common/external_clients/serialization_manager.h src/common/external_clients/rocksdb_impl.cpp src/common/external_clients/rocksdb_impl.h src/common/external_clients/memcached_impl.cpp src/common/external_clients/memcached_impl.h src/common/external_clients/nats_impl.cpp src/common/external_clients/nats_impl.h)

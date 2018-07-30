@@ -35,10 +35,14 @@ public:
         return instance== nullptr ? instance=std::shared_ptr<data_manager>
                 (new data_manager(service)) : instance;
     }
-    std::string get(const table &name, std::string key);
-    int put(const table &name, std::string key, std::string data);
-    bool exists(const table &name, std::string key);
-    std::string remove(const table &name, std::string key);
+    std::string get(const table &name, std::string key,std::string
+    server);
+    int put(const table &name, std::string key, std::string data,std::string
+    server);
+    bool exists(const table &name, std::string key,std::string
+    server);
+    std::string remove(const table &name, std::string key,std::string
+    server);
 /******************************************************************************
 *Destructor
 ******************************************************************************/

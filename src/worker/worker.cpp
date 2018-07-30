@@ -31,13 +31,25 @@ int worker::run() {
             switch (task_i->t_type){
                 case task_type::WRITE_TASK:{
                     auto *wt= reinterpret_cast<write_task *>(task_i);
-                    std::cout<<wt->source.offset<<"\taccepted"<<"\n";
+#ifdef DEBUG
+                    std::cout << "Task#" << task_i->task_id
+                              << "\tOperation: WRITE"
+                              << "\tOffset:" <<wt->source.offset
+                              << "\tSize:" << wt->destination.size
+                              << "\n";
+#endif
                     client->write(*wt);
                     break;
                 }
                 case task_type::READ_TASK:{
                     auto *rt= reinterpret_cast<read_task *>(task_i);
-                    std::cout<<serialization_manager().serialize_task(rt)<<"\n";
+#ifdef DEBUG
+                    std::cout << "Task#" << task_i->task_id
+                              << "\tOperation: READ"
+                              << "\tOffset:" << rt->source.offset
+                              << "\tSize:" << rt->source.size
+                              << "\n";
+#endif
                     client->read(*rt);
                     break;
                 }
@@ -73,14 +85,13 @@ int worker::run() {
 
 int worker::update_score(bool before_sleeping=false) {
     int worker_score = calculate_worker_score(before_sleeping);
-    std::cout<<"worker score: "<<worker_score<<std::endl;
+    //std::cout<<"worker score: "<<worker_score<<std::endl;
     if(worker_score>0){
         if(map->put(
                 table::WORKER_SCORE,
                 std::to_string(worker_index),
-                std::to_string(worker_score))!=MEMCACHED_SUCCESS){
-            return WORKER__UPDATE_SCORE_FAILED;
-        }
+                std::to_string(worker_score),std::to_string(0)
+        )!=MEMCACHED_SUCCESS) return WORKER__UPDATE_SCORE_FAILED;
     }
     return SUCCESS;
 }
@@ -121,8 +132,8 @@ int worker::update_capacity() {
     if(map->put(
             table::WORKER_CAPACITY,
             std::to_string(worker_index),
-            std::to_string(remaining_cap))==MEMCACHED_SUCCESS){
-        std::cout<<"worker capacity: "<<(int)remaining_cap<<"\n";
+            std::to_string(remaining_cap),std::to_string(0))==MEMCACHED_SUCCESS){
+        //std::cout<<"worker capacity: "<<(int)remaining_cap<<"\n";
         return SUCCESS;
     }
     else return WORKER__UPDATE_CAPACITY_FAILED;

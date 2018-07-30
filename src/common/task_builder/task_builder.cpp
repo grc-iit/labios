@@ -26,7 +26,9 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
             source.offset % MAX_IO_UNIT;
     std::size_t data_offset = 0;
     std::size_t remaining_data = source.size;
-
+    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank /
+            PROCESS_PER_NODE);
+    //std::cout<<"rank"<<aetrio_system::getInstance(LIB)->rank<<"server:"<<server <<"\n";
     while(remaining_data > 0){
         std::size_t chunk_index = base_offset / MAX_IO_UNIT;
         auto sub_task = new write_task(task);
@@ -38,7 +40,9 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
             size_t bucket_offset=base_offset-chunk_index * MAX_IO_UNIT;
             std::string chunk_str = map_client->get(
                     table::CHUNK_DB,
-                    source.filename + std::to_string(chunk_index * MAX_IO_UNIT));
+                    source.filename + std::to_string(chunk_index *
+                                                     MAX_IO_UNIT),
+                    std::to_string(0));
             chunk_meta cm =
                     serialization_manager().deserialize_chunk(chunk_str);
 /*************************** chunk in dataspace ******************************/
@@ -46,7 +50,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 /********* update new data in dataspace **********/
                 auto chunk_value=map_client->get(
                         table::DATASPACE_DB,
-                        cm.destination.filename);
+                        cm.destination.filename,std::to_string(cm.destination.server));
                 std::size_t size_to_write=0;
                 if(remaining_data < MAX_IO_UNIT){
                     size_to_write=remaining_data;
@@ -68,7 +72,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 map_client->put(
                         table::DATASPACE_DB,
                         cm.destination.filename,
-                        chunk_value);
+                        chunk_value,std::to_string(cm.destination.server));
                 sub_task->addDataspace=false;
                 if(chunk_value.length()==MAX_IO_UNIT) {
                     sub_task->publish=true;
@@ -79,6 +83,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                     sub_task->source.filename=source.filename;
                     sub_task->destination.location=location_type::CACHE;
                     sub_task->destination.filename =cm.destination.filename;
+                    sub_task->destination.server=cm.destination.worker;
                 }else{
                     /********* build new task **********/
                     sub_task->destination.size=chunk_value.length();
@@ -88,6 +93,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                     sub_task->source.filename=source.filename;
                     sub_task->destination.location=location_type::CACHE;
                     sub_task->destination.filename =cm.destination.filename;
+                    sub_task->destination.server=cm.destination.worker;
                 }
 
 
@@ -110,6 +116,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 sub_task->source.size=size_to_write;
                 sub_task->source.filename=source.filename;
                 sub_task->destination.location=location_type::CACHE;
+                sub_task->destination.server=server;
                 sub_task->destination.filename =
                         std::to_string(dataspace_id) + "_" +
                         std::to_string(chunk_index);
@@ -135,7 +142,8 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
             if(remaining_data < MAX_IO_UNIT){
                 if(!map_client->exists(table::CHUNK_DB,
                                        source.filename +
-                                       std::to_string(chunk_index * MAX_IO_UNIT))){
+                                       std::to_string(chunk_index *
+                                                      MAX_IO_UNIT),std::to_string(0))){
                     sub_task->publish=false;
                     sub_task->destination.size = remaining_data;
                     sub_task->destination.offset = bucket_offset;
@@ -143,13 +151,15 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                     sub_task->source.size = sub_task->destination.size;
                     sub_task->source.filename = source.filename;
                     sub_task->destination.location = location_type::CACHE;
+                    sub_task->destination.server=server;
                     sub_task->destination.filename =
                             std::to_string(dataspace_id) + "_" +
                             std::to_string(chunk_index);
                 }else{
                     std::string chunk_str = map_client->get(
                             table::CHUNK_DB,
-                            source.filename + std::to_string(chunk_index * MAX_IO_UNIT));
+                            source.filename + std::to_string(chunk_index *
+                                                             MAX_IO_UNIT),std::to_string(0));
                     chunk_meta cm =
                             serialization_manager().deserialize_chunk(chunk_str);
                     /********* chunk in dataspace **********/
@@ -157,7 +167,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                         //update new data in dataspace
                         auto chunk_value = map_client->get(
                                 table::DATASPACE_DB,
-                                cm.destination.filename);
+                                cm.destination.filename,std::to_string(cm.destination.server));
                         if(chunk_value.size() >= bucket_offset +remaining_data){
                             chunk_value.replace(bucket_offset,
                                                 remaining_data,
@@ -171,7 +181,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                         map_client->put(
                                 table::DATASPACE_DB,
                                 cm.destination.filename,
-                                chunk_value);
+                                chunk_value,std::to_string(cm.destination.server));
                         //build new task
                         sub_task->addDataspace=false;
                         sub_task->publish=false;
@@ -183,6 +193,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                         sub_task->source.size=remaining_data;
                         sub_task->source.filename=source.filename;
                         sub_task->destination.location=location_type::CACHE;
+                        sub_task->destination.server=cm.destination.server;
                         sub_task->destination.filename =cm.destination.filename;
                     }
                     /************ chunk in file *************/
@@ -195,6 +206,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                         sub_task->source.size=remaining_data;
                         sub_task->source.filename=source.filename;
                         sub_task->destination.location=location_type::CACHE;
+                        sub_task->destination.server=server;
                         sub_task->destination.filename =
                                 std::to_string(dataspace_id) + "_" +
                                 std::to_string(chunk_index);
@@ -215,6 +227,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
                 sub_task->source.size = MAX_IO_UNIT;
                 sub_task->source.filename = source.filename;
                 sub_task->destination.location = location_type::CACHE;
+                sub_task->destination.server=server;
                 sub_task->destination.filename =
                         std::to_string(dataspace_id) + "_" +
                         std::to_string(chunk_index);
@@ -235,6 +248,8 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
     auto map_server = aetrio_system::getInstance(service_i)->map_server;
     auto chunks = mdm->fetch_chunks(task);
     size_t data_pointer=0;
+    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank /
+            PROCESS_PER_NODE);
     for(auto chunk:chunks){
         auto rt = new read_task();
         rt->task_id = static_cast<int64_t>
@@ -243,6 +258,7 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
         rt->source = chunk.destination;
         rt->destination.offset=data_pointer;
         rt->destination.size=rt->source.size;
+        rt->destination.server=server;
         data_pointer+=rt->destination.size;
         rt->destination.filename = std::to_string(static_cast<uint64_t>
                 (std::chrono::duration_cast<std::chrono::microseconds>

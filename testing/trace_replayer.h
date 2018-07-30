@@ -13,7 +13,7 @@
 class trace_replayer{
 public:
     static FILE * open(const char *name, const char *mode) {
-#ifdef TAPIOS
+#ifdef TABIOS
         return aetrio::fopen(name,mode);
 #else
         return std::fopen(name,mode);
@@ -21,7 +21,7 @@ public:
     }
 
     static int close(FILE *fh) {
-#ifdef TAPIOS
+#ifdef TABIOS
         return aetrio::fclose(fh);
 #else
         return std::fclose(fh);
@@ -29,7 +29,7 @@ public:
     }
 
     static size_t read(void* ptr, FILE *fh, size_t amount) {
-#ifdef TAPIOS
+#ifdef TABIOS
         return aetrio::fread(ptr, sizeof(char), amount, fh);
 #else
         return std::fread(ptr, sizeof(char), amount, fh);
@@ -37,7 +37,7 @@ public:
     }
 
     static size_t write(void* ptr, FILE *fh, size_t amount) {
-#ifdef TAPIOS
+#ifdef TABIOS
         return aetrio::fwrite(ptr, sizeof(char), amount, fh);
 #else
         return std::fwrite(ptr, sizeof(char), amount, fh);
@@ -46,7 +46,7 @@ public:
 
 
     static int seek(FILE *fh, size_t amount) {
-#ifdef TAPIOS
+#ifdef TABIOS
         return aetrio::fseek(fh, amount, SEEK_SET);
 #else
         return std::fseek(fh, amount, SEEK_SET);

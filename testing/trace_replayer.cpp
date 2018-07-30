@@ -164,8 +164,8 @@ int trace_replayer::replay_trace(std::string path, std::string traceName,
 
             lineNumber++;
         }
-#ifdef TAPIOS
-        std::cout << "TAPIOS,";
+#ifdef TABIOS
+        std::cout << "TABIOS,";
 #else
         std::cout << "POSIX,";
 #endif
@@ -192,8 +192,8 @@ int trace_replayer::replay_trace(std::string path, std::string traceName,
     if(rank == 0) {
         printf("Time : %lf\n",mean);
         std::cout <<
-                  #ifdef TAPIOS
-                  "TAPIOS,"
+                  #ifdef TABIOS
+                  "TABIOS,"
                   #else
                   "POSIX,"
                   #endif
@@ -208,7 +208,7 @@ int trace_replayer::replay_trace(std::string path, std::string traceName,
     }
     if (line) free(line);
 
-#ifdef TAPIOS
+#ifdef TABIOS
 
 #else
     /*if( remove( "/mnt/orangefs/temp/file.dat" ) != 0 )

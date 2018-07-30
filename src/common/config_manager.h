@@ -24,11 +24,10 @@ private:
     config_manager():
             NATS_URL_CLIENT("nats://localhost:4222/"),
             NATS_URL_SERVER("nats://localhost:4223/"),
-            MEMCACHED_URL_CLIENT("--SERVER=localhost:11211"
-                                 ""),
+            MEMCACHED_URL_CLIENT("--SERVER=localhost:11211 --SERVER=localhost:11213"),
             MEMCACHED_URL_SERVER("--SERVER=localhost:11212"),
             ASSIGNMENT_POLICY("RANDOM"),
-            TS_NUM_WORKER_THREADS(1){}
+            TS_NUM_WORKER_THREADS(4){}
 public:
 /******************************************************************************
 *Variables and members

@@ -35,9 +35,9 @@ public:
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    int put(const table &name,std::string key,const std::string &value) override;
-    std::string get(const table &name, std::string key) override ;
-    std::string remove(const table &name, std::string key) override ;
+    int put(const table &name,std::string key,const std::string &value,std::string group_key) override;
+    std::string get(const table &name, std::string key,std::string group_key) override ;
+    std::string remove(const table &name, std::string key,std::string group_key) override ;
 /******************************************************************************
 *Destructor
 ******************************************************************************/

@@ -12,7 +12,7 @@ std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
 *Interface
 ******************************************************************************/
 void aetrio_system::init(service service) {
-    MPI_Comm_rank(MPI_COMM_SELF,&rank);
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_server = std::make_shared<MemcacheDImpl>
                 (service,
@@ -34,7 +34,8 @@ void aetrio_system::init(service service) {
     switch(service){
         case LIB:{
             if(rank==0){
-                auto value=map_server->get(table::SYSTEM_REG,"app_no");
+                auto value=map_server->get(table::SYSTEM_REG,"app_no",
+                        std::to_string(0));
                 int curr=0;
                 if(!value.empty()){
                     curr = std::stoi(value);
@@ -43,7 +44,7 @@ void aetrio_system::init(service service) {
                 application_id=curr;
                 map_server->put(
                         table::SYSTEM_REG,"app_no",
-                        std::to_string(curr));
+                        std::to_string(curr),std::to_string(0));
             }
             break;
         }

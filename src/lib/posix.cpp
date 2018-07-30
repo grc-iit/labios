@@ -2,9 +2,11 @@
 *include files
 ******************************************************************************/
 #include <zconf.h>
+#include <iomanip>
 #include "posix.h"
 #include "../common/task_builder/task_builder.h"
 #include "../common/return_codes.h"
+#include "../common/timer.h"
 
 /******************************************************************************
 *Interface
@@ -76,7 +78,16 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     auto offset = mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
     auto r_task = read_task(file(filename, offset, size * count), file());
+#ifdef TIMER
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     auto tasks = task_m->build_read_task(r_task);
+#ifdef TIMER
+    std::cout << "build_read_task(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
+#endif
     int ptr_pos=0;
 
     for(auto task:tasks){
@@ -85,15 +96,18 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
             case PFS:
             case BUFFERS:{
                 client_queue->publish_task(&task);
-                while(!data_m->exists(DATASPACE_DB,task.destination.filename)){}
+                while(!data_m->exists(DATASPACE_DB,task.destination.filename,
+                                      std::to_string(task.destination.server)
+                )){}
                 data = const_cast<char *>(data_m->get(DATASPACE_DB,
-                        task.destination.filename).c_str());
-                data_m->remove(DATASPACE_DB,task.destination.filename);
+                        task.destination.filename,std::to_string(task.destination.server)).c_str());
+                data_m->remove(DATASPACE_DB,task.destination.filename,
+                               std::to_string(task.destination.server));
                 break;
             }
             case CACHE:{
                 data = const_cast<char *>(data_m->get(DATASPACE_DB,
-                        task.source.filename).c_str());
+                        task.source.filename,std::to_string(task.destination.server)).c_str());
                 break;
             }
         }
@@ -105,7 +119,6 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 }
 
 size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
-
     auto mdm = metadata_manager::getInstance(LIB);
     auto client_queue = aetrio_system::getInstance(LIB)->get_client_queue
             (CLIENT_TASK_SUBJECT);
@@ -115,14 +128,17 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     auto offset = mdm->get_fp(filename);
     if(!mdm->is_opened(filename))
         throw std::runtime_error("aetrio::fwrite() file not opened!");
-
-
     auto w_task = write_task(file(filename,offset,size*count),file());
-
-
+#ifdef TIMER
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     auto write_tasks = task_m->build_write_task(w_task,static_cast<char*>(ptr));
-
-
+#ifdef TIMER
+    std::cout <<"build_write_task(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
+#endif
 
     int index=0;
     std::string write_data(static_cast<char*>(ptr));
@@ -131,13 +147,15 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
             if(write_data.length() >= task->source.offset + task->source.size){
                 auto data=write_data.substr(task->source.offset,
                         task->source.size);
-                data_m->put(DATASPACE_DB, task->destination.filename, data);
+                data_m->put(DATASPACE_DB, task->destination.filename, data,
+                            std::to_string(task->destination.server));
             }else{
-                data_m->put(DATASPACE_DB, task->destination.filename, write_data);
+                data_m->put(DATASPACE_DB, task->destination.filename,
+                            write_data,std::to_string(task->destination
+                                                              .server));
             }
 
         }
-
         if(task->publish){
             if(size*count < task->source.size)
                 mdm->update_write_task_info(*task,filename,size*count);

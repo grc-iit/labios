@@ -4,7 +4,7 @@
 
 #include "rocksdb_impl.h"
 
-int RocksDBImpl::put(const table &name, std::string key, const std::string &value) {
+int RocksDBImpl::put(const table &name, std::string key, const std::string &value,std::string group_key) {
 
 #ifdef ROCKS_P
     rocksdb::DB* db=create_db(name);
@@ -15,7 +15,7 @@ int RocksDBImpl::put(const table &name, std::string key, const std::string &valu
 #endif
 }
 
-std::string RocksDBImpl::get(const table &name, std::string key) {
+std::string RocksDBImpl::get(const table &name, std::string key,std::string group_key) {
 #ifdef ROCKS_P
     rocksdb::DB* db=create_db(name);
     std::string value=std::string();
@@ -27,7 +27,7 @@ std::string RocksDBImpl::get(const table &name, std::string key) {
 
 }
 
-std::string RocksDBImpl::remove(const table &name, std::string key) {
+std::string RocksDBImpl::remove(const table &name, std::string key,std::string group_key) {
 #ifdef ROCKS_P
     rocksdb::DB* db=create_db(name);
     std::string value=std::string();

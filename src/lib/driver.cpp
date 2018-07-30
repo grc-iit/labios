@@ -56,6 +56,10 @@ void gen_random(char *s, std::size_t len) {
 }
 
 void cm1_base(int argc, char** argv) {
+#ifdef TIMER
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
@@ -93,16 +97,24 @@ void cm1_base(int argc, char** argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "MPIIOSHARED,"
-                  << "average,"
+        //printf("Time : %lf\n",mean);
+        std::cout << "cm1_base,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
     }
+#ifdef TIMER
+    std::cout << "cm1_base(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
+#endif
 }
 
 void cm1_tabios(int argc, char** argv) {
+#ifdef TIMER
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
@@ -141,13 +153,16 @@ void cm1_tabios(int argc, char** argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "TABIOS,"
-                  << "average,"
+        std::cout << "cm1_tabios,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
     }
+#ifdef TIMER
+    std::cout << "cm1_tabios(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
+#endif
 }
 
 
@@ -202,9 +217,7 @@ void montage_base(int argc, char** argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "TABIOS,"
-                  << "average,"
+        std::cout << "montage_base,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
@@ -250,9 +263,7 @@ void hacc_base(int argc, char** argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "TABIOS,"
-                  << "average,"
+        std::cout << "hacc_base,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
@@ -302,9 +313,7 @@ void kmeans_base(int argc, char** argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "TABIOS,"
-                  << "average,"
+        std::cout << "kmeans_base,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
@@ -349,9 +358,7 @@ void hacc_tabios(int argc, char **argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "TABIOS,"
-                  << "average,"
+        std::cout << "hacc_tabios,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
@@ -385,9 +392,9 @@ void kmeans_tabios(int argc, char **argv) {
         for(auto read:workload){
             for(int j=0;j<read[1];++j){
                 size_t rand_offset =rand() % (io_per_teration - 32 * 1024);
-                if(count%50==0)
-                std::cout<<count<<" read: offset: "<<rand_offset<<" size: "
-                                                          ""<<read[0]<<"\n";
+//                if(count%50==0)
+//                std::cout<<count<<" read: offset: "<<rand_offset<<" size: "
+//                                                          ""<<read[0]<<"\n";
                 char read_buf[read[0]];
                 global_timer.resumeTime();
                 aetrio::fseek(fh,rand_offset,SEEK_SET);
@@ -408,103 +415,14 @@ void kmeans_tabios(int argc, char **argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "TABIOS,"
-                  << "average,"
+        std::cout << "kmeans_tabios,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
     }
 }
 
-/******************************************************************************
-*Main
-******************************************************************************/
-int main(int argc, char** argv){
-    aetrio::MPI_Init(&argc,&argv);
-    int rank,comm_size;
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    std::string log_name=std::string(argv[0])+"_"+std::to_string(rank)+".log";
-    freopen(log_name.c_str(), "w", stdout);
-    if(rank==0){
-        aetrio_system::getInstance(service::LIB)->map_client->purge();
-        aetrio_system::getInstance(service::LIB)->map_server->purge();
-        system("rm -rf /opt/temp/1/*");
-        system("rm -rf /opt/temp/2/*");
-        system("rm -rf /opt/temp/3/*");
-        system("rm -rf /opt/temp/4/*");
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
-    int return_val=0;
-    if(argc > 1){
-        testCase= static_cast<test_case>(atoi(argv[1]));
-    }
-    switch(testCase){
-        case SIMPLE_WRITE:{
-            return_val=simple_write();
-        break;
-        }
-        case SIMPLE_READ:{
-            return_val=simple_read();
-            break;
-        }
-        case SIMPLE_MIXED:{
-            return_val=simple_write();
-            return_val=simple_read();
-            break;
-        }
-        case MULTI_WRITE:{
-            return_val=multi_write();
-            break;
-        }
-        case MULTI_READ:{
-            return_val=multi_read();
-            break;
-        }
-        case MULTI_MIXED:{
-            return_val=multi_write();
-            return_val+=multi_read();
-            break;
-        }
-        case CM1_BASE:{
-            cm1_base(argc,argv);
-            break;
-        }
-        case CM1_TABIOS:{
-            cm1_tabios(argc,argv);
-            break;
-        }
-        case MONTAGE_BASE:{
-            montage_base(argc,argv);
-            break;
-        }
-        case MONTAGE_TABIOS:{
-            montage_tabios(argc,argv);
-            break;
-        }
-        case HACC_BASE:{
-            hacc_base(argc,argv);
-            break;
-        }
-        case HACC_TABIOS:{
-            hacc_tabios(argc,argv);
-            break;
-        }
-        case KMEANS_BASE:{
-            kmeans_base(argc,argv);
-            break;
-        }
-        case KMEANS_TABIOS:{
-            kmeans_tabios(argc,argv);
-            break;
-        }
-    }
 
-    aetrio::MPI_Finalize();
-
-    return return_val;
-}
 
 void montage_tabios(int argc, char **argv) {
     int rank,comm_size;
@@ -556,9 +474,7 @@ void montage_tabios(int argc, char **argv) {
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        printf("Time : %lf\n",mean);
-        std::cout << "TABIOS,"
-                  << "average,"
+        std::cout << "montage_tabios,"
                   << std::setprecision(6)
                   << mean
                   << "\n";
@@ -626,3 +542,93 @@ int multi_read(){
     return 0;
 }
 
+
+
+/******************************************************************************
+*Main
+******************************************************************************/
+int main(int argc, char** argv){
+    aetrio::MPI_Init(&argc,&argv);
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string log_name=std::string(argv[0])+"_"+std::to_string(rank)+".log";
+    //freopen(log_name.c_str(), "w+", stdout);
+    if(rank==0){
+        aetrio_system::getInstance(service::LIB)->map_client->purge();
+        aetrio_system::getInstance(service::LIB)->map_server->purge();
+        system("rm -rf /opt/temp/1/*");
+        system("rm -rf /opt/temp/2/*");
+        system("rm -rf /opt/temp/3/*");
+        system("rm -rf /opt/temp/4/*");
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    int return_val=0;
+    if(argc > 1){
+        testCase= static_cast<test_case>(atoi(argv[1]));
+    }
+    switch(testCase){
+        case SIMPLE_WRITE:{
+            return_val=simple_write();
+            break;
+        }
+        case SIMPLE_READ:{
+            return_val=simple_read();
+            break;
+        }
+        case SIMPLE_MIXED:{
+            return_val=simple_write();
+            return_val=simple_read();
+            break;
+        }
+        case MULTI_WRITE:{
+            return_val=multi_write();
+            break;
+        }
+        case MULTI_READ:{
+            return_val=multi_read();
+            break;
+        }
+        case MULTI_MIXED:{
+            return_val=multi_write();
+            return_val+=multi_read();
+            break;
+        }
+        case CM1_BASE:{
+            cm1_base(argc,argv);
+            break;
+        }
+        case CM1_TABIOS:{
+            cm1_tabios(argc,argv);
+            break;
+        }
+        case MONTAGE_BASE:{
+            montage_base(argc,argv);
+            break;
+        }
+        case MONTAGE_TABIOS:{
+            montage_tabios(argc,argv);
+            break;
+        }
+        case HACC_BASE:{
+            hacc_base(argc,argv);
+            break;
+        }
+        case HACC_TABIOS:{
+            hacc_tabios(argc,argv);
+            break;
+        }
+        case KMEANS_BASE:{
+            kmeans_base(argc,argv);
+            break;
+        }
+        case KMEANS_TABIOS:{
+            kmeans_tabios(argc,argv);
+            break;
+        }
+    }
+
+    aetrio::MPI_Finalize();
+
+    return return_val;
+}
