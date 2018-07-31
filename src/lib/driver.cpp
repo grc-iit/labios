@@ -324,17 +324,19 @@ void montage_base(int argc, char** argv) {
     size_t current_offset=0;
     Timer global_timer=Timer();
     global_timer.resumeTime();
-    FILE* fh=std::fopen(filename.c_str(),"w+");
+    //FILE* fh=std::fopen(filename.c_str(),"w+");
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    int fd=open(filename.c_str(),O_CREAT|O_SYNC|O_RSYNC|O_RDWR|O_TRUNC, mode);
     global_timer.pauseTime();
     for(int i=0;i<iteration;++i){
-        for(auto write:workload){
-            for(int j=0;j<write[1];++j){
-                char write_buf[write[0]];
-                gen_random(write_buf,write[0]);
+        for(auto item:workload){
+            for(int j=0;j<item[1];++j){
+                char write_buf[item[0]];
+                gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
                 if(rank%2==0){
-                    std::fwrite(write_buf,sizeof(char),write[0],fh);
-                    std::fflush(fh);
+                    write(fd,write_buf,item[0]);
+                    fsync(fd);
                 }
                 else{
                     static_cast<int64_t>
@@ -344,14 +346,14 @@ void montage_base(int argc, char** argv) {
                 }
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
-                current_offset+=write[0];
+                current_offset+=item[0];
                 //usleep(1000000);
             }
         }
     }
     sleep(3*MAX_SCHEDULE_TIMER);
     global_timer.resumeTime();
-    std::fclose(fh);
+    close(fd);
     global_timer.pauseTime();
 
     for(int i=0;i<iteration;++i){
@@ -367,8 +369,7 @@ void montage_base(int argc, char** argv) {
                 }
                 else{
                     filename=file_path+"test_"+std::to_string(rank-1)+".dat";
-                    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-                    int fd=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
+                    fd=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
                     read(fd,read_buf,write[0]);
                     close(fd);
                 }
