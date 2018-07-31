@@ -30,11 +30,11 @@ const std::string CLIENT_TASK_SUBJECT = "TASK";
 *Configs
 *******************/
 const map_impl_type map_impl_type_t = map_impl_type::MEMCACHE_D;
-const solver_impl_type solver_impl_type_t = solver_impl_type::ROUND_ROBIN;
+const solver_impl_type solver_impl_type_t = solver_impl_type::RANDOM_SELECT;
 const queue_impl_type queue_impl_type_t = queue_impl_type::NATS;
 const io_client_type io_client_type_t = io_client_type::POSIX;
 const std::string KEY_SEPARATOR = "#";
-const std::size_t PROCESS_PER_NODE=1;
+const std::size_t PROCESS_PER_NODE=8;
 /*******************
 *Workers
 *******************/
@@ -71,6 +71,7 @@ const std::size_t MAX_WORKER_TASK_COUNT = 50;
 *******************/
 const std::size_t MAX_NUM_TASKS_IN_QUEUE=1;
 const std::size_t MAX_SCHEDULE_TIMER=1;
+const std::size_t MAX_READ_TIMER=3;
 const std::size_t MAX_TASK_TIMER_MS=MAX_SCHEDULE_TIMER*1000;
 const std::size_t MAX_TASK_TIMER_MS_MAX=MAX_SCHEDULE_TIMER*1000000;
 const std::size_t WORKER_MANAGER_INTERVAL=5;

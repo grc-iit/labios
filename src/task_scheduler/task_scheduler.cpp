@@ -2,6 +2,7 @@
 *include files
 ******************************************************************************/
 #include <algorithm>
+#include <iomanip>
 #include "task_scheduler.h"
 #include "../common/external_clients/memcached_impl.h"
 #include "../aetrio_system.h"
@@ -79,6 +80,8 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
     delete input.task_size;
     delete output.solution;
 #ifdef TIMER
-    std::cout<<"task_scheduler::schedule_tasks(),"<<t.pauseTime()<<"\n";
+    std::cout << "task_scheduler::schedule_tasks(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
 #endif
 }

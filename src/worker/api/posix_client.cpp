@@ -10,11 +10,14 @@ int posix_client::read(read_task task) {
     FILE* fh=fopen(task.source.filename.c_str(),"r+");
     auto data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     long long int pos=fseek(fh,task.source.offset,SEEK_SET);
-    if(pos!=0) throw std::runtime_error("posix_client::read"
-                                                         "() seek failed");
+    if(pos!=0)
+        std::cerr << "posix_client::read() seek failed\n";
+        //throw std::runtime_error("posix_client::read() seek failed");
     size_t count=fread(data,sizeof(char),task.source.size,fh);
-    if(count!=task.source.size) throw std::runtime_error("posix_client::read"
-                                                         "() read failed");
+    if(count!=task.source.size)
+        std::cerr << "posix_client::read() read failed\n";
+        //throw std::runtime_error("posix_client::read() read failed");
+
     auto map_client=aetrio_system::getInstance(WORKER)->map_client;
     serialization_manager sm=serialization_manager();
     map_client->put(DATASPACE_DB,task.destination.filename,data,
@@ -61,18 +64,19 @@ int posix_client::write(write_task task) {
         /*
          * New I/O
          */
-#ifdef DEBUG
-        std::cout <<data.length()<<" chunk index:"<<chunk_index
-                  <<" dataspaceId:"<<task.destination.filename
-                  <<" clientId: " << task.destination.server<<"\n";
-#endif
-
         auto file_id=static_cast<int64_t>
         (std::chrono::duration_cast<std::chrono::microseconds>
                         (std::chrono::system_clock::now().time_since_epoch()).count());
         file_path=dir+std::to_string(file_id);
+#ifdef DEBUG
+        std::cout <<data.length()<<" chunk index:"<<chunk_index
+                  <<" dataspaceId:"<<task.destination.filename
+                  <<" created filename:"<<file_path
+                  <<" clientId: " << task.destination.server<<"\n";
+#endif
         FILE* fh=fopen(file_path.c_str(),"w+");
-        fwrite(data.c_str(),sizeof(char),task.destination.size,fh);
+        auto count = fwrite(data.c_str(),sizeof(char),task.destination.size,fh);
+        if(count!=task.destination.size) std::cerr<<"written less"<<count<<"\n";
         fclose(fh);
     }else{
         /*cd
@@ -88,7 +92,7 @@ int posix_client::write(write_task task) {
         file_path=chunk_meta1.destination.filename;
         FILE* fh=fopen(chunk_meta1.destination.filename.c_str(),"r+");
         fseek(fh,task.source.offset-base_offset,SEEK_SET);
-        fwrite(data.c_str(),task.source.size, sizeof(char),fh);
+        fwrite(data.c_str(),sizeof(char),task.source.size,fh);
         fclose(fh);
     }
     chunk_meta1.actual_user_chunk=task.source;

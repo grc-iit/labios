@@ -48,6 +48,7 @@ int worker::run() {
                               << "\tOperation: READ"
                               << "\tOffset:" << rt->source.offset
                               << "\tSize:" << rt->source.size
+                              << "\tFilename:" << rt->source.filename
                               << "\n";
 #endif
                     client->read(*rt);

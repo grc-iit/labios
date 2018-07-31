@@ -1,6 +1,7 @@
 /******************************************************************************
 *include files
 ******************************************************************************/
+#include <iomanip>
 #include "nats_impl.h"
 #include "../timer.h"
 
@@ -15,7 +16,9 @@ int NatsImpl::publish_task(task* task_t) {
     auto msg = serialization_manager().serialize_task(task_t);
     natsConnection_PublishString(nc, subject.c_str(), msg.c_str());
 #ifdef TIMER
-    std::cout<<"NatsImpl::publish_task(),"<<t.pauseTime()<<"\n";
+    std::cout << "NatsImpl::publish_task(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
 #endif
     return 0;
 }
@@ -31,7 +34,9 @@ task*  NatsImpl::subscribe_task_with_timeout(int &status) {
     task* task= serialization_manager().deserialize_task(natsMsg_GetData(msg));
     status=0;
 #ifdef TIMER
-    std::cout<<"NatsImpl::subscribe_task_with_timeout(),"<<t.pauseTime()<<"\n";
+    std::cout << "NatsImpl::subscribe_task_with_timeout(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
 #endif
     return task;
 }
@@ -47,7 +52,9 @@ task* NatsImpl::subscribe_task(int &status) {
     task* task= serialization_manager().deserialize_task(natsMsg_GetData(msg));
     status=0;
 #ifdef TIMER
-    std::cout<<"NatsImpl::subscribe_task(),"<<t.pauseTime()<<"\n";
+    std::cout << "NatsImpl::subscribe_task(),"
+              <<std::fixed<<std::setprecision(10)
+              <<t.pauseTime()<<"\n";
 #endif
     return task;
 }

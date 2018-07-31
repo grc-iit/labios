@@ -31,6 +31,7 @@ double Timer::pauseTime() {
     return elapsed_time;
 }
 
-void Timer::resumeTime() {
+int Timer::resumeTime() {
     t1 = std::chrono::high_resolution_clock::now();
+    return 0;
 }

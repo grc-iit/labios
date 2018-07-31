@@ -15,7 +15,7 @@ public:
     double endTimeWithPrint(std::string fnName);
     double stopTime();
     double pauseTime();
-    void resumeTime();
+    int resumeTime();
     double elapsed_time;
 private:
     std::chrono::high_resolution_clock::time_point t1;
