@@ -1,9 +1,13 @@
 # README #
 #TODO LIST
 ##cluster
-* finish timers(done)
-* scripting for deployment
-* investigate timings first locally. Make TABIOS faster!
+* Sync nodes 
+** Make sure .bashrc is the same everywhere for both cc user and root
+* Start NFS everywhere
+* Start PFS servers on servers and BB
+* Start PFS clients everywhere
+* Start NATS and Memcached
+* Run the tune script for all nodes
 
 ##Immediate
 * Revisit task_builder (done)

@@ -65,7 +65,7 @@ void cm1_base(int argc, char** argv) {
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
     parse_opts(argc,argv);
-    std::string filename=file_path+"/test.dat";
+    std::string filename=file_path+"test.dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
     workload.push_back({1*1024*1024, 32});
@@ -73,7 +73,18 @@ void cm1_base(int argc, char** argv) {
     Timer global_timer=Timer();
     MPI_File outFile;
     global_timer.resumeTime();
-    MPI_File_open(MPI_COMM_WORLD, filename.c_str(), MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &outFile);
+    MPI_Info info;
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "direct_write", "true");
+
+    MPI_File_open(MPI_COMM_WORLD, filename.c_str(), MPI_MODE_CREATE |
+                                                    MPI_MODE_RDWR,
+                  info, &outFile);
+    MPI_File_set_view(outFile, static_cast<MPI_Offset>(rank * io_per_teration),
+                      MPI_CHAR,
+                      MPI_CHAR,
+                      "native",
+                      MPI_INFO_NULL);
     global_timer.pauseTime();
     for(int i=0;i<iteration;++i){
         for(auto write:workload){
@@ -81,8 +92,16 @@ void cm1_base(int argc, char** argv) {
                 char write_buf[write[0]];
                 gen_random(write_buf,write[0]);
                 global_timer.resumeTime();
-                MPI_File_write_at_all(outFile, static_cast<MPI_Offset>(rank * io_per_teration + current_offset), write_buf,
-                                      static_cast<int>(write[0]), MPI_CHAR, MPI_STATUS_IGNORE);
+//                MPI_File_seek(outFile,static_cast<MPI_Offset>(rank *
+//                                                              io_per_teration
+//                                                              +
+//                                                              current_offset)
+//                        ,SEEK_SET);
+                MPI_File_write(outFile,
+                                       write_buf,
+                                      static_cast<int>(write[0]),
+                                       MPI_CHAR,
+                                       MPI_STATUS_IGNORE);
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
                 current_offset+=write[0];
