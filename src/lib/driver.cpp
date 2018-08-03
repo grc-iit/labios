@@ -140,7 +140,10 @@ void cm1_tabios(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
-    parse_opts(argc,argv);
+    //parse_opts(argc,argv);
+
+    std::cout
+            <<"#####################################################"<<config_manager::get_instance()->NATS_URL_CLIENT<<"\n";
     std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
@@ -196,8 +199,9 @@ void hacc_base(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
+    std::string buf_path=argv[4];
     parse_opts(argc,argv);
-    std::string filename=file_path+"test_"+std::to_string(rank)+".dat";
+    std::string filename=buf_path+"test_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
     workload.push_back({1*1024*1024, 32});

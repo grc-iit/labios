@@ -40,13 +40,16 @@ std::string MemcacheDImpl::get(const table &name, std::string key,std::string gr
 
 std::string MemcacheDImpl::remove(const table &name, std::string key,std::string group_key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
-    memcached_delete(mem_client, key.c_str(), key.length(), (time_t)0);
+    memcached_delete_by_key(mem_client,group_key.c_str(),
+                            group_key.length(), key.c_str(), key.length(),
+                            (time_t)0);
     return "";
 }
 
 bool MemcacheDImpl::exists(const table &name, std::string key,std::string group_key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
-    memcached_return_t rc= memcached_exist(mem_client,key.c_str(),key.size());
+    memcached_return_t rc= memcached_exist_by_key(mem_client,group_key.c_str(),
+            group_key.length(),key.c_str(),key.size());
     return rc == memcached_return_t::MEMCACHED_SUCCESS;
 }
 

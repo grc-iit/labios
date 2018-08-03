@@ -30,47 +30,23 @@ const std::string CLIENT_TASK_SUBJECT = "TASK";
 *Configs
 *******************/
 const map_impl_type map_impl_type_t = map_impl_type::MEMCACHE_D;
-const solver_impl_type solver_impl_type_t = solver_impl_type::RANDOM_SELECT;
+const solver_impl_type solver_impl_type_t = solver_impl_type::ROUND_ROBIN;
 const queue_impl_type queue_impl_type_t = queue_impl_type::NATS;
 const io_client_type io_client_type_t = io_client_type::POSIX;
 const std::string KEY_SEPARATOR = "#";
-const std::size_t PROCESS_PER_NODE=48;
+const std::size_t PROCESS_PER_NODE=8;
 /*******************
 *Workers
 *******************/
-const std::size_t MAX_WORKER_COUNT = 16;
+const std::size_t MAX_WORKER_COUNT = 4;
 const std::string WORKER_TASK_SUBJECT[MAX_WORKER_COUNT] =
         {"1",
          "2",
          "3",
-         "4",
-         "5",
-         "6",
-         "7",
-         "8",
-         "9",
-         "10",
-         "11",
-         "12",
-         "13",
-         "14",
-         "15",
-         "16"
+         "4"
         };
 const int WORKER_SPEED[MAX_WORKER_COUNT] =
         {2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
          2,
          2,
          2
@@ -79,39 +55,15 @@ const int WORKER_ENERGY[MAX_WORKER_COUNT] =
         {2,
          2,
          2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
          2
         };
 const int64_t WORKER_CAPACITY_MAX[MAX_WORKER_COUNT] =
         {137438953472,
          137438953472,
          137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
          137438953472
         };
-const std::string WORKER_PATH="/home/cc/worker";
+const std::string WORKER_PATH="/opt/temp/";
 const std::string PFS_PATH="/mnt/pfs";
 const size_t KB = 1024;
 const std::size_t WORKER_ATTRIBUTES_COUNT=5;

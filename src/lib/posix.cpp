@@ -99,7 +99,7 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
                 timer.startTime();
                 client_queue->publish_task(&task);
                 int retries = 1;
-                while(retries<5){
+                while(retries<10){
                     if(data_m->exists(DATASPACE_DB,task.destination.filename,
                                       std::to_string(task.destination.server)))
                         break;
@@ -108,14 +108,14 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
                         if(time_elapsed>MAX_READ_TIMER &&
                            !data_m->exists(DATASPACE_DB,task.destination.filename,
                                            std::to_string(task.destination.server))){
-                            std::cerr<<"timeout on read occured!\n";
+                            //std::cerr<<"timeout on read occured!\n";
                             client_queue->publish_task(&task);
                             retries++;
                             timer.startTime();
                         }
                     }
                 }
-                if(retries==5) std::cerr << "Read task not found in buffers\n";
+                if(retries==10) std::cerr << "Read task not found in buffers\n";
 
                 data = const_cast<char *>(data_m->get(DATASPACE_DB,
                         task.destination.filename,std::to_string(task.destination.server)).c_str());

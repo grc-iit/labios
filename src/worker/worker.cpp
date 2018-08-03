@@ -2,6 +2,7 @@
 *include files
 ******************************************************************************/
 #include <sys/stat.h>
+#include <iomanip>
 #include "worker.h"
 #include "../common/return_codes.h"
 std::shared_ptr<worker> worker::instance = nullptr;
@@ -71,10 +72,12 @@ int worker::run() {
         }
         if(t.stopTime()>WORKER_INTERVAL || task_count>=MAX_WORKER_TASK_COUNT){
             if(update_score(false)!=SUCCESS){
-                throw std::runtime_error("worker::update_score() failed!");
+                std::cerr << "worker::update_score() failed!\n";
+                //throw std::runtime_error("worker::update_score() failed!");
             }
             if(update_capacity()!=SUCCESS){
-                throw std::runtime_error("worker::update_capacity() failed!");
+                std::cerr << "worker::update_capacity() failed!\n";
+                //throw std::runtime_error("worker::update_capacity() failed!");
             }
             t.startTime();
             task_count=0;
@@ -134,7 +137,8 @@ int worker::update_capacity() {
             table::WORKER_CAPACITY,
             std::to_string(worker_index),
             std::to_string(remaining_cap),std::to_string(0))==MEMCACHED_SUCCESS){
-        //std::cout<<"worker capacity: "<<(int)remaining_cap<<"\n";
+        std::cout<<"worker capacity: "<<std::setprecision(6)
+        <<remaining_cap<<"\n";
         return SUCCESS;
     }
     else return WORKER__UPDATE_CAPACITY_FAILED;

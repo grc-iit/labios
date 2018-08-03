@@ -42,7 +42,7 @@ int task_scheduler::run() {
 
 
 void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
-#ifdef TIMER
+#ifdef TIMERTS
     Timer t=Timer();
     t.resumeTime();
 #endif
@@ -79,7 +79,7 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
     }
     delete input.task_size;
     delete output.solution;
-#ifdef TIMER
+#ifdef TIMERTS
     std::cout << "task_scheduler::schedule_tasks(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";

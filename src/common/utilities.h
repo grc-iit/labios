@@ -61,6 +61,10 @@ break;
 
         }
     }
+    std::cout << conf->NATS_URL_CLIENT <<"\n"
+            << conf->NATS_URL_SERVER <<"\n"
+            << conf->MEMCACHED_URL_CLIENT <<"\n"
+            << conf->MEMCACHED_URL_SERVER <<"\n";
     for(int i=0;i<argc;++i){
        delete(argv_cp[i]);
     }
