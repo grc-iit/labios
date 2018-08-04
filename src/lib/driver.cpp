@@ -92,11 +92,6 @@ void cm1_base(int argc, char** argv) {
                 char write_buf[write[0]];
                 gen_random(write_buf,write[0]);
                 global_timer.resumeTime();
-//                MPI_File_seek(outFile,static_cast<MPI_Offset>(rank *
-//                                                              io_per_teration
-//                                                              +
-//                                                              current_offset)
-//                        ,SEEK_SET);
                 MPI_File_write(outFile,
                                        write_buf,
                                       static_cast<int>(write[0]),
@@ -140,10 +135,6 @@ void cm1_tabios(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
-    //parse_opts(argc,argv);
-
-    std::cout
-            <<"#####################################################"<<config_manager::get_instance()->NATS_URL_CLIENT<<"\n";
     std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
@@ -163,7 +154,6 @@ void cm1_tabios(int argc, char** argv) {
                 aetrio::fwrite(write_buf,sizeof(char),write[0],fh);
                 global_timer.pauseTime();
                 current_offset+=write[0];
-                //usleep(1000000);
             }
         }
     }
@@ -357,49 +347,52 @@ void montage_base(int argc, char** argv) {
                 char write_buf[item[0]];
                 gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
-                if(rank%2==0){
-                    write(fd,write_buf,item[0]);
-                    fsync(fd);
-                }
-                else{
-                    static_cast<int64_t>
-                    (std::chrono::duration_cast<std::chrono::microseconds>
-                            (std::chrono::system_clock::now().
-                                    time_since_epoch()).count());
-                }
+//                if(rank%2==0){
+//                    write(fd,write_buf,item[0]);
+//                    fsync(fd);
+//                }
+//                else{
+//                    static_cast<int64_t>
+//                    (std::chrono::duration_cast<std::chrono::microseconds>
+//                            (std::chrono::system_clock::now().
+//                                    time_since_epoch()).count());
+//                }
+                write(fd,write_buf,item[0]);
+                fsync(fd);
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
                 current_offset+=item[0];
-                //usleep(1000000);
             }
         }
     }
-    sleep(3*MAX_SCHEDULE_TIMER);
+    //sleep(3*MAX_SCHEDULE_TIMER);
     global_timer.resumeTime();
     close(fd);
     global_timer.pauseTime();
 
     for(int i=0;i<iteration;++i){
-        for(auto write:workload){
-            for(int j=0;j<write[1];++j){
-                char read_buf[write[0]];
+        for(auto item:workload){
+            for(int j=0;j<item[1];++j){
+                char read_buf[item[0]];
                 global_timer.resumeTime();
-                if(rank%2==0){
-                    static_cast<int64_t>
-                    (std::chrono::duration_cast<std::chrono::microseconds>
-                            (std::chrono::system_clock::now().
-                                    time_since_epoch()).count());
-                }
-                else{
-                    filename=file_path+"test_"+std::to_string(rank-1)+".dat";
-                    fd=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
-                    read(fd,read_buf,write[0]);
-                    close(fd);
-                }
+//                if(rank%2==0){
+//                    static_cast<int64_t>
+//                    (std::chrono::duration_cast<std::chrono::microseconds>
+//                            (std::chrono::system_clock::now().
+//                                    time_since_epoch()).count());
+//                }
+//                else{
+//                    filename=file_path+"test_"+std::to_string(rank-1)+".dat";
+//                    fd=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
+//                    read(fd,read_buf,item[0]);
+//                    close(fd);
+//                }
+                fd=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
+                read(fd,read_buf,item[0]);
+                close(fd);
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
-                current_offset+=write[0];
-                //usleep(1000000);
+                current_offset+=item[0];
             }
         }
     }
@@ -452,21 +445,22 @@ void montage_tabios(int argc, char **argv) {
                 aetrio::fwrite(write_buf,sizeof(char),write[0],fh);
                 global_timer.pauseTime();
                 current_offset+=write[0];
-                //usleep(1000000);
             }
         }
     }
     sleep(3*MAX_SCHEDULE_TIMER);
+    char* buf=new char[io_per_teration];
+    gen_random(buf,io_per_teration);
     aetrio::fseek(fh,0,SEEK_SET);
     for(int i=0;i<iteration;++i){
-        for(auto write:workload){
-            for(int j=0;j<write[1];++j){
-                char read_buf[write[0]];
+        for(auto item:workload){
+            for(int j=0;j<item[1];++j){
+                char read_buf[item[0]];
+                gen_random(read_buf,item[0]);
                 global_timer.resumeTime();
-                aetrio::fread(read_buf,sizeof(char),write[0],fh);
+                aetrio::fwrite(read_buf,sizeof(char),item[0],fh);
                 global_timer.pauseTime();
-                current_offset+=write[0];
-                //usleep(1000000);
+                current_offset+=item[0];
             }
         }
     }
