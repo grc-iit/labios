@@ -6,11 +6,14 @@
 #include <iomanip>
 #include <zconf.h>
 #include <fcntl.h>
+#include <malloc.h>
 #include "posix.h"
 #include "../common/return_codes.h"
 #include "../../testing/trace_replayer.h"
 #include "../common/timer.h"
 #include "../common/utilities.h"
+#include <sstream>
+#include <fstream>
 
 enum test_case{
     SIMPLE_WRITE=0,
@@ -298,7 +301,6 @@ void hacc_base(int argc, char** argv) {
                   <<t.pauseTime()<<"\n";
 #endif
     }
-
 }
 
 void hacc_tabios(int argc, char **argv) {
@@ -334,21 +336,18 @@ void hacc_tabios(int argc, char **argv) {
             }
         }
     }
-    aetrio::fclose(fh);
-    auto out_buf=static_cast<char*>(malloc(io_per_teration/8));
-    gen_random(out_buf,io_per_teration/8);
-    MPI_Barrier(MPI_COMM_WORLD);
-
     global_timer.resumeTime();
-//    fh=aetrio::fopen(filename.c_str(),"r+");
-//    aetrio::fread(read_buf,sizeof(char),io_per_teration,fh);
-//    aetrio::fclose(fh);
-
-    std::string output=file_path+"final_"+std::to_string(rank)+".out";
-    FILE* out=aetrio::fopen(output.c_str(),"+w");
-    aetrio::fwrite(out_buf,sizeof(char),io_per_teration/8,out);
-    aetrio::fclose(out);
+    aetrio::fclose(fh);
     global_timer.pauseTime();
+
+//    auto out_buf=static_cast<char*>(malloc(io_per_teration/8));
+//    gen_random(out_buf,io_per_teration/8);
+//    MPI_Barrier(MPI_COMM_WORLD);
+//    std::string output=file_path+"final_"+std::to_string(rank)+".out";
+//    FILE* out=aetrio::fopen(output.c_str(),"+w");
+//    aetrio::fwrite(out_buf,sizeof(char),io_per_teration/8,out);
+//    aetrio::fclose(out);
+//    global_timer.pauseTime();
 
     auto time=global_timer.elapsed_time;
     double sum;
@@ -373,90 +372,197 @@ void montage_base(int argc, char** argv) {
     Timer t=Timer();
     t.resumeTime();
 #endif
+    std::stringstream stream;
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
+    std::string final_path=argv[4];
     parse_opts(argc,argv);
-    std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
+    std::string filename1=file_path+"/file1_"+std::to_string(rank)+".dat";
+    std::string filename2=file_path+"/file2_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+#ifdef TIMERBASE
+    Timer c=Timer();
+    c.resumeTime();
+#endif
+    int count=0;
+    for(auto i=0;i<32;++i){
+        for(int j=0;j<comm_size*1024*128;++j){
+            count+=1;
+            auto result = count * j;
+            result -=j;
+        }
+        count =0;
+    }
     workload.push_back({1*1024*1024, 32});
-
     size_t current_offset=0;
+#ifdef TIMERBASE
+    if(rank == 0){
+        stream << "montage_base(),"
+               <<std::fixed<<std::setprecision(10)
+               <<c.pauseTime()<<",";
+    }
+    else c.pauseTime();
+#endif
+#ifdef TIMERBASE
+    Timer w=Timer();
+    w.resumeTime();
+#endif
     Timer global_timer=Timer();
     global_timer.resumeTime();
-    //FILE* fh=std::fopen(filename.c_str(),"w+");
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    int fd=open(filename.c_str(),O_CREAT|O_SYNC|O_RSYNC|O_RDWR|O_TRUNC, mode);
+    int fd1,fd2;
+    if(rank%2==0){
+        fd1=open(filename1.c_str(),O_CREAT|O_SYNC|O_DSYNC|O_WRONLY|O_TRUNC, mode);
+        fd2=open(filename2.c_str(),O_CREAT|O_SYNC|O_DSYNC|O_WRONLY|O_TRUNC, mode);
+    }
     global_timer.pauseTime();
+#ifdef TIMERBASE
+    w.pauseTime();
+#endif
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
                 char write_buf[item[0]];
                 gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
-//                if(rank%2==0){
-//                    write(fd,write_buf,item[0]);
-//                    fsync(fd);
-//                }
-//                else{
-//                    static_cast<int64_t>
-//                    (std::chrono::duration_cast<std::chrono::microseconds>
-//                            (std::chrono::system_clock::now().
-//                                    time_since_epoch()).count());
-//                }
-                write(fd,write_buf,item[0]);
-                fsync(fd);
+#ifdef TIMERBASE
+        w.resumeTime();
+#endif
+                if(rank%2==0){
+                    if(j%2==0){
+                        write(fd1,write_buf,item[0]);
+                        fsync(fd1);
+                    }else{
+                        write(fd2,write_buf,item[0]);
+                        fsync(fd2);
+                    }
+
+                }
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
+#ifdef TIMERBASE
+    w.pauseTime();
+#endif
                 current_offset+=item[0];
             }
         }
     }
-    //sleep(3*MAX_SCHEDULE_TIMER);
     global_timer.resumeTime();
-    close(fd);
+    if(rank%2==0){
+        close(fd1);
+        close(fd2);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
     global_timer.pauseTime();
-
+#ifdef TIMERBASE
+    w.resumeTime();
+    if(rank == 0) stream << w.pauseTime()<<",";
+    else w.pauseTime();
+#endif
+#ifdef TIMERBASE
+    Timer r=Timer();
+#endif
+    if(rank==0)
+        system("sudo sh /home/anthony/Dropbox/Projects/aetrio/scripts/drop_cache"
+                       ".sh");
+    size_t align = 4096;
+    global_timer.resumeTime();
+    if(rank%2!=0){
+        filename1=file_path+"file1_"+std::to_string(rank-1)+".dat";
+        filename2=file_path+"file2_"+std::to_string(rank-1)+".dat";
+        fd1=open(filename1.c_str(),O_DIRECT|O_RDONLY| mode);
+        if(fd1==-1) std::cerr << "open() failed!\n";
+        fd2=open(filename2.c_str(),O_DIRECT|O_RDONLY| mode);
+        if(fd2==-1) std::cerr << "open() failed!\n";
+    }
+    global_timer.pauseTime();
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
-                char read_buf[item[0]];
+                void* read_buf;
+                read_buf = memalign(align * 2, item[0] + align);
+                if (read_buf == NULL) std::cerr <<"memalign\n";
+                read_buf += align;
                 global_timer.resumeTime();
-//                if(rank%2==0){
-//                    static_cast<int64_t>
-//                    (std::chrono::duration_cast<std::chrono::microseconds>
-//                            (std::chrono::system_clock::now().
-//                                    time_since_epoch()).count());
-//                }
-//                else{
-//                    filename=file_path+"test_"+std::to_string(rank-1)+".dat";
-//                    fd=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
-//                    read(fd,read_buf,item[0]);
-//                    close(fd);
-//                }
-                fd=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
-                read(fd,read_buf,item[0]);
-                close(fd);
+#ifdef TIMERBASE
+    r.resumeTime();
+#endif
+                if(rank%2!=0){
+                    ssize_t bytes = 0;
+                    bytes = read(fd1,read_buf,item[0]/2);
+                    bytes+= read(fd2,read_buf,item[0]/2);
+//                    if(j%2==0){
+//                        bytes = read(fd1,read_buf,item[0]);
+//                    }else{
+//                        bytes = read(fd2,read_buf,item[0]);
+//                    }
+                    if(bytes!=item[0])
+                        std::cerr << "Read() failed!"<<"Bytes:"<<bytes
+                                  <<"\tError code:"<<errno << "\n";
+                }
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
+#ifdef TIMERBASE
+    r.pauseTime();
+#endif
                 current_offset+=item[0];
             }
         }
     }
     global_timer.resumeTime();
+    close(fd1);
+    close(fd2);
+#ifdef TIMERBASE
+    if(rank == 0) stream <<r.pauseTime()<<",";
+    else r.pauseTime();
+#endif
+
+#ifdef TIMERBASE
+    Timer a=Timer();
+    a.resumeTime();
+#endif
+    std::string finalname=final_path+"/final_"+std::to_string(rank)+".dat";
+    std::fstream outfile;
+    outfile.open(finalname, std::ios::out);
+    global_timer.pauseTime();
+    for(auto i=0;i<32;++i){
+        for(int j=0;j<comm_size*1024*128;++j){
+            count+=1;
+            auto result = count * j;
+            result -=j;
+        }
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::uniform_int_distribution<int> dist(0, io_per_teration);
+        auto rand =dist(generator);
+        int x = (i+1)*rand;
+        global_timer.resumeTime();
+        outfile << x << std::endl;
+        global_timer.pauseTime();
+    }
+    global_timer.resumeTime();
+    outfile.close();
+    global_timer.pauseTime();
+#ifdef TIMERBASE
+    if(rank == 0){
+        stream << a.pauseTime()<<",";
+    }
+    else a.pauseTime();
+#endif
 
     auto time=global_timer.elapsed_time;
     double sum;
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double mean = sum / comm_size;
     if(rank == 0) {
-        std::cout << "average_montage_base,"
-                  << std::setprecision(6)
-                  << mean
-                  << "\n";
+        stream << "average,"
+               << mean
+               << "\n";
+        std::cout << stream.str();
 #ifdef TIMER
         std::cout << "montage_base(),"
                   <<std::fixed<<std::setprecision(10)
@@ -536,6 +642,19 @@ void montage_tabios(int argc, char **argv) {
 }
 
 void kmeans_base(int argc, char** argv) {
+    /**
+     * PHASE 1:
+     * MPI write shared file simulation of producing points 49GB
+     * PHASE 2:
+     * copy 49 GB from 16 PFS servers to 16 HDFS (pvfs2-cp /mnt/pfs1 /mnt/pfs2)
+     * PHASE 3:
+     * Run Kmeans on 16 HDFS machines
+     ** MPI Read 49GB
+     ** MPI write the centroid on PFS shared file (COMM_WORLD) 50MB
+     * MPI read the shared file (COMM_GROUP_REDUCE) 50MB
+     * reduce poin to rank 0
+     * One rank as aggregator writes the final centroid (rank 0) 64KB
+ */
 #ifdef TIMER
     Timer t=Timer();
     t.resumeTime();
@@ -619,6 +738,7 @@ void kmeans_base(int argc, char** argv) {
 }
 
 void kmeans_tabios(int argc, char **argv) {
+
 #ifdef TIMER
     Timer t=Timer();
     t.resumeTime();
@@ -755,8 +875,6 @@ int multi_read(){
     free(t);
     return 0;
 }
-
-int test_queue(int num_tasks)
 
 
 /******************************************************************************

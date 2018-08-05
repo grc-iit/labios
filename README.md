@@ -1,7 +1,9 @@
 # README #
 #TODO LIST
 ##cluster
-* Sync nodes 
+* Sync nodes
+** Change permissions to /Chameleon-toolkit/ssh_keys/ to 600
+`sudo chmod 600 /home/cc/Chameleon-toolkit/ssh_keys.id_rsa*`
 ** Make sure .bashrc is the same everywhere for both cc user and root
 * Start NFS everywhere
 * Start PFS servers on servers and BB
