@@ -157,7 +157,7 @@ void cm1_tabios(int argc, char** argv) {
             }
         }
     }
-
+    sleep(10*MAX_SCHEDULE_TIMER);
     global_timer.resumeTime();
     aetrio::fclose(fh);
     global_timer.pauseTime();
@@ -170,13 +170,15 @@ void cm1_tabios(int argc, char** argv) {
                   << std::setprecision(6)
                   << mean
                   << "\n";
+        std::cout << "Please enter an integer value: ";
+        int i;
+        std::cin >> i;
 #ifdef TIMER
         std::cout << "cm1_tabios(),"
                   <<std::fixed<<std::setprecision(10)
                   <<t.pauseTime()<<"\n";
 #endif
     }
-
 }
 
 void hacc_base(int argc, char** argv) {
@@ -197,40 +199,88 @@ void hacc_base(int argc, char** argv) {
     workload.push_back({1*1024*1024, 32});
 
     size_t current_offset=0;
+#ifdef TIMERBASE
+        Timer wbb=Timer();
+        wbb.resumeTime();
+#endif
     Timer global_timer=Timer();
     global_timer.resumeTime();
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    int fd=open(filename.c_str(),O_CREAT|O_SYNC|O_RSYNC|O_RDWR|O_TRUNC, mode);
+//    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+//    int fd=open(filename.c_str(),O_CREAT|O_SYNC|O_RSYNC|O_RDWR|O_TRUNC, mode);
+    FILE* fh = std::fopen(filename.c_str(),"w+");
     global_timer.pauseTime();
+#ifdef TIMERBASE
+    wbb.pauseTime();
+#endif
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
                 char write_buf[item[0]];
                 gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
-                write(fd,write_buf,item[0]);
-                fsync(fd);
+#ifdef TIMERBASE
+                wbb.resumeTime();
+#endif
+//                write(fd,write_buf,item[0]);
+//                fsync(fd);
+                std::fwrite(write_buf,sizeof(char),item[0],fh);
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
+#ifdef TIMERBASE
+                wbb.pauseTime();
+#endif
                 current_offset+=item[0];
             }
         }
     }
+#ifdef TIMERBASE
+    wbb.resumeTime();
+    if(rank == 0) std::cout << "hacc_base()::write_to_BB,"
+              <<std::fixed<<std::setprecision(10)
+              <<wbb.pauseTime()<<"\n";
+    else wbb.pauseTime();
+#endif
     auto read_buf=static_cast<char*>(calloc(io_per_teration, sizeof(char)));
     global_timer.resumeTime();
-    close(fd);
-
-    int in=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
-    read(in,read_buf,io_per_teration);
-    close(in);
+#ifdef TIMERBASE
+    Timer rbb=Timer();
+    rbb.resumeTime();
+#endif
+    //close(fd);
+    std::fclose(fh);
+//    int in=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
+//    read(in,read_buf,io_per_teration);
+//    close(in);
+    FILE* fh1 = std::fopen(filename.c_str(),"r");
+    std::fread(read_buf,sizeof(char),io_per_teration,fh1);
+    std::fclose(fh1);
     MPI_Barrier(MPI_COMM_WORLD);
-
+#ifdef TIMERBASE
+    if(rank == 0) std::cout << "hacc_base()::read_from_BB,"
+              <<std::fixed<<std::setprecision(10)
+              <<rbb.pauseTime()<<"\n";
+    else rbb.pauseTime();
+#endif
     std::string output=file_path+"final_"+std::to_string(rank)+".out";
-    int out=open(output.c_str(),O_CREAT|O_SYNC|O_WRONLY|O_TRUNC, mode);
-    write(out,read_buf,io_per_teration);
-    fsync(out);
-    close(out);
+#ifdef TIMERBASE
+    Timer pfs=Timer();
+    pfs.resumeTime();
+#endif
+//    int out=open(output.c_str(),O_CREAT|O_SYNC|O_WRONLY|O_TRUNC, mode);
+//    write(out,read_buf,io_per_teration);
+//    fsync(out);
+//    close(out);
+    FILE* fh2 = std::fopen(output.c_str(),"w");
+    std::fwrite(read_buf,sizeof(char),io_per_teration,fh2);
+    std::fflush(fh2);
+    std::fclose(fh2);
     MPI_Barrier(MPI_COMM_WORLD);
+#ifdef TIMERBASE
+    if(rank == 0) std::cout << "hacc_base()::write_to_PFS,"
+              <<std::fixed<<std::setprecision(10)
+              <<pfs.pauseTime()<<"\n";
+    else pfs.pauseTime();
+#endif
     global_timer.pauseTime();
 
     auto time=global_timer.elapsed_time;
@@ -706,6 +756,7 @@ int multi_read(){
     return 0;
 }
 
+int test_queue(int num_tasks)
 
 
 /******************************************************************************

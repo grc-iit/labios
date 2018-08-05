@@ -78,15 +78,17 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     auto offset = mdm->get_fp(filename);
     if(!mdm->is_opened(filename)) return 0;
     auto r_task = read_task(file(filename, offset, size * count), file());
-#ifdef TIMER
+#ifdef TIMERTB
     Timer t=Timer();
     t.resumeTime();
 #endif
     auto tasks = task_m->build_read_task(r_task);
-#ifdef TIMER
-    std::cout << "build_read_task(),"
+#ifdef TIMERTB
+    std::stringstream stream;
+    stream  << "build_read_task(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
+    std::cout << stream.str();
 #endif
     int ptr_pos=0;
 
@@ -98,6 +100,7 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
                 Timer timer=Timer();
                 timer.startTime();
                 client_queue->publish_task(&task);
+
                 int retries = 1;
                 while(retries<10){
                     if(data_m->exists(DATASPACE_DB,task.destination.filename,
@@ -147,15 +150,17 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     if(!mdm->is_opened(filename))
         throw std::runtime_error("aetrio::fwrite() file not opened!");
     auto w_task = write_task(file(filename,offset,size*count),file());
-#ifdef TIMER
+#ifdef TIMERTB
     Timer t=Timer();
     t.resumeTime();
 #endif
     auto write_tasks = task_m->build_write_task(w_task,static_cast<char*>(ptr));
-#ifdef TIMER
-    std::cout <<"build_write_task(),"
+#ifdef TIMERTB
+    std::stringstream stream;
+    stream  << "build_write_task(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
+    std::cout << stream.str();
 #endif
 
     int index=0;

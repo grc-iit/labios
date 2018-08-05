@@ -22,6 +22,7 @@
 * Test tasks from PFS
 * Memory leak
 
+
 ##Future
 * Task dependecies (don't care)
 * Metadata persistent store (flush at the end)
@@ -31,7 +32,12 @@
 ##Notes
 * Timeout task scheduling. line#66
 * check the usleep in task scheduler-> infinite looping
-* listener_thread-> scheduler_thread->1solver:2solver:3solver->1sender
+* Aggregating logs
+`cat ts_* >> ts.csv`
+* Printing correctly
+`std::stringstream stream; // #include <sstream> for this
+stream << 1 << 2 << 3;
+std::cout << stream.str();`
 
 ##Logic
 * IDs everywhere (done ID= timestamp) How do we use the IDs? Why timestamps?

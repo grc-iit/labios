@@ -9,22 +9,24 @@
 *Interface
 ******************************************************************************/
 int NatsImpl::publish_task(task* task_t) {
-#ifdef TIMER
+#ifdef TIMERNATS
     Timer t=Timer();
     t.resumeTime();
 #endif
     auto msg = serialization_manager().serialize_task(task_t);
     natsConnection_PublishString(nc, subject.c_str(), msg.c_str());
-#ifdef TIMER
-    std::cout << "NatsImpl::publish_task(),"
+#ifdef TIMERNATS
+    std::stringstream stream;
+    stream  << "NatsImpl::publish_task()"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
+    std::cout << stream.str();
 #endif
     return 0;
 }
 
 task*  NatsImpl::subscribe_task_with_timeout(int &status) {
-#ifdef TIMER
+#ifdef TIMERNATS
     Timer t=Timer();
     t.resumeTime();
 #endif
@@ -33,16 +35,18 @@ task*  NatsImpl::subscribe_task_with_timeout(int &status) {
     if(msg==nullptr) return nullptr;
     task* task= serialization_manager().deserialize_task(natsMsg_GetData(msg));
     status=0;
-#ifdef TIMER
-    std::cout << "NatsImpl::subscribe_task_with_timeout(),"
+#ifdef TIMERNATS
+    std::stringstream stream;
+    stream  << "NatsImpl::subscribe_task_with_timeout()"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
+    std::cout << stream.str();
 #endif
     return task;
 }
 
 task* NatsImpl::subscribe_task(int &status) {
-#ifdef TIMER
+#ifdef TIMERNATS
     Timer t=Timer();
     t.resumeTime();
 #endif
@@ -51,10 +55,12 @@ task* NatsImpl::subscribe_task(int &status) {
     if(msg==nullptr) return nullptr;
     task* task= serialization_manager().deserialize_task(natsMsg_GetData(msg));
     status=0;
-#ifdef TIMER
-    std::cout << "NatsImpl::subscribe_task(),"
+#ifdef TIMERNATS
+    std::stringstream stream;
+    stream  << "NatsImpl::subscribe_task()"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
+    std::cout << stream.str();
 #endif
     return task;
 }

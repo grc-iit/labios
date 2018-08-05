@@ -2,11 +2,18 @@
 // Created by hdevarajan on 5/10/18.
 //
 
+#include <iomanip>
+#include "../../common/timer.h"
 #include "posix_client.h"
 #include "../../common/client_interface/distributed_hashmap.h"
 #include "../../aetrio_system.h"
 
+
 int posix_client::read(read_task task) {
+#ifdef TIMERW
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     FILE* fh=fopen(task.source.filename.c_str(),"r+");
     auto data= static_cast<char *>(malloc(sizeof(char) * task.source.size));
     long long int pos=fseek(fh,task.source.offset,SEEK_SET);
@@ -45,10 +52,21 @@ int posix_client::read(read_task task) {
         map_client->put(table::CHUNK_DB, task.source.filename +std::to_string
                 (base_offset),chunk_str, std::to_string(0));
     }
+#ifdef TIMERW
+    std::stringstream stream;
+    stream  << "posix_client::read(),"
+            <<std::fixed<<std::setprecision(10)
+            <<t.pauseTime()<<"\n";
+    std::cout << stream.str();
+#endif
     return 0;
 }
 
 int posix_client::write(write_task task) {
+#ifdef TIMERW
+    Timer t=Timer();
+    t.resumeTime();
+#endif
     std::shared_ptr<distributed_hashmap> map_client=aetrio_system::getInstance(WORKER)->map_client;
     serialization_manager sm=serialization_manager();
     auto source=task.source;
@@ -106,6 +124,13 @@ int posix_client::write(write_task task) {
             (chunk_index * MAX_IO_UNIT),chunk_str, std::to_string(0));
 
     map_client->remove(DATASPACE_DB,task.destination.filename, std::to_string(task.destination.server));
+#ifdef TIMERW
+    std::stringstream stream;
+    stream  << "posix_client::write(),"
+            <<std::fixed<<std::setprecision(10)
+            <<t.pauseTime()<<"\n";
+    std::cout << stream.str();
+#endif
     return 0;
 }
 

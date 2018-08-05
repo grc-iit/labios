@@ -137,8 +137,7 @@ int worker::update_capacity() {
             table::WORKER_CAPACITY,
             std::to_string(worker_index),
             std::to_string(remaining_cap),std::to_string(0))==MEMCACHED_SUCCESS){
-        std::cout<<"worker capacity: "<<std::setprecision(6)
-        <<remaining_cap<<"\n";
+        //std::cout<<"worker capacity: "<<std::setprecision(6)<<remaining_cap<<"\n";
         return SUCCESS;
     }
     else return WORKER__UPDATE_CAPACITY_FAILED;
