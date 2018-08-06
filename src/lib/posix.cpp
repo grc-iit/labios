@@ -13,7 +13,7 @@
 ******************************************************************************/
 FILE* aetrio::fopen(const char *filename, const char *mode) {
     auto mdm = metadata_manager::getInstance(LIB);
-    FILE* fh;
+    FILE* fh = nullptr;
     if(!mdm->is_created(filename)){
         if(strcmp(mode,"r")==0 ||
            strcmp(mode,"w")==0 ||
@@ -25,7 +25,7 @@ FILE* aetrio::fopen(const char *filename, const char *mode) {
             }
         }
     }else{
-        if(mdm->is_opened(filename)){
+        if(!mdm->is_opened(filename)){
             if(mdm->update_on_open(filename,mode,fh) != SUCCESS){
                 throw std::runtime_error("aetrio::fopen() update failed!");
             }
@@ -91,35 +91,22 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     std::cout << stream.str();
 #endif
     int ptr_pos=0;
-
+    size_t size_read=0;
     for(auto task:tasks){
         char * data;
         switch(task.source.location){
-            case PFS:
+            case PFS:{
+                std::cout<<"in pfs\n";
+            }
             case BUFFERS:{
                 Timer timer=Timer();
                 timer.startTime();
                 client_queue->publish_task(&task);
-
-                int retries = 1;
-                while(retries<10){
-                    if(data_m->exists(DATASPACE_DB,task.destination.filename,
-                                      std::to_string(task.destination.server)))
-                        break;
-                    else{
-                        auto time_elapsed = timer.stopTime();
-                        if(time_elapsed>MAX_READ_TIMER &&
-                           !data_m->exists(DATASPACE_DB,task.destination.filename,
-                                           std::to_string(task.destination.server))){
-                            //std::cerr<<"timeout on read occured!\n";
-                            client_queue->publish_task(&task);
-                            retries++;
-                            timer.startTime();
-                        }
-                    }
+                while(!data_m->exists(DATASPACE_DB,task.destination.filename,
+                                      std::to_string(task.destination.server)
+                )){
+                    //std::cout << "Looping...\n";
                 }
-                if(retries==10) std::cerr << "Read task not found in buffers\n";
-
                 data = const_cast<char *>(data_m->get(DATASPACE_DB,
                         task.destination.filename,std::to_string(task.destination.server)).c_str());
                 data_m->remove(DATASPACE_DB,task.destination.filename,
@@ -133,10 +120,11 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
             }
         }
         memcpy(ptr+ptr_pos,data+task.destination.offset,task.destination.size);
+        size_read+=task.destination.size;
         ptr_pos+=task.destination.size;
     }
     mdm->update_read_task_info(tasks,filename);
-    return size*count;
+    return size_read;
 }
 
 size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {

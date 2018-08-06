@@ -102,7 +102,14 @@ int metadata_manager::remove_chunks(std::string &filename) {
 
 int metadata_manager::update_on_close(FILE *&fh) {
     auto iter=fh_map.find(fh);
-    if(iter!=fh_map.end()) fh_map.erase(iter);
+    if(iter!=fh_map.end()){
+        auto iter2=file_map.find(iter->second);
+        if(iter2!=file_map.end()){
+            file_map.erase(iter2);
+        }
+        fh_map.erase(iter);
+        std::fclose(fh);
+    }
     return SUCCESS;
 }
 
@@ -306,8 +313,7 @@ filename, std::size_t io_size) {
     update_on_write(task_k.source.filename,io_size,task_k.source.offset);
     if(!task_k.meta_updated){
         auto chunk_index=(task_k.source.offset/ MAX_IO_UNIT);
-        auto base_offset=chunk_index*MAX_IO_UNIT+
-                         task_k.source.offset%MAX_IO_UNIT;
+        auto base_offset=(task_k.source.offset / MAX_IO_UNIT) * MAX_IO_UNIT;
         chunk_meta cm;
         cm.actual_user_chunk=task_k.source;
         cm.destination=task_k.destination;

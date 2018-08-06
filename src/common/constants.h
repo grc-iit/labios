@@ -38,39 +38,15 @@ const std::size_t PROCESS_PER_NODE=8;
 /*******************
 *Workers
 *******************/
-const std::size_t MAX_WORKER_COUNT = 16;
+const std::size_t MAX_WORKER_COUNT = 4;
 const std::string WORKER_TASK_SUBJECT[MAX_WORKER_COUNT] =
         {"1",
          "2",
          "3",
-         "4",
-         "5",
-         "6",
-         "7",
-         "8",
-         "9",
-         "10",
-         "11",
-         "12",
-         "13",
-         "14",
-         "15",
-         "16"
+         "4"
         };
 const int WORKER_SPEED[MAX_WORKER_COUNT] =
         {2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
          2,
          2,
          2
@@ -79,34 +55,10 @@ const int WORKER_ENERGY[MAX_WORKER_COUNT] =
         {2,
          2,
          2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
-         2,
          2
         };
 const int64_t WORKER_CAPACITY_MAX[MAX_WORKER_COUNT] =
         {137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
-         137438953472,
          137438953472,
          137438953472,
          137438953472
