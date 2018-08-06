@@ -303,7 +303,7 @@ void hacc_base(int argc, char** argv) {
     }
 }
 
-void hacc_tabios(int argc, char **argv) {
+void hacc_tabios_old(int argc, char **argv) {
 #ifdef TIMER
     Timer t=Timer();
     t.resumeTime();
@@ -340,15 +340,6 @@ void hacc_tabios(int argc, char **argv) {
     aetrio::fclose(fh);
     global_timer.pauseTime();
 
-//    auto out_buf=static_cast<char*>(malloc(io_per_teration/8));
-//    gen_random(out_buf,io_per_teration/8);
-//    MPI_Barrier(MPI_COMM_WORLD);
-//    std::string output=file_path+"final_"+std::to_string(rank)+".out";
-//    FILE* out=aetrio::fopen(output.c_str(),"+w");
-//    aetrio::fwrite(out_buf,sizeof(char),io_per_teration/8,out);
-//    aetrio::fclose(out);
-//    global_timer.pauseTime();
-
     auto time=global_timer.elapsed_time;
     double sum;
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -365,6 +356,114 @@ void hacc_tabios(int argc, char **argv) {
 #endif
     }
 
+}
+
+void hacc_tabios(int argc, char** argv) {
+#ifdef TIMER
+    Timer t=Timer();
+    t.resumeTime();
+#endif
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::string file_path=argv[2];
+    int iteration=atoi(argv[3]);
+    std::string buf_path=argv[4];
+    parse_opts(argc,argv);
+    std::string filename=buf_path+"test_"+std::to_string(rank)+".dat";
+    size_t io_per_teration=32*1024*1024;
+    std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
+    workload.push_back({1*1024*1024, 32});
+
+    size_t current_offset=0;
+#ifdef TIMERBASE
+    Timer wbb=Timer();
+    wbb.resumeTime();
+#endif
+    Timer global_timer=Timer();
+    global_timer.resumeTime();
+    FILE* fh = aetrio::fopen(filename.c_str(),"w+");
+    global_timer.pauseTime();
+#ifdef TIMERBASE
+    wbb.pauseTime();
+#endif
+    for(int i=0;i<iteration;++i){
+        for(auto item:workload){
+            for(int j=0;j<item[1];++j){
+                char write_buf[item[0]];
+                gen_random(write_buf,item[0]);
+                global_timer.resumeTime();
+#ifdef TIMERBASE
+                wbb.resumeTime();
+#endif
+                aetrio::fwrite(write_buf,sizeof(char),item[0],fh);
+                MPI_Barrier(MPI_COMM_WORLD);
+                global_timer.pauseTime();
+#ifdef TIMERBASE
+                wbb.pauseTime();
+#endif
+                current_offset+=item[0];
+            }
+        }
+    }
+#ifdef TIMERBASE
+    wbb.resumeTime();
+    if(rank == 0) std::cout << "hacc_tabios()::write_to_BB,"
+                            <<std::fixed<<std::setprecision(10)
+                            <<wbb.pauseTime()<<"\n";
+    else wbb.pauseTime();
+#endif
+    char* read_buf=(char*)malloc(io_per_teration*sizeof(char));
+    //sleep(2);
+    global_timer.resumeTime();
+#ifdef TIMERBASE
+    Timer rbb=Timer();
+    rbb.resumeTime();
+#endif
+aetrio::fclose(fh);
+    FILE* fh1 = aetrio::fopen(filename.c_str(),"r+");
+    auto bytes = aetrio::fread(read_buf,sizeof(char),io_per_teration,fh1);
+    if(bytes != io_per_teration) std::cerr <<"Bytes read: " << bytes << "\n";
+    aetrio::fclose(fh1);
+    MPI_Barrier(MPI_COMM_WORLD);
+#ifdef TIMERBASE
+    if(rank == 0) std::cout << "hacc_tabios()::read_from_BB,"
+                            <<std::fixed<<std::setprecision(10)
+                            <<rbb.pauseTime()<<"\n";
+    else rbb.pauseTime();
+#endif
+    std::string output=file_path+"final_"+std::to_string(rank)+".out";
+#ifdef TIMERBASE
+    Timer pfs=Timer();
+    pfs.resumeTime();
+#endif
+    FILE* fh2 = aetrio::fopen(output.c_str(),"w+");
+    aetrio::fwrite(read_buf,sizeof(char),io_per_teration,fh2);
+    aetrio::fclose(fh2);
+    MPI_Barrier(MPI_COMM_WORLD);
+#ifdef TIMERBASE
+    if(rank == 0) std::cout << "hacc_tabios()::write_to_PFS,"
+                            <<std::fixed<<std::setprecision(10)
+                            <<pfs.pauseTime()<<"\n";
+    else pfs.pauseTime();
+#endif
+    global_timer.pauseTime();
+
+    auto time=global_timer.elapsed_time;
+    double sum;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank == 0) {
+        std::cout << "average_hacc_tabios,"
+                  << std::setprecision(6)
+                  << mean
+                  << "\n";
+#ifdef TIMER
+        std::cout << "hacc_base(),"
+                  <<std::fixed<<std::setprecision(10)
+                  <<t.pauseTime()<<"\n";
+#endif
+    }
 }
 
 void montage_base(int argc, char** argv) {
@@ -891,6 +990,7 @@ void kmeans_base(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
+    std::string pfs_path=argv[4];
     parse_opts(argc,argv);
     std::string filename=file_path+"test_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
@@ -898,40 +998,46 @@ void kmeans_base(int argc, char** argv) {
     workload.push_back({32*1024, 1024});
 
     size_t current_offset=0;
+    size_t align = 4096;
     Timer global_timer=Timer();
     global_timer.resumeTime();
-    //FILE* fh=std::fopen(filename.c_str(),"w+");
+    FILE* fh=std::fopen(filename.c_str(),"w+");
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    int fd=open(filename.c_str(),O_CREAT|O_SYNC|O_RSYNC|O_RDWR|O_TRUNC, mode);
+    int fd=open(filename.c_str(),O_DIRECT|O_RDWR|O_TRUNC, mode);
     global_timer.pauseTime();
     char* write_buf=new char[io_per_teration];
     gen_random(write_buf,io_per_teration);
-    //std::fwrite(write_buf,sizeof(char),io_per_teration,fh);
-    //std::fflush(fh);
-    write(fd,write_buf,io_per_teration);
-    fsync(fd);
+    std::fwrite(write_buf,sizeof(char),io_per_teration,fh);
+    std::fflush(fh);
+//    write(fd,write_buf,io_per_teration);
+//    fsync(fd);
     MPI_Barrier(MPI_COMM_WORLD);
     delete(write_buf);
     int count=0;
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
-                if(count%16==0){
+                if(count%32==0){
                     std::random_device rd;
                     std::mt19937 generator(rd());
-                    std::uniform_int_distribution<int> dist(0, 15);
-                    auto rand_offset =
-                            static_cast<size_t>(dist(generator)*2*1024*1024);
+                    std::uniform_int_distribution<int> dist(0, 31);
+                    auto rand_offset =(dist(generator)*1*1024*1024);
                     global_timer.resumeTime();
-                    //std::fseek(fh,rand_offset,SEEK_SET);
-                    lseek(fd,rand_offset,SEEK_SET);
+                    std::fseek(fh,rand_offset,SEEK_SET);
+                    //lseek(fd,rand_offset,SEEK_SET);
                     MPI_Barrier(MPI_COMM_WORLD);
                     global_timer.pauseTime();
                 }
-                char read_buf[item[0]];
+                void* read_buf;
+                read_buf = memalign(align * 2, item[0] + align);
+                if (read_buf == NULL) std::cerr <<"memalign\n";
+                read_buf += align;
                 global_timer.resumeTime();
-                //std::fread(read_buf,sizeof(char),read[0],fh);
+
+                //auto bytes = std::fread(read_buf,sizeof(char),item[0],fh);
+
                 auto bytes = read(fd,read_buf,item[0]);
+                if(bytes!=item[0]) std::cerr << "Read failed:" <<bytes<<"\n";
                 MPI_Barrier(MPI_COMM_WORLD);
                 //std::cout << "Read:" <<bytes<<"\n";
                 global_timer.pauseTime();
@@ -946,6 +1052,33 @@ void kmeans_base(int argc, char** argv) {
     close(fd);
     MPI_Barrier(MPI_COMM_WORLD);
     global_timer.pauseTime();
+
+    MPI_File outFile;
+    MPI_Info info;
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "direct_write", "true");
+    std::string final=pfs_path+"final.dat";
+    global_timer.resumeTime();
+    MPI_File_open(MPI_COMM_WORLD, final.c_str(), MPI_MODE_CREATE |
+                                                    MPI_MODE_RDWR,
+                  info, &outFile);
+    MPI_File_set_view(outFile, static_cast<MPI_Offset>(rank * 1024*1024),
+                      MPI_CHAR,
+                      MPI_CHAR,
+                      "native",
+                      MPI_INFO_NULL);
+    global_timer.pauseTime();
+    char out_buff[1024*1024];
+    gen_random(out_buff,1024*1024);
+    global_timer.resumeTime();
+    MPI_File_write(outFile,
+                   out_buff,
+                   (1024*1024),
+                   MPI_CHAR,
+                   MPI_STATUS_IGNORE);
+    MPI_File_close(&outFile);
+    global_timer.pauseTime();
+
     auto time=global_timer.elapsed_time;
     double sum;
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -975,8 +1108,9 @@ void kmeans_tabios(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     std::string file_path=argv[2];
     int iteration=atoi(argv[3]);
+    std::string pfs_path=argv[4];
     parse_opts(argc,argv);
-    std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
+    std::string filename=file_path+"test_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
     workload.push_back({32*1024, 1024});
@@ -989,39 +1123,47 @@ void kmeans_tabios(int argc, char **argv) {
     FILE* fh=aetrio::fopen(filename.c_str(),"w+");
     global_timer.pauseTime();
     aetrio::fwrite(write_buf,sizeof(char),io_per_teration,fh);
-
+    delete(write_buf);
     size_t count=0;
 
     for(int i=0;i<iteration;++i){
         for(auto read:workload){
             for(int j=0;j<read[1];++j){
-                if(count%16==0){
+                if(count%32==0){
                     std::random_device rd;
                     std::mt19937 generator(rd());
-                    std::uniform_int_distribution<int> dist(0, 15);
-                    auto rand_offset =
-                            static_cast<size_t>(dist(generator)*2*1024*1024);
+                    std::uniform_int_distribution<int> dist(0, 31);
+                    auto rand_offset = (dist(generator)*1*1024*1024);
                     global_timer.resumeTime();
                     aetrio::fseek(fh,rand_offset,SEEK_SET);
                     global_timer.pauseTime();
-                    current_offset=rand_offset;
+                    current_offset= static_cast<size_t>(rand_offset);
                 }
                 char read_buf[read[0]];
                 global_timer.resumeTime();
-                //aetrio::fread(read_buf,sizeof(char),read[0],fh);
-                memcpy(read_buf,write_buf+current_offset,read[0]);
+                aetrio::fread(read_buf,sizeof(char),read[0],fh);
                 global_timer.pauseTime();
                 current_offset+=read[0];
                 count++;
             }
         }
     }
-    delete(write_buf);
+
     global_timer.resumeTime();
     aetrio::fclose(fh);
     global_timer.pauseTime();
-    //MPI_Barrier(MPI_COMM_WORLD);
-    //std::cerr << "Rank#"<<rank<<"\tCount:" <<count<<"\n";
+    std::string finalname=pfs_path+"final_"+std::to_string(rank)+".dat";
+    FILE* outfile;
+    outfile=aetrio::fopen(finalname.c_str(), "w+");
+    global_timer.pauseTime();
+
+    char out_buff[1024*1024];
+    gen_random(out_buff,1024*1024);
+    global_timer.resumeTime();
+    aetrio::fwrite(out_buff,sizeof(char),1024*1024,outfile);
+    aetrio::fclose(outfile);
+    global_timer.pauseTime();
+
     auto time=global_timer.elapsed_time;
     double sum;
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -1114,14 +1256,7 @@ int main(int argc, char** argv){
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     std::string log_name=std::string(argv[0])+"_"+std::to_string(rank)+".log";
     //freopen(log_name.c_str(), "w+", stdout);
-    if(rank==0){
-        aetrio_system::getInstance(service::LIB)->map_client->purge();
-        aetrio_system::getInstance(service::LIB)->map_server->purge();
-        system("rm -rf /opt/temp/1/*");
-        system("rm -rf /opt/temp/2/*");
-        system("rm -rf /opt/temp/3/*");
-        system("rm -rf /opt/temp/4/*");
-    }
+
     MPI_Barrier(MPI_COMM_WORLD);
     int return_val=0;
     if(argc > 1){

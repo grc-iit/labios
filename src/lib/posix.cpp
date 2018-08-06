@@ -111,16 +111,19 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
                         task.destination.filename,std::to_string(task.destination.server)).c_str());
                 data_m->remove(DATASPACE_DB,task.destination.filename,
                                std::to_string(task.destination.server));
+                memcpy(ptr+ptr_pos,data+task.destination.offset,task.destination.size);
+                size_read+=task.destination.size;
                 break;
             }
             case CACHE:{
                 data = const_cast<char *>(data_m->get(DATASPACE_DB,
                         task.source.filename,std::to_string(task.destination.server)).c_str());
+                memcpy(ptr+ptr_pos,data+task.source.offset,task.source.size);
+                size_read+=task.source.size;
                 break;
             }
         }
-        memcpy(ptr+ptr_pos,data+task.destination.offset,task.destination.size);
-        size_read+=task.destination.size;
+
         ptr_pos+=task.destination.size;
     }
     mdm->update_read_task_info(tasks,filename);

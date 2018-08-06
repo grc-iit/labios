@@ -122,8 +122,7 @@ int posix_client::write(write_task task) {
     chunk_str= sm.serialize_chunk(chunk_meta1);
     map_client->put(table::CHUNK_DB, task.source.filename +std::to_string
             (chunk_index * MAX_IO_UNIT),chunk_str, std::to_string(0));
-
-    map_client->remove(DATASPACE_DB,task.destination.filename, std::to_string(task.destination.server));
+//    map_client->remove(DATASPACE_DB,task.destination.filename, std::to_string(task.destination.server));
 #ifdef TIMERW
     std::stringstream stream;
     stream  << "posix_client::write(),"

@@ -30,6 +30,11 @@
 * Metadata persistent store (flush at the end)
 * Automated server bootstrapping
 * Investigate read simulation
+* Handle MDM for outstanding operations (data in transit)
+** Discuss how important is this issue of decoupled components
+** Possible fixes:
+*** Invalidation lists + timer expiration to cleanup
+*** Intermediate state of data in MDM
 
 ##Notes
 * Timeout task scheduling. line#66

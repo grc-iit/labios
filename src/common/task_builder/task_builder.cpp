@@ -256,7 +256,7 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
                 (std::chrono::duration_cast<std::chrono::microseconds>
                 (std::chrono::system_clock::now().time_since_epoch()).count());
         rt->source = chunk.destination;
-        rt->destination.offset=data_pointer;
+        rt->destination.offset=0;
         rt->destination.size=rt->source.size;
         rt->destination.server=server;
         data_pointer+=rt->destination.size;
