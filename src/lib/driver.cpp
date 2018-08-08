@@ -1073,6 +1073,8 @@ void kmeans_tabios(int argc, char **argv) {
     size_t count=0;
     std::vector<std::pair<size_t,std::vector<read_task>>> operations=
             std::vector<std::pair<size_t,std::vector<read_task>>>();
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(rank == 0) std::cerr<<"Data created Done\n";
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
@@ -1119,6 +1121,8 @@ void kmeans_tabios(int argc, char **argv) {
           wait_for_read(operation.first, operation.second,filename);
     }
     aetrio::fclose(fh);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(rank == 0) std::cerr<<"Read Done\n";
 #ifdef TIMERBASE
     map.pauseTime();
 #endif

@@ -17,7 +17,7 @@ int MemcacheDImpl::put(const table &name, std::string key, const std::string &va
                                                 value.length()+1,
                                                 (time_t)0,
                                                 (uint32_t)0);
-    //if(rc!=MEMCACHED_SUCCESS) std::cerr<< "put failed for key:"<<key<<"\n";
+    if(rc!=MEMCACHED_SUCCESS) std::cerr<< "put failed for key:"<<key<<"\n";
     return rc;
 }
 
@@ -76,7 +76,7 @@ size_t MemcacheDImpl::counter_inc(const table &name, std::string key,
         memcached_set_by_key(mem_client,group_key.c_str(),group_key.length(),
                 key.c_str(),key
         .length(),
-                "0",2,0,0);
+                "0",1,0,0);
         value=0;
     }
     return value;

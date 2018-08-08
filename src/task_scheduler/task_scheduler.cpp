@@ -31,8 +31,8 @@ int task_scheduler::run() {
         if(!task_list.empty() &&
            (task_list.size()>=MAX_NUM_TASKS_IN_QUEUE
             ||time_elapsed>=MAX_SCHEDULE_TIMER)){
-            scheduling_threads.submit(std::bind(schedule_tasks, task_list));
-            //schedule_tasks(task_list);
+            //scheduling_threads.submit(std::bind(schedule_tasks, task_list));
+            schedule_tasks(task_list);
             t.startTime();
             task_list.clear();
         }

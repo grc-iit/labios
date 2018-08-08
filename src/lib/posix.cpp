@@ -277,6 +277,7 @@ size_t aetrio::fwrite_sync(void *ptr, size_t size, size_t count, FILE *stream) {
     auto client_queue = aetrio_system::getInstance(LIB)->get_client_queue
             (CLIENT_TASK_SUBJECT);
     auto map_client=aetrio_system::getInstance(LIB)->map_client();
+    auto map_server=aetrio_system::getInstance(LIB)->map_server();
     auto task_m = task_builder::getInstance(LIB);
     auto data_m = data_manager::getInstance(LIB);
     auto filename = mdm->get_filename(stream);
@@ -331,9 +332,9 @@ size_t aetrio::fwrite_sync(void *ptr, size_t size, size_t count, FILE *stream) {
         delete task;
     }
     for(auto task_id:task_ids){
-        while(!map_client->exists(table::WRITE_FINISHED_DB,task_id.first,task_id
-        .second)){}
-        map_client->remove(table::WRITE_FINISHED_DB,task_id.first,task_id.second);
+        while(!map_server->exists(table::WRITE_FINISHED_DB,task_id.first,
+                std::to_string(0))){}
+        map_server->remove(table::WRITE_FINISHED_DB,task_id.first,std::to_string(0));
         map_client->remove(table::DATASPACE_DB,task_id.first,task_id.second);
     }
     return size*count;
