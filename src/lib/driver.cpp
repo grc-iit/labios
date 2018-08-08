@@ -1369,7 +1369,6 @@ int main(int argc, char** argv){
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    usleep(rank);
     if(rank==0){
         std::string log_name=std::string(argv[0])+"_" +
                              std::to_string(comm_size) +".csv";
