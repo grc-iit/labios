@@ -37,6 +37,17 @@ std::string RocksDBImpl::remove(const table &name, std::string key,std::string g
 #endif
 
 }
+
+size_t RocksDBImpl::counter_init(const table &name, std::string key,
+                                 std::string group_key) {
+    return distributed_hashmap::counter_init(name, key, group_key);
+}
+
+size_t RocksDBImpl::counter_inc(const table &name, std::string key,
+                                std::string group_key) {
+    return distributed_hashmap::counter_inc(name, key, group_key);
+}
+
 #ifdef ROCKS_P
 rocksdb::DB* RocksDBImpl::create_db(const table &table_name) {
     rocksdb::DB* db;

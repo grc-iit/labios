@@ -61,3 +61,24 @@ bool MemcacheDImpl::purge() {
     memcached_flush(mem_client,0);
 }
 
+size_t MemcacheDImpl::counter_init(const table &name, std::string key,
+                                   std::string group_key) {
+    key=std::to_string(name)+KEY_SEPARATOR+key;
+    return distributed_hashmap::counter_init(name, key, group_key);
+}
+
+size_t MemcacheDImpl::counter_inc(const table &name, std::string key,
+                                  std::string group_key) {
+    key=std::to_string(name)+KEY_SEPARATOR+key;
+    size_t value=0;
+    memcached_return_t rc= memcached_increment(mem_client,key.c_str(),key.length(),1,&value);
+    if(rc==MEMCACHED_NOTFOUND){
+        memcached_set_by_key(mem_client,group_key.c_str(),group_key.length(),
+                key.c_str(),key
+        .length(),
+                "0",2,0,0);
+        value=0;
+    }
+    return value;
+}
+

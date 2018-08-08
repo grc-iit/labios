@@ -38,6 +38,13 @@ public:
     int put(const table &name,std::string key,const std::string &value,std::string group_key) override;
     std::string get(const table &name, std::string key,std::string group_key) override ;
     std::string remove(const table &name, std::string key,std::string group_key) override ;
+
+    size_t counter_init(const table &name, std::string key,
+                        std::string group_key) override;
+
+    size_t counter_inc(const table &name, std::string key,
+                       std::string group_key) override;
+
 /******************************************************************************
 *Destructor
 ******************************************************************************/

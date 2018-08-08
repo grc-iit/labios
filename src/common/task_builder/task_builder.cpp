@@ -18,9 +18,8 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
 
     auto number_of_tasks = static_cast<int>(std::ceil(
             (float)(source.size) / MAX_IO_UNIT));
-    auto dataspace_id = static_cast<int64_t>
-            (std::chrono::duration_cast<std::chrono::nanoseconds>
-            (std::chrono::system_clock::now().time_since_epoch()).count());
+    auto dataspace_id = map_server->counter_inc(COUNTER_DB,DATASPACE_ID,
+                                                  std::to_string(0));
 
     std::size_t base_offset = (source.offset / MAX_IO_UNIT) * MAX_IO_UNIT +
             source.offset % MAX_IO_UNIT;
@@ -260,9 +259,7 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
         rt->destination.size=rt->source.size;
         rt->destination.server=server;
         data_pointer+=rt->destination.size;
-        rt->destination.filename = std::to_string(static_cast<uint64_t>
-                (std::chrono::duration_cast<std::chrono::nanoseconds>
-                        (std::chrono::system_clock::now().time_since_epoch()).count()));
+        rt->destination.filename = std::to_string( map_server->counter_inc(COUNTER_DB,DATASPACE_ID,std::to_string(0)));
         tasks.push_back(*rt);
         delete(rt);
     }

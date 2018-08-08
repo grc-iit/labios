@@ -48,6 +48,13 @@ public:
     virtual bool purge(){
         throw NotImplementedException("purge");
     }
+    virtual size_t counter_init(const table &name, std::string key,std::string group_key){
+        throw NotImplementedException("counter_init");
+    }
+    virtual size_t counter_inc(const table &name, std::string key,std::string
+    group_key){
+        throw NotImplementedException("counter_inc");
+    }
 /******************************************************************************
 *Destructor
 ******************************************************************************/

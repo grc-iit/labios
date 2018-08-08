@@ -37,6 +37,13 @@ public:
     std::string remove(const table &name, std::string key,std::string group_key) override;
     bool exists(const table &name, std::string key,std::string group_key) override;
     bool purge() override;
+
+    size_t counter_init(const table &name, std::string key,
+                        std::string group_key) override;
+
+    size_t counter_inc(const table &name, std::string key,
+                       std::string group_key) override;
+
 /******************************************************************************
 *Destructor
 ******************************************************************************/

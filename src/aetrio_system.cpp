@@ -45,7 +45,10 @@ void aetrio_system::init(service service) {
                 map_server()->put(
                         table::SYSTEM_REG,"app_no",
                         std::to_string(curr),std::to_string(0));
+                std::size_t t=map_server()->counter_inc(COUNTER_DB,DATASPACE_ID,
+                        std::to_string(0));
             }
+            MPI_Barrier(MPI_COMM_WORLD);
             break;
         }
         case CLIENT:{
