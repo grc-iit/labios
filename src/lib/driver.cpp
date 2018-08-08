@@ -350,7 +350,7 @@ void hacc_tabios(int argc, char** argv) {
 #ifdef TIMERBASE
                 wbb.resumeTime();
 #endif
-                aetrio::fwrite(write_buf,sizeof(char),item[0],fh);
+                aetrio::fwrite_sync(write_buf,sizeof(char),item[0],fh);
 #ifdef TIMERBASE
                 wbb.pauseTime();
 #endif
@@ -394,7 +394,7 @@ aetrio::fclose(fh);
     pfs.resumeTime();
 #endif
     FILE* fh2 = aetrio::fopen(output.c_str(),"w+");
-    aetrio::fwrite(read_buf,sizeof(char),io_per_teration,fh2);
+    aetrio::fwrite_sync(read_buf,sizeof(char),io_per_teration,fh2);
     aetrio::fclose(fh2);
 #ifdef TIMERBASE
     if(rank == 0) stream << "write_to_PFS," <<pfs.pauseTime()<<",";
@@ -700,9 +700,9 @@ void montage_tabios(int argc, char** argv) {
 #endif
                 if(rank%2==0 || comm_size==1){
                     if(j%2==0){
-                        aetrio::fwrite(write_buf,sizeof(char),item[0],fd1);
+                        aetrio::fwrite_sync(write_buf,sizeof(char),item[0],fd1);
                     }else{
-                        aetrio::fwrite(write_buf,sizeof(char),item[0],fd2);
+                        aetrio::fwrite_sync(write_buf,sizeof(char),item[0],fd2);
                     }
                 }
 #ifdef TIMERBASE
@@ -850,7 +850,7 @@ void montage_tabios(int argc, char** argv) {
     char write_buf[1024*1024];
     gen_random(write_buf,1024*1024);
     global_timer.resumeTime();
-    aetrio::fwrite(write_buf,sizeof(char),1024*1024,outfile);
+    aetrio::fwrite_sync(write_buf,sizeof(char),1024*1024,outfile);
     aetrio::fclose(outfile);
 #ifdef TIMERBASE
     a.pauseTime();
@@ -1202,7 +1202,7 @@ void kmeans_tabios_sync(int argc, char **argv) {
     map.pauseTime();
 #endif
     global_timer.pauseTime();
-    aetrio::fwrite(write_buf,sizeof(char),io_per_teration,fh);
+    aetrio::fwrite_sync(write_buf,sizeof(char),io_per_teration,fh);
     delete(write_buf);
     size_t count=0;
 
@@ -1275,7 +1275,7 @@ void kmeans_tabios_sync(int argc, char **argv) {
 #ifdef TIMERBASE
     reduce.resumeTime();
 #endif
-    aetrio::fwrite(out_buff,sizeof(char),1024*1024,outfile);
+    aetrio::fwrite_sync(out_buff,sizeof(char),1024*1024,outfile);
     aetrio::fclose(outfile);
 #ifdef TIMERBASE
     reduce.pauseTime();
