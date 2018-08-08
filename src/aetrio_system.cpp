@@ -14,12 +14,12 @@ std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
 void aetrio_system::init(service service) {
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_server = std::make_shared<MemcacheDImpl>
+        map_server_ = std::make_shared<MemcacheDImpl>
                 (service,
                  config_manager::get_instance()->MEMCACHED_URL_SERVER,
                  0);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
-        map_server = std::make_shared<RocksDBImpl>(service,kDBPath_server);
+        map_server_ = std::make_shared<RocksDBImpl>(service,kDBPath_server);
     }
 
     if(solver_impl_type_t==solver_impl_type::DP){
@@ -34,7 +34,7 @@ void aetrio_system::init(service service) {
     switch(service){
         case LIB:{
             if(rank==0){
-                auto value=map_server->get(table::SYSTEM_REG,"app_no",
+                auto value=map_server()->get(table::SYSTEM_REG,"app_no",
                         std::to_string(0));
                 int curr=0;
                 if(!value.empty()){
@@ -42,7 +42,7 @@ void aetrio_system::init(service service) {
                     curr++;
                 }
                 application_id=curr;
-                map_server->put(
+                map_server()->put(
                         table::SYSTEM_REG,"app_no",
                         std::to_string(curr),std::to_string(0));
             }
@@ -66,12 +66,12 @@ void aetrio_system::init(service service) {
     }
 
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
-        map_client= std::make_shared<MemcacheDImpl>
+        map_client_= std::make_shared<MemcacheDImpl>
                 (service,
                  config_manager::get_instance()->MEMCACHED_URL_CLIENT,
                  application_id);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
-        map_client=  std::make_shared<RocksDBImpl>(service,kDBPath_client);
+        map_client_=  std::make_shared<RocksDBImpl>(service,kDBPath_client);
     }
 }
 

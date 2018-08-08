@@ -11,15 +11,15 @@ std::shared_ptr<task_builder> task_builder::instance = nullptr;
 ******************************************************************************/
 std::vector<write_task*> task_builder::build_write_task(write_task task,
                                                        std::string data) {
-    auto map_client=aetrio_system::getInstance(service_i)->map_client;
-    auto map_server=aetrio_system::getInstance(service_i)->map_server;
+    auto map_client=aetrio_system::getInstance(service_i)->map_client();
+    auto map_server=aetrio_system::getInstance(service_i)->map_server();
     auto tasks = std::vector<write_task*>();
     file source = task.source;
 
     auto number_of_tasks = static_cast<int>(std::ceil(
             (float)(source.size) / MAX_IO_UNIT));
     auto dataspace_id = static_cast<int64_t>
-            (std::chrono::duration_cast<std::chrono::microseconds>
+            (std::chrono::duration_cast<std::chrono::nanoseconds>
             (std::chrono::system_clock::now().time_since_epoch()).count());
 
     std::size_t base_offset = (source.offset / MAX_IO_UNIT) * MAX_IO_UNIT +
@@ -245,7 +245,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
 std::vector<read_task> task_builder::build_read_task(read_task task) {
     auto tasks = std::vector<read_task>();
     auto mdm = metadata_manager::getInstance(LIB);
-    auto map_server = aetrio_system::getInstance(service_i)->map_server;
+    auto map_server = aetrio_system::getInstance(service_i)->map_server();
     auto chunks = mdm->fetch_chunks(task);
     size_t data_pointer=0;
     int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank /
@@ -261,7 +261,7 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
         rt->destination.server=server;
         data_pointer+=rt->destination.size;
         rt->destination.filename = std::to_string(static_cast<uint64_t>
-                (std::chrono::duration_cast<std::chrono::microseconds>
+                (std::chrono::duration_cast<std::chrono::nanoseconds>
                         (std::chrono::system_clock::now().time_since_epoch()).count()));
         tasks.push_back(*rt);
         delete(rt);

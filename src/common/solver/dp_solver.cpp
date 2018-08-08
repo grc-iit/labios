@@ -59,7 +59,7 @@ solver_output DPSolver::solve(solver_input input) {
     }
 
 
-    auto map=aetrio_system::getInstance(service_i)->map_server;
+    auto map=aetrio_system::getInstance(service_i)->map_server();
     auto sorted_workers=std::vector<std::pair<int,int>>();
     int original_index=0;
     for(int worker_index=0;worker_index<MAX_WORKER_COUNT;worker_index++){

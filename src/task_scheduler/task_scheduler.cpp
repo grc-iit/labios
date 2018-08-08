@@ -46,9 +46,6 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
     Timer t=Timer();
     t.resumeTime();
 #endif
-    std::stringstream ss;
-    ss << "ts_"<<std::this_thread::get_id() << ".csv";
-    freopen(ss.str().c_str(), "a", stdout);
     auto solver_i=aetrio_system::getInstance(service_i)->solver_i;
     solver_input input(tasks, static_cast<int>(tasks.size()));
     solver_output output=solver_i->solve(input);
@@ -59,6 +56,7 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
         for(auto task:element.second){
 #ifdef DEBUG
             std::cout << "threadID:" <<std::this_thread::get_id()
+                              << "\tOperation" << static_cast<std::underlying_type<task_type>::type>(task->t_type)
                               << "\tTask#" << task->task_id
                               << "\tWorker#" << element.first
                               << "\n";

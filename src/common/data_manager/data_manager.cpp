@@ -15,8 +15,8 @@ server) {
     Timer t=Timer();
     t.resumeTime();
 #endif
-    auto return_value= aetrio_system::getInstance(service_i)->map_client->
-            get(name,std::move(key),std::move(server));
+    auto return_value= aetrio_system::getInstance(service_i)->map_client()->
+            get(name,key,server);
 #ifdef TIMERDM
     std::stringstream stream;
     stream  << "data_manager::get(),"
@@ -33,8 +33,8 @@ int data_manager::put(const table &name, std::string key, std::string data,
     Timer t=Timer();
     t.resumeTime();
 #endif
-    auto return_value= aetrio_system::getInstance(service_i)->map_client->
-            put(name,std::move(key),data,std::move(server));
+    auto return_value= aetrio_system::getInstance(service_i)->map_client()->
+            put(name,key,data,server);
 #ifdef TIMERDM
     std::stringstream stream;
     stream  << "data_manager::put(),"
@@ -47,8 +47,7 @@ int data_manager::put(const table &name, std::string key, std::string data,
 
 bool data_manager::exists(const table &name, std::string key,std::string
 server) {
-    return  aetrio_system::getInstance(service_i)->map_client->exists
-            (name,std::move(key),std::move(server));
+    return  aetrio_system::getInstance(service_i)->map_client()->exists(name,key,server);
 }
 
 std::string data_manager::remove(const table &name, std::string key,std::string
@@ -58,7 +57,7 @@ server) {
     t.resumeTime();
 #endif
     auto return_value = aetrio_system::getInstance(service_i)
-            ->map_client->remove(name,std::move(key),std::move(server));
+            ->map_client()->remove(name,std::move(key),std::move(server));
 #ifdef TIMERDM
     std::stringstream stream;
     stream  << "data_manager::remove(),"

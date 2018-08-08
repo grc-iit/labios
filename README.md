@@ -98,6 +98,10 @@ src/common/config_manager.h src/common/config_manager.cpp CMakeLists.txt`
     "master_server_key=atoi(group_key);"
 ##copy into libmemcached/storage.cc:375
     "uint32_t server_key=atoi(group_key);"
+##copy into libmemcached/exist.cc:146
+    "uint32_t server_key=atoi(group_key);"
+##copy into libmemcached/delete.cc:
+    "uint32_t server_key=atoi(group_key);"
 ##install from source
     ./configure && make && sudo make install
 

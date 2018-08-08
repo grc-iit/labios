@@ -45,7 +45,7 @@ tabio-32:48
 dd if=/dev/zero of=/mnt/pfs/file.txt count=1024 bs=$((1024*1024)) conv=fsync
 ./IOR -a POSIX -b 1m -s 1024 -B -e -i 5 -o /home/cc/testFile -v -k
 std::cout<<BUFSIZ<<"\n";
-
+-o noac,sync
 mpirun -f hosts -np 32 /home/cc/nfs/aetrio/build/aetrio_lib 10 /mnt/pfs/tests/ 1 "-anats://tabio-33:4223/"
 
 /home/cc/nfs/aetrio/build/aetrio_worker $((index+1)) "-bnats://${WORKERS[$index]}:4222/" "-c$MEMCACHED_CLIENT_STR" "-d--SERVER=tabio-33:11211"  > /home/cc/tabio/logs/worker${index}.out 2> /home/cc/tabio/logs/worker${index}.err < /dev/null &
@@ -115,7 +115,6 @@ mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 10 /mnt/pfs/tests/ 1
 : -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 10 /mnt/pfs/tests/ 1 "-anats://tabio-30:4222/" \
 : -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 10 /mnt/pfs/tests/ 1 "-anats://tabio-31:4222/" \
 : -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 10 /mnt/pfs/tests/ 1 "-anats://tabio-32:4222/"
-
 
 
 
@@ -192,3 +191,163 @@ mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1
 : -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
 : -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
 : -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/"
+
+mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-5:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-6:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-7:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-8:4222/" 
+
+mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-5:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-6:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-7:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-8:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-9:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-10:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-11:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-12:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-13:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-14:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-15:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-16:4222/"
+
+mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-5:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-6:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-7:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-8:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-9:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-10:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-11:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-12:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-13:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-14:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-15:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-16:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-17:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-18:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-19:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-20:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-21:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-22:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-23:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-24:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-25:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-26:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-27:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-28:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-29:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-30:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-31:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 12 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-32:4222/"
+
+
+
+                                                K-Means
+
+mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/"
+
+mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-5:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-6:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-7:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-8:4222/" 
+
+mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-5:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-6:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-7:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-8:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-9:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-10:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-11:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-12:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-13:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-14:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-15:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-16:4222/"
+
+mpirun -f hosts -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-2:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-3:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-4:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-5:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-6:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-7:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-8:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-9:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-10:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-11:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-12:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-13:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-14:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-15:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-16:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-17:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-18:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-19:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-20:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-21:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-22:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-23:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-24:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-25:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-26:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-27:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-28:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-29:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-30:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-31:4222/" \
+: -np 48 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-32:4222/"
+
+
+
+50 Nodes
+16 worker 32 clients
+50 ts
+50 memcached clients
+1 memcached server
+50 nats clients
+50 nats servers
+
+
+code
+- consts 
+	- worker 1
+
+running
+	- each nodes goes to local scheduler
+		- only sends task to local worker
+script
+	- start_workers all workers will have worker_index=0
+	- check we should check only director 0
+
+	44:a8:42:9a:c5:41
+
+Kmeans 1 task 1MB : 0.0023174430,0.0032557700
+Kmeans 1 task 32KB : 0.0056048980, 0.0035757530, 0.0040099470
+Kmeans 2 task 32KB : 0.0085524960
+Kmeans 4 task 32KB :
+Kmeans 1024 task 32KB : 3.7029139490
+
+
+mpirun -f hosts -np 1 /home/cc/nfs/aetrio/build/aetrio_lib 13 /mnt/pfs/tests/ 1 /mnt/pfs/tests/ "-anats://tabio-1:4222/"

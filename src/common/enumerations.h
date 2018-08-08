@@ -53,7 +53,8 @@ enum table{
     DATASPACE_DB=4,
     WORKER_SCORE=5,
     WORKER_CAPACITY=6,
-    TASK_DB=7
+    TASK_DB=7,
+    WRITE_FINISHED_DB=8
 };
 enum map_impl_type{
     ROCKS_DB=0,

@@ -25,10 +25,11 @@ int posix_client::read(read_task task) {
         std::cerr << "posix_client::read() read failed\n";
         //throw std::runtime_error("posix_client::read() read failed");
 
-    auto map_client=aetrio_system::getInstance(WORKER)->map_client;
+    auto map_client=aetrio_system::getInstance(WORKER)->map_client();
     serialization_manager sm=serialization_manager();
     map_client->put(DATASPACE_DB,task.destination.filename,data,
                     std::to_string(task.destination.server));
+    //std::cout<<task.destination.filename<<","<<task.destination.server<<"\n";
     fclose(fh);
     free(data);
     if(task.local_copy){
@@ -67,7 +68,7 @@ int posix_client::write(write_task task) {
     Timer t=Timer();
     t.resumeTime();
 #endif
-    std::shared_ptr<distributed_hashmap> map_client=aetrio_system::getInstance(WORKER)->map_client;
+    std::shared_ptr<distributed_hashmap> map_client=aetrio_system::getInstance(WORKER)->map_client();
     serialization_manager sm=serialization_manager();
     auto source=task.source;
     size_t chunk_index=(source.offset/ MAX_IO_UNIT);
@@ -123,6 +124,8 @@ int posix_client::write(write_task task) {
     map_client->put(table::CHUNK_DB, task.source.filename +std::to_string
             (chunk_index * MAX_IO_UNIT),chunk_str, std::to_string(0));
 //    map_client->remove(DATASPACE_DB,task.destination.filename, std::to_string(task.destination.server));
+    map_client->put(table::WRITE_FINISHED_DB, task.destination.filename,
+            std::to_string(task.destination.server), std::to_string(0));
 #ifdef TIMERW
     std::stringstream stream;
     stream  << "posix_client::write(),"

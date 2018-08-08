@@ -40,9 +40,15 @@ private:
             :service_i(service),application_id(),client_comm(),
              client_rank(),rank(){init(service_i);}
     void init(service service);
+    std::shared_ptr<distributed_hashmap> map_client_,map_server_;
 public:
     std::shared_ptr<solver> solver_i;
-    std::shared_ptr<distributed_hashmap> map_client,map_server;
+    std::shared_ptr<distributed_hashmap> map_client(){
+        return map_client_;
+    }
+    std::shared_ptr<distributed_hashmap> map_server(){
+        return map_server_;
+    }
     std::shared_ptr<distributed_queue> client_queue,
             worker_queues[MAX_WORKER_COUNT];
     int rank,client_rank;

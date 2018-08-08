@@ -38,7 +38,7 @@ private:
             client=std::make_shared<posix_client>(posix_client(worker_index));
         }
         queue=aetrio_system::getInstance(service_i)->get_worker_queue(worker_index);
-        map=aetrio_system::getInstance(service_i)->map_server;
+        map=aetrio_system::getInstance(service_i)->map_server();
     }
 /******************************************************************************
 *Interface
