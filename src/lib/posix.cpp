@@ -216,7 +216,8 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     return size_read;
 }
 
-size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
+std::vector<write_task*> aetrio::fwrite_async(void *ptr, size_t size,
+                                              size_t count, FILE *stream) {
     auto mdm = metadata_manager::getInstance(LIB);
     auto client_queue = aetrio_system::getInstance(LIB)->get_client_queue
             (CLIENT_TASK_SUBJECT);
@@ -265,14 +266,30 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
         }else{
             mdm->update_write_task_info(*task,filename,task->source.size);
         }
-
         index++;
-        delete task;
     }
-    return size*count;
+    return write_tasks;
 }
 
-size_t aetrio::fwrite_sync(void *ptr, size_t size, size_t count, FILE *stream) {
+size_t aetrio::fwrite_wait(std::vector<write_task*> tasks) {
+    size_t total_size_written=0;
+    auto map_client=aetrio_system::getInstance(LIB)->map_client();
+    auto map_server=aetrio_system::getInstance(LIB)->map_server();
+    for(auto task:tasks){
+        while(!map_server->exists(table::WRITE_FINISHED_DB,task->destination
+        .filename,std::to_string(0)))
+        {}
+        map_server->remove(table::WRITE_FINISHED_DB,task->destination
+                .filename,std::to_string(0));
+        map_client->remove(table::DATASPACE_DB,task->destination
+                .filename,std::to_string(task->destination.server));
+        total_size_written+=task->destination.size;
+        delete(task);
+    }
+    return total_size_written;
+}
+
+size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     auto mdm = metadata_manager::getInstance(LIB);
     auto client_queue = aetrio_system::getInstance(LIB)->get_client_queue
             (CLIENT_TASK_SUBJECT);
