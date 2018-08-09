@@ -61,7 +61,6 @@ bool MemcacheDImpl::exists(const table &name, std::string key,std::string group_
     key=std::to_string(name)+KEY_SEPARATOR+key;
 
     if(group_key=="-1"){
-        std::cout<<key;
         group_key=get_server(key);
     }
     memcached_return_t rc= memcached_exist_by_key(mem_client,

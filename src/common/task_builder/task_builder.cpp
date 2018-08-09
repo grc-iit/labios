@@ -25,7 +25,7 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
             source.offset % MAX_IO_UNIT;
     std::size_t data_offset = 0;
     std::size_t remaining_data = source.size;
-    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank /
+    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank %
             map_client->get_servers());
     //std::cout<<"rank"<<aetrio_system::getInstance(LIB)->rank<<"server:"<<server <<"\n";
     while(remaining_data > 0){
@@ -248,7 +248,7 @@ std::vector<read_task> task_builder::build_read_task(read_task task) {
     auto map_client = aetrio_system::getInstance(service_i)->map_client();
     auto chunks = mdm->fetch_chunks(task);
     size_t data_pointer=0;
-    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank /
+    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank %
             map_client->get_servers());
     for(auto chunk:chunks){
         auto rt = new read_task();
