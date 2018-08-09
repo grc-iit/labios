@@ -63,10 +63,15 @@ public:
     inline std::shared_ptr<distributed_queue>get_client_queue
             (const std::string &subject){
         if(client_queue == nullptr){
+            if(service_i==LIB)
             client_queue=std::make_shared<NatsImpl>(
                     service_i,
                     config_manager::get_instance()->NATS_URL_CLIENT,
-                    CLIENT_TASK_SUBJECT,std::to_string(service_i));
+                    CLIENT_TASK_SUBJECT,std::to_string(service_i),false);
+            else client_queue=std::make_shared<NatsImpl>(
+                        service_i,
+                        config_manager::get_instance()->NATS_URL_CLIENT,
+                        CLIENT_TASK_SUBJECT,std::to_string(service_i),true);
         }
         return client_queue;
     }
@@ -76,7 +81,7 @@ public:
             worker_queues[worker_index]=std::make_shared<NatsImpl>(
                     service_i,
                     config_manager::get_instance()->NATS_URL_SERVER,
-                    std::to_string(worker_index-1),"");
+                    std::to_string(worker_index-1),"",true);
         return worker_queues[worker_index];
     }
     int build_message_key(MPI_Datatype &message);
