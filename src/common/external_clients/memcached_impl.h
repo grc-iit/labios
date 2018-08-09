@@ -12,6 +12,7 @@
 #include "../client_interface/distributed_hashmap.h"
 #include <libmemcached/memcached.h>
 #include <cstring>
+#include "../city.h"
 /******************************************************************************
 *Class
 ******************************************************************************/
@@ -21,13 +22,20 @@ class MemcacheDImpl: public distributed_hashmap {
 ******************************************************************************/
 private:
     memcached_st * mem_client;
+    size_t num_servers;
+    std::string get_server(std::string key);
 public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    MemcacheDImpl(service service,const std::string &config_string,int server)
+    MemcacheDImpl(service service,const std::string &config_string,int
+    server)
             :distributed_hashmap(service){
        mem_client = memcached(config_string.c_str(), config_string.size());
+       num_servers=mem_client->number_of_hosts;
+    }
+    size_t get_servers() override{
+       return num_servers;
     }
 /******************************************************************************
 *Interface

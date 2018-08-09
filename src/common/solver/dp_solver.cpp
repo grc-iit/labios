@@ -64,17 +64,17 @@ solver_output DPSolver::solve(solver_input input) {
     int original_index=0;
     for(int worker_index=0;worker_index<MAX_WORKER_COUNT;worker_index++){
         std::string val=map->get(table::WORKER_CAPACITY,std::to_string
-                (worker_index+1),std::to_string(0));
+                (worker_index+1),std::to_string(-1));
         sorted_workers.emplace_back(std::make_pair(atoi(val.c_str()),
                                              original_index++));
     }
     std::sort(sorted_workers.begin(), sorted_workers.end());
     int new_index=0;
     for(auto pair:sorted_workers){
-        std::string val=map->get(table::WORKER_SCORE,std::to_string(pair.second+1),std::to_string(0));
+        std::string val=map->get(table::WORKER_SCORE,std::to_string(pair.second+1),std::to_string(-1));
         worker_score[new_index]=atoi(val.c_str());
         worker_capacity[new_index]=pair.first;
-        worker_energy[new_index]=WORKER_ENERGY[pair.second];
+        worker_energy[new_index]=WORKER_ENERGY;
         std::cout<<"worker:"<<pair.second+1<<" capacity:"<<worker_capacity[new_index]<<" score:"<<worker_score[new_index]<<std::endl;
         new_index++;
     }

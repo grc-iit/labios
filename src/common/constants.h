@@ -35,35 +35,13 @@ const queue_impl_type queue_impl_type_t = queue_impl_type::NATS;
 const io_client_type io_client_type_t = io_client_type::POSIX;
 const std::string DATASPACE_ID="DATASPACE_ID";
 const std::string KEY_SEPARATOR = "#";
-const std::size_t PROCESS_PER_NODE=4;
 /*******************
 *Workers
 *******************/
 const std::size_t MAX_WORKER_COUNT = 4;
-const std::string WORKER_TASK_SUBJECT[MAX_WORKER_COUNT] =
-        {"1",
-         "2",
-         "3",
-         "4"
-        };
-const int WORKER_SPEED[MAX_WORKER_COUNT] =
-        {2,
-         2,
-         2,
-         2
-        };
-const int WORKER_ENERGY[MAX_WORKER_COUNT] =
-        {2,
-         2,
-         2,
-         2
-        };
-const int64_t WORKER_CAPACITY_MAX[MAX_WORKER_COUNT] =
-        {137438953472,
-         137438953472,
-         137438953472,
-         137438953472
-        };
+const int WORKER_SPEED =2;
+const int WORKER_ENERGY=2;
+const int64_t WORKER_CAPACITY_MAX=137438953472;
 const std::string WORKER_PATH="/opt/temp/";
 const std::string PFS_PATH="/mnt/pfs";
 const size_t KB = 1024;

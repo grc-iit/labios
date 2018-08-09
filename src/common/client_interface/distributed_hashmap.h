@@ -55,6 +55,9 @@ public:
     group_key){
         throw NotImplementedException("counter_inc");
     }
+    virtual size_t get_servers(){
+        throw NotImplementedException("get_servers");
+    }
 /******************************************************************************
 *Destructor
 ******************************************************************************/

@@ -94,7 +94,7 @@ int worker::update_score(bool before_sleeping=false) {
         if(map->put(
                 table::WORKER_SCORE,
                 std::to_string(worker_index),
-                std::to_string(worker_score),std::to_string(0)
+                std::to_string(worker_score),std::to_string(-1)
         )!=MEMCACHED_SUCCESS) return WORKER__UPDATE_SCORE_FAILED;
     }
     return SUCCESS;
@@ -104,8 +104,8 @@ int worker::calculate_worker_score(bool before_sleeping=false) {
     float load = (float)queue->get_queue_count()/INT_MAX;
     float capacity=get_remaining_capacity()/get_total_capacity();
     float isAlive= before_sleeping?0:1;
-    float energy=((float)WORKER_ENERGY[worker_index-1])/5;
-    float speed=((float)WORKER_SPEED[worker_index-1])/5;
+    float energy=((float)WORKER_ENERGY)/5;
+    float speed=((float)WORKER_SPEED)/5;
 
     float score= POLICY_WEIGHT[0]*load +
                  POLICY_WEIGHT[1]*capacity +
@@ -136,7 +136,7 @@ int worker::update_capacity() {
     if(map->put(
             table::WORKER_CAPACITY,
             std::to_string(worker_index),
-            std::to_string(remaining_cap),std::to_string(0))==MEMCACHED_SUCCESS){
+            std::to_string(remaining_cap),std::to_string(-1))==MEMCACHED_SUCCESS){
         //std::cout<<"worker capacity: "<<std::setprecision(6)<<remaining_cap<<"\n";
         return SUCCESS;
     }
@@ -158,7 +158,7 @@ int worker::setup_working_dir() {
 }
 
 int64_t worker::get_total_capacity() {
-    return WORKER_CAPACITY_MAX[worker_index-1];
+    return WORKER_CAPACITY_MAX;
 }
 
 int64_t worker::get_current_capacity() {

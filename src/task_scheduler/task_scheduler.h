@@ -30,7 +30,7 @@ private:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit task_scheduler(service service)
+    explicit task_scheduler(service service_i)
             :kill(false),
              scheduling_threads(config_manager::get_instance()->TS_NUM_WORKER_THREADS){
         scheduling_threads.init();

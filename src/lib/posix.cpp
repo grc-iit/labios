@@ -277,10 +277,10 @@ size_t aetrio::fwrite_wait(std::vector<write_task*> tasks) {
     auto map_server=aetrio_system::getInstance(LIB)->map_server();
     for(auto task:tasks){
         while(!map_server->exists(table::WRITE_FINISHED_DB,task->destination
-        .filename,std::to_string(0)))
+        .filename,std::to_string(-1)))
         {}
         map_server->remove(table::WRITE_FINISHED_DB,task->destination
-                .filename,std::to_string(0));
+                .filename,std::to_string(-1));
         map_client->remove(table::DATASPACE_DB,task->destination
                 .filename,std::to_string(task->destination.server));
         total_size_written+=task->destination.size;
@@ -350,8 +350,8 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     }
     for(auto task_id:task_ids){
         while(!map_server->exists(table::WRITE_FINISHED_DB,task_id.first,
-                std::to_string(0))){}
-        map_server->remove(table::WRITE_FINISHED_DB,task_id.first,std::to_string(0));
+                std::to_string(-1))){}
+        map_server->remove(table::WRITE_FINISHED_DB,task_id.first,std::to_string(-1));
         map_client->remove(table::DATASPACE_DB,task_id.first,task_id.second);
     }
     return size*count;

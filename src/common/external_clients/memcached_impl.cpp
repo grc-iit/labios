@@ -1,6 +1,7 @@
 /******************************************************************************
 *include files
 ******************************************************************************/
+#include <mpi.h>
 #include "memcached_impl.h"
 
 /******************************************************************************
@@ -8,6 +9,9 @@
 ******************************************************************************/
 int MemcacheDImpl::put(const table &name, std::string key, const std::string &value,std::string group_key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
+    if(group_key=="-1"){
+        group_key=get_server(key);
+    }
     memcached_return_t rc= memcached_set_by_key(mem_client,
                                                 group_key.c_str(),
                                                 group_key.length(),
@@ -25,6 +29,9 @@ std::string MemcacheDImpl::get(const table &name, std::string key,std::string gr
     char *return_value;
     size_t size;
     key=std::to_string(name)+KEY_SEPARATOR+key;
+    if(group_key=="-1"){
+        group_key=get_server(key);
+    }
     return_value = memcached_get_by_key(mem_client,
                                         group_key.c_str(),
                                         group_key.length(),
@@ -41,6 +48,9 @@ std::string MemcacheDImpl::get(const table &name, std::string key,std::string gr
 
 std::string MemcacheDImpl::remove(const table &name, std::string key,std::string group_key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
+    if(group_key=="-1"){
+        group_key=get_server(key);
+    }
     memcached_delete_by_key(mem_client,group_key.c_str(),
                             group_key.length(), key.c_str(), key.length(),
                             (time_t)0);
@@ -49,6 +59,11 @@ std::string MemcacheDImpl::remove(const table &name, std::string key,std::string
 
 bool MemcacheDImpl::exists(const table &name, std::string key,std::string group_key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
+
+    if(group_key=="-1"){
+        std::cout<<key;
+        group_key=get_server(key);
+    }
     memcached_return_t rc= memcached_exist_by_key(mem_client,
             group_key.c_str(),
             group_key.length(),
@@ -64,12 +79,18 @@ bool MemcacheDImpl::purge() {
 size_t MemcacheDImpl::counter_init(const table &name, std::string key,
                                    std::string group_key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
+    if(group_key=="-1"){
+        group_key=get_server(key);
+    }
     return distributed_hashmap::counter_init(name, key, group_key);
 }
 
 size_t MemcacheDImpl::counter_inc(const table &name, std::string key,
                                   std::string group_key) {
     key=std::to_string(name)+KEY_SEPARATOR+key;
+    if(group_key=="-1"){
+        group_key=get_server(key);
+    }
     size_t value=0;
     memcached_return_t rc= memcached_increment(mem_client,key.c_str(),key.length(),1,&value);
     if(rc==MEMCACHED_NOTFOUND){
@@ -80,5 +101,13 @@ size_t MemcacheDImpl::counter_inc(const table &name, std::string key,
         value=0;
     }
     return value;
+}
+
+std::string MemcacheDImpl::get_server(std::string key) {
+    auto hash=CityHash64(key.c_str(),key.length());
+    int comm_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    size_t server=hash%num_servers;
+    return std::to_string(server);
 }
 

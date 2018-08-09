@@ -44,6 +44,9 @@ public:
 
     size_t counter_inc(const table &name, std::string key,
                        std::string group_key) override;
+    size_t get_servers() override{
+        throw NotImplementedException("get_servers");
+    }
 
 /******************************************************************************
 *Destructor

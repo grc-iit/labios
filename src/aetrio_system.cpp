@@ -13,6 +13,9 @@ std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
 ******************************************************************************/
 void aetrio_system::init(service service) {
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    int comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&comm_size);
+    comm_size=comm_size==0?1:comm_size;
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_server_ = std::make_shared<MemcacheDImpl>
                 (service,
@@ -35,7 +38,7 @@ void aetrio_system::init(service service) {
         case LIB:{
             if(rank==0){
                 auto value=map_server()->get(table::SYSTEM_REG,"app_no",
-                        std::to_string(0));
+                        std::to_string(-1));
                 int curr=0;
                 if(!value.empty()){
                     curr = std::stoi(value);
@@ -44,9 +47,9 @@ void aetrio_system::init(service service) {
                 application_id=curr;
                 map_server()->put(
                         table::SYSTEM_REG,"app_no",
-                        std::to_string(curr),std::to_string(0));
+                        std::to_string(curr),std::to_string(-1));
                 std::size_t t=map_server()->counter_inc(COUNTER_DB,DATASPACE_ID,
-                        std::to_string(0));
+                        std::to_string(-1));
             }
             MPI_Barrier(MPI_COMM_WORLD);
             break;

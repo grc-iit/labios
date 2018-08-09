@@ -25,11 +25,15 @@ public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    NatsImpl(service service, const std::string &url,
-             const std::string &subject)
+    NatsImpl(service service, const std::string &url, const std::string
+    &subject,std::string queue_group)
             :distributed_queue(service),subject(subject) {
         natsConnection_ConnectTo(&nc, url.c_str());
-        natsConnection_SubscribeSync(&sub, nc, subject.c_str());
+        if(queue_group.empty()) natsConnection_SubscribeSync(&sub, nc, subject.c_str());
+        else
+        natsConnection_QueueSubscribeSync(&sub, nc, subject.c_str(),
+                queue_group.c_str());
+        //natsConnection_SubscribeSync(&sub, nc, subject.c_str());
     }
 /******************************************************************************
 *Interface

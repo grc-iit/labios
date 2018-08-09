@@ -9,7 +9,7 @@
 #include "../common/data_structures.h"
 
 std::shared_ptr<task_scheduler> task_scheduler::instance = nullptr;
-service task_scheduler::service_i = service();
+service task_scheduler::service_i = service(TASK_SCHEDULER);
 /******************************************************************************
 *Interface
 ******************************************************************************/
@@ -31,8 +31,8 @@ int task_scheduler::run() {
         if(!task_list.empty() &&
            (task_list.size()>=MAX_NUM_TASKS_IN_QUEUE
             ||time_elapsed>=MAX_SCHEDULE_TIMER)){
-            //scheduling_threads.submit(std::bind(schedule_tasks, task_list));
-            schedule_tasks(task_list);
+            scheduling_threads.submit(std::bind(schedule_tasks, task_list));
+            //schedule_tasks(task_list);
             t.startTime();
             task_list.clear();
         }
@@ -54,21 +54,30 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
         auto queue=aetrio_system::getInstance(service_i)->
                 get_worker_queue(element.first);
         for(auto task:element.second){
+
+            switch (task->t_type){
+                case task_type::WRITE_TASK:{
+                    auto *wt= reinterpret_cast<write_task *>(task);
 #ifdef DEBUG
-            std::cout << "threadID:" <<std::this_thread::get_id()
+                    std::cout << "threadID:" <<std::this_thread::get_id()
                               << "\tOperation" << static_cast<std::underlying_type<task_type>::type>(task->t_type)
+                              << "\tDataspaceID#" << wt->destination.filename
                               << "\tTask#" << task->task_id
                               << "\tWorker#" << element.first
                               << "\n";
 #endif
-            switch (task->t_type){
-                case task_type::WRITE_TASK:{
-                    auto *wt= reinterpret_cast<write_task *>(task);
                     queue->publish_task(wt);
                     break;
                 }
                 case task_type::READ_TASK:{
                     auto *rt= reinterpret_cast<read_task *>(task);
+#ifdef DEBUG
+                    std::cout << "threadID:" <<std::this_thread::get_id()
+                              << "\tOperation" << static_cast<std::underlying_type<task_type>::type>(task->t_type)
+                              << "\tTask#" << task->task_id
+                              << "\tWorker#" << element.first
+                              << "\n";
+#endif
                     queue->publish_task(rt);
                     break;
                 }
