@@ -104,8 +104,6 @@ size_t MemcacheDImpl::counter_inc(const table &name, std::string key,
 
 std::string MemcacheDImpl::get_server(std::string key) {
     auto hash=CityHash64(key.c_str(),key.length());
-    int comm_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     size_t server=hash%num_servers;
     return std::to_string(server);
 }

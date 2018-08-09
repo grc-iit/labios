@@ -35,6 +35,7 @@ const queue_impl_type queue_impl_type_t = queue_impl_type::NATS;
 const io_client_type io_client_type_t = io_client_type::POSIX;
 const std::string DATASPACE_ID="DATASPACE_ID";
 const std::string KEY_SEPARATOR = "#";
+const size_t PROCS_PER_MEMCACHED=24;
 /*******************
 *Workers
 *******************/
