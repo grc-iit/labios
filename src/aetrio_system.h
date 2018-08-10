@@ -81,7 +81,11 @@ public:
             worker_queues[worker_index]=std::make_shared<NatsImpl>(
                     service_i,
                     config_manager::get_instance()->NATS_URL_SERVER,
-                    std::to_string(worker_index-1),"",true);
+                    std::to_string(worker_index-1),
+                    std::to_string(service_i) +
+                    "_"+
+                    std::to_string(worker_index-1),
+                    true);
         return worker_queues[worker_index];
     }
     int build_message_key(MPI_Datatype &message);

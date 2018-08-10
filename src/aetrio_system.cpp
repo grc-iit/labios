@@ -61,6 +61,8 @@ void aetrio_system::init(service service) {
             break;
         }
         case TASK_SCHEDULER:{
+            std::size_t t=map_server()->counter_inc(COUNTER_DB,ROUND_ROBIN_INDEX,
+                                                    std::to_string(-1));
             break;
         }
         case WORKER_MANAGER:{

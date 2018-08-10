@@ -20,12 +20,10 @@ private:
 *Variables and members
 ******************************************************************************/
     static std::shared_ptr<round_robin_solver> instance;
-    std::size_t last_worker_index;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit round_robin_solver(service service):solver(service),
-            last_worker_index(0){}
+    explicit round_robin_solver(service service):solver(service){}
 public:
 /******************************************************************************
 *Interface

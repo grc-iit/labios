@@ -124,10 +124,20 @@ std::size_t aetrio::fread_wait(void *ptr, std::vector<read_task> &tasks,
             }
             case BUFFERS:{
                 //std::cerr<<"wait in buffers\n";
-                while(!data_m->exists(DATASPACE_DB,task.destination.filename,
+                Timer wait_timer=Timer();
+                int count=0;
+                while(wait_timer.resumeTime()==0 &&!data_m->exists(DATASPACE_DB,task.destination.filename,
                                       std::to_string(task.destination.server)
                 )){
-                    //std::cerr<<task.destination.filename<<","<<task.destination.server<<"looping\n";
+                    wait_timer.pauseTime();
+                    if(wait_timer.elapsed_time > 5 && count%1000000==0){
+                        int rank;
+                        MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+                        std::stringstream stream;
+                        stream<<"Waiting for task more than 5 seconds rank:"<<rank<<
+                              "dataspace_id:"<<task.destination.filename;
+                        count++;
+                    }
                 }
                 data = data_m->get(DATASPACE_DB,
                                    task.destination.filename,std::to_string(task.destination.server));
@@ -276,9 +286,23 @@ size_t aetrio::fwrite_wait(std::vector<write_task*> tasks) {
     auto map_client=aetrio_system::getInstance(LIB)->map_client();
     auto map_server=aetrio_system::getInstance(LIB)->map_server();
     for(auto task:tasks){
-        while(!map_server->exists(table::WRITE_FINISHED_DB,task->destination
+        int count=0;
+        Timer wait_timer=Timer();
+
+        while(wait_timer.resumeTime()==0 && !map_server->exists
+        (table::WRITE_FINISHED_DB,task->destination
         .filename,std::to_string(-1)))
-        {}
+        {
+            wait_timer.pauseTime();
+            if(wait_timer.elapsed_time > 5 && count%1000000==0){
+                int rank;
+                MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+                std::stringstream stream;
+                stream<<"Waiting for task more than 5 seconds rank:"<<rank<<
+                        "dataspace_id:"<<task->destination.filename;
+                count++;
+            }
+        }
         map_server->remove(table::WRITE_FINISHED_DB,task->destination
                 .filename,std::to_string(-1));
         map_client->remove(table::DATASPACE_DB,task->destination

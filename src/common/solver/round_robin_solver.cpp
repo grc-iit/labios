@@ -2,15 +2,20 @@
 *include files
 ******************************************************************************/
 #include "round_robin_solver.h"
+#include "../../aetrio_system.h"
+
 std::shared_ptr<round_robin_solver> round_robin_solver::instance = nullptr;
 /******************************************************************************
 *Interface
 ******************************************************************************/
 solver_output round_robin_solver::solve(solver_input input) {
     std::vector<task*> worker_tasks;
-    std::size_t worker_id=last_worker_index;
+    auto map_server=aetrio_system::getInstance(service_i)->map_server();
+
     solver_output solution(input.num_tasks);
     for(auto i=0;i<input.tasks.size();i++){
+        std::size_t worker_id=map_server->counter_inc(COUNTER_DB,ROUND_ROBIN_INDEX,
+                                                      std::to_string(-1));
         worker_id = worker_id % MAX_WORKER_COUNT;
         switch(input.tasks[i]->t_type) {
             case task_type::WRITE_TASK: {
@@ -57,8 +62,6 @@ solver_output round_robin_solver::solve(solver_input input) {
             solution.worker_task_map.emplace
                     (std::make_pair(solution.solution[i],worker_tasks));
         }else it->second.push_back(input.tasks[i]);
-        worker_id++;
-        last_worker_index = worker_id % MAX_WORKER_COUNT;
     }
     return solution;
 }
