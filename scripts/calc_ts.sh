@@ -7,4 +7,4 @@ do
      sum=`echo $sum+$col2 | bc`
 done <  ts.csv
 
-echo $sum | bc -l
+echo $sum/8 | bc -l

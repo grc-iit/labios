@@ -29,7 +29,8 @@ enum test_case{
     CM1_TABIOS=10,
     MONTAGE_TABIOS=11,
     HACC_TABIOS=12,
-    KMEANS_TABIOS=13
+    KMEANS_TABIOS=13,
+    STRESS_TEST=14
 };
 
 test_case testCase=SIMPLE_READ;
@@ -96,6 +97,11 @@ void cm1_base(int argc, char** argv) {
     size_t current_offset=0;
     Timer global_timer=Timer();
     MPI_File outFile;
+    char* write_buf[32];
+    for(int i=0;i<32;++i){
+        write_buf[i]= static_cast<char *>(malloc(1 * 1024 * 1024));
+        gen_random(write_buf[i],1*1024*1024);
+    }
     global_timer.resumeTime();
     MPI_Info info;
     MPI_Info_create(&info);
@@ -113,10 +119,8 @@ void cm1_base(int argc, char** argv) {
     for(int i=0;i<iteration;++i){
         for(auto write:workload){
             for(int j=0;j<write[1];++j){
-                char write_buf[write[0]];
-                gen_random(write_buf,write[0]);
                 global_timer.resumeTime();
-                MPI_File_write(outFile, write_buf,
+                MPI_File_write(outFile, write_buf[j],
                                static_cast<int>(write[0]),
                                MPI_CHAR,
                                MPI_STATUS_IGNORE);
@@ -125,6 +129,9 @@ void cm1_base(int argc, char** argv) {
                 current_offset+=write[0];
             }
         }
+    }
+    for(int i=0;i<32;++i){
+        free(write_buf[i]);
     }
     global_timer.resumeTime();
     MPI_File_close(&outFile);
@@ -139,7 +146,22 @@ void cm1_base(int argc, char** argv) {
         std::cerr << stream.str();
     }
 }
-
+void simulation(int comp){
+    int count=0;
+    int comm_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    std::cout << "\tSimulation Started";
+    for(auto i=0;i<32;++i){
+        for(int j=0;j<comp*1024*1024;++j){
+            count+=1;
+            auto result = count * j;
+            result -=j;
+        }
+        std::cout << ".";
+        count =0;
+    }
+    std::cout << "\tSimulation completed\n";
+}
 void cm1_tabios(int argc, char** argv) {
 #ifdef COLLECT
     system("sh /home/cc/nfs/aetrio/scripts/log_reset.sh");
@@ -153,8 +175,11 @@ void cm1_tabios(int argc, char** argv) {
     int iteration=atoi(argv[3]);
     std::string filename=file_path+"/test_"+std::to_string(rank)+".dat";
     size_t io_per_teration=32*1024*1024;
+
+
     std::vector<std::array<size_t,2>> workload=std::vector<std::array<size_t,2>>();
     workload.push_back({1*1024*1024, 32});
+
     size_t current_offset=0;
     Timer global_timer=Timer();
 
@@ -162,21 +187,24 @@ void cm1_tabios(int argc, char** argv) {
     FILE* fh=aetrio::fopen(filename.c_str(),"w+");
     global_timer.pauseTime();
 
+
+    char* write_buf[32];
+    for(int i=0;i<32;++i){
+        write_buf[i]= static_cast<char *>(malloc(1 * 1024 * 1024));
+        gen_random(write_buf[i],1*1024*1024);
+    }
     std::vector<std::pair<size_t,std::vector<write_task*>>> operations=
             std::vector<std::pair<size_t,std::vector<write_task*>>>();
 
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
-                char write_buf[item[0]];
-                gen_random(write_buf,item[0]);
-
                 global_timer.resumeTime();
-                operations.emplace_back(std::make_pair(item[0],
-                                                       aetrio::fwrite_async(write_buf,sizeof(char),
-                                                                            item[0], fh)));
+                operations.emplace_back
+                (std::make_pair(item[0],
+                        aetrio::fwrite_async(write_buf[j],sizeof(char),
+                                item[0],fh)));
                 global_timer.pauseTime();
-
                 current_offset+=item[0];
             }
         }
@@ -186,22 +214,28 @@ void cm1_tabios(int argc, char** argv) {
         auto bytes = aetrio::fwrite_wait(operation.second);
         if(bytes != operation.first) std::cerr << "Write failed\n";
     }
+    global_timer.pauseTime();
+    for(int i=0;i<32;++i){
+        free(write_buf[i]);
+    }
+    global_timer.resumeTime();
     if(rank==0) std::cerr <<"Write finished\n";
     aetrio::fclose(fh);
     global_timer.pauseTime();
 
     auto time=global_timer.elapsed_time;
-    double sum;
+    double sum,max,min;
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&time, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    MPI_Allreduce(&time, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     double mean = sum / comm_size;
-
     if(rank == 0) {
 #ifdef COLLECT
         double ts = get_average_ts();
         double worker = get_average_worker();
         stream << ts<<","<< worker << ",";
 #endif
-        stream <<mean<<"\n";
+        stream <<mean<<","<<max<<","<<min<<"\n";
         std::cerr << stream.str();
     }
 }
@@ -222,7 +256,11 @@ void hacc_base(int argc, char** argv) {
     workload.push_back({1*1024*1024, 32});
     size_t current_offset=0;
     Timer global_timer=Timer();
-
+    char* write_buf[32];
+    for(int i=0;i<32;++i){
+        write_buf[i]= static_cast<char *>(malloc(1 * 1024 * 1024));
+        gen_random(write_buf[i],1*1024*1024);
+    }
     global_timer.resumeTime();
 #ifdef TIMERBASE
     Timer wbb=Timer();
@@ -239,15 +277,13 @@ void hacc_base(int argc, char** argv) {
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
-                char write_buf[item[0]];
-                gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
 #ifdef TIMERBASE
                 wbb.resumeTime();
 #endif
 //                write(fd,write_buf,item[0]);
 //                fsync(fd);
-                std::fwrite(write_buf,sizeof(char),item[0],fh);
+                std::fwrite(write_buf[j],sizeof(char),item[0],fh);
                 MPI_Barrier(MPI_COMM_WORLD);
                 global_timer.pauseTime();
 #ifdef TIMERBASE
@@ -256,6 +292,9 @@ void hacc_base(int argc, char** argv) {
                 current_offset+=item[0];
             }
         }
+    }
+    for(int i=0;i<32;++i){
+        free(write_buf[i]);
     }
 #ifdef TIMERBASE
     wbb.resumeTime();
@@ -299,7 +338,7 @@ void hacc_base(int argc, char** argv) {
     if(rank == 0) stream << "write_to_PFS,"<<pfs.pauseTime()<<"\n";
 #endif
     global_timer.pauseTime();
-
+    free(read_buf);
     auto time=global_timer.elapsed_time;
     double sum;
     MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -329,7 +368,11 @@ void hacc_tabios(int argc, char** argv) {
     workload.push_back({1*1024*1024, 32});
     size_t current_offset=0;
     Timer global_timer=Timer();
-
+    char* write_buf[32];
+    for(int i=0;i<32;++i){
+        write_buf[i]= static_cast<char *>(malloc(1 * 1024 * 1024));
+        gen_random(write_buf[i],1*1024*1024);
+    }
     global_timer.resumeTime();
 #ifdef TIMERBASE
     Timer wbb=Timer();
@@ -347,14 +390,12 @@ void hacc_tabios(int argc, char** argv) {
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
-                char write_buf[item[0]];
-                gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
 #ifdef TIMERBASE
                 wbb.resumeTime();
 #endif
                 operations.emplace_back(std::make_pair(item[0],
-                        aetrio::fwrite_async(write_buf,sizeof(char),
+                        aetrio::fwrite_async(write_buf[j],sizeof(char),
                                 item[0], fh)));
 #ifdef TIMERBASE
                 wbb.pauseTime();
@@ -363,6 +404,9 @@ void hacc_tabios(int argc, char** argv) {
                 current_offset+=item[0];
             }
         }
+    }
+    for(int i=0;i<32;++i){
+        free(write_buf[i]);
     }
     global_timer.resumeTime();
 #ifdef TIMERBASE
@@ -398,6 +442,7 @@ void hacc_tabios(int argc, char** argv) {
 //    auto bytes= aetrio::fread_wait(read_buf,op,filename);
 //    if(bytes!=io_per_teration) std::cerr << "Read failed:" <<bytes<<"\n";
     aetrio::fclose(fh1);
+
 #endif
 
 #ifdef TIMERBASE
@@ -419,7 +464,8 @@ void hacc_tabios(int argc, char** argv) {
     aetrio::fclose(fh2);
 #ifdef TIMERBASE
     pfs.pauseTime();
-    auto pfs_time=rbb.elapsed_time;
+    free(read_buf);
+    auto pfs_time=pfs.elapsed_time;
     double pfs_sum;
     MPI_Allreduce(&pfs_time, &pfs_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     double pfs_mean = pfs_sum / comm_size;
@@ -471,6 +517,11 @@ void montage_base(int argc, char** argv) {
     }
     workload.push_back({1*1024*1024, 32});
     size_t current_offset=0;
+    char* write_buf[32];
+    for(int i=0;i<32;++i){
+        write_buf[i]= static_cast<char *>(malloc(1 * 1024 * 1024));
+        gen_random(write_buf[i],1*1024*1024);
+    }
 #ifdef TIMERBASE
     if(rank == 0){
         stream << "montage_base(),"
@@ -498,18 +549,16 @@ void montage_base(int argc, char** argv) {
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
-                char write_buf[item[0]];
-                gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
 #ifdef TIMERBASE
                 w.resumeTime();
 #endif
                 if(rank%2==0){
                     if(j%2==0){
-                        write(fd1,write_buf,item[0]);
+                        write(fd1,write_buf[j],item[0]);
                         fsync(fd1);
                     }else{
-                        write(fd2,write_buf,item[0]);
+                        write(fd2,write_buf[j],item[0]);
                         fsync(fd2);
                     }
 
@@ -522,6 +571,9 @@ void montage_base(int argc, char** argv) {
                 current_offset+=item[0];
             }
         }
+    }
+    for(int i=0;i<32;++i){
+        free(write_buf[i]);
     }
     global_timer.resumeTime();
 #ifdef TIMERBASE
@@ -683,6 +735,11 @@ void montage_tabios(int argc, char** argv) {
     }
     workload.push_back({1*1024*1024, 32});
     size_t current_offset=0;
+    char* write_buf[32];
+    for(int i=0;i<32;++i){
+        write_buf[i]= static_cast<char *>(malloc(1 * 1024 * 1024));
+        gen_random(write_buf[i],1*1024*1024);
+    }
 #ifdef TIMERBASE
     c.pauseTime();
 #endif
@@ -719,21 +776,18 @@ void montage_tabios(int argc, char** argv) {
     for(int i=0;i<iteration;++i){
         for(auto item:workload){
             for(int j=0;j<item[1];++j){
-                char write_buf[item[0]];
-                gen_random(write_buf,item[0]);
                 global_timer.resumeTime();
 #ifdef TIMERBASE
                 w.resumeTime();
 #endif
                 if(rank%2==0 || comm_size==1){
                     if(j%2==0){
-                        operations.emplace_back(std::make_pair(item[0],
-                                                               aetrio::fwrite_async(write_buf,sizeof(char),
-                                                                                    item[0], fd1)));
+                        operations.emplace_back(
+                                std::make_pair(item[0], aetrio::fwrite_async(write_buf[j],sizeof(char),item[0], fd1)));
                     }else{
-                        operations.emplace_back(std::make_pair(item[0],
-                                                               aetrio::fwrite_async(write_buf,sizeof(char),
-                                                                                    item[0], fd2)));
+                        operations.emplace_back(
+                                std::make_pair(item[0],aetrio::fwrite_async
+                                (write_buf[j],sizeof(char),item[0], fd2)));
                     }
                 }
 #ifdef TIMERBASE
@@ -744,7 +798,6 @@ void montage_tabios(int argc, char** argv) {
             }
         }
     }
-
     global_timer.resumeTime();
 #ifdef TIMERBASE
     w.resumeTime();
@@ -769,9 +822,12 @@ void montage_tabios(int argc, char** argv) {
         w_time=w.elapsed_time;
     double w_sum;
     MPI_Allreduce(&w_time, &w_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    double w_mean = w_sum / comm_size/2;
+    double w_mean = w_sum / comm_size*2;
     if(rank == 0) stream << w_mean<<",";
 #endif
+    for(int i=0;i<32;++i){
+        free(write_buf[i]);
+    }
 #ifdef TIMERBASE
     Timer r=Timer();
 #endif
@@ -838,13 +894,15 @@ void montage_tabios(int argc, char** argv) {
     r.pauseTime();
 #endif
     MPI_Barrier(MPI_COMM_WORLD);
+    global_timer.pauseTime();
+
 #ifdef TIMERBASE
     double r_time=0.0;
     if(rank%2 == 1 || comm_size == 1)
         r_time=r.elapsed_time;
     double r_sum;
     MPI_Allreduce(&r_time, &r_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    double r_mean = r_sum / comm_size/2;
+    double r_mean = r_sum / comm_size*2;
     if(rank==0 && comm_size>1){
         stream <<r_mean<<",";
     }
@@ -858,6 +916,7 @@ void montage_tabios(int argc, char** argv) {
 #endif
     std::string finalname=final_path+"final_"+std::to_string(rank)+".dat";
     FILE* outfile;
+    global_timer.resumeTime();
     outfile=aetrio::fopen(finalname.c_str(), "w+");
     global_timer.pauseTime();
     for(auto i=0;i<32;++i){
@@ -872,10 +931,10 @@ void montage_tabios(int argc, char** argv) {
         auto rand =dist(generator);
         int x = (i+1)*rand;
     }
-    char write_buf[1024*1024];
-    gen_random(write_buf,1024*1024);
+    char final_buff[1024*1024];
+    gen_random(final_buff,1024*1024);
     global_timer.resumeTime();
-    aetrio::fwrite(write_buf, sizeof(char), 1024 * 1024, outfile);
+    aetrio::fwrite(final_buff, sizeof(char), 1024 * 1024, outfile);
     aetrio::fclose(outfile);
 #ifdef TIMERBASE
     a.pauseTime();
@@ -1186,10 +1245,12 @@ void kmeans_tabios(int argc, char **argv) {
     global_timer.pauseTime();
 #ifdef TIMERBASE
     auto red_time=reduce.elapsed_time;
-    double red_sum;
+    double red_sum,max,min;
     MPI_Allreduce(&red_time, &red_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&red_time, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    MPI_Allreduce(&red_time, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     double red_mean = red_sum / comm_size;
-    if(rank == 0) stream << red_mean<<",";
+    if(rank == 0) stream << red_mean<<","<<max<<","<<min;
 #endif
     auto time=global_timer.elapsed_time;
     double sum;
@@ -1207,6 +1268,65 @@ void kmeans_tabios(int argc, char **argv) {
 
 }
 
+void stress_test(int argc, char** argv){
+
+    int rank,comm_size;
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    if(rank==0) std::cerr << "Stress test\n";
+    const int io_size=1024*1024;
+    int num_iterations=128;
+    Timer global_timer=Timer();
+    global_timer.resumeTime();
+    FILE* fh=aetrio::fopen("file.test","w+");
+    global_timer.pauseTime();
+    std::vector<std::pair<size_t,std::vector<write_task*>>> operations=
+            std::vector<std::pair<size_t,std::vector<write_task*>>>();
+    char write_buf[io_size];
+    gen_random(write_buf,io_size);
+    for(int i=0;i<num_iterations;++i){
+        global_timer.resumeTime();
+        operations.emplace_back
+                (std::make_pair(io_size,
+                                aetrio::fwrite_async(write_buf,sizeof(char),
+                                                     io_size,fh)));
+        global_timer.pauseTime();
+        if(i!=0 && i%32==0){
+            if(rank==0) std::cerr << "Waiting..."<<i<<"\n";
+            for(int task=0;task<32;++task){
+                auto operation=operations[task];
+                global_timer.resumeTime();
+                auto bytes = aetrio::fwrite_wait(operation.second);
+                if(bytes != operation.first) std::cerr << "Write failed\n";
+                global_timer.pauseTime();
+            }
+            operations.erase(operations.begin(),operations.begin()+32);
+            MPI_Barrier(MPI_COMM_WORLD);
+        }
+    }
+    global_timer.resumeTime();
+    for(auto operation:operations){
+        auto bytes = aetrio::fwrite_wait(operation.second);
+        if(bytes != operation.first) std::cerr << "Write failed\n";
+    }
+    global_timer.pauseTime();
+    global_timer.resumeTime();
+    aetrio::fclose(fh);
+    global_timer.pauseTime();
+    if(rank==0) std::cerr << "Done writing. Now reducing\n";
+    auto time=global_timer.elapsed_time;
+    double sum,max,min;
+    MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&time, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    MPI_Allreduce(&time, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    double mean = sum / comm_size;
+    if(rank==0){
+        std::stringstream stream;
+        std::cerr <<"Write finished\n";
+        stream <<"mean,"<<mean<<"\tmax,"<<max<<"\tmin,"<<min<<"\n";
+        std::cerr << stream.str();
+    }
+}
 
 
 /******************************************************************************
@@ -1218,11 +1338,14 @@ int main(int argc, char** argv){
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 #ifdef OVERHEADS
-    if(rank==0 || rank==1){
-        std::string log_name=std::string(argv[0])+"_" +
-                             std::to_string(comm_size) +".csv";
-        freopen(log_name.c_str(), "w+", stdout);
-    }
+    std::string log_name=std::string(argv[0])+"_" +
+                         std::to_string(rank) +".csv";
+    freopen(log_name.c_str(), "w+", stdout);
+//    if(rank==0 || rank==1){
+//        std::string log_name=std::string(argv[0])+"_" +
+//                             std::to_string(comm_size) +".csv";
+//        freopen(log_name.c_str(), "w+", stdout);
+//    }
 #endif
     MPI_Barrier(MPI_COMM_WORLD);
     int return_val=0;
@@ -1230,12 +1353,48 @@ int main(int argc, char** argv){
         testCase= static_cast<test_case>(atoi(argv[1]));
     }
     switch(testCase){
-        case CM1_BASE:{
-            cm1_base(argc,argv);
+        case CM1_BASE: {
+#ifdef FTIMER
+            Timer timer = Timer();
+            timer.resumeTime();
+            std::stringstream stream;
+#endif
+            cm1_base(argc, argv);
+#ifdef FTIMER
+            timer.pauseTime();
+            auto time = timer.elapsed_time;
+            double sum, max, min;
+            MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            MPI_Allreduce(&time, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+            MPI_Allreduce(&time, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+            double mean = sum / comm_size;
+            if(rank == 0) {
+                stream << mean << "," << max << "," << min << "\n";
+                std::cerr << stream.str();
+            }
+#endif
             break;
         }
         case CM1_TABIOS:{
+#ifdef FTIMER
+            Timer timer = Timer();
+            timer.resumeTime();
+            std::stringstream stream;
+#endif
             cm1_tabios(argc,argv);
+#ifdef FTIMER
+            timer.pauseTime();
+            auto time = timer.elapsed_time;
+            double sum, max, min;
+            MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            MPI_Allreduce(&time, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+            MPI_Allreduce(&time, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+            double mean = sum / comm_size;
+            if(rank == 0) {
+                stream << mean << "," << max << "," << min << "\n";
+                std::cerr << stream.str();
+            }
+#endif
             break;
         }
         case MONTAGE_BASE:{
@@ -1260,6 +1419,10 @@ int main(int argc, char** argv){
         }
         case KMEANS_TABIOS:{
             kmeans_tabios(argc,argv);
+            break;
+        }
+        case STRESS_TEST:{
+            stress_test(argc,argv);
             break;
         }
     }

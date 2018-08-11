@@ -83,11 +83,11 @@ std::vector<read_task> aetrio::fread_async(size_t size,size_t count,FILE *stream
 #endif
     auto tasks = task_m->build_read_task(r_task);
 #ifdef TIMERTB
-    std::stringstream stream;
-    stream  << "build_read_task(),"
+    std::stringstream stream1;
+    stream1  << "build_read_task(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
-    std::cout << stream.str();
+    std::cout << stream1.str();
 #endif
 
     for(auto task:tasks){
@@ -179,11 +179,11 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
 #endif
     auto tasks = task_m->build_read_task(r_task);
 #ifdef TIMERTB
-    std::stringstream stream;
-    stream  << "build_read_task(),"
+    std::stringstream stream1;
+    stream1  << "build_read_task(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
-    std::cout << stream.str();
+    std::cout << stream1.str();
 #endif
     int ptr_pos=0;
     size_t size_read=0;
@@ -244,11 +244,11 @@ std::vector<write_task*> aetrio::fwrite_async(void *ptr, size_t size,
 #endif
     auto write_tasks = task_m->build_write_task(w_task,static_cast<char*>(ptr));
 #ifdef TIMERTB
-    std::stringstream stream;
-    stream  << "build_write_task(),"
+    std::stringstream stream1;
+    stream1  << "build_write_task(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
-    std::cout << stream.str();
+    std::cout << stream1.str();
 #endif
 
     int index=0;
@@ -294,7 +294,7 @@ size_t aetrio::fwrite_wait(std::vector<write_task*> tasks) {
         .filename,std::to_string(-1)))
         {
             wait_timer.pauseTime();
-            if(wait_timer.elapsed_time > 5 && count%1000000==0){
+            if(wait_timer.elapsed_time > 5 && count%10000==0){
                 int rank;
                 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
                 std::stringstream stream;
@@ -332,11 +332,11 @@ size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
 #endif
     auto write_tasks = task_m->build_write_task(w_task,static_cast<char*>(ptr));
 #ifdef TIMERTB
-    std::stringstream stream;
-    stream  << "build_write_task(),"
+    std::stringstream stream1;
+    stream1  << "build_write_task(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
-    std::cout << stream.str();
+    std::cout << stream1.str();
 #endif
 
     int index=0;

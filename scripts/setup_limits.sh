@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+sudo chmod -x /etc/update-motd.d/*
 cp /home/cc/nfs/limits.conf /etc/security/limits.conf
 cp /home/cc/nfs/common-session /etc/pam.d/common-session
 cp /home/cc/nfs/common-session-noninteractive /etc/pam.d/common-session-noninteractive

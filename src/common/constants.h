@@ -36,7 +36,7 @@ const io_client_type io_client_type_t = io_client_type::POSIX;
 const std::string DATASPACE_ID="DATASPACE_ID";
 const std::string ROUND_ROBIN_INDEX="ROUND_ROBIN_INDEX";
 const std::string KEY_SEPARATOR = "#";
-const size_t PROCS_PER_MEMCACHED=4;
+const size_t PROCS_PER_MEMCACHED=8;
 /*******************
 *Workers
 *******************/

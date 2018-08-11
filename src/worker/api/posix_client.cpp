@@ -27,8 +27,19 @@ int posix_client::read(read_task task) {
 
     auto map_client=aetrio_system::getInstance(WORKER)->map_client();
     serialization_manager sm=serialization_manager();
+#ifdef TIMERDM
+    Timer t0=Timer();
+    t0.resumeTime();
+#endif
     map_client->put(DATASPACE_DB,task.destination.filename,data,
                     std::to_string(task.destination.server));
+#ifdef TIMERDM
+    std::stringstream stream;
+    stream  << "posix_client::read()::send_data,"
+            <<std::fixed<<std::setprecision(10)
+            <<t0.pauseTime()<<"\n";
+    std::cout << stream.str();
+#endif
     //std::cout<<task.destination.filename<<","<<task.destination.server<<"\n";
     fclose(fh);
     free(data);
@@ -42,6 +53,7 @@ int posix_client::read(read_task task) {
         fclose(fh1);
         size_t chunk_index=(task.source.offset/ MAX_IO_UNIT);
         size_t base_offset=chunk_index*MAX_IO_UNIT+task.source.offset%MAX_IO_UNIT;
+
         chunk_meta chunk_meta1;
         chunk_meta1.actual_user_chunk=task.source;
         chunk_meta1.destination.location=BUFFERS;
@@ -49,16 +61,23 @@ int posix_client::read(read_task task) {
         chunk_meta1.destination.offset=0;
         chunk_meta1.destination.size=task.source.size;
         chunk_meta1.destination.worker=worker_index;
+#ifdef TIMERMDM
+        Timer t1=Timer();
+        t1.resumeTime();
+#endif
         std::string chunk_str= sm.serialize_chunk(chunk_meta1);
         map_client->put(table::CHUNK_DB, task.source.filename +std::to_string
                 (base_offset),chunk_str, std::to_string(-1));
+#ifdef TIMERMDM
+        std::cout<<"posix_client::read()::update_meta,"<<t1.pauseTime() <<"\n";
+#endif
     }
 #ifdef TIMERW
-    std::stringstream stream;
-    stream  << "posix_client::read(),"
+    std::stringstream stream1;
+    stream1  << "posix_client::read(),"
             <<std::fixed<<std::setprecision(10)
             <<t.pauseTime()<<"\n";
-    std::cout << stream.str();
+    std::cout << stream1.str();
 #endif
     return 0;
 }
@@ -78,8 +97,20 @@ int posix_client::write(write_task task) {
     std::string chunk_str=map_client->get(table::CHUNK_DB, task.source
             .filename + std::to_string(chunk_index * MAX_IO_UNIT),
                                           std::to_string(-1));
+
     chunk_meta chunk_meta1= sm.deserialize_chunk(chunk_str);
+#ifdef TIMERDM
+    Timer t0=Timer();
+    t0.resumeTime();
+#endif
     std::string data=map_client->get(DATASPACE_DB,task.destination.filename, std::to_string(task.destination.server));
+#ifdef TIMERDM
+    std::stringstream stream;
+    stream  << "posix_client::write()::get_data,"
+            <<std::fixed<<std::setprecision(10)
+            <<t0.pauseTime()<<"\n";
+    std::cout << stream.str();
+#endif
     std::string file_path;
     if(chunk_meta1.destination.location==location_type::CACHE){
         /*
@@ -122,18 +153,25 @@ int posix_client::write(write_task task) {
     chunk_meta1.destination.offset=0;
     chunk_meta1.destination.size=task.destination.size;
     chunk_meta1.destination.worker=worker_index;
+#ifdef TIMERMDM
+    Timer t1=Timer();
+    t1.resumeTime();
+#endif
     chunk_str= sm.serialize_chunk(chunk_meta1);
     map_client->put(table::CHUNK_DB, task.source.filename +std::to_string
             (chunk_index * MAX_IO_UNIT),chunk_str, std::to_string(-1));
 //    map_client->remove(DATASPACE_DB,task.destination.filename, std::to_string(task.destination.server));
+#ifdef TIMERMDM
+    std::cout<<"posix_client::write()::update_meta,"<<t1.pauseTime()<<"\n";
+#endif
     map_server->put(table::WRITE_FINISHED_DB, task.destination.filename,
                     std::to_string(-1), std::to_string(-1));
 #ifdef TIMERW
-    std::stringstream stream;
-    stream  << "posix_client::write(),"
+    std::stringstream stream1;
+    stream1  << "posix_client::write(),"
             <<std::fixed<<std::setprecision(10)
             <<t.pauseTime()<<"\n";
-    std::cout << stream.str();
+    std::cout << stream1.str();
 #endif
     return 0;
 }

@@ -17,7 +17,8 @@ int NatsImpl::publish_task(task* task_t) {
     natsConnection_PublishString(nc, subject.c_str(), msg.c_str());
 #ifdef TIMERNATS
     std::stringstream stream;
-    stream  << "NatsImpl::publish_task()"
+    stream  << "NatsImpl::publish_task("+std::to_string
+    (static_cast<std::underlying_type<task_type>::type>(task_t->t_type))+"),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
     std::cout << stream.str();
@@ -37,7 +38,8 @@ task*  NatsImpl::subscribe_task_with_timeout(int &status) {
     status=0;
 #ifdef TIMERNATS
     std::stringstream stream;
-    stream  << "NatsImpl::subscribe_task_with_timeout()"
+    stream  << "NatsImpl::subscribe_task_with_timeout("+std::to_string
+            (static_cast<std::underlying_type<task_type>::type>(task->t_type))+"),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
     std::cout << stream.str();
@@ -57,7 +59,8 @@ task* NatsImpl::subscribe_task(int &status) {
     status=0;
 #ifdef TIMERNATS
     std::stringstream stream;
-    stream  << "NatsImpl::subscribe_task()"
+    stream  << "NatsImpl::subscribe_task("+std::to_string
+            (static_cast<std::underlying_type<task_type>::type>(task->t_type))+"),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
     std::cout << stream.str();

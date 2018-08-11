@@ -91,7 +91,7 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
     delete output.solution;
 #ifdef TIMERTS
     std::stringstream stream;
-    stream  << "task_scheduler::schedule_tasks(),"<<tasks.size()<<","
+    stream  << "task_scheduler::schedule_tasks(),"
               <<std::fixed<<std::setprecision(10)
               <<t.pauseTime()<<"\n";
     std::cout << stream.str();

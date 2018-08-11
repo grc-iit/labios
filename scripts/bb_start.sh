@@ -6,7 +6,7 @@ for server_node in $SERVER_NODES
 do
 ssh $server_node << EOF
 sudo mkdir /mnt/disk
-sudo mount /dev/md0 /mnt/disk
+sudo mount /dev/md127 /mnt/disk
 sudo chown cc:cc -R /mnt
 EOF
 ssh $server_node "sudo killall pvfs2-server"
