@@ -31,6 +31,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <sstream>
 
 enum Distribution {
     UNIFORM, LINEAR, EXPONENTIAL
@@ -62,7 +63,7 @@ class Bucket {
     std::set<int> workers;
 public:
     int getWorkerId(int idx){
-        return *(workers.begin()+idx);
+      return *(std::next(workers.begin(),idx));
     }
 
     bool isPromotionCandidate(int score){
@@ -228,7 +229,7 @@ int worker_manager_service::sort_worker_score() {
     for(int i = 0; i <= NUM_WORKERS / workersPerChunk; i++){
         std::stringstream s;
         for(int j = 0; j < workersPerChunk; j++){
-            s << buckets[currentBucket].getWorkerId() << ',';
+            s << buckets[currentBucket].getWorkerId(0) << ',';
             currentPosition++;
             bucketOffset++;
             if(bucketOffset > buckets[currentBucket].getSize()){
