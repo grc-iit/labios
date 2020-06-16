@@ -23,8 +23,8 @@
 * Created by hariharan on 5/9/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_TASK_SCHEDULER_SERVICE_H
-#define AETRIO_MAIN_TASK_SCHEDULER_SERVICE_H
+#ifndef LABIOS_MAIN_TASK_SCHEDULER_SERVICE_H
+#define LABIOS_MAIN_TASK_SCHEDULER_SERVICE_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -74,4 +74,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_TASK_SCHEDULER_SERVICE_H
+#endif //LABIOS_MAIN_TASK_SCHEDULER_SERVICE_H

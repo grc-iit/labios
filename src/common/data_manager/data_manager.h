@@ -23,15 +23,15 @@
 * Created by hariharan on 2/23/18.
 * Updated by akougkas on 6/29/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_DATA_MANAGER_H
-#define AETRIO_MAIN_DATA_MANAGER_H
+#ifndef LABIOS_MAIN_DATA_MANAGER_H
+#define LABIOS_MAIN_DATA_MANAGER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
 #include <cereal/types/memory.hpp>
 #include "../enumerations.h"
 #include "../client_interface/distributed_hashmap.h"
-#include "../../aetrio_system.h"
+#include "../../labios_system.h"
 /******************************************************************************
 *Class
 ******************************************************************************/
@@ -67,4 +67,4 @@ public:
 ******************************************************************************/
     virtual ~data_manager(){}
 };
-#endif //AETRIO_MAIN_DATA_MANAGER_H
+#endif //LABIOS_MAIN_DATA_MANAGER_H

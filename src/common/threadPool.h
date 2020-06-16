@@ -22,8 +22,8 @@
 /*******************************************************************************
 * Created by akougkas on 6/30/18.
 ******************************************************************************/
-#ifndef AETRIO_THREAD_POOL_H
-#define AETRIO_THREAD_POOL_H
+#ifndef LABIOS_THREAD_POOL_H
+#define LABIOS_THREAD_POOL_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -164,4 +164,4 @@ public:
 };
 
 
-#endif //AETRIO_THREAD_POOL_H
+#endif //LABIOS_THREAD_POOL_H

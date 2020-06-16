@@ -3,8 +3,8 @@
 // CREATE DATE: 12/17/2017
 // ===============================
 
-#ifndef AETRIO_STATISTICS_H
-#define AETRIO_STATISTICS_H
+#ifndef LABIOS_STATISTICS_H
+#define LABIOS_STATISTICS_H
 
 #include <vector>
 #include <string>
@@ -54,4 +54,4 @@ private:
     static unsigned long totalSize(std::vector<calculations> &data);
 };
 
-#endif //AETRIO_STATISTICS_H
+#endif //LABIOS_STATISTICS_H

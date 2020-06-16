@@ -23,8 +23,8 @@
 * Created by hariharan on 2/16/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_POSIX_H
-#define AETRIO_MAIN_POSIX_H
+#ifndef LABIOS_MAIN_POSIX_H
+#define LABIOS_MAIN_POSIX_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -33,11 +33,11 @@
 #include "mpi.h"
 #include "../common/metadata_manager/metadata_manager.h"
 #include "../common/data_manager/data_manager.h"
-#include "../aetrio_system.h"
+#include "../labios_system.h"
 /******************************************************************************
-*Aetrio Namespace
+*Labios Namespace
 ******************************************************************************/
-namespace aetrio{
+namespace labios{
 /******************************************************************************
 *Interface
 ******************************************************************************/
@@ -55,4 +55,4 @@ namespace aetrio{
 }
 
 
-#endif //AETRIO_MAIN_POSIX_H
+#endif //LABIOS_MAIN_POSIX_H

@@ -32,8 +32,8 @@ std::shared_ptr<task_builder> task_builder::instance = nullptr;
 ******************************************************************************/
 std::vector<write_task*> task_builder::build_write_task(write_task task,
                                                        std::string data) {
-    auto map_client=aetrio_system::getInstance(service_i)->map_client();
-    auto map_server=aetrio_system::getInstance(service_i)->map_server();
+    auto map_client=labios_system::getInstance(service_i)->map_client();
+    auto map_server=labios_system::getInstance(service_i)->map_server();
     auto tasks = std::vector<write_task*>();
     file source = task.source;
 
@@ -46,9 +46,9 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
             source.offset % MAX_IO_UNIT;
     std::size_t data_offset = 0;
     std::size_t remaining_data = source.size;
-    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank /
+    int server= static_cast<int>(labios_system::getInstance(LIB)->rank /
             PROCS_PER_MEMCACHED);
-    //std::cout<<"rank"<<aetrio_system::getInstance(LIB)->rank<<"server:"<<server <<"\n";
+    //std::cout<<"rank"<<labios_system::getInstance(LIB)->rank<<"server:"<<server <<"\n";
     while(remaining_data > 0){
         std::size_t chunk_index = base_offset / MAX_IO_UNIT;
         auto sub_task = new write_task(task);
@@ -265,11 +265,11 @@ std::vector<write_task*> task_builder::build_write_task(write_task task,
 std::vector<read_task> task_builder::build_read_task(read_task task) {
     auto tasks = std::vector<read_task>();
     auto mdm = metadata_manager::getInstance(LIB);
-    auto map_server = aetrio_system::getInstance(service_i)->map_server();
-    auto map_client = aetrio_system::getInstance(service_i)->map_client();
+    auto map_server = labios_system::getInstance(service_i)->map_server();
+    auto map_client = labios_system::getInstance(service_i)->map_client();
     auto chunks = mdm->fetch_chunks(task);
     size_t data_pointer=0;
-    int server= static_cast<int>(aetrio_system::getInstance(LIB)->rank /
+    int server= static_cast<int>(labios_system::getInstance(LIB)->rank /
             PROCS_PER_MEMCACHED);
     for(auto chunk:chunks){
         auto rt = new read_task();

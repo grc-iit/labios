@@ -26,7 +26,7 @@
 #include <iomanip>
 #include "task_scheduler.h"
 #include "../common/external_clients/memcached_impl.h"
-#include "../aetrio_system.h"
+#include "../labios_system.h"
 #include "../common/data_structures.h"
 
 std::shared_ptr<task_scheduler> task_scheduler::instance = nullptr;
@@ -35,7 +35,7 @@ service task_scheduler::service_i = service(TASK_SCHEDULER);
 *Interface
 ******************************************************************************/
 int task_scheduler::run() {
-    auto queue = aetrio_system::getInstance(service_i)
+    auto queue = labios_system::getInstance(service_i)
             ->get_client_queue(CLIENT_TASK_SUBJECT);
     auto task_list = std::vector<task*>();
     Timer t=Timer();
@@ -67,12 +67,12 @@ void task_scheduler::schedule_tasks(std::vector<task*> &tasks) {
     Timer t=Timer();
     t.resumeTime();
 #endif
-    auto solver_i=aetrio_system::getInstance(service_i)->solver_i;
+    auto solver_i=labios_system::getInstance(service_i)->solver_i;
     solver_input input(tasks, static_cast<int>(tasks.size()));
     solver_output output=solver_i->solve(input);
 
     for (auto element : output.worker_task_map){
-        auto queue=aetrio_system::getInstance(service_i)->
+        auto queue=labios_system::getInstance(service_i)->
                 get_worker_queue(element.first);
         for(auto task:element.second){
 

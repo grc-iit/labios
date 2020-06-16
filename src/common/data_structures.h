@@ -23,8 +23,8 @@
 * Created by hariharan on 2/17/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_STRUCTURE_H
-#define AETRIO_MAIN_STRUCTURE_H
+#ifndef LABIOS_MAIN_STRUCTURE_H
+#define LABIOS_MAIN_STRUCTURE_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -346,4 +346,4 @@ struct solver_output{
     virtual ~solver_output() {}
 };
 
-#endif //AETRIO_MAIN_STRUCTURE_H
+#endif //LABIOS_MAIN_STRUCTURE_H

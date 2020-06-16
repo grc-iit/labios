@@ -23,8 +23,8 @@
 // Created by hariharan on 3/3/18.
 //
 
-#ifndef AETRIO_MAIN_EXCEPTION_H
-#define AETRIO_MAIN_EXCEPTION_H
+#ifndef LABIOS_MAIN_EXCEPTION_H
+#define LABIOS_MAIN_EXCEPTION_H
 
 #include <stdexcept>
 
@@ -35,4 +35,4 @@ public:
 
     virtual char const * what()  const noexcept override { return "Function not yet implemented."; }
 };
-#endif //AETRIO_MAIN_EXCEPTION_H
+#endif //LABIOS_MAIN_EXCEPTION_H

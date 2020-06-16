@@ -41,7 +41,7 @@ bool metadata_manager::is_created(std::string filename) {
 
 int metadata_manager::create(std::string filename, std::string mode, FILE* &fh) {
     if(filename.length() > FILENAME_MAX) return MDM__FILENAME_MAX_LENGTH;
-    auto map=aetrio_system::getInstance(service_i)->map_client();
+    auto map=labios_system::getInstance(service_i)->map_client();
     fh=fmemopen(nullptr, 1, mode.c_str());
     file_stat stat ={fh,0,0,mode,true};
     auto iter=file_map.find(filename);
@@ -68,7 +68,7 @@ int metadata_manager::update_on_open(std::string filename,std::string mode,FILE 
     t.resumeTime();
 #endif
     if(filename.length() > FILENAME_MAX) return MDM__FILENAME_MAX_LENGTH;
-    auto map = aetrio_system::getInstance(service_i)->map_client();
+    auto map = labios_system::getInstance(service_i)->map_client();
     auto iter = file_map.find(filename);
     file_stat stat;
     if(iter != file_map.end()){
@@ -112,7 +112,7 @@ bool metadata_manager::is_opened(FILE *fh) {
 }
 
 int metadata_manager::remove_chunks(std::string &filename) {
-    auto map=aetrio_system::getInstance(service_i)->map_client();
+    auto map=labios_system::getInstance(service_i)->map_client();
     std::string chunks_str = map->remove(table::FILE_CHUNK_DB, filename,std::to_string(-1));
     std::vector<std::string> chunks = string_split(chunks_str);
     for (const auto& chunk :chunks) {
@@ -164,7 +164,7 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
     Timer t=Timer();
     t.resumeTime();
 #endif
-    auto map = aetrio_system::getInstance(service_i)->map_client();
+    auto map = labios_system::getInstance(service_i)->map_client();
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
@@ -182,7 +182,7 @@ int metadata_manager::update_read_task_info(std::vector<read_task> task_ks,std::
 }
 
 int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std::string filename) {
-    auto  map=aetrio_system::getInstance(service_i)->map_client();
+    auto  map=labios_system::getInstance(service_i)->map_client();
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;
@@ -206,7 +206,7 @@ int metadata_manager::update_write_task_info(std::vector<write_task> task_ks,std
 
 int metadata_manager::update_on_seek(std::string filename,
                                      size_t offset, size_t origin){
-    auto map=aetrio_system::getInstance(service_i)->map_client();
+    auto map=labios_system::getInstance(service_i)->map_client();
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -240,7 +240,7 @@ int metadata_manager::update_on_seek(std::string filename,
 }
 
 void metadata_manager::update_on_read(std::string filename, size_t size) {
-    std::shared_ptr<distributed_hashmap>  map=aetrio_system::getInstance(service_i)->map_client();
+    std::shared_ptr<distributed_hashmap>  map=labios_system::getInstance(service_i)->map_client();
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -253,7 +253,7 @@ void metadata_manager::update_on_read(std::string filename, size_t size) {
 }
 
 void metadata_manager::update_on_write(std::string filename, size_t size,size_t offset) {
-    auto map = aetrio_system::getInstance(service_i)->map_client();
+    auto map = labios_system::getInstance(service_i)->map_client();
     serialization_manager sm=serialization_manager();
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()){
@@ -274,7 +274,7 @@ std::vector<chunk_meta> metadata_manager::fetch_chunks(read_task task) {
     Timer t=Timer();
     t.resumeTime();
 #endif
-    auto map = aetrio_system::getInstance(service_i)->map_client();
+    auto map = labios_system::getInstance(service_i)->map_client();
 
     auto remaining_data = task.source.size;
     auto chunks = std::vector<chunk_meta>();
@@ -327,7 +327,7 @@ filename, std::size_t io_size) {
     Timer t=Timer();
     t.resumeTime();
 #endif
-    auto map=aetrio_system::getInstance(service_i)->map_client();
+    auto map=labios_system::getInstance(service_i)->map_client();
     file_stat fs;
     auto iter=file_map.find(filename);
     if(iter!=file_map.end()) fs=iter->second;

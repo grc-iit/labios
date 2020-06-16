@@ -22,8 +22,8 @@
 /*******************************************************************************
 * Created by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_RETURN_CODES_H
-#define AETRIO_RETURN_CODES_H
+#ifndef LABIOS_RETURN_CODES_H
+#define LABIOS_RETURN_CODES_H
 /******************************************************************************
 *error code enum
 ******************************************************************************/
@@ -55,4 +55,4 @@ typedef enum return_codes{
 
 
 
-#endif //AETRIO_RETURN_CODES_H
+#endif //LABIOS_RETURN_CODES_H

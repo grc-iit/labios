@@ -23,8 +23,8 @@
 * Created by akougkas on 6/18/18.
 * Updated by akougkas on 6/30/2018
 ******************************************************************************/
-#ifndef AETRIO_DEFAULT_SOLVER_H
-#define AETRIO_DEFAULT_SOLVER_H
+#ifndef LABIOS_DEFAULT_SOLVER_H
+#define LABIOS_DEFAULT_SOLVER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -49,4 +49,4 @@ public:
 };
 
 
-#endif //AETRIO_DEFAULT_SOLVER_H
+#endif //LABIOS_DEFAULT_SOLVER_H

@@ -23,8 +23,8 @@
 // Created by anthony on 4/24/18.
 //
 
-#ifndef AETRIO_MAIN_AETRIO_H
-#define AETRIO_MAIN_AETRIO_H
+#ifndef LABIOS_MAIN_LABIOS_H
+#define LABIOS_MAIN_LABIOS_H
 
-#include "../src/lib/posix.h"
-#endif //AETRIO_MAIN_AETRIO_H
+#include "./drivers/posix.h"
+#endif //LABIOS_MAIN_LABIOS_H

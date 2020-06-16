@@ -23,8 +23,8 @@
 * Created by hariharan on 3/2/18.
 * Updated by akougkas on 7/5/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_ROCKSDBIMPL_H
-#define AETRIO_MAIN_ROCKSDBIMPL_H
+#ifndef LABIOS_MAIN_ROCKSDBIMPL_H
+#define LABIOS_MAIN_ROCKSDBIMPL_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -72,4 +72,4 @@ public:
 ******************************************************************************/
     virtual ~RocksDBImpl(){}
 };
-#endif //AETRIO_MAIN_ROCKSDBIMPL_H
+#endif //LABIOS_MAIN_ROCKSDBIMPL_H

@@ -23,8 +23,8 @@
 * Created by hariharan on 2/23/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_DISTRIBUTEDQUEUE_H
-#define AETRIO_MAIN_DISTRIBUTEDQUEUE_H
+#ifndef LABIOS_MAIN_DISTRIBUTEDQUEUE_H
+#define LABIOS_MAIN_DISTRIBUTEDQUEUE_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -78,4 +78,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_DISTRIBUTEDQUEUE_H
+#endif //LABIOS_MAIN_DISTRIBUTEDQUEUE_H

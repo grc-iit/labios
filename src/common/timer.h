@@ -23,8 +23,8 @@
 // Created by hdevarajan on 5/9/18.
 //
 
-#ifndef AETRIO_TIMER_H
-#define AETRIO_TIMER_H
+#ifndef LABIOS_TIMER_H
+#define LABIOS_TIMER_H
 
 #include <chrono>
 #include <string>
@@ -43,4 +43,4 @@ private:
 
 };
 
-#endif //AETRIO_TIMER_H
+#endif //LABIOS_TIMER_H

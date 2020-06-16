@@ -23,8 +23,8 @@
 * Created by hariharan on 2/16/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_CONSTANTS_H
-#define AETRIO_MAIN_CONSTANTS_H
+#ifndef LABIOS_MAIN_CONSTANTS_H
+#define LABIOS_MAIN_CONSTANTS_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -32,9 +32,9 @@
 #include <climits>
 #include <string>
 /******************************************************************************
-*Aetrio parameters
+*Labios parameters
 ******************************************************************************/
-const std::string AETRIO_CLIENT_PORT = "9999";
+const std::string LABIOS_CLIENT_PORT = "9999";
 const size_t KEY_SIZE = 256;
 const size_t FILE_SIZE = 256;
 const long long MAX_DATA_SIZE = 2 * 1024 * 1024 * 1024;
@@ -63,7 +63,7 @@ const std::size_t MAX_WORKER_COUNT = 4;
 const int WORKER_SPEED =2;
 const int WORKER_ENERGY=2;
 const int64_t WORKER_CAPACITY_MAX=137438953472;
-const std::string WORKER_PATH="/opt/temp/";
+const std::string WORKER_PATH="/home/kbateman/temp/";
 const std::string PFS_PATH="/mnt/pfs";
 const size_t KB = 1024;
 const std::size_t WORKER_ATTRIBUTES_COUNT=5;
@@ -81,4 +81,4 @@ const std::size_t MAX_TASK_TIMER_MS_MAX=MAX_SCHEDULE_TIMER*1000000;
 const std::size_t WORKER_MANAGER_INTERVAL=5;
 const std::size_t SYSTEM_MANAGER_INTERVAL=5;
 
-#endif //AETRIO_MAIN_CONSTANTS_H
+#endif //LABIOS_MAIN_CONSTANTS_H

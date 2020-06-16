@@ -23,8 +23,8 @@
 * Created by hariharan on 2/23/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_TASK_HANDLER_H
-#define AETRIO_MAIN_TASK_HANDLER_H
+#ifndef LABIOS_MAIN_TASK_HANDLER_H
+#define LABIOS_MAIN_TASK_HANDLER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -65,4 +65,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_TASK_HANDLER_H
+#endif //LABIOS_MAIN_TASK_HANDLER_H

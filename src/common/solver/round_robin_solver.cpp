@@ -23,7 +23,7 @@
 *include files
 ******************************************************************************/
 #include "round_robin_solver.h"
-#include "../../aetrio_system.h"
+#include "../../labios_system.h"
 
 std::shared_ptr<round_robin_solver> round_robin_solver::instance = nullptr;
 /******************************************************************************
@@ -31,7 +31,7 @@ std::shared_ptr<round_robin_solver> round_robin_solver::instance = nullptr;
 ******************************************************************************/
 solver_output round_robin_solver::solve(solver_input input) {
     std::vector<task*> worker_tasks;
-    auto map_server=aetrio_system::getInstance(service_i)->map_server();
+    auto map_server=labios_system::getInstance(service_i)->map_server();
 
     solver_output solution(input.num_tasks);
     for(auto i=0;i<input.tasks.size();i++){

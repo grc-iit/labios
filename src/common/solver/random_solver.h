@@ -23,8 +23,8 @@
 * Created by hariharan on 5/19/18.
 * Updated by akougkas on 6/30/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_RANDOM_SOLVER_H
-#define AETRIO_MAIN_RANDOM_SOLVER_H
+#ifndef LABIOS_MAIN_RANDOM_SOLVER_H
+#define LABIOS_MAIN_RANDOM_SOLVER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -49,4 +49,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_RANDOM_SOLVER_H
+#endif //LABIOS_MAIN_RANDOM_SOLVER_H

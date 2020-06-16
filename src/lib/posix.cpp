@@ -32,7 +32,7 @@
 /******************************************************************************
 *Interface
 ******************************************************************************/
-FILE* aetrio::fopen(const char *filename, const char *mode) {
+FILE* labios::fopen(const char *filename, const char *mode) {
     auto mdm = metadata_manager::getInstance(LIB);
     FILE* fh = nullptr;
     if(!mdm->is_created(filename)){
@@ -42,13 +42,13 @@ FILE* aetrio::fopen(const char *filename, const char *mode) {
             return nullptr;
         }else{
             if(mdm->create(filename,mode,fh)!= SUCCESS){
-                throw std::runtime_error("aetrio::fopen() create failed!");
+                throw std::runtime_error("labios::fopen() create failed!");
             }
         }
     }else{
         if(!mdm->is_opened(filename)){
             if(mdm->update_on_open(filename,mode,fh) != SUCCESS){
-                throw std::runtime_error("aetrio::fopen() update failed!");
+                throw std::runtime_error("labios::fopen() update failed!");
             }
         }
         else return nullptr;
@@ -56,14 +56,14 @@ FILE* aetrio::fopen(const char *filename, const char *mode) {
     return fh;
 }
 
-int aetrio::fclose(FILE *stream) {
+int labios::fclose(FILE *stream) {
     auto mdm=metadata_manager::getInstance(LIB);
     if(!mdm->is_opened(stream)) return LIB__FCLOSE_FAILED;
     if(mdm->update_on_close(stream)!=SUCCESS) return LIB__FCLOSE_FAILED;
     return SUCCESS;
 }
 
-int aetrio::fseek(FILE *stream, long int offset, int origin) {
+int labios::fseek(FILE *stream, long int offset, int origin) {
     auto mdm=metadata_manager::getInstance(LIB);
     auto filename=mdm->get_filename(stream);
     if( mdm->get_mode(filename)=="a" ||
@@ -89,9 +89,9 @@ int aetrio::fseek(FILE *stream, long int offset, int origin) {
                                static_cast<size_t>(origin));
 }
 
-std::vector<read_task> aetrio::fread_async(size_t size,size_t count,FILE *stream) {
+std::vector<read_task> labios::fread_async(size_t size,size_t count,FILE *stream) {
     auto mdm = metadata_manager::getInstance(LIB);
-    auto client_queue = aetrio_system::getInstance(LIB)
+    auto client_queue = labios_system::getInstance(LIB)
             ->get_client_queue(CLIENT_TASK_SUBJECT);
     auto task_m = task_builder::getInstance(LIB);
     auto filename = mdm->get_filename(stream);
@@ -131,7 +131,7 @@ std::vector<read_task> aetrio::fread_async(size_t size,size_t count,FILE *stream
     return tasks;
 }
 
-std::size_t aetrio::fread_wait(void *ptr, std::vector<read_task> &tasks,
+std::size_t labios::fread_wait(void *ptr, std::vector<read_task> &tasks,
         std::string filename){
     auto mdm = metadata_manager::getInstance(LIB);
     auto data_m = data_manager::getInstance(LIB);
@@ -184,9 +184,9 @@ std::size_t aetrio::fread_wait(void *ptr, std::vector<read_task> &tasks,
     return size_read;
 }
 
-size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
+size_t labios::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     auto mdm = metadata_manager::getInstance(LIB);
-    auto client_queue = aetrio_system::getInstance(LIB)
+    auto client_queue = labios_system::getInstance(LIB)
             ->get_client_queue(CLIENT_TASK_SUBJECT);
     auto task_m = task_builder::getInstance(LIB);
     auto data_m = data_manager::getInstance(LIB);
@@ -247,17 +247,17 @@ size_t aetrio::fread(void *ptr, size_t size, size_t count, FILE *stream) {
     return size_read;
 }
 
-std::vector<write_task*> aetrio::fwrite_async(void *ptr, size_t size,
+std::vector<write_task*> labios::fwrite_async(void *ptr, size_t size,
                                               size_t count, FILE *stream) {
     auto mdm = metadata_manager::getInstance(LIB);
-    auto client_queue = aetrio_system::getInstance(LIB)->get_client_queue
+    auto client_queue = labios_system::getInstance(LIB)->get_client_queue
             (CLIENT_TASK_SUBJECT);
     auto task_m = task_builder::getInstance(LIB);
     auto data_m = data_manager::getInstance(LIB);
     auto filename = mdm->get_filename(stream);
     auto offset = mdm->get_fp(filename);
     if(!mdm->is_opened(filename))
-        throw std::runtime_error("aetrio::fwrite() file not opened!");
+        throw std::runtime_error("labios::fwrite() file not opened!");
     auto w_task = write_task(file(filename,offset,size*count),file());
 #ifdef TIMERTB
     Timer t=Timer();
@@ -302,10 +302,10 @@ std::vector<write_task*> aetrio::fwrite_async(void *ptr, size_t size,
     return write_tasks;
 }
 
-size_t aetrio::fwrite_wait(std::vector<write_task*> tasks) {
+size_t labios::fwrite_wait(std::vector<write_task*> tasks) {
     size_t total_size_written=0;
-    auto map_client=aetrio_system::getInstance(LIB)->map_client();
-    auto map_server=aetrio_system::getInstance(LIB)->map_server();
+    auto map_client=labios_system::getInstance(LIB)->map_client();
+    auto map_server=labios_system::getInstance(LIB)->map_server();
     for(auto task:tasks){
         int count=0;
         Timer wait_timer=Timer();
@@ -334,18 +334,18 @@ size_t aetrio::fwrite_wait(std::vector<write_task*> tasks) {
     return total_size_written;
 }
 
-size_t aetrio::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
+size_t labios::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     auto mdm = metadata_manager::getInstance(LIB);
-    auto client_queue = aetrio_system::getInstance(LIB)->get_client_queue
+    auto client_queue = labios_system::getInstance(LIB)->get_client_queue
             (CLIENT_TASK_SUBJECT);
-    auto map_client=aetrio_system::getInstance(LIB)->map_client();
-    auto map_server=aetrio_system::getInstance(LIB)->map_server();
+    auto map_client=labios_system::getInstance(LIB)->map_client();
+    auto map_server=labios_system::getInstance(LIB)->map_server();
     auto task_m = task_builder::getInstance(LIB);
     auto data_m = data_manager::getInstance(LIB);
     auto filename = mdm->get_filename(stream);
     auto offset = mdm->get_fp(filename);
     if(!mdm->is_opened(filename))
-        throw std::runtime_error("aetrio::fwrite() file not opened!");
+        throw std::runtime_error("labios::fwrite() file not opened!");
     auto w_task = write_task(file(filename,offset,size*count),file());
 #ifdef TIMERTB
     Timer t=Timer();

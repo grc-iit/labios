@@ -23,8 +23,8 @@
 * Created by hariharan on 2/23/18.
 * Updated by akougkas on 6/29/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_DISTRIBUTEDHASHMAP_H
-#define AETRIO_MAIN_DISTRIBUTEDHASHMAP_H
+#ifndef LABIOS_MAIN_DISTRIBUTEDHASHMAP_H
+#define LABIOS_MAIN_DISTRIBUTEDHASHMAP_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -83,4 +83,4 @@ public:
     virtual ~distributed_hashmap(){}
 };
 
-#endif //AETRIO_MAIN_DISTRIBUTEDHASHMAP_H
+#endif //LABIOS_MAIN_DISTRIBUTEDHASHMAP_H

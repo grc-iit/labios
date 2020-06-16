@@ -25,13 +25,13 @@
 #include "mpi.h"
 #include "../common/utilities.h"
 
-int aetrio::MPI_Init(int *argc, char ***argv) {
+int labios::MPI_Init(int *argc, char ***argv) {
   PMPI_Init(argc,argv);
   parse_opts(*argc,*argv);
-  aetrio_system::getInstance(service::LIB);
+  labios_system::getInstance(service::LIB);
   return 0;
 }
 
-void aetrio::MPI_Finalize() {
+void labios::MPI_Finalize() {
   PMPI_Finalize();
 }

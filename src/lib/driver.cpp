@@ -205,7 +205,7 @@ void cm1_tabios(int argc, char** argv) {
     Timer global_timer=Timer();
 
     global_timer.resumeTime();
-    FILE* fh=aetrio::fopen(filename.c_str(),"w+");
+    FILE* fh=labios::fopen(filename.c_str(),"w+");
     global_timer.pauseTime();
 
 
@@ -223,7 +223,7 @@ void cm1_tabios(int argc, char** argv) {
                 global_timer.resumeTime();
                 operations.emplace_back
                 (std::make_pair(item[0],
-                        aetrio::fwrite_async(write_buf[j],sizeof(char),
+                        labios::fwrite_async(write_buf[j],sizeof(char),
                                 item[0],fh)));
                 global_timer.pauseTime();
                 current_offset+=item[0];
@@ -232,7 +232,7 @@ void cm1_tabios(int argc, char** argv) {
     }
     global_timer.resumeTime();
     for(auto operation:operations){
-        auto bytes = aetrio::fwrite_wait(operation.second);
+        auto bytes = labios::fwrite_wait(operation.second);
         if(bytes != operation.first) std::cerr << "Write failed\n";
     }
     global_timer.pauseTime();
@@ -241,7 +241,7 @@ void cm1_tabios(int argc, char** argv) {
     }
     global_timer.resumeTime();
     if(rank==0) std::cerr <<"Write finished\n";
-    aetrio::fclose(fh);
+    labios::fclose(fh);
     global_timer.pauseTime();
 
     auto time=global_timer.elapsed_time;
@@ -399,7 +399,7 @@ void hacc_tabios(int argc, char** argv) {
     Timer wbb=Timer();
     wbb.resumeTime();
 #endif
-    FILE* fh = aetrio::fopen(filename.c_str(),"w+");
+    FILE* fh = labios::fopen(filename.c_str(),"w+");
 #ifdef TIMERBASE
     wbb.pauseTime();
 #endif
@@ -416,7 +416,7 @@ void hacc_tabios(int argc, char** argv) {
                 wbb.resumeTime();
 #endif
                 operations.emplace_back(std::make_pair(item[0],
-                        aetrio::fwrite_async(write_buf[j],sizeof(char),
+                        labios::fwrite_async(write_buf[j],sizeof(char),
                                 item[0], fh)));
 #ifdef TIMERBASE
                 wbb.pauseTime();
@@ -434,7 +434,7 @@ void hacc_tabios(int argc, char** argv) {
     wbb.resumeTime();
 #endif
     for(auto operation:operations){
-        auto bytes = aetrio::fwrite_wait(operation.second);
+        auto bytes = labios::fwrite_wait(operation.second);
         if(bytes != operation.first) std::cerr << "Write failed\n";
     }
 #ifdef TIMERBASE
@@ -455,14 +455,14 @@ void hacc_tabios(int argc, char** argv) {
     Timer rbb=Timer();
     rbb.resumeTime();
 #endif
-    aetrio::fclose(fh);
+    labios::fclose(fh);
 
 #ifndef COLLECT
-    FILE* fh1 = aetrio::fopen(filename.c_str(),"r+");
-    auto op = aetrio::fread_async(sizeof(char),io_per_teration, fh1);
-//    auto bytes= aetrio::fread_wait(read_buf,op,filename);
+    FILE* fh1 = labios::fopen(filename.c_str(),"r+");
+    auto op = labios::fread_async(sizeof(char),io_per_teration, fh1);
+//    auto bytes= labios::fread_wait(read_buf,op,filename);
 //    if(bytes!=io_per_teration) std::cerr << "Read failed:" <<bytes<<"\n";
-    aetrio::fclose(fh1);
+    labios::fclose(fh1);
 
 #endif
 
@@ -480,9 +480,9 @@ void hacc_tabios(int argc, char** argv) {
     Timer pfs=Timer();
     pfs.resumeTime();
 #endif
-    FILE* fh2 = aetrio::fopen(output.c_str(),"w+");
-    aetrio::fwrite_async(read_buf, sizeof(char), io_per_teration, fh2);
-    aetrio::fclose(fh2);
+    FILE* fh2 = labios::fopen(output.c_str(),"w+");
+    labios::fwrite_async(read_buf, sizeof(char), io_per_teration, fh2);
+    labios::fclose(fh2);
 #ifdef TIMERBASE
     pfs.pauseTime();
     free(read_buf);
@@ -784,8 +784,8 @@ void montage_tabios(int argc, char** argv) {
 #ifdef TIMERBASE
         w.resumeTime();
 #endif
-        fd1=aetrio::fopen(filename1.c_str(),"w+");
-        fd2=aetrio::fopen(filename2.c_str(),"w+");
+        fd1=labios::fopen(filename1.c_str(),"w+");
+        fd2=labios::fopen(filename2.c_str(),"w+");
 #ifdef TIMERBASE
         w.pauseTime();
 #endif
@@ -804,10 +804,10 @@ void montage_tabios(int argc, char** argv) {
                 if(rank%2==0 || comm_size==1){
                     if(j%2==0){
                         operations.emplace_back(
-                                std::make_pair(item[0], aetrio::fwrite_async(write_buf[j],sizeof(char),item[0], fd1)));
+                                std::make_pair(item[0], labios::fwrite_async(write_buf[j],sizeof(char),item[0], fd1)));
                     }else{
                         operations.emplace_back(
-                                std::make_pair(item[0],aetrio::fwrite_async
+                                std::make_pair(item[0],labios::fwrite_async
                                 (write_buf[j],sizeof(char),item[0], fd2)));
                     }
                 }
@@ -825,11 +825,11 @@ void montage_tabios(int argc, char** argv) {
 #endif
     if(rank%2==0|| comm_size==1){
         for(auto operation:operations){
-            auto bytes = aetrio::fwrite_wait(operation.second);
+            auto bytes = labios::fwrite_wait(operation.second);
             if(bytes != operation.first) std::cerr << "Write failed\n";
         }
-        aetrio::fclose(fd1);
-        aetrio::fclose(fd2);
+        labios::fclose(fd1);
+        labios::fclose(fd2);
     }
 #ifdef TIMERBASE
     w.pauseTime();
@@ -869,8 +869,8 @@ void montage_tabios(int argc, char** argv) {
             filename2=file_path+"file2_"+std::to_string(rank-1)+".dat";
         }
 
-        fd1=aetrio::fopen(filename1.c_str(),"r+");
-        fd2=aetrio::fopen(filename2.c_str(),"r+");
+        fd1=labios::fopen(filename1.c_str(),"r+");
+        fd2=labios::fopen(filename2.c_str(),"r+");
     }
 #ifdef TIMERBASE
     r.pauseTime();
@@ -888,8 +888,8 @@ void montage_tabios(int argc, char** argv) {
                 if(rank%2!=0 || comm_size==1){
                     ssize_t bytes = 0;
 #ifndef COLLECT
-                    bytes = aetrio::fread(read_buf,sizeof(char),item[0]/2,fd1);
-                    bytes += aetrio::fread(read_buf,sizeof(char),item[0]/2,fd2);
+                    bytes = labios::fread(read_buf,sizeof(char),item[0]/2,fd1);
+                    bytes += labios::fread(read_buf,sizeof(char),item[0]/2,fd2);
                     if(bytes!=item[0])
                         std::cerr << "Read() failed!"<<"Bytes:"<<bytes
                                   <<"\tError code:"<<errno << "\n";
@@ -908,8 +908,8 @@ void montage_tabios(int argc, char** argv) {
     r.resumeTime();
 #endif
     if(rank%2!=0|| comm_size==1) {
-        aetrio::fclose(fd1);
-        aetrio::fclose(fd2);
+        labios::fclose(fd1);
+        labios::fclose(fd2);
     }
 #ifdef TIMERBASE
     r.pauseTime();
@@ -938,7 +938,7 @@ void montage_tabios(int argc, char** argv) {
     std::string finalname=final_path+"final_"+std::to_string(rank)+".dat";
     FILE* outfile;
     global_timer.resumeTime();
-    outfile=aetrio::fopen(finalname.c_str(), "w+");
+    outfile=labios::fopen(finalname.c_str(), "w+");
     global_timer.pauseTime();
     for(auto i=0;i<32;++i){
         for(int j=0;j<comm_size*1024*128;++j){
@@ -955,8 +955,8 @@ void montage_tabios(int argc, char** argv) {
     char final_buff[1024*1024];
     gen_random(final_buff,1024*1024);
     global_timer.resumeTime();
-    aetrio::fwrite(final_buff, sizeof(char), 1024 * 1024, outfile);
-    aetrio::fclose(outfile);
+    labios::fwrite(final_buff, sizeof(char), 1024 * 1024, outfile);
+    labios::fclose(outfile);
 #ifdef TIMERBASE
     a.pauseTime();
 #endif
@@ -1137,7 +1137,7 @@ void kmeans_base(int argc, char** argv) {
 void wait_for_read(size_t size,std::vector<read_task> tasks,std::string
 filename){
     char read_buf[size];
-    auto bytes= aetrio::fread_wait(read_buf,tasks,filename);
+    auto bytes= labios::fread_wait(read_buf,tasks,filename);
     if(bytes!=size) std::cerr << "Read failed:" <<bytes<<"\n";
 }
 
@@ -1169,12 +1169,12 @@ void kmeans_tabios(int argc, char **argv) {
     Timer map=Timer();
     map.resumeTime();
 #endif
-    FILE* fh=aetrio::fopen(filename.c_str(),"w+");
+    FILE* fh=labios::fopen(filename.c_str(),"w+");
 #ifdef TIMERBASE
     map.pauseTime();
 #endif
     global_timer.pauseTime();
-    aetrio::fwrite(write_buf, sizeof(char), io_per_teration, fh);
+    labios::fwrite(write_buf, sizeof(char), io_per_teration, fh);
     delete(write_buf);
     size_t count=0;
     std::vector<std::pair<size_t,std::vector<read_task>>> operations=
@@ -1193,7 +1193,7 @@ void kmeans_tabios(int argc, char **argv) {
 #ifdef TIMERBASE
                     map.resumeTime();
 #endif
-                    aetrio::fseek(fh,rand_offset,SEEK_SET);
+                    labios::fseek(fh,rand_offset,SEEK_SET);
 #ifdef TIMERBASE
                     map.pauseTime();
 #endif
@@ -1206,7 +1206,7 @@ void kmeans_tabios(int argc, char **argv) {
 #endif
 #ifndef COLLECT
                 operations.emplace_back(std::make_pair(item[0],
-                        aetrio::fread_async(sizeof(char), item[0],fh)));
+                        labios::fread_async(sizeof(char), item[0],fh)));
 
 #endif
 #ifdef TIMERBASE
@@ -1225,7 +1225,7 @@ void kmeans_tabios(int argc, char **argv) {
     for(auto operation:operations){
         wait_for_read(operation.first, operation.second,filename);
     }
-    aetrio::fclose(fh);
+    labios::fclose(fh);
     MPI_Barrier(MPI_COMM_WORLD);
     if(rank == 0) std::cerr<<"Read Done\n";
 #ifdef TIMERBASE
@@ -1246,7 +1246,7 @@ void kmeans_tabios(int argc, char **argv) {
     Timer reduce=Timer();
     reduce.resumeTime();
 #endif
-    outfile=aetrio::fopen(finalname.c_str(), "w+");
+    outfile=labios::fopen(finalname.c_str(), "w+");
 #ifdef TIMERBASE
     reduce.pauseTime();
 #endif
@@ -1258,8 +1258,8 @@ void kmeans_tabios(int argc, char **argv) {
 #ifdef TIMERBASE
     reduce.resumeTime();
 #endif
-    aetrio::fwrite(out_buff, sizeof(char), 1024 * 1024, outfile);
-    aetrio::fclose(outfile);
+    labios::fwrite(out_buff, sizeof(char), 1024 * 1024, outfile);
+    labios::fclose(outfile);
 #ifdef TIMERBASE
     reduce.pauseTime();
 #endif
@@ -1299,7 +1299,7 @@ void stress_test(int argc, char** argv){
     int num_iterations=128;
     Timer global_timer=Timer();
     global_timer.resumeTime();
-    FILE* fh=aetrio::fopen("file.test","w+");
+    FILE* fh=labios::fopen("file.test","w+");
     global_timer.pauseTime();
     std::vector<std::pair<size_t,std::vector<write_task*>>> operations=
             std::vector<std::pair<size_t,std::vector<write_task*>>>();
@@ -1309,7 +1309,7 @@ void stress_test(int argc, char** argv){
         global_timer.resumeTime();
         operations.emplace_back
                 (std::make_pair(io_size,
-                                aetrio::fwrite_async(write_buf,sizeof(char),
+                                labios::fwrite_async(write_buf,sizeof(char),
                                                      io_size,fh)));
         global_timer.pauseTime();
         if(i!=0 && i%32==0){
@@ -1317,7 +1317,7 @@ void stress_test(int argc, char** argv){
             for(int task=0;task<32;++task){
                 auto operation=operations[task];
                 global_timer.resumeTime();
-                auto bytes = aetrio::fwrite_wait(operation.second);
+                auto bytes = labios::fwrite_wait(operation.second);
                 if(bytes != operation.first) std::cerr << "Write failed\n";
                 global_timer.pauseTime();
             }
@@ -1327,12 +1327,12 @@ void stress_test(int argc, char** argv){
     }
     global_timer.resumeTime();
     for(auto operation:operations){
-        auto bytes = aetrio::fwrite_wait(operation.second);
+        auto bytes = labios::fwrite_wait(operation.second);
         if(bytes != operation.first) std::cerr << "Write failed\n";
     }
     global_timer.pauseTime();
     global_timer.resumeTime();
-    aetrio::fclose(fh);
+    labios::fclose(fh);
     global_timer.pauseTime();
     if(rank==0) std::cerr << "Done writing. Now reducing\n";
     auto time=global_timer.elapsed_time;
@@ -1354,7 +1354,7 @@ void stress_test(int argc, char** argv){
 *Main
 ******************************************************************************/
 int main(int argc, char** argv){
-    aetrio::MPI_Init(&argc,&argv);
+    labios::MPI_Init(&argc,&argv);
     int rank,comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
@@ -1374,6 +1374,60 @@ int main(int argc, char** argv){
         testCase= static_cast<test_case>(atoi(argv[1]));
     }
     switch(testCase){
+		case SIMPLE_WRITE:{
+			FILE *fp;
+			int rv; // return val
+			char write_buf[50] = "Testing R/W with LABIOS. This is msg body.";
+
+			Timer timer = Timer();
+			timer.resumeTime();
+			std::cerr << "This is a simple WRITE test.\n";
+
+			// open/create file
+			fp = labios::fopen(argv[2], "w+");
+			if (fp == NULL) {
+				std::cerr << "Failed to open/create file. Aborting...\n";
+				exit(-1);
+			}
+				
+			// write message to file
+			rv = labios::fwrite(write_buf,sizeof(write_buf),1,fp);
+			std::cerr << "(Return value: " << rv << ")\n";
+			std::cerr << "Written to: " << argv[2] << "\n";
+
+			labios::fclose(fp);
+			timer.pauseTime();
+			auto time = timer.elapsed_time;
+			std::cerr << "Time elapsed: " << time << " seconds.\n";
+			break;
+		}
+		case SIMPLE_READ:{
+			FILE *fp;
+			int rv; // return val
+			char read_buf[50];
+	
+			Timer timer = Timer();
+			timer.resumeTime();
+			std::cerr << "This is a simple READ test.\n";
+			
+			// open file for reading
+			fp = labios::fopen(argv[2], "rb");
+			if (fp == NULL) {
+				std::cerr << "Failed to find file. Aborting...\n";
+				exit(-1);
+			}
+
+			// read
+			rv = labios::fread(read_buf,sizeof(read_buf),1,fp);
+			std::cerr << "(Return value: " << rv << ")\n";
+			std::cerr << read_buf << "\n";
+
+			labios::fclose(fp);
+			timer.pauseTime();
+			auto time = timer.elapsed_time;
+			std::cerr << "Time elapsed: " << time << " seconds.\n";
+			break;			
+		}
         case CM1_BASE: {
 #ifdef FTIMER
             Timer timer = Timer();
@@ -1448,7 +1502,7 @@ int main(int argc, char** argv){
         }
     }
 
-    aetrio::MPI_Finalize();
+    labios::MPI_Finalize();
 
     return return_val;
 }

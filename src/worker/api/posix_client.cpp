@@ -27,7 +27,7 @@
 #include "../../common/timer.h"
 #include "posix_client.h"
 #include "../../common/client_interface/distributed_hashmap.h"
-#include "../../aetrio_system.h"
+#include "../../labios_system.h"
 
 
 int posix_client::read(read_task task) {
@@ -46,7 +46,7 @@ int posix_client::read(read_task task) {
         std::cerr << "posix_client::read() read failed\n";
         //throw std::runtime_error("posix_client::read() read failed");
 
-    auto map_client=aetrio_system::getInstance(WORKER)->map_client();
+    auto map_client=labios_system::getInstance(WORKER)->map_client();
     serialization_manager sm=serialization_manager();
 #ifdef TIMERDM
     Timer t0=Timer();
@@ -108,8 +108,8 @@ int posix_client::write(write_task task) {
     Timer t=Timer();
     t.resumeTime();
 #endif
-    std::shared_ptr<distributed_hashmap> map_client=aetrio_system::getInstance(WORKER)->map_client();
-    std::shared_ptr<distributed_hashmap> map_server=aetrio_system::getInstance
+    std::shared_ptr<distributed_hashmap> map_client=labios_system::getInstance(WORKER)->map_client();
+    std::shared_ptr<distributed_hashmap> map_server=labios_system::getInstance
             (WORKER)->map_server();
     serialization_manager sm=serialization_manager();
     auto source=task.source;

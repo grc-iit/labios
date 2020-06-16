@@ -23,8 +23,8 @@
 * Created by hariharan on 2/16/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_METADATA_MANAGER_H
-#define AETRIO_MAIN_METADATA_MANAGER_H
+#ifndef LABIOS_MAIN_METADATA_MANAGER_H
+#define LABIOS_MAIN_METADATA_MANAGER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -32,7 +32,7 @@
 #include <string>
 #include <unordered_map>
 #include <cereal/types/memory.hpp>
-#include "../../aetrio_system.h"
+#include "../../labios_system.h"
 #include "../data_structures.h"
 /******************************************************************************
 *Class
@@ -81,10 +81,10 @@ public:
 *Destructor
 ******************************************************************************/
     virtual ~metadata_manager(){
-        //TODO: serialize structures and send down to aetrio_meta_file
+        //TODO: serialize structures and send down to labios_meta_file
     }
 
 };
 
 
-#endif //AETRIO_MAIN_METADATA_MANAGER_H
+#endif //LABIOS_MAIN_METADATA_MANAGER_H

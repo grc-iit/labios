@@ -23,15 +23,15 @@
 // Created by hariharan on 2/16/18.
 //
 
-#ifndef AETRIO_MAIN_CLIENT_H
-#define AETRIO_MAIN_CLIENT_H
+#ifndef LABIOS_MAIN_CLIENT_H
+#define LABIOS_MAIN_CLIENT_H
 
 
 #include <unordered_map>
 #include <future>
 #include "../common/data_structures.h"
 
-class AetrioClient {
+class LabiosClient {
 private:
     std::unordered_map<size_t,MPI_Comm> application_map;
     std::unordered_map<std::string,file_meta> files;
@@ -40,7 +40,7 @@ private:
     size_t count;
     MPI_Comm applications_comms,client_comms;
     std::future<int> async_handle;
-    AetrioClient():count(0),application_map(){
+    LabiosClient():count(0),application_map(){
 
     }
 public:
@@ -62,4 +62,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_CLIENT_H
+#endif //LABIOS_MAIN_CLIENT_H

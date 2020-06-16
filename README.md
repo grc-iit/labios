@@ -77,13 +77,13 @@ std::cout << stream.str();`
 
 #VCS management
 ##Make sure we work on local versions for constants.h
-`cd aetrio/`
+`cd labios/`
 
 `git update-index --assume-unchanged src/common/constants.h 
 src/common/config_manager.h src/common/config_manager.cpp CMakeLists.txt`
 
 ##Undo commands:
-`cd aetrio/`
+`cd labios/`
 
 `git update-index --no-assume-unchanged src/common/constants.h 
  src/common/config_manager.h src/common/config_manager.cpp CMakeLists.txt`
@@ -133,16 +133,19 @@ Download from https://nats.io/download/
 `make && sudo make install`
 ###Run NATS with logging
 #### Client 
-`gnatsd -p 4222 -a localhost -DV -l ~/nats_client.log &`
+`nats-server -p 4222 -a localhost -DV -l ~/nats_client.log &`
 #### Server
-`gnatsd -p 4223 -a localhost -DV -l ~/nats_server.log &`
+`nats-server -p 4223 -a localhost -DV -l ~/nats_server.log &`
 
 ###Run NATS without logging
 #### Client 
-`gnatsd -p 4222 -a localhost -DV &`
+`nats-server -p 4222 -a localhost -DV &`
 #### Server
-`gnatsd -p 4223 -a localhost -DV &`
+`nats-server -p 4223 -a localhost -DV &`
 
 ## Other Dependencies
 ###zlib
 `sudo apt-get install zlib1g-dev`
+
+mpicxx test.cpp -I/home/kbateman/labios1.0/external_libs/ -llabios -lnats
+LD_PRELOAD=/home/kbateman/labios1.0/liblabios.so mpirun -n 1 ./a.out

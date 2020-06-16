@@ -23,8 +23,8 @@
 * Created by hariharan on 5/18/18.
 * Updated by akougkas on 6/30/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_DPSOLVER_H
-#define AETRIO_MAIN_DPSOLVER_H
+#ifndef LABIOS_MAIN_DPSOLVER_H
+#define LABIOS_MAIN_DPSOLVER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -59,4 +59,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_DPSOLVER_H
+#endif //LABIOS_MAIN_DPSOLVER_H

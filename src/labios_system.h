@@ -23,8 +23,8 @@
 * Created by hariharan on 2/16/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_SYSTEM_H
-#define AETRIO_MAIN_SYSTEM_H
+#ifndef LABIOS_MAIN_SYSTEM_H
+#define LABIOS_MAIN_SYSTEM_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -44,18 +44,18 @@
 /******************************************************************************
 *Class
 ******************************************************************************/
-class aetrio_system {
+class labios_system {
 private:
 /******************************************************************************
 *Variables and members
 ******************************************************************************/
-    static std::shared_ptr<aetrio_system> instance;
+    static std::shared_ptr<labios_system> instance;
     int application_id;
     service service_i;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit aetrio_system(service service)
+    explicit labios_system(service service)
             :service_i(service),application_id(),client_comm(),
              client_rank(),rank(){init(service_i);}
     void init(service service);
@@ -76,9 +76,9 @@ public:
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    inline static std::shared_ptr<aetrio_system> getInstance(service service){
-        return instance== nullptr ? instance=std::shared_ptr<aetrio_system>
-                (new aetrio_system(service)) : instance;}
+    inline static std::shared_ptr<labios_system> getInstance(service service){
+        return instance== nullptr ? instance=std::shared_ptr<labios_system>
+                (new labios_system(service)) : instance;}
     inline std::shared_ptr<distributed_queue>get_client_queue
             (const std::string &subject){
         if(client_queue == nullptr){
@@ -113,7 +113,7 @@ public:
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~aetrio_system(){};
+    virtual ~labios_system(){};
 };
 
-#endif //AETRIO_MAIN_SYSTEM_H
+#endif //LABIOS_MAIN_SYSTEM_H

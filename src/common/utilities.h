@@ -23,8 +23,8 @@
 // Created by hariharan on 2/23/18.
 //
 
-#ifndef AETRIO_MAIN_UTILITY_H
-#define AETRIO_MAIN_UTILITY_H
+#ifndef LABIOS_MAIN_UTILITY_H
+#define LABIOS_MAIN_UTILITY_H
 
 #include <string>
 #include <vector>
@@ -88,4 +88,4 @@ break;
     return 0;
 }
 
-#endif //AETRIO_MAIN_UTILITY_H
+#endif //LABIOS_MAIN_UTILITY_H

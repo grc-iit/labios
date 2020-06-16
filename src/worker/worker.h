@@ -23,8 +23,8 @@
 * Created by hariharan on 5/10/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_WORKERSERVICE_H
-#define AETRIO_MAIN_WORKERSERVICE_H
+#ifndef LABIOS_MAIN_WORKERSERVICE_H
+#define LABIOS_MAIN_WORKERSERVICE_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -32,7 +32,7 @@
 #include "api/io_client.h"
 #include "../common/external_clients/memcached_impl.h"
 #include "api/posix_client.h"
-#include "../aetrio_system.h"
+#include "../labios_system.h"
 #include "api/posix_client.h"
 /******************************************************************************
 *Class
@@ -56,8 +56,8 @@ private:
         if(io_client_type_t==io_client_type::POSIX){
             client=std::make_shared<posix_client>(posix_client(worker_index));
         }
-        queue=aetrio_system::getInstance(service_i)->get_worker_queue(worker_index);
-        map=aetrio_system::getInstance(service_i)->map_server();
+        queue=labios_system::getInstance(service_i)->get_worker_queue(worker_index);
+        map=labios_system::getInstance(service_i)->map_server();
     }
 /******************************************************************************
 *Interface
@@ -82,4 +82,4 @@ public:
     virtual ~worker(){}
 };
 
-#endif //AETRIO_MAIN_WORKERSERVICE_H
+#endif //LABIOS_MAIN_WORKERSERVICE_H

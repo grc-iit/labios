@@ -23,8 +23,8 @@
 * Created by hariharan on 5/12/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_CONFIGURATION_MANAGER_H
-#define AETRIO_CONFIGURATION_MANAGER_H
+#ifndef LABIOS_CONFIGURATION_MANAGER_H
+#define LABIOS_CONFIGURATION_MANAGER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -68,6 +68,6 @@ public:
 };
 
 
-#endif //AETRIO_CONFIGURATION_MANAGER_H
+#endif //LABIOS_CONFIGURATION_MANAGER_H
 
 

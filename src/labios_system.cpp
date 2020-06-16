@@ -22,17 +22,17 @@
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "aetrio_system.h"
+#include "labios_system.h"
 #include "common/solver/dp_solver.h"
 #include "common/solver/random_solver.h"
 #include "common/solver/round_robin_solver.h"
 #include "common/solver/default_solver.h"
 
-std::shared_ptr<aetrio_system> aetrio_system::instance = nullptr;
+std::shared_ptr<labios_system> labios_system::instance = nullptr;
 /******************************************************************************
 *Interface
 ******************************************************************************/
-void aetrio_system::init(service service) {
+void labios_system::init(service service) {
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     int comm_size;
     MPI_Comm_rank(MPI_COMM_WORLD,&comm_size);
@@ -104,7 +104,7 @@ void aetrio_system::init(service service) {
     }
 }
 
-int aetrio_system::build_message_key(MPI_Datatype &message) {
+int labios_system::build_message_key(MPI_Datatype &message) {
     MPI_Datatype  type[4] = {MPI_INT, MPI_INT, MPI_INT,MPI_CHAR};
     int blocklen[4] = {1, 1,1, KEY_SIZE};
     MPI_Aint disp[4]={0, sizeof(MPI_INT), 2*sizeof(MPI_INT), 3*sizeof(MPI_INT)};
@@ -113,7 +113,7 @@ int aetrio_system::build_message_key(MPI_Datatype &message) {
     return 0;
 }
 
-int aetrio_system::build_message_file(MPI_Datatype &message_file) {
+int labios_system::build_message_file(MPI_Datatype &message_file) {
     MPI_Datatype  type[3] = {MPI_CHAR, MPI_INT, MPI_INT};
     int blocklen[3] = {KEY_SIZE,1, 1, };
     MPI_Aint disp[3]={0, KEY_SIZE*sizeof(MPI_CHAR), KEY_SIZE*sizeof(MPI_CHAR)+sizeof(MPI_INT)};
@@ -122,7 +122,7 @@ int aetrio_system::build_message_file(MPI_Datatype &message_file) {
     return 0;
 }
 
-int aetrio_system::build_message_chunk(MPI_Datatype &message_chunk) {
+int labios_system::build_message_chunk(MPI_Datatype &message_chunk) {
     MPI_Datatype  type[5] = {MPI_INT,MPI_INT,MPI_CHAR,MPI_INT,MPI_INT};
     int blocklen[5] = {1, 1,FILE_SIZE,1,1 };
     MPI_Aint disp[5]={0, sizeof(MPI_INT),2*sizeof(MPI_INT),2*sizeof(MPI_INT)+FILE_SIZE*sizeof(MPI_CHAR),3*sizeof(MPI_INT)+FILE_SIZE*sizeof(MPI_CHAR)};

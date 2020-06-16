@@ -23,8 +23,8 @@
 // Created by hariharan on 2/23/18.
 //
 
-#ifndef AETRIO_MAIN_SERIALIZATION_MANAGER_H
-#define AETRIO_MAIN_SERIALIZATION_MANAGER_H
+#ifndef LABIOS_MAIN_SERIALIZATION_MANAGER_H
+#define LABIOS_MAIN_SERIALIZATION_MANAGER_H
 
 #include "../data_structures.h"
 #include <cereal/archives/json.hpp>
@@ -46,4 +46,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_SERIALIZATION_MANAGER_H
+#endif //LABIOS_MAIN_SERIALIZATION_MANAGER_H

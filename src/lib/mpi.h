@@ -23,16 +23,16 @@
 // Created by anthony on 4/24/18.
 //
 
-#ifndef AETRIO_MAIN_MPI_H
-#define AETRIO_MAIN_MPI_H
+#ifndef LABIOS_MAIN_MPI_H
+#define LABIOS_MAIN_MPI_H
 
 #include <mpi.h>
 #include "../common/enumerations.h"
-#include "../aetrio_system.h"
+#include "../labios_system.h"
 
-namespace aetrio {
+namespace labios {
   int MPI_Init(int *argc, char ***argv);
 
   void MPI_Finalize();
 }
-#endif //AETRIO_MAIN_MPI_H
+#endif //LABIOS_MAIN_MPI_H

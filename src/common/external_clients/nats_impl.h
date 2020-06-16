@@ -23,8 +23,8 @@
 * Created by hariharan on 5/7/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef AETRIO_MAIN_NATSCLIENT_H
-#define AETRIO_MAIN_NATSCLIENT_H
+#ifndef LABIOS_MAIN_NATSCLIENT_H
+#define LABIOS_MAIN_NATSCLIENT_H
 /******************************************************************************
 *include files
 ******************************************************************************/
@@ -73,4 +73,4 @@ public:
 };
 
 
-#endif //AETRIO_MAIN_NATSCLIENT_H
+#endif //LABIOS_MAIN_NATSCLIENT_H

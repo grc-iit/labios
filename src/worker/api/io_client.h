@@ -23,8 +23,8 @@
 // Created by hdevarajan on 5/10/18.
 //
 
-#ifndef AETRIO_MAIN_IO_CLIENT_H
-#define AETRIO_MAIN_IO_CLIENT_H
+#ifndef LABIOS_MAIN_IO_CLIENT_H
+#define LABIOS_MAIN_IO_CLIENT_H
 
 #include "../../common/data_structures.h"
 
@@ -38,4 +38,4 @@ public:
     virtual int delete_file(delete_task task)=0;
     virtual int flush_file(flush_task task)=0;
 };
-#endif //AETRIO_MAIN_IO_CLIENT_H
+#endif //LABIOS_MAIN_IO_CLIENT_H
