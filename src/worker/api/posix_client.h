@@ -27,7 +27,7 @@
 #define LABIOS_MAIN_POSIXCLIENT_H
 
 
-#include "../../common/data_structures.h"
+#include <labios/common/data_structures.h>
 #include "io_client.h"
 #include <chrono>
 using namespace std::chrono;

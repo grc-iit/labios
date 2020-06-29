@@ -23,9 +23,9 @@
 *include files
 ******************************************************************************/
 #include <algorithm>
-#include "dp_solver.h"
+#include <labios/common/solver/dp_solver.h>
 #include "knapsack.cpp"
-#include "../../labios_system.h"
+#include <labios/labios_system.h>
 
 /******************************************************************************
 *Interface

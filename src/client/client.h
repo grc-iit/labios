@@ -29,7 +29,7 @@
 
 #include <unordered_map>
 #include <future>
-#include "../common/data_structures.h"
+#include <labios/common/data_structures.h>
 
 class LabiosClient {
 private:

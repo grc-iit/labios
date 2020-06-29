@@ -23,8 +23,8 @@
 *include files
 ******************************************************************************/
 #include <cmath>
-#include "task_builder.h"
-#include "../metadata_manager/metadata_manager.h"
+#include <labios/common/task_builder/task_builder.h>
+#include <labios/common/metadata_manager/metadata_manager.h>
 
 std::shared_ptr<task_builder> task_builder::instance = nullptr;
 /******************************************************************************

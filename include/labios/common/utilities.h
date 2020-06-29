@@ -30,7 +30,7 @@
 #include <vector>
 #include <cstring>
 #include <getopt.h>
-#include "config_manager.h"
+#include <labios/common/config_manager.h>
 
 static std::vector<std::string> string_split(std::string value,std::string delimiter=","){
     char *token = strtok(const_cast<char *>(value.c_str()), delimiter.c_str());

@@ -28,11 +28,11 @@
 #include <zconf.h>
 #include <fcntl.h>
 #include <malloc.h>
-#include "posix.h"
-#include "../common/return_codes.h"
-#include "../common/timer.h"
-#include "../common/utilities.h"
-#include "../common/threadPool.h"
+#include <labios/drivers/posix.h>
+#include <labios/common/return_codes.h>
+#include <labios/common/timer.h>
+#include <labios/common/utilities.h>
+#include <labios/common/threadPool.h>
 #include <sstream>
 #include <fstream>
 

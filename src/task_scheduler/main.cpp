@@ -27,9 +27,9 @@
 *include files
 ******************************************************************************/
 #include <mpi.h>
-#include "../common/data_structures.h"
+#include <labios/common/data_structures.h>
 #include "task_scheduler.h"
-#include "../common/utilities.h"
+#include <labios/common/utilities.h>
 /******************************************************************************
 *Main
 ******************************************************************************/

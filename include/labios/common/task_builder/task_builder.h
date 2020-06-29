@@ -29,9 +29,9 @@
 *include files
 ******************************************************************************/
 #include <memory>
-#include "../enumerations.h"
-#include "../client_interface/distributed_queue.h"
-#include "../data_structures.h"
+#include <labios/common/enumerations.h>
+#include <labios/common/client_interface/distributed_queue.h>
+#include <labios/common/data_structures.h>
 #include <chrono>
 /******************************************************************************
 *Class

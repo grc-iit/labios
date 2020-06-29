@@ -20,33 +20,67 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/19/18.
-* Updated by akougkas on 6/30/2018
+* Created by hariharan on 2/23/18.
+* Updated by akougkas on 6/29/2018
 ******************************************************************************/
-#ifndef LABIOS_MAIN_RANDOM_SOLVER_H
-#define LABIOS_MAIN_RANDOM_SOLVER_H
+#ifndef LABIOS_MAIN_DISTRIBUTEDHASHMAP_H
+#define LABIOS_MAIN_DISTRIBUTEDHASHMAP_H
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "solver.h"
+#include <cereal/types/memory.hpp>
+#include <labios/common/enumerations.h>
+#include <labios/common/constants.h>
+#include <labios/common/exceptions.h>
 /******************************************************************************
 *Class
 ******************************************************************************/
-class random_solver: public solver {
+class distributed_hashmap {
+protected:
+/******************************************************************************
+*Variables and members
+******************************************************************************/
+    service service_i;
 public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit random_solver(service service) : solver(service) {}
+    explicit distributed_hashmap(service service):service_i(service){}
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    solver_output solve(solver_input input) override;
+    virtual int put(
+            const table &name, std::string key,
+            const std::string &value,
+            std::string group_key){
+        throw NotImplementedException("put");
+    }
+    virtual std::string get(const table &name, std::string key,std::string group_key){
+        throw NotImplementedException("get");
+    }
+    virtual std::string remove(const table &name, std::string key,std::string group_key){
+        throw NotImplementedException("remove");
+    }
+    virtual bool exists(const table &name, std::string key,std::string group_key){
+        throw NotImplementedException("remove");
+    }
+    virtual bool purge(){
+        throw NotImplementedException("purge");
+    }
+    virtual size_t counter_init(const table &name, std::string key,std::string group_key){
+        throw NotImplementedException("counter_init");
+    }
+    virtual size_t counter_inc(const table &name, std::string key,std::string
+    group_key){
+        throw NotImplementedException("counter_inc");
+    }
+    virtual size_t get_servers(){
+        throw NotImplementedException("get_servers");
+    }
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~random_solver(){}
+    virtual ~distributed_hashmap(){}
 };
 
-
-#endif //LABIOS_MAIN_RANDOM_SOLVER_H
+#endif //LABIOS_MAIN_DISTRIBUTEDHASHMAP_H

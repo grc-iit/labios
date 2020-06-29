@@ -20,57 +20,56 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/7/18.
-* Updated by akougkas on 6/26/2018
+* Created by hariharan on 3/2/18.
+* Updated by akougkas on 7/5/2018
 ******************************************************************************/
-#ifndef LABIOS_MAIN_NATSCLIENT_H
-#define LABIOS_MAIN_NATSCLIENT_H
+#ifndef LABIOS_MAIN_ROCKSDBIMPL_H
+#define LABIOS_MAIN_ROCKSDBIMPL_H
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "../client_interface/distributed_queue.h"
+#include <labios/common/client_interface/distributed_hashmap.h>
+#ifdef ROCKS_P
+#include <rocksdb/db.enumeration_index>
+#include <rocksdb/slice.enumeration_index>
+#include <rocksdb/options.enumeration_index>
+#endif
 /******************************************************************************
 *Class
 ******************************************************************************/
-class NatsImpl: public distributed_queue {
+class RocksDBImpl: public distributed_hashmap{
 private:
-/******************************************************************************
-*Variables and members
-******************************************************************************/
-    natsConnection      *nc  = nullptr;
-    natsSubscription    *sub = nullptr;
-    std::string subject;
+    std::string table_prefix;
 public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    NatsImpl(service service, const std::string &url, const std::string
-    &subject,std::string queue_group,bool subscribe)
-            :distributed_queue(service),subject(subject) {
-        natsConnection_ConnectTo(&nc, url.c_str());
-        if(subscribe){
-            if(queue_group.empty()) natsConnection_SubscribeSync(&sub, nc, subject.c_str());
-            else
-                natsConnection_QueueSubscribeSync(&sub, nc, subject.c_str(),
-                                                  queue_group.c_str());
-        }
-
-        //natsConnection_SubscribeSync(&sub, nc, subject.c_str());
+    RocksDBImpl(service service,std::string table_prefix)
+            :distributed_hashmap(service),table_prefix(std::move(table_prefix)){
+        throw 20;
     }
+#ifdef ROCKS_P
+    rocksdb::DB* create_db(const table &table_name);
+#endif
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    int publish_task(task *task_t) override;
-    task * subscribe_task_with_timeout( int &status) override;
-    task * subscribe_task(int &status) override;
-    int get_queue_count() override;
-    int get_queue_size() override;
-    int get_queue_count_limit() override;
+    int put(const table &name,std::string key,const std::string &value,std::string group_key) override;
+    std::string get(const table &name, std::string key,std::string group_key) override ;
+    std::string remove(const table &name, std::string key,std::string group_key) override ;
+
+    size_t counter_init(const table &name, std::string key,
+                        std::string group_key) override;
+
+    size_t counter_inc(const table &name, std::string key,
+                       std::string group_key) override;
+    size_t get_servers() override{
+        throw NotImplementedException("get_servers");
+    }
+
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~NatsImpl(){}
+    virtual ~RocksDBImpl(){}
 };
-
-
-#endif //LABIOS_MAIN_NATSCLIENT_H
+#endif //LABIOS_MAIN_ROCKSDBIMPL_H

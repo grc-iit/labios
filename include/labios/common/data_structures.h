@@ -29,8 +29,8 @@
 *include files
 ******************************************************************************/
 #include <cereal/types/memory.hpp>
-#include "enumerations.h"
-#include "constants.h"
+#include <labios/common/enumerations.h>
+#include <labios/common/constants.h>
 #include <cereal/types/string.hpp>
 #include <cereal/types/common.hpp>
 #include <utility>

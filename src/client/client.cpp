@@ -26,8 +26,8 @@
 #include <mpi.h>
 #include <cstring>
 #include "client.h"
-#include "../labios_system.h"
-#include "../common/return_codes.h"
+#include <labios/labios_system.h>
+#include <labios/common/return_codes.h>
 
 int LabiosClient::init() {
     MPI_Open_port(MPI_INFO_NULL, const_cast<char *>(LABIOS_CLIENT_PORT.c_str

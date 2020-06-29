@@ -23,7 +23,7 @@
 // Created by hariharan on 2/23/18.
 //
 
-#include "serialization_manager.h"
+#include <labios/common/external_clients/serialization_manager.h>
 
 std::string serialization_manager::serialize_file_stat(file_stat stat) {
     std::stringstream ss; // any stream can be used

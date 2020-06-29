@@ -30,9 +30,9 @@
 ******************************************************************************/
 #include "../task_scheduler/task_scheduler.h"
 #include "api/io_client.h"
-#include "../common/external_clients/memcached_impl.h"
+#include <labios/common/external_clients/memcached_impl.h>
 #include "api/posix_client.h"
-#include "../labios_system.h"
+#include <labios/labios_system.h>
 #include "api/posix_client.h"
 /******************************************************************************
 *Class

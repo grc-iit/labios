@@ -20,19 +20,30 @@
  * <http://www.gnu.org/licenses/>.
  */
 //
-// Created by anthony on 4/24/18.
+// Created by hariharan on 2/23/18.
 //
 
-#ifndef LABIOS_MAIN_MPI_H
-#define LABIOS_MAIN_MPI_H
+#ifndef LABIOS_MAIN_SERIALIZATION_MANAGER_H
+#define LABIOS_MAIN_SERIALIZATION_MANAGER_H
 
-#include <mpi.h>
-#include "../common/enumerations.h"
-#include "../labios_system.h"
+#include <labios/common/data_structures.h>
+#include <cereal/archives/json.hpp>
+#include <sstream>
+#include <cereal/cereal.hpp>
 
-namespace labios {
-  int MPI_Init(int *argc, char ***argv);
+class serialization_manager {
+public:
+    //TODO: explore binary with NATS and memcached
+    std::string serialize_file_stat(file_stat stat);
 
-  void MPI_Finalize();
-}
-#endif //LABIOS_MAIN_MPI_H
+    chunk_meta deserialize_chunk(std::string chunk_str);
+
+    std::string serialize_chunk(chunk_meta meta);
+
+    std::string serialize_task(task *task);
+
+    task* deserialize_task(std::string string);
+};
+
+
+#endif //LABIOS_MAIN_SERIALIZATION_MANAGER_H

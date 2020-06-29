@@ -24,10 +24,10 @@
 ******************************************************************************/
 #include <zconf.h>
 #include <iomanip>
-#include "posix.h"
-#include "../common/task_builder/task_builder.h"
-#include "../common/return_codes.h"
-#include "../common/timer.h"
+#include <labios/drivers/posix.h>
+#include <labios/common/task_builder/task_builder.h>
+#include <labios/common/return_codes.h>
+#include <labios/common/timer.h>
 
 /******************************************************************************
 *Interface
@@ -401,4 +401,3 @@ size_t labios::fwrite(void *ptr, size_t size, size_t count, FILE *stream) {
     }
     return size*count;
 }
-

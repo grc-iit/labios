@@ -25,10 +25,10 @@
 #include <mpi.h>
 #include <cstring>
 #include <random>
-#include "metadata_manager.h"
-#include "../utilities.h"
-#include "../return_codes.h"
-#include "../timer.h"
+#include <labios/common/metadata_manager/metadata_manager.h>
+#include <labios/common/utilities.h>
+#include <labios/common/return_codes.h>
+#include <labios/common/timer.h>
 
 std::shared_ptr<metadata_manager> metadata_manager::instance = nullptr;
 /******************************************************************************

@@ -25,9 +25,9 @@
 #include <algorithm>
 #include <iomanip>
 #include "task_scheduler.h"
-#include "../common/external_clients/memcached_impl.h"
-#include "../labios_system.h"
-#include "../common/data_structures.h"
+#include <labios/common/external_clients/memcached_impl.h>
+#include <labios/labios_system.h>
+#include <labios/common/data_structures.h>
 
 std::shared_ptr<task_scheduler> task_scheduler::instance = nullptr;
 service task_scheduler::service_i = service(TASK_SCHEDULER);

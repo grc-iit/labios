@@ -22,7 +22,7 @@
 #include <iostream>
 #include <mpi.h>
 #include "worker_manager_service.h"
-#include "../common/utilities.h"
+#include <labios/common/utilities.h>
 
 int main(int argc, char** argv) {
     parse_opts(argc,argv);

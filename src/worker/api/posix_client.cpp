@@ -24,10 +24,10 @@
 //
 
 #include <iomanip>
-#include "../../common/timer.h"
+#include <labios/common/timer.h>
 #include "posix_client.h"
-#include "../../common/client_interface/distributed_hashmap.h"
-#include "../../labios_system.h"
+#include <labios/common/client_interface/distributed_hashmap.h>
+#include <labios/labios_system.h>
 
 
 int posix_client::read(read_task task) {

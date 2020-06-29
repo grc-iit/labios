@@ -23,7 +23,7 @@
 // Created by hariharan on 3/2/18.
 //
 
-#include "rocksdb_impl.h"
+#include <labios/common/external_clients/rocksdb_impl.h>
 
 int RocksDBImpl::put(const table &name, std::string key, const std::string &value,std::string group_key) {
 

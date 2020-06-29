@@ -28,7 +28,7 @@
 
 
 #include <memory>
-#include "../common/enumerations.h"
+#include <labios/common/enumerations.h>
 
 class worker_manager_service {
     static std::shared_ptr<worker_manager_service> instance;

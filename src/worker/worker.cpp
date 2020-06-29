@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <iomanip>
 #include "worker.h"
-#include "../common/return_codes.h"
+#include <labios/common/return_codes.h>
 std::shared_ptr<worker> worker::instance = nullptr;
 /******************************************************************************
 *Interface

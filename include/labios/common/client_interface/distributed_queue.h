@@ -29,11 +29,11 @@
 *include files
 ******************************************************************************/
 #include <memory>
-#include "../enumerations.h"
-#include "../data_structures.h"
+#include <labios/common/enumerations.h>
+#include <labios/common/data_structures.h>
 #include <nats.h>
-#include "../external_clients/serialization_manager.h"
-#include "../exceptions.h"
+#include <labios/common/external_clients/serialization_manager.h>
+#include <labios/common/exceptions.h>
 /******************************************************************************
 *Class
 ******************************************************************************/

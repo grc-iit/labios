@@ -22,8 +22,8 @@
 //
 // Created by anthony on 4/24/18.
 //
-#include "mpi.h"
-#include "../common/utilities.h"
+#include <labios/drivers/mpi.h>
+#include <labios/common/utilities.h>
 
 int labios::MPI_Init(int *argc, char ***argv) {
   PMPI_Init(argc,argv);

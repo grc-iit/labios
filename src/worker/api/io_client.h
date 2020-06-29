@@ -26,7 +26,7 @@
 #ifndef LABIOS_MAIN_IO_CLIENT_H
 #define LABIOS_MAIN_IO_CLIENT_H
 
-#include "../../common/data_structures.h"
+#include <labios/common/data_structures.h>
 
 class io_client {
 protected:

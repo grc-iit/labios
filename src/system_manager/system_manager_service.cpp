@@ -25,7 +25,7 @@
 
 #include <zconf.h>
 #include "system_manager_service.h"
-#include "../common/constants.h"
+#include <labios/common/constants.h>
 
 int system_manager_service::check_applications_score() {
     return 0;

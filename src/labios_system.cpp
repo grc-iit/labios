@@ -22,11 +22,11 @@
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "labios_system.h"
-#include "common/solver/dp_solver.h"
-#include "common/solver/random_solver.h"
-#include "common/solver/round_robin_solver.h"
-#include "common/solver/default_solver.h"
+#include <labios/labios_system.h>
+#include <labios/common/solver/dp_solver.h>
+#include <labios/common/solver/random_solver.h>
+#include <labios/common/solver/round_robin_solver.h>
+#include <labios/common/solver/default_solver.h>
 
 std::shared_ptr<labios_system> labios_system::instance = nullptr;
 /******************************************************************************

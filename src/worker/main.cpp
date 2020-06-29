@@ -30,7 +30,7 @@
 #include <iostream>
 #include <mpi.h>
 #include "worker.h"
-#include "../common/utilities.h"
+#include <labios/common/utilities.h>
 /******************************************************************************
 *Worker main
 ******************************************************************************/

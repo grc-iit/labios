@@ -23,7 +23,7 @@
 *include files
 ******************************************************************************/
 #include <mpi.h>
-#include "memcached_impl.h"
+#include <labios/common/external_clients/memcached_impl.h>
 
 /******************************************************************************
 *Interface

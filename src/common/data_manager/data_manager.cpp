@@ -23,8 +23,8 @@
 *include files
 ******************************************************************************/
 #include <iomanip>
-#include "data_manager.h"
-#include "../timer.h"
+#include <labios/common/data_manager/data_manager.h>
+#include <labios/common/timer.h>
 
 std::shared_ptr<data_manager> data_manager::instance = nullptr;
 /******************************************************************************

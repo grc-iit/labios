@@ -20,71 +20,57 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 2/16/18.
+* Created by hariharan on 5/7/18.
 * Updated by akougkas on 6/26/2018
 ******************************************************************************/
-#ifndef LABIOS_MAIN_METADATA_MANAGER_H
-#define LABIOS_MAIN_METADATA_MANAGER_H
+#ifndef LABIOS_MAIN_NATSCLIENT_H
+#define LABIOS_MAIN_NATSCLIENT_H
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include <cstdio>
-#include <string>
-#include <unordered_map>
-#include <cereal/types/memory.hpp>
-#include "../../labios_system.h"
-#include "../data_structures.h"
+#include <labios/common/client_interface/distributed_queue.h>
 /******************************************************************************
 *Class
 ******************************************************************************/
-class metadata_manager {
+class NatsImpl: public distributed_queue {
 private:
 /******************************************************************************
 *Variables and members
 ******************************************************************************/
-    static std::shared_ptr<metadata_manager> instance;
-    std::unordered_map<FILE*,std::string> fh_map;
-    std::unordered_map<std::string,file_stat> file_map;
-    service service_i;
+    natsConnection      *nc  = nullptr;
+    natsSubscription    *sub = nullptr;
+    std::string subject;
+public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit metadata_manager(service service)
-            :fh_map(),file_map(),service_i(service){}
-public:
+    NatsImpl(service service, const std::string &url, const std::string
+    &subject,std::string queue_group,bool subscribe)
+            :distributed_queue(service),subject(subject) {
+        natsConnection_ConnectTo(&nc, url.c_str());
+        if(subscribe){
+            if(queue_group.empty()) natsConnection_SubscribeSync(&sub, nc, subject.c_str());
+            else
+                natsConnection_QueueSubscribeSync(&sub, nc, subject.c_str(),
+                                                  queue_group.c_str());
+        }
+
+        //natsConnection_SubscribeSync(&sub, nc, subject.c_str());
+    }
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    inline static std::shared_ptr<metadata_manager> getInstance(service service){
-        return instance== nullptr ? instance=std::shared_ptr<metadata_manager>
-                (new metadata_manager(service)):instance; }
-    bool is_created(std::string filename);
-    int create(std::string filename,std::string mode,FILE* &fh);
-    bool is_opened(std::string filename);
-    bool is_opened(FILE* fh);
-    int update_on_open(std::string filename,std::string mode,FILE* &fh);
-    int update_on_close(FILE* &fh);
-    int remove_chunks(std::string &basic_string);
-    std::string get_filename(FILE* fh);
-    std::size_t get_filesize(std::string basic_string);
-    std::string get_mode(std::string basic_string);
-    long long int get_fp(const std::string &basic_string);
-    int update_on_seek(std::string basic_string,size_t offset, size_t origin);
-    int update_read_task_info(std::vector<read_task> task_k,std::string filename);
-    int update_write_task_info(std::vector<write_task> task_ks,std::string filename);
-    int update_write_task_info(write_task task_ks,std::string filename,
-                               std::size_t io_size);
-    std::vector<chunk_meta> fetch_chunks(read_task task);
-    void update_on_read(std::string filename, size_t size);
-    void update_on_write(std::string filename, size_t size,size_t offset);
+    int publish_task(task *task_t) override;
+    task * subscribe_task_with_timeout( int &status) override;
+    task * subscribe_task(int &status) override;
+    int get_queue_count() override;
+    int get_queue_size() override;
+    int get_queue_count_limit() override;
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~metadata_manager(){
-        //TODO: serialize structures and send down to labios_meta_file
-    }
-
+    virtual ~NatsImpl(){}
 };
 
 
-#endif //LABIOS_MAIN_METADATA_MANAGER_H
+#endif //LABIOS_MAIN_NATSCLIENT_H

@@ -26,5 +26,5 @@
 #ifndef LABIOS_MAIN_LABIOS_H
 #define LABIOS_MAIN_LABIOS_H
 
-#include "./drivers/posix.h"
+#include <labios/drivers/posix.h>
 #endif //LABIOS_MAIN_LABIOS_H

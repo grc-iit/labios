@@ -20,56 +20,36 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 3/2/18.
-* Updated by akougkas on 7/5/2018
+* Created by hariharan on 5/8/18.
+* Updated by akougkas on 6/30/2018
 ******************************************************************************/
-#ifndef LABIOS_MAIN_ROCKSDBIMPL_H
-#define LABIOS_MAIN_ROCKSDBIMPL_H
+#ifndef LABIOS_MAIN_SOLVER_H
+#define LABIOS_MAIN_SOLVER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "../client_interface/distributed_hashmap.h"
-#ifdef ROCKS_P
-#include <rocksdb/db.enumeration_index>
-#include <rocksdb/slice.enumeration_index>
-#include <rocksdb/options.enumeration_index>
-#endif
+#include <labios/common/data_structures.h>
 /******************************************************************************
 *Class
 ******************************************************************************/
-class RocksDBImpl: public distributed_hashmap{
-private:
-    std::string table_prefix;
+class solver {
+protected:
+/******************************************************************************
+*Variables and members
+******************************************************************************/
+    service service_i;
 public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    RocksDBImpl(service service,std::string table_prefix)
-            :distributed_hashmap(service),table_prefix(std::move(table_prefix)){
-        throw 20;
-    }
-#ifdef ROCKS_P
-    rocksdb::DB* create_db(const table &table_name);
-#endif
+    explicit solver(service service) : service_i(service){}
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    int put(const table &name,std::string key,const std::string &value,std::string group_key) override;
-    std::string get(const table &name, std::string key,std::string group_key) override ;
-    std::string remove(const table &name, std::string key,std::string group_key) override ;
-
-    size_t counter_init(const table &name, std::string key,
-                        std::string group_key) override;
-
-    size_t counter_inc(const table &name, std::string key,
-                       std::string group_key) override;
-    size_t get_servers() override{
-        throw NotImplementedException("get_servers");
-    }
-
+    virtual solver_output solve(solver_input input)=0;
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~RocksDBImpl(){}
+    virtual ~solver(){}
 };
-#endif //LABIOS_MAIN_ROCKSDBIMPL_H
+#endif //LABIOS_MAIN_SOLVER_H

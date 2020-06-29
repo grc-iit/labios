@@ -20,39 +20,33 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 2/16/18.
-* Updated by akougkas on 6/26/2018
+* Created by hariharan on 5/19/18.
+* Updated by akougkas on 6/30/2018
 ******************************************************************************/
-#ifndef LABIOS_MAIN_POSIX_H
-#define LABIOS_MAIN_POSIX_H
+#ifndef LABIOS_MAIN_RANDOM_SOLVER_H
+#define LABIOS_MAIN_RANDOM_SOLVER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include <cstdio>
-#include <cstring>
-#include "mpi.h"
-#include "../common/metadata_manager/metadata_manager.h"
-#include "../common/data_manager/data_manager.h"
-#include "../labios_system.h"
+#include <labios/common/solver/solver.h>
 /******************************************************************************
-*Labios Namespace
+*Class
 ******************************************************************************/
-namespace labios{
+class random_solver: public solver {
+public:
+/******************************************************************************
+*Constructor
+******************************************************************************/
+    explicit random_solver(service service) : solver(service) {}
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    FILE *fopen(const char *filename, const char *mode);
-    int fclose(FILE *stream);
-    int fseek(FILE *stream, long int offset, int origin);
-    size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
-    std::vector<read_task> fread_async(size_t size, size_t count, FILE *stream);
-    std::size_t fread_wait(void *ptr, std::vector<read_task> &tasks,
-            std::string filename);
-    std::vector<write_task*> fwrite_async(void *ptr, size_t size, size_t count,
-                                          FILE *stream);
-    size_t fwrite_wait(std::vector<write_task*> tasks);
-    size_t fwrite(void *ptr, size_t size, size_t count, FILE *stream);
-}
+    solver_output solve(solver_input input) override;
+/******************************************************************************
+*Destructor
+******************************************************************************/
+    virtual ~random_solver(){}
+};
 
 
-#endif //LABIOS_MAIN_POSIX_H
+#endif //LABIOS_MAIN_RANDOM_SOLVER_H

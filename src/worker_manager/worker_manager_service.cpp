@@ -25,7 +25,7 @@
 
 #include <zconf.h>
 #include "worker_manager_service.h"
-#include "../common/constants.h"
+#include <labios/common/constants.h>
 
 #include <set>
 #include <vector>

@@ -20,36 +20,51 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/8/18.
-* Updated by akougkas on 6/30/2018
+* Created by hariharan on 2/23/18.
+* Updated by akougkas on 6/29/2018
 ******************************************************************************/
-#ifndef LABIOS_MAIN_SOLVER_H
-#define LABIOS_MAIN_SOLVER_H
+#ifndef LABIOS_MAIN_DATA_MANAGER_H
+#define LABIOS_MAIN_DATA_MANAGER_H
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "../data_structures.h"
+#include <cereal/types/memory.hpp>
+#include <labios/common/enumerations.h>
+#include <labios/common/client_interface/distributed_hashmap.h>
+#include <labios/labios_system.h>
 /******************************************************************************
 *Class
 ******************************************************************************/
-class solver {
-protected:
+class data_manager {
+private:
 /******************************************************************************
 *Variables and members
 ******************************************************************************/
+    static std::shared_ptr<data_manager> instance;
     service service_i;
-public:
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    explicit solver(service service) : service_i(service){}
+    explicit data_manager(service service):service_i(service){}
+public:
 /******************************************************************************
 *Interface
 ******************************************************************************/
-    virtual solver_output solve(solver_input input)=0;
+    inline static std::shared_ptr<data_manager> getInstance(service service){
+        return instance== nullptr ? instance=std::shared_ptr<data_manager>
+                (new data_manager(service)) : instance;
+    }
+    std::string get(const table &name, std::string key,std::string
+    server);
+    int put(const table &name, std::string key, std::string data,std::string
+    server);
+    bool exists(const table &name, std::string key,std::string
+    server);
+    std::string remove(const table &name, std::string key,std::string
+    server);
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~solver(){}
+    virtual ~data_manager(){}
 };
-#endif //LABIOS_MAIN_SOLVER_H
+#endif //LABIOS_MAIN_DATA_MANAGER_H

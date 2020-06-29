@@ -29,12 +29,12 @@
 *include files
 ******************************************************************************/
 #include <memory>
-#include "../common/enumerations.h"
+#include <labios/common/enumerations.h>
 #include <zconf.h>
-#include "../common/external_clients/nats_impl.h"
-#include "../common/timer.h"
-#include "../common/threadPool.h"
-#include "../common/config_manager.h"
+#include <labios/common/external_clients/nats_impl.h>
+#include <labios/common/timer.h>
+#include <labios/common/threadPool.h>
+#include <labios/common/config_manager.h>
 /******************************************************************************
 *Class
 ******************************************************************************/

@@ -23,8 +23,8 @@
 *include files
 ******************************************************************************/
 #include <iomanip>
-#include "nats_impl.h"
-#include "../timer.h"
+#include <labios/common/external_clients/nats_impl.h>
+#include <labios/common/timer.h>
 
 /******************************************************************************
 *Interface

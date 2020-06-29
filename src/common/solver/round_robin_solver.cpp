@@ -22,8 +22,8 @@
 /******************************************************************************
 *include files
 ******************************************************************************/
-#include "round_robin_solver.h"
-#include "../../labios_system.h"
+#include <labios/common/solver/round_robin_solver.h>
+#include <labios/labios_system.h>
 
 std::shared_ptr<round_robin_solver> round_robin_solver::instance = nullptr;
 /******************************************************************************
