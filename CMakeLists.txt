@@ -111,6 +111,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     PUBLIC_HEADER include/labios.h)
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY external_libs/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
