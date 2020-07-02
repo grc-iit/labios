@@ -30,15 +30,15 @@
 ******************************************************************************/
 #include <memory>
 #include <climits>
-#include "common/enumerations.h"
-#include "common/constants.h"
-#include "common/client_interface/distributed_hashmap.h"
-#include "common/external_clients/memcached_impl.h"
-#include "common/external_clients/rocksdb_impl.h"
-#include "common/client_interface/distributed_queue.h"
-#include "common/solver/solver.h"
-#include "common/external_clients/nats_impl.h"
-#include "common/config_manager.h"
+#include <labios/common/enumerations.h>
+#include <labios/common/constants.h>
+#include <labios/common/client_interface/distributed_hashmap.h>
+#include <labios/common/external_clients/memcached_impl.h>
+#include <labios/common/external_clients/rocksdb_impl.h>
+#include <labios/common/client_interface/distributed_queue.h>
+#include <labios/common/solver/solver.h>
+#include <labios/common/external_clients/nats_impl.h>
+#include <labios/common/config_manager.h>
 #include <mpi.h>
 #include <string>
 /******************************************************************************
