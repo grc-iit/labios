@@ -9,4 +9,4 @@ Version: @PROJECT_VERSION@
 
 Requires:
 Libs: -L${libdir} -llabios -lnats
-Cflags: -I${includedir} -I/home/kbateman/labios1.0/external_libs/
+Cflags: -I${includedir}
