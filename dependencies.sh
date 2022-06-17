@@ -56,7 +56,7 @@ spack load mpich
 spack install protobuf-c
 spack load protobuf-c
 
-###########INSTALLING NATS
+###########INSTALL NATS
 scspkg create cnats
 cd `scspkg pkg-src cnats`
 wget https://github.com/nats-io/nats.c/archive/refs/tags/v3.3.0.tar.gz
@@ -69,4 +69,6 @@ cmake ../ -DCMAKE_INSTALL_PREFIX=`scspkg pkg-root cnats`
 make -j8
 make install
 
-##############
+############INSTALL CEREAL
+spack install cereal
+spack load cereal

@@ -4,9 +4,39 @@ LABIOS, a new, distributed, scalable, and adaptive I/O System.
 LABIOS is the first LAbel-Based I/O System, is fully decoupled, 
 and is intended to grow in the intersection of HPC and BigData.
 
+## Dependencies
+
+Labios depends on the following:
+* scspkg
+* mpich (>3.0)
+* protobufs
+* cnats
+* libmemcached
+* Jarvis-CD
+* Python3
+
+To install:
+```bash
+bash dependencies.sh
+```
+
 ## Installation
 
+To install Labios, do the following
+```bash
+mkdir build
+cd build
+cmake ../ -DCMAKE_
+```
 
+## Deployment
+
+```bash
+jarvis labios scaffold
+jarvis labios init
+jarvis labios start
+jarvis labios stop
+```
 
 #TODO LIST
 ##cluster
