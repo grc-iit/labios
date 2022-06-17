@@ -1,4 +1,13 @@
-# README #
+# Labios
+
+LABIOS, a new, distributed, scalable, and adaptive I/O System. 
+LABIOS is the first LAbel-Based I/O System, is fully decoupled, 
+and is intended to grow in the intersection of HPC and BigData.
+
+## Installation
+
+
+
 #TODO LIST
 ##cluster
 * Sync nodes

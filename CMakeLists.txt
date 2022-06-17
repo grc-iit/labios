@@ -25,9 +25,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIMERW")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOVERHEADS")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIMERBASE")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTABIOS")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -l/home/kbateman/lib64")
 
-set(CMAKE_MODULE_PATH /home/kbateman/install/cmake-3.13.3/Modules)
 set(COMMON_SRC "" include/labios/common/city.h src/common/city.cc
         src/common/solver/default_solver.cpp
         include/labios/common/solver/default_solver.h include/labios/common/config_manager.h src/common/config_manager.cpp src/common/solver/dp_solver.cpp include/labios/common/solver/dp_solver.h include/labios/common/solver/solver.h src/common/solver/random_solver.cpp include/labios/common/solver/random_solver.h src/common/solver/round_robin_solver.cpp include/labios/common/solver/round_robin_solver.h src/common/solver/knapsack.cpp external_libs/cereal/cereal.hpp include/labios/common/timer.h src/common/timer.cpp include/labios/common/enumerations.h include/labios/common/exceptions.h include/labios/common/data_structures.h src/common/data_manager/data_manager.cpp include/labios/common/data_manager/data_manager.h src/common/client_interface/distributed_hashmap.cpp include/labios/common/client_interface/distributed_hashmap.h include/labios/common/utilities.h src/common/metadata_manager/metadata_manager.cpp include/labios/common/metadata_manager/metadata_manager.h include/labios/common/constants.h src/labios_system.cpp include/labios/labios_system.h src/common/task_builder/task_builder.cpp include/labios/common/task_builder/task_builder.h src/common/client_interface/distributed_hashmap.cpp include/labios/common/client_interface/distributed_hashmap.h src/common/client_interface/distributed_queue.cpp include/labios/common/client_interface/distributed_queue.h src/common/external_clients/serialization_manager.cpp include/labios/common/external_clients/serialization_manager.h src/common/external_clients/rocksdb_impl.cpp include/labios/common/external_clients/rocksdb_impl.h src/common/external_clients/memcached_impl.cpp include/labios/common/external_clients/memcached_impl.h src/common/external_clients/nats_impl.cpp include/labios/common/external_clients/nats_impl.h)
@@ -51,7 +49,6 @@ if(DEFINED MEMCACHED)
 endif()
 if(DEFINED ROCKS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROCKS_P")
-    include_directories(/home/hariharan/Downloads/rocksdb/include)
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 
@@ -132,13 +129,3 @@ else()
    install(FILES ${CMAKE_BINARY_DIR}/basket.pc
                   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
 endif()
-
-
-#[[target_link_libraries(labios_lib ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
-#target_link_libraries(labios_client ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
-#target_link_libraries(labios_server ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
-#target_link_libraries(labios_task_scheduler ${MPI_LIBRARIES} -pthread -lrocksdb  -lnats memcached)
-#target_link_libraries(labios_worker_manager ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
-#target_link_libraries(labios_worker ${MPI_LIBRARIES} -pthread -lrocksdb -lnats memcached)
-    #worker programs
-#target_link_libraries(labios_worker_stats ${MPI_LIBRARIES} -pthread)]]

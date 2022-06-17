@@ -79,7 +79,7 @@ std::string serialization_manager::serialize_task(task *task) {
             return ss.str();
         }
     }
-    return std::__cxx11::string();
+    return std::string();
 }
 
 

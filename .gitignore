@@ -4,4 +4,5 @@
 /testing/traces
 /testing/chameleon_nodes.txt
 *~
-
+/cmake-*
+/build
