@@ -24,7 +24,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOVERHEADS")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIMERBASE")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTABIOS")
 
-set(COMMON_SRC "" include/labios/common/city.h src/common/city.cc
+set(COMMON_SRC
         src/common/solver/default_solver.cpp
         include/labios/common/solver/default_solver.h include/labios/common/config_manager.h src/common/config_manager.cpp src/common/solver/dp_solver.cpp include/labios/common/solver/dp_solver.h include/labios/common/solver/solver.h src/common/solver/random_solver.cpp include/labios/common/solver/random_solver.h src/common/solver/round_robin_solver.cpp include/labios/common/solver/round_robin_solver.h src/common/solver/knapsack.cpp include/labios/common/timer.h src/common/timer.cpp include/labios/common/enumerations.h include/labios/common/exceptions.h include/labios/common/data_structures.h src/common/data_manager/data_manager.cpp include/labios/common/data_manager/data_manager.h src/common/client_interface/distributed_hashmap.cpp include/labios/common/client_interface/distributed_hashmap.h include/labios/common/utilities.h src/common/metadata_manager/metadata_manager.cpp include/labios/common/metadata_manager/metadata_manager.h include/labios/common/constants.h src/labios_system.cpp include/labios/labios_system.h src/common/task_builder/task_builder.cpp include/labios/common/task_builder/task_builder.h src/common/client_interface/distributed_hashmap.cpp include/labios/common/client_interface/distributed_hashmap.h src/common/client_interface/distributed_queue.cpp include/labios/common/client_interface/distributed_queue.h src/common/external_clients/serialization_manager.cpp include/labios/common/external_clients/serialization_manager.h src/common/external_clients/rocksdb_impl.cpp include/labios/common/external_clients/rocksdb_impl.h src/common/external_clients/memcached_impl.cpp include/labios/common/external_clients/memcached_impl.h src/common/external_clients/nats_impl.cpp include/labios/common/external_clients/nats_impl.h)
 set(LABIOS_LIB_SRC ${COMMON_SRC} src/lib/driver.cpp src/lib/posix.cpp include/labios/drivers/posix.h include/labios/drivers/mpi.h src/lib/mpi.cpp include/labios/common/return_codes.h src/common/threadPool.cpp include/labios/common/threadPool.h )
@@ -91,12 +91,12 @@ if(DEFINED NATS)
     target_link_libraries(labios_worker -lnats)
 endif()
 
-target_link_libraries(labios_lib -pthread)
-target_link_libraries(labios_client -pthread)
-target_link_libraries(labios_server -pthread)
-target_link_libraries(labios_task_scheduler -pthread)
-target_link_libraries(labios_worker_manager -pthread)
-target_link_libraries(labios_worker -pthread)
+target_link_libraries(labios_lib -pthread cityhash)
+target_link_libraries(labios_client -pthread cityhash)
+target_link_libraries(labios_server -pthread cityhash)
+target_link_libraries(labios_task_scheduler -pthread cityhash)
+target_link_libraries(labios_worker_manager -pthread cityhash)
+target_link_libraries(labios_worker -pthread cityhash)
 
 add_library(${PROJECT_NAME} SHARED ${LABIOS_LIB_SRC})
 

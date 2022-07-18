@@ -31,7 +31,7 @@
 #include <labios/common/client_interface/distributed_hashmap.h>
 #include <libmemcached/memcached.h>
 #include <cstring>
-#include <labios/common/city.h>
+#include <city.h>
 /******************************************************************************
 *Class
 ******************************************************************************/
