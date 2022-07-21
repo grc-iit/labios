@@ -26,15 +26,47 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTABIOS")
 
 set(COMMON_SRC
         src/common/solver/default_solver.cpp
-        include/labios/common/solver/default_solver.h include/labios/common/config_manager.h src/common/config_manager.cpp src/common/solver/dp_solver.cpp include/labios/common/solver/dp_solver.h include/labios/common/solver/solver.h src/common/solver/random_solver.cpp include/labios/common/solver/random_solver.h src/common/solver/round_robin_solver.cpp include/labios/common/solver/round_robin_solver.h src/common/solver/knapsack.cpp include/labios/common/timer.h src/common/timer.cpp include/labios/common/enumerations.h include/labios/common/exceptions.h include/labios/common/data_structures.h src/common/data_manager/data_manager.cpp include/labios/common/data_manager/data_manager.h src/common/client_interface/distributed_hashmap.cpp include/labios/common/client_interface/distributed_hashmap.h include/labios/common/utilities.h src/common/metadata_manager/metadata_manager.cpp include/labios/common/metadata_manager/metadata_manager.h include/labios/common/constants.h src/labios_system.cpp include/labios/labios_system.h src/common/task_builder/task_builder.cpp include/labios/common/task_builder/task_builder.h src/common/client_interface/distributed_hashmap.cpp include/labios/common/client_interface/distributed_hashmap.h src/common/client_interface/distributed_queue.cpp include/labios/common/client_interface/distributed_queue.h src/common/external_clients/serialization_manager.cpp include/labios/common/external_clients/serialization_manager.h src/common/external_clients/rocksdb_impl.cpp include/labios/common/external_clients/rocksdb_impl.h src/common/external_clients/memcached_impl.cpp include/labios/common/external_clients/memcached_impl.h src/common/external_clients/nats_impl.cpp include/labios/common/external_clients/nats_impl.h)
-set(LABIOS_LIB_SRC ${COMMON_SRC} src/lib/driver.cpp src/lib/posix.cpp include/labios/drivers/posix.h include/labios/drivers/mpi.h src/lib/mpi.cpp include/labios/common/return_codes.h src/common/threadPool.cpp include/labios/common/threadPool.h )
-set(LABIOS_CLIENT_SRC  ${COMMON_SRC} "src/client/main.cpp" src/client/client.cpp src/client/client.h include/labios/common/exceptions.h include/labios.h include/labios/common/return_codes.h src/common/threadPool.cpp include/labios/common/threadPool.h)
-set(LABIOS_SERVER_SRC  ${COMMON_SRC} "src/system_manager/main.cpp" src/system_manager/system_manager_service.cpp src/system_manager/system_manager_service.h include/labios/common/return_codes.h src/common/threadPool.cpp include/labios/common/threadPool.h)
-set(LABIOS_TS_SRC  ${COMMON_SRC} src/task_scheduler/main.cpp src/task_scheduler/task_scheduler.cpp src/task_scheduler/task_scheduler.h include/labios/common/return_codes.h src/common/threadPool.cpp include/labios/common/threadPool.h)
-set(LABIOS_WM_SRC  ${COMMON_SRC} "src/worker_manager/main.cpp" src/worker_manager/worker_manager_service.cpp src/worker_manager/worker_manager_service.h include/labios/common/return_codes.h src/common/threadPool.cpp include/labios/common/threadPool.h)
-set(LABIOS_W_PROG_REPO src/worker/api/io_client.h src/worker/api/posix_client.cpp src/worker/api/posix_client.h src/worker/program_repo/statistics.h src/worker/program_repo/statistics.cpp include/labios/common/return_codes.h)
-set(LABIOS_WS_SRC  ${COMMON_SRC} ${LABIOS_W_PROG_REPO} src/worker/main.cpp src/worker/worker.cpp src/worker/worker.h include/labios/common/return_codes.h src/common/threadPool.cpp include/labios/common/threadPool.h)
-
+        src/common/config_manager.cpp src/common/solver/dp_solver.cpp
+        src/common/solver/random_solver.cpp
+        src/common/solver/round_robin_solver.cpp
+        src/common/solver/knapsack.cpp
+        src/common/timer.cpp
+        src/common/data_manager/data_manager.cpp
+        src/common/client_interface/distributed_hashmap.cpp
+        src/common/metadata_manager/metadata_manager.cpp
+        src/labios_system.cpp
+        src/common/client_interface/distributed_hashmap.cpp
+        src/common/client_interface/distributed_queue.cpp
+        src/common/external_clients/serialization_manager.cpp
+        src/common/external_clients/rocksdb_impl.cpp
+        src/common/external_clients/memcached_impl.cpp
+        src/common/external_clients/nats_impl.cpp
+        src/common/task_builder/task_builder.cpp)
+set(LABIOS_LIB_SRC ${COMMON_SRC}
+        src/lib/driver.cpp
+        src/lib/posix.cpp
+        src/lib/mpi.cpp
+        src/common/threadPool.cpp)
+set(LABIOS_CLIENT_SRC  ${COMMON_SRC}
+        src/client/main.cpp
+        src/client/client.cpp
+        src/common/threadPool.cpp)
+set(LABIOS_SERVER_SRC  ${COMMON_SRC}
+        src/system_manager/main.cpp
+        src/system_manager/system_manager_service.cpp)
+set(LABIOS_TS_SRC  ${COMMON_SRC}
+        src/task_scheduler/main.cpp
+        src/task_scheduler/task_scheduler.cpp
+        src/task_scheduler/task_scheduler.h)
+set(LABIOS_WM_SRC  ${COMMON_SRC}
+        src/worker_manager/main.cpp
+        src/worker_manager/worker_manager_service.cpp)
+set(LABIOS_W_PROG_REPO
+        src/worker/api/posix_client.cpp
+        src/worker/program_repo/statistics.cpp)
+set(LABIOS_WS_SRC  ${COMMON_SRC} ${LABIOS_W_PROG_REPO}
+        src/worker/main.cpp
+        src/worker/worker.cpp)
 
 if(DEFINED MPI)
     find_package(MPI REQUIRED)

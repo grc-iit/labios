@@ -25,6 +25,7 @@
 #include <cmath>
 #include <labios/common/task_builder/task_builder.h>
 #include <labios/common/metadata_manager/metadata_manager.h>
+#include <vector>
 
 std::shared_ptr<task_builder> task_builder::instance = nullptr;
 /******************************************************************************
