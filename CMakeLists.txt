@@ -42,29 +42,28 @@ set(COMMON_SRC
         src/common/external_clients/memcached_impl.cpp
         src/common/external_clients/nats_impl.cpp
         src/common/task_builder/task_builder.cpp)
-set(LABIOS_LIB_SRC ${COMMON_SRC}
+set(LABIOS_LIB_SRC
         src/lib/driver.cpp
         src/lib/posix.cpp
         src/lib/mpi.cpp
         src/common/threadPool.cpp)
-set(LABIOS_CLIENT_SRC  ${COMMON_SRC}
+set(LABIOS_CLIENT_SRC
         src/client/main.cpp
         src/client/client.cpp
         src/common/threadPool.cpp)
-set(LABIOS_SERVER_SRC  ${COMMON_SRC}
+set(LABIOS_SERVER_SRC
         src/system_manager/main.cpp
         src/system_manager/system_manager_service.cpp)
-set(LABIOS_TS_SRC  ${COMMON_SRC}
+set(LABIOS_TS_SRC
         src/task_scheduler/main.cpp
         src/task_scheduler/task_scheduler.cpp
         src/task_scheduler/task_scheduler.h)
-set(LABIOS_WM_SRC  ${COMMON_SRC}
+set(LABIOS_WM_SRC
         src/worker_manager/main.cpp
         src/worker_manager/worker_manager_service.cpp)
-set(LABIOS_W_PROG_REPO
+set(LABIOS_WS_SRC
         src/worker/api/posix_client.cpp
-        src/worker/program_repo/statistics.cpp)
-set(LABIOS_WS_SRC  ${COMMON_SRC} ${LABIOS_W_PROG_REPO}
+        src/worker/program_repo/statistics.cpp
         src/worker/main.cpp
         src/worker/worker.cpp)
 
@@ -82,55 +81,41 @@ if(DEFINED ROCKS)
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 
-
-add_executable(labios_lib ${LABIOS_LIB_SRC})
+add_library(labios_common SHARED ${COMMON_SRC})
+add_library(${PROJECT_NAME} SHARED ${LABIOS_LIB_SRC})
 add_executable(labios_client ${LABIOS_CLIENT_SRC})
 add_executable(labios_server ${LABIOS_SERVER_SRC})
 add_executable(labios_task_scheduler ${LABIOS_TS_SRC})
 add_executable(labios_worker_manager ${LABIOS_WM_SRC})
 add_executable(labios_worker ${LABIOS_WS_SRC})
 
-if(DEFINED MPI)
-    target_link_libraries(labios_lib ${MPI_LIBRARIES})
-    target_link_libraries(labios_client ${MPI_LIBRARIES})
-    target_link_libraries(labios_server ${MPI_LIBRARIES})
-    target_link_libraries(labios_task_scheduler ${MPI_LIBRARIES})
-    target_link_libraries(labios_worker_manager ${MPI_LIBRARIES})
-    target_link_libraries(labios_worker ${MPI_LIBRARIES})
-endif()
-if(DEFINED ROCKS)
-    target_link_libraries(labios_lib -lrocksdb)
-    target_link_libraries(labios_client -lrocksdb)
-    target_link_libraries(labios_server -lrocksdb)
-    target_link_libraries(labios_task_scheduler -lrocksdb)
-    target_link_libraries(labios_worker_manager -lrocksdb)
-    target_link_libraries(labios_worker -lrocksdb)
-endif()
-if(DEFINED MEMCACHED)
-    target_link_libraries(labios_lib -lmemcached)
-    target_link_libraries(labios_client -lmemcached)
-    target_link_libraries(labios_server -lmemcached)
-    target_link_libraries(labios_task_scheduler -lmemcached)
-    target_link_libraries(labios_worker_manager -lmemcached)
-    target_link_libraries(labios_worker -lmemcached)
-endif()
-if(DEFINED NATS)
-    target_link_libraries(labios_lib -lnats)
-    target_link_libraries(labios_client -lnats)
-    target_link_libraries(labios_server -lnats)
-    target_link_libraries(labios_task_scheduler -lnats)
-    target_link_libraries(labios_worker_manager -lnats)
-    target_link_libraries(labios_worker -lnats)
-endif()
+function(labios_set_libs target)
+    if(DEFINED MPI)
+        target_link_libraries(${target} ${MPI_LIBRARIES})
+    endif()
+    if(DEFINED ROCKS)
+        target_link_libraries(${target} -lrocksdb)
+    endif()
+    if(DEFINED MEMCACHED)
+        target_link_libraries(${target} -lmemcached)
+    endif()
+    if(DEFINED NATS)
+        target_link_libraries(${target} -lnats)
+    endif()
+    target_link_libraries(${target} -pthread cityhash)
+    if(NOT ${target} STREQUAL "labios_common")
+        message(${target})
+        add_dependencies(${target} labios_common)
+        target_link_libraries(${target} labios_common)
+    endif()
+endfunction()
 
-target_link_libraries(labios_lib -pthread cityhash)
-target_link_libraries(labios_client -pthread cityhash)
-target_link_libraries(labios_server -pthread cityhash)
-target_link_libraries(labios_task_scheduler -pthread cityhash)
-target_link_libraries(labios_worker_manager -pthread cityhash)
-target_link_libraries(labios_worker -pthread cityhash)
-
-add_library(${PROJECT_NAME} SHARED ${LABIOS_LIB_SRC})
+labios_set_libs(labios_common)
+labios_set_libs(labios_client)
+labios_set_libs(labios_server)
+labios_set_libs(labios_task_scheduler)
+labios_set_libs(labios_worker_manager)
+labios_set_libs(labios_worker)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION ${PROJECT_VERSION}
@@ -144,7 +129,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE .)
 target_link_libraries(labios ${CMAKE_CXX_LINK_FLAGS})
 
 install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(TARGETS labios_lib DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(TARGETS labios_client DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS labios_server DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS labios_task_scheduler DESTINATION ${CMAKE_INSTALL_BINDIR})
