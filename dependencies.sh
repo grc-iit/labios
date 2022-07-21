@@ -80,4 +80,5 @@ module load protobuf-c-1.3.2-gcc-9.3.0-fmmtrx4
 module load nats-c-3.3.0-gcc-9.3.0-myawpzv
 module load cereal-1.3.0-gcc-9.3.0-ww6zqh4
 module load cityhash-2013-07-31-gcc-9.3.0-dbbe6o7
-module load yaml-cpp-0.7.0-gcc-9.3.0-mxs6yil
+#module load yaml-cpp-0.7.0-gcc-9.3.0-mxs6yil
+module load yaml-cpp-0.6.3-gcc-9.3.0-kbtrofj

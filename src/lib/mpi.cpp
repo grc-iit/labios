@@ -26,12 +26,12 @@
 #include <labios/common/utilities.h>
 
 int labios::MPI_Init(int *argc, char ***argv) {
-  PMPI_Init(argc,argv);
-  parse_opts(*argc,*argv);
-  labios_system::getInstance(service::LIB);
-  return 0;
+    PMPI_Init(argc,argv);
+    ConfigManager::get_instance()->LoadConfig((*argv)[1]);
+    labios_system::getInstance(service::LIB);
+    return 0;
 }
 
 void labios::MPI_Finalize() {
-  PMPI_Finalize();
+    PMPI_Finalize();
 }

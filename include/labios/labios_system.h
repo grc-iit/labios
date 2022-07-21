@@ -94,8 +94,7 @@ public:
         }
         return client_queue;
     }
-    inline std::shared_ptr<distributed_queue>get_worker_queue
-            (const int &worker_index){
+    inline std::shared_ptr<distributed_queue> get_worker_queue(const int &worker_index){
         if(worker_queues[worker_index] == nullptr)
             worker_queues[worker_index]=std::make_shared<NatsImpl>(
                     service_i,
