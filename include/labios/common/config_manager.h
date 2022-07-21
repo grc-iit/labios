@@ -30,12 +30,14 @@
 ******************************************************************************/
 #include <memory>
 #include <thread>
+#include <yaml-cpp/yaml.h>
 
 /******************************************************************************
 *Class
 ******************************************************************************/
 class ConfigManager {
 private:
+    YAML::Node config_;
     static std::shared_ptr<ConfigManager> instance;
 /******************************************************************************
 *Constructor
@@ -62,6 +64,10 @@ public:
     static std::shared_ptr<ConfigManager> get_instance(){
         return instance== nullptr ? instance=std::shared_ptr<ConfigManager>
                 (new ConfigManager()) : instance;
+    }
+    void LoadConfig(char *path) {
+        config_ = YAML::LoadFile(path);
+        WORKER_PATH = config_['WORKER_PATH'].as<std::string>();
     }
 /******************************************************************************
 *Destructor

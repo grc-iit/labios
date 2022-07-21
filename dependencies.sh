@@ -73,10 +73,11 @@ make install
 spack install cereal
 spack load cereal
 
-spack load libmemcached nats-c
+spack load libmemcached nats-c yaml-cpp
 module load libmemcached-1.0.18-gcc-9.3.0-ugz2lwc
 module load mpich-3.3.2-gcc-9.3.0-mrb5naa
 module load protobuf-c-1.3.2-gcc-9.3.0-fmmtrx4
 module load nats-c-3.3.0-gcc-9.3.0-myawpzv
 module load cereal-1.3.0-gcc-9.3.0-ww6zqh4
 module load cityhash-2013-07-31-gcc-9.3.0-dbbe6o7
+module load yaml-cpp-0.7.0-gcc-9.3.0-mxs6yil
