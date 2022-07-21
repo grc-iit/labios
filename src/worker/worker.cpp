@@ -165,13 +165,14 @@ int worker::update_capacity() {
 }
 
 int worker::setup_working_dir() {
-    std::string cmd="mkdir -p "+WORKER_PATH+"/"+std::to_string(worker_index);
+    auto config_manager = ConfigManager::get_instance();
+    std::string cmd="mkdir -p "+ config_manager->WORKER_PATH+"/"+std::to_string(worker_index);
     std::system(cmd.c_str());
 
-    cmd="rm -rf "+WORKER_PATH+"/"+std::to_string(worker_index)+"/*";
+    cmd="rm -rf "+config_manager->WORKER_PATH+"/"+std::to_string(worker_index)+"/*";
     std::system(cmd.c_str());
     struct stat info;
-    std::string path=WORKER_PATH+"/"+std::to_string(worker_index);
+    std::string path=config_manager->WORKER_PATH+"/"+std::to_string(worker_index);
     if( stat( path.c_str() , &info ) != 0 ){
         std::cerr << "cannot access "<<path.c_str() <<"\n";
         return WORKER__SETTING_DIR_FAILED;
@@ -183,7 +184,8 @@ int64_t worker::get_total_capacity() {
 }
 
 int64_t worker::get_current_capacity() {
-    std::string cmd = "du -s " + WORKER_PATH
+    auto config_manager = ConfigManager::get_instance();
+    std::string cmd = "du -s " + config_manager->WORKER_PATH
                       +"/" +
                       std::to_string(worker_index)
                       +"/"+" | awk {'print$1'}";

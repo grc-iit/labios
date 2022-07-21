@@ -40,7 +40,7 @@ void labios_system::init(service service) {
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_server_ = std::make_shared<MemcacheDImpl>
                 (service,
-                 config_manager::get_instance()->MEMCACHED_URL_SERVER,
+                 ConfigManager::get_instance()->MEMCACHED_URL_SERVER,
                  0);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_server_ = std::make_shared<RocksDBImpl>(service,kDBPath_server);
@@ -97,7 +97,7 @@ void labios_system::init(service service) {
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_client_= std::make_shared<MemcacheDImpl>
                 (service,
-                 config_manager::get_instance()->MEMCACHED_URL_CLIENT,
+                 ConfigManager::get_instance()->MEMCACHED_URL_CLIENT,
                  application_id);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_client_=  std::make_shared<RocksDBImpl>(service,kDBPath_client);

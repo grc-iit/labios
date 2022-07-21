@@ -34,13 +34,13 @@
 /******************************************************************************
 *Class
 ******************************************************************************/
-class config_manager {
+class ConfigManager {
 private:
-    static std::shared_ptr<config_manager> instance;
+    static std::shared_ptr<ConfigManager> instance;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    config_manager():
+    ConfigManager():
             NATS_URL_CLIENT("nats://localhost:4222/"),
             NATS_URL_SERVER("nats://localhost:4223/"),
             MEMCACHED_URL_CLIENT("--SERVER=localhost:11211 --SERVER=localhost:11212"),
@@ -56,15 +56,17 @@ public:
     std::string MEMCACHED_URL_CLIENT;
     std::string MEMCACHED_URL_SERVER;
     std::string ASSIGNMENT_POLICY;
+    std::string WORKER_PATH;
+    std::string PFS_PATH;
     int TS_NUM_WORKER_THREADS;
-    static std::shared_ptr<config_manager> get_instance(){
-        return instance== nullptr ? instance=std::shared_ptr<config_manager>
-                (new config_manager()) : instance;
+    static std::shared_ptr<ConfigManager> get_instance(){
+        return instance== nullptr ? instance=std::shared_ptr<ConfigManager>
+                (new ConfigManager()) : instance;
     }
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~config_manager(){}
+    virtual ~ConfigManager(){}
 };
 
 

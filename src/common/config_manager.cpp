@@ -24,4 +24,4 @@
 //
 
 #include <labios/common/config_manager.h>
-std::shared_ptr<config_manager> config_manager::instance = nullptr;
+std::shared_ptr<ConfigManager> ConfigManager::instance = nullptr;

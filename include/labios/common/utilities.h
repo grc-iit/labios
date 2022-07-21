@@ -49,7 +49,7 @@ static int parse_opts(int argc, char *argv[]){
         strcpy(argv_cp[i],argv[i]);
     }
 
-    auto conf=config_manager::get_instance();
+    auto conf=ConfigManager::get_instance();
     int flags, opt;
     int nsecs, tfnd;
 
