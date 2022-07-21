@@ -34,6 +34,7 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/common.hpp>
 #include <utility>
+#include <vector>
 /******************************************************************************
 *message_key structure
 ******************************************************************************/
