@@ -6,11 +6,9 @@ and is intended to grow in the intersection of HPC and BigData.
 
 ## Installation
 
-To install Labios, do the following
+We use spack for installing labios
 ```bash
-mkdir build
-cd build
-cmake ../ -DCMAKE_
+spack install labios
 ```
 
 ## Deployment
