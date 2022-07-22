@@ -31,6 +31,9 @@
 #include <memory>
 #include <thread>
 #include <yaml-cpp/yaml.h>
+#include <string>
+#include <iostream>
+#include <labios/common/path_parser.h>
 
 /******************************************************************************
 *Class
@@ -67,15 +70,14 @@ public:
     }
     void LoadConfig(char *path) {
         config_ = YAML::LoadFile(path);
-        WORKER_PATH = config_['WORKER_PATH'].as<std::string>();
-        NATS_URL_CLIENT = config_['NATS_URL_CLIENT'].as<std::string>();
-        NATS_URL_SERVER = config_['NATS_URL_SERVER'].as<std::string>();
-        MEMCACHED_URL_CLIENT = config_['MEMCACHED_URL_CLIENT'].as<std::string>();
-        MEMCACHED_URL_SERVER = config_['MEMCACHED_URL_SERVER'].as<std::string>();
-        ASSIGNMENT_POLICY = config_['ASSIGNMENT_POLICY'].as<std::string>();
-        WORKER_PATH = config_['WORKER_PATH'].as<std::string>();
-        PFS_PATH = config_['PFS_PATH'].as<std::string>();
-        TS_NUM_WORKER_THREADS = config_['TS_NUM_WORKER_THREADS'].as<int>();
+        NATS_URL_CLIENT = config_["NATS_URL_CLIENT"].as<std::string>();
+        NATS_URL_SERVER = config_["NATS_URL_SERVER"].as<std::string>();
+        MEMCACHED_URL_CLIENT = config_["MEMCACHED_URL_CLIENT"].as<std::string>();
+        MEMCACHED_URL_SERVER = config_["MEMCACHED_URL_SERVER"].as<std::string>();
+        ASSIGNMENT_POLICY = config_["ASSIGNMENT_POLICY"].as<std::string>();
+        WORKER_PATH = scs::path_parser(config_["WORKER_PATH"].as<std::string>());
+        PFS_PATH = scs::path_parser(config_["PFS_PATH"].as<std::string>());
+        TS_NUM_WORKER_THREADS = config_["TS_NUM_WORKER_THREADS"].as<int>();
     }
 /******************************************************************************
 *Destructor

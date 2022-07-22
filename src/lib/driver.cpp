@@ -1364,7 +1364,7 @@ int main(int argc, char** argv){
     MPI_Barrier(MPI_COMM_WORLD);
     int return_val=0;
     if(argc > 1){
-        testCase= static_cast<test_case>(atoi(argv[1]));
+        testCase= static_cast<test_case>(atoi(argv[2]));
     }
     switch(testCase){
 		case SIMPLE_WRITE:{
