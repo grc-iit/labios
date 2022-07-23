@@ -65,7 +65,6 @@ set(LABIOS_WS_SRC
         src/worker/program_repo/statistics.cpp
         src/worker/main.cpp
         src/worker/worker.cpp)
-set(LABIOS_DRIVER_SRC benchmark/driver.cpp)
 
 if(DEFINED MPI)
     find_package(MPI REQUIRED)
@@ -88,7 +87,6 @@ add_executable(labios_server ${LABIOS_SERVER_SRC})
 add_executable(labios_task_scheduler ${LABIOS_TS_SRC})
 add_executable(labios_worker_manager ${LABIOS_WM_SRC})
 add_executable(labios_worker ${LABIOS_WS_SRC})
-add_executable(labios_driver ${LABIOS_DRIVER_SRC})
 
 function(labios_set_libs target)
     target_link_libraries(${target} yaml-cpp)
@@ -118,9 +116,7 @@ labios_set_libs(labios_server)
 labios_set_libs(labios_task_scheduler)
 labios_set_libs(labios_worker_manager)
 labios_set_libs(labios_worker)
-labios_set_libs(labios_driver)
-target_link_libraries(labios_driver ${PROJECT_NAME})
-add_dependencies(labios_driver ${PROJECT_NAME})
+labios_set_libs(${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION ${PROJECT_VERSION}
@@ -141,7 +137,8 @@ install(TARGETS labios_server DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS labios_task_scheduler DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS labios_worker_manager DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS labios_worker DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(TARGETS labios_driver DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+add_subdirectory(benchmark)
