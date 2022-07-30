@@ -26,6 +26,8 @@
 #ifndef LABIOS_MAIN_ENUMERATION_H
 #define LABIOS_MAIN_ENUMERATION_H
 
+#include <cstdint>
+
 enum request_status{
     COMPLETED = 0,
     PENDING =1

@@ -40,7 +40,7 @@ void labios_system::init(service service) {
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_server_ = std::make_shared<MemcacheDImpl>
                 (service,
-                 config_manager::get_instance()->MEMCACHED_URL_SERVER,
+                 ConfigManager::get_instance()->MEMCACHED_URL_SERVER,
                  0);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_server_ = std::make_shared<RocksDBImpl>(service,kDBPath_server);
@@ -97,7 +97,7 @@ void labios_system::init(service service) {
     if(map_impl_type_t==map_impl_type::MEMCACHE_D){
         map_client_= std::make_shared<MemcacheDImpl>
                 (service,
-                 config_manager::get_instance()->MEMCACHED_URL_CLIENT,
+                 ConfigManager::get_instance()->MEMCACHED_URL_CLIENT,
                  application_id);
     }else if(map_impl_type_t==map_impl_type::ROCKS_DB){
         map_client_=  std::make_shared<RocksDBImpl>(service,kDBPath_client);
@@ -108,7 +108,7 @@ int labios_system::build_message_key(MPI_Datatype &message) {
     MPI_Datatype  type[4] = {MPI_INT, MPI_INT, MPI_INT,MPI_CHAR};
     int blocklen[4] = {1, 1,1, KEY_SIZE};
     MPI_Aint disp[4]={0, sizeof(MPI_INT), 2*sizeof(MPI_INT), 3*sizeof(MPI_INT)};
-    MPI_Type_struct(8, blocklen, disp, type, &message);
+    MPI_Type_create_struct(8, blocklen, disp, type, &message);
     MPI_Type_commit(&message);
     return 0;
 }
@@ -117,7 +117,7 @@ int labios_system::build_message_file(MPI_Datatype &message_file) {
     MPI_Datatype  type[3] = {MPI_CHAR, MPI_INT, MPI_INT};
     int blocklen[3] = {KEY_SIZE,1, 1, };
     MPI_Aint disp[3]={0, KEY_SIZE*sizeof(MPI_CHAR), KEY_SIZE*sizeof(MPI_CHAR)+sizeof(MPI_INT)};
-    MPI_Type_struct(6, blocklen, disp, type, &message_file);
+    MPI_Type_create_struct(6, blocklen, disp, type, &message_file);
     MPI_Type_commit(&message_file);
     return 0;
 }
@@ -126,7 +126,7 @@ int labios_system::build_message_chunk(MPI_Datatype &message_chunk) {
     MPI_Datatype  type[5] = {MPI_INT,MPI_INT,MPI_CHAR,MPI_INT,MPI_INT};
     int blocklen[5] = {1, 1,FILE_SIZE,1,1 };
     MPI_Aint disp[5]={0, sizeof(MPI_INT),2*sizeof(MPI_INT),2*sizeof(MPI_INT)+FILE_SIZE*sizeof(MPI_CHAR),3*sizeof(MPI_INT)+FILE_SIZE*sizeof(MPI_CHAR)};
-    MPI_Type_struct(10, blocklen, disp, type, &message_chunk);
+    MPI_Type_create_struct(10, blocklen, disp, type, &message_chunk);
     MPI_Type_commit(&message_chunk);
     return 0;
 }

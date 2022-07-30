@@ -85,21 +85,20 @@ public:
             if(service_i==LIB)
             client_queue=std::make_shared<NatsImpl>(
                     service_i,
-                    config_manager::get_instance()->NATS_URL_CLIENT,
+                    ConfigManager::get_instance()->NATS_URL_CLIENT,
                     CLIENT_TASK_SUBJECT,std::to_string(service_i),false);
             else client_queue=std::make_shared<NatsImpl>(
                         service_i,
-                        config_manager::get_instance()->NATS_URL_CLIENT,
+                        ConfigManager::get_instance()->NATS_URL_CLIENT,
                         CLIENT_TASK_SUBJECT,std::to_string(service_i),true);
         }
         return client_queue;
     }
-    inline std::shared_ptr<distributed_queue>get_worker_queue
-            (const int &worker_index){
+    inline std::shared_ptr<distributed_queue> get_worker_queue(const int &worker_index){
         if(worker_queues[worker_index] == nullptr)
             worker_queues[worker_index]=std::make_shared<NatsImpl>(
                     service_i,
-                    config_manager::get_instance()->NATS_URL_SERVER,
+                    ConfigManager::get_instance()->NATS_URL_SERVER,
                     std::to_string(worker_index-1),
                     std::to_string(service_i) +
                     "_"+

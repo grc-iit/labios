@@ -36,8 +36,9 @@
 ******************************************************************************/
 int main(int argc, char** argv) {
     MPI_Init(&argc,&argv);
-    parse_opts(argc,argv);
-    int worker_index=atoi(argv[1]);
+    ConfigManager::get_instance()->LoadConfig(argv[1]);
+    int worker_index;
+    MPI_Comm_rank(MPI_COMM_WORLD, &worker_index);
     std::shared_ptr<worker> worker_service_i =
             worker::getInstance(service::WORKER, worker_index);
     worker_service_i->run();

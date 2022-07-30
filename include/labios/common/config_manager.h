@@ -30,17 +30,22 @@
 ******************************************************************************/
 #include <memory>
 #include <thread>
+#include <yaml-cpp/yaml.h>
+#include <string>
+#include <iostream>
+#include <labios/common/path_parser.h>
 
 /******************************************************************************
 *Class
 ******************************************************************************/
-class config_manager {
+class ConfigManager {
 private:
-    static std::shared_ptr<config_manager> instance;
+    YAML::Node config_;
+    static std::shared_ptr<ConfigManager> instance;
 /******************************************************************************
 *Constructor
 ******************************************************************************/
-    config_manager():
+    ConfigManager():
             NATS_URL_CLIENT("nats://localhost:4222/"),
             NATS_URL_SERVER("nats://localhost:4223/"),
             MEMCACHED_URL_CLIENT("--SERVER=localhost:11211 --SERVER=localhost:11212"),
@@ -56,15 +61,28 @@ public:
     std::string MEMCACHED_URL_CLIENT;
     std::string MEMCACHED_URL_SERVER;
     std::string ASSIGNMENT_POLICY;
+    std::string WORKER_PATH;
+    std::string PFS_PATH;
     int TS_NUM_WORKER_THREADS;
-    static std::shared_ptr<config_manager> get_instance(){
-        return instance== nullptr ? instance=std::shared_ptr<config_manager>
-                (new config_manager()) : instance;
+    static std::shared_ptr<ConfigManager> get_instance(){
+        return instance== nullptr ? instance=std::shared_ptr<ConfigManager>
+                (new ConfigManager()) : instance;
+    }
+    void LoadConfig(char *path) {
+        config_ = YAML::LoadFile(path);
+        NATS_URL_CLIENT = config_["NATS_URL_CLIENT"].as<std::string>();
+        NATS_URL_SERVER = config_["NATS_URL_SERVER"].as<std::string>();
+        MEMCACHED_URL_CLIENT = config_["MEMCACHED_URL_CLIENT"].as<std::string>();
+        MEMCACHED_URL_SERVER = config_["MEMCACHED_URL_SERVER"].as<std::string>();
+        ASSIGNMENT_POLICY = config_["ASSIGNMENT_POLICY"].as<std::string>();
+        WORKER_PATH = scs::path_parser(config_["WORKER_PATH"].as<std::string>());
+        PFS_PATH = scs::path_parser(config_["PFS_PATH"].as<std::string>());
+        TS_NUM_WORKER_THREADS = config_["TS_NUM_WORKER_THREADS"].as<int>();
     }
 /******************************************************************************
 *Destructor
 ******************************************************************************/
-    virtual ~config_manager(){}
+    virtual ~ConfigManager(){}
 };
 
 

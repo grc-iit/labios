@@ -35,7 +35,7 @@
 ******************************************************************************/
 int main(int argc, char** argv) {
     MPI_Init(&argc,&argv);
-    parse_opts(argc,argv);
+    ConfigManager::get_instance()->LoadConfig(argv[1]);
     auto scheduler_service = task_scheduler::getInstance(TASK_SCHEDULER);
     scheduler_service->run();
     MPI_Finalize();

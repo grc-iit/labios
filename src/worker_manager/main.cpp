@@ -25,8 +25,8 @@
 #include <labios/common/utilities.h>
 
 int main(int argc, char** argv) {
-    parse_opts(argc,argv);
     MPI_Init(&argc,&argv);
+    ConfigManager::get_instance()->LoadConfig(argv[1]);
     std::shared_ptr<worker_manager_service>
             worker_manager_service_i=worker_manager_service::getInstance
                     (service::WORKER_MANAGER);
