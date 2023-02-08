@@ -20,9 +20,9 @@ jarvis labios start
 jarvis labios stop
 ```
 
-#TODO LIST
+# TODO LIST
 
-##Future
+## Future
 * Task dependecies (don't care)
 * Metadata persistent store (flush at the end)
 * Automated server bootstrapping
@@ -33,7 +33,7 @@ jarvis labios stop
 *** Invalidation lists + timer expiration to cleanup
 *** Intermediate state of data in MDM
 
-##Notes
+## Notes
 * Timeout task scheduling. line#66
 * check the usleep in task scheduler-> infinite looping
 * Aggregating logs
