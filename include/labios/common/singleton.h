@@ -9,20 +9,22 @@
 
 namespace scs {
 
-template<typename T>
-class Singleton {
+template <typename T> class Singleton {
 private:
-    static T* obj_;
+  static T *obj_;
+
 public:
-    Singleton() = default;
-    static T* GetInstance() {
-        if(!obj_) { obj_ = new T(); }
-        return obj_;
+  Singleton() = default;
+  static T *GetInstance() {
+    if (!obj_) {
+      obj_ = new T();
     }
+    return obj_;
+  }
 };
 
-#define SINGLETON_T(T) T*
+#define SINGLETON_T(T) T *
 
-}
+} // namespace scs
 
-#endif //SCS_SINGLETON_H
+#endif // SCS_SINGLETON_H

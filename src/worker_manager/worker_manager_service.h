@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -26,25 +26,26 @@
 #ifndef LABIOS_MAIN_WORKER_MANAGER_SERVICE_H
 #define LABIOS_MAIN_WORKER_MANAGER_SERVICE_H
 
-
-#include <memory>
 #include <labios/common/enumerations.h>
+#include <memory>
 
 class worker_manager_service {
-    static std::shared_ptr<worker_manager_service> instance;
-    service service_i;
-    worker_manager_service(service service):service_i(service),kill(false){
-    }
+  static std::shared_ptr<worker_manager_service> instance;
+  service service_i;
+  worker_manager_service(service service) : service_i(service), kill(false) {}
 
-    int sort_worker_score();
+  int sort_worker_score();
+
 public:
-    int kill;
-    inline static std::shared_ptr<worker_manager_service> getInstance(service service){
-        return instance== nullptr ? instance=std::shared_ptr<worker_manager_service>(new worker_manager_service(service))
-                                  : instance;
-    }
-    void run();
+  int kill;
+  inline static std::shared_ptr<worker_manager_service>
+  getInstance(service service) {
+    return instance == nullptr
+               ? instance = std::shared_ptr<worker_manager_service>(
+                     new worker_manager_service(service))
+               : instance;
+  }
+  void run();
 };
 
-
-#endif //LABIOS_MAIN_WORKER_MANAGER_SERVICE_H
+#endif // LABIOS_MAIN_WORKER_MANAGER_SERVICE_H

@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -23,17 +23,15 @@
 // Created by hdevarajan on 5/14/18.
 //
 
-#include <zconf.h>
 #include "system_manager_service.h"
 #include <labios/common/constants.h>
+#include <zconf.h>
 
-int system_manager_service::check_applications_score() {
-    return 0;
-}
+int system_manager_service::check_applications_score() { return 0; }
 
 void system_manager_service::run() {
-    while(!kill) {
-        sleep(SYSTEM_MANAGER_INTERVAL);
-        check_applications_score();
-    }
+  while (!kill) {
+    sleep(SYSTEM_MANAGER_INTERVAL);
+    check_applications_score();
+  }
 }

@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -27,4 +27,4 @@
 #define LABIOS_MAIN_LABIOS_H
 
 #include <labios/drivers/posix.h>
-#endif //LABIOS_MAIN_LABIOS_H
+#endif // LABIOS_MAIN_LABIOS_H

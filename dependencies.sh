@@ -2,19 +2,19 @@
 #######INSTALL JARVIS-CD
 
 #######INSTALL SCSPKG
-cd ${HOME}
+cd "${HOME}" || exit
 git clone https://github.com/scs-lab/scspkg.git
-cd scspkg
+cd scspkg || exit
 bash install.sh
 source ~/.bashrc
 
 ########INSTALL libmemcached
 scspkg create libmemcached
-cd `scspkg pkg-src libmemcached`
+cd $(scspkg pkg-src libmemcached) || exit
 wget https://launchpad.net/libmemcached/1.0/1.0.18/+download/libmemcached-1.0.18.tar.gz
 tar -xzf libmemcached-1.0.18.tar.gz
-cd libmemcached-1.0.18
-./configure --prefix=`scspkg pkg-root libmemcached`
+cd libmemcached-1.0.18 || exit
+./configure --prefix=$(scspkg pkg-root libmemcached)
 
 ###There's an error which prevents it from compiling, which I guess they didn't patch.
 cat << EOF > memflush.patch
@@ -58,14 +58,14 @@ spack load protobuf-c
 
 ###########INSTALL NATS
 scspkg create cnats
-cd `scspkg pkg-src cnats`
+cd $(scspkg pkg-src cnats) || exit
 wget https://github.com/nats-io/nats.c/archive/refs/tags/v3.3.0.tar.gz
 tar -xzf v3.3.0.tar.gz
-cd nats.c-3.3.0
+cd nats.c-3.3.0 || exit
 ./install_deps.sh
 mkdir build
-cd build
-cmake ../ -DCMAKE_INSTALL_PREFIX=`scspkg pkg-root cnats`
+cd build || exit
+cmake ../ -DCMAKE_INSTALL_PREFIX=$(scspkg pkg-root cnats)
 make -j8
 make install
 

@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,58 +20,57 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/9/18.
-* Updated by akougkas on 6/26/2018
-******************************************************************************/
+ * Created by hariharan on 5/9/18.
+ * Updated by akougkas on 6/26/2018
+ ******************************************************************************/
 #ifndef LABIOS_MAIN_TASK_SCHEDULER_SERVICE_H
 #define LABIOS_MAIN_TASK_SCHEDULER_SERVICE_H
 /******************************************************************************
-*include files
-******************************************************************************/
-#include <memory>
-#include <labios/common/enumerations.h>
-#include <zconf.h>
-#include <labios/common/external_clients/nats_impl.h>
-#include <labios/common/timer.h>
-#include <labios/common/threadPool.h>
+ *include files
+ ******************************************************************************/
 #include <labios/common/config_manager.h>
+#include <labios/common/enumerations.h>
+#include <labios/common/external_clients/nats_impl.h>
+#include <labios/common/threadPool.h>
+#include <labios/common/timer.h>
+#include <memory>
+#include <zconf.h>
 /******************************************************************************
-*Class
-******************************************************************************/
+ *Class
+ ******************************************************************************/
 class task_scheduler {
 private:
-/******************************************************************************
-*Variables and members
-******************************************************************************/
-    static std::shared_ptr<task_scheduler> instance;
-    static service service_i;
-    threadPool scheduling_threads;
-/******************************************************************************
-*Constructor
-******************************************************************************/
-    explicit task_scheduler(service service_i)
-            :kill(false),
-             scheduling_threads(ConfigManager::get_instance()->TS_NUM_WORKER_THREADS){
-        scheduling_threads.init();
-    }
-/******************************************************************************
-*Interface
-******************************************************************************/
-    static void schedule_tasks(std::vector<task*> &tasks);
+  /******************************************************************************
+   *Variables and members
+   ******************************************************************************/
+  static std::shared_ptr<task_scheduler> instance;
+  static service service_i;
+  threadPool scheduling_threads;
+  /******************************************************************************
+   *Constructor
+   ******************************************************************************/
+  explicit task_scheduler(service service_i)
+      : kill(false), scheduling_threads(
+                         ConfigManager::get_instance()->TS_NUM_WORKER_THREADS) {
+    scheduling_threads.init();
+  }
+  /******************************************************************************
+   *Interface
+   ******************************************************************************/
+  static void schedule_tasks(std::vector<task *> &tasks);
+
 public:
-    int kill;
-    inline static std::shared_ptr<task_scheduler> getInstance(service service){
-        return instance== nullptr ? instance = std::shared_ptr<task_scheduler>
-                        (new task_scheduler(service)) : instance;
-    }
-    int run();
-/******************************************************************************
-*Destructor
-******************************************************************************/
-    virtual ~task_scheduler() {
-        scheduling_threads.shutdown();
-    }
+  int kill;
+  inline static std::shared_ptr<task_scheduler> getInstance(service service) {
+    return instance == nullptr ? instance = std::shared_ptr<task_scheduler>(
+                                     new task_scheduler(service))
+                               : instance;
+  }
+  int run();
+  /******************************************************************************
+   *Destructor
+   ******************************************************************************/
+  virtual ~task_scheduler() { scheduling_threads.shutdown(); }
 };
 
-
-#endif //LABIOS_MAIN_TASK_SCHEDULER_SERVICE_H
+#endif // LABIOS_MAIN_TASK_SCHEDULER_SERVICE_H

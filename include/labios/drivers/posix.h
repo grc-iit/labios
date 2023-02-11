@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,39 +20,38 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 2/16/18.
-* Updated by akougkas on 6/26/2018
-******************************************************************************/
+ * Created by hariharan on 2/16/18.
+ * Updated by akougkas on 6/26/2018
+ ******************************************************************************/
 #ifndef LABIOS_MAIN_POSIX_H
 #define LABIOS_MAIN_POSIX_H
 /******************************************************************************
-*include files
-******************************************************************************/
+ *include files
+ ******************************************************************************/
 #include <cstdio>
 #include <cstring>
-#include <labios/drivers/mpi.h>
-#include <labios/common/metadata_manager/metadata_manager.h>
 #include <labios/common/data_manager/data_manager.h>
+#include <labios/common/metadata_manager/metadata_manager.h>
+#include <labios/drivers/mpi.h>
 #include <labios/labios_system.h>
 /******************************************************************************
-*Labios Namespace
-******************************************************************************/
-namespace labios{
+ *Labios Namespace
+ ******************************************************************************/
+namespace labios {
 /******************************************************************************
-*Interface
-******************************************************************************/
-    FILE *fopen(const char *filename, const char *mode);
-    int fclose(FILE *stream);
-    int fseek(FILE *stream, long int offset, int origin);
-    size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
-    std::vector<read_task> fread_async(size_t size, size_t count, FILE *stream);
-    std::size_t fread_wait(void *ptr, std::vector<read_task> &tasks,
-            std::string filename);
-    std::vector<write_task*> fwrite_async(void *ptr, size_t size, size_t count,
-                                          FILE *stream);
-    size_t fwrite_wait(std::vector<write_task*> tasks);
-    size_t fwrite(void *ptr, size_t size, size_t count, FILE *stream);
-}
+ *Interface
+ ******************************************************************************/
+FILE *fopen(const char *filename, const char *mode);
+int fclose(FILE *stream);
+int fseek(FILE *stream, long int offset, int origin);
+size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
+std::vector<read_task> fread_async(size_t size, size_t count, FILE *stream);
+std::size_t fread_wait(void *ptr, std::vector<read_task> &tasks,
+                       std::string filename);
+std::vector<write_task *> fwrite_async(void *ptr, size_t size, size_t count,
+                                       FILE *stream);
+size_t fwrite_wait(std::vector<write_task *> tasks);
+size_t fwrite(void *ptr, size_t size, size_t count, FILE *stream);
+} // namespace labios
 
-
-#endif //LABIOS_MAIN_POSIX_H
+#endif // LABIOS_MAIN_POSIX_H

@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,43 +20,40 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/18/18.
-* Updated by akougkas on 6/30/2018
-******************************************************************************/
+ * Created by hariharan on 5/18/18.
+ * Updated by akougkas on 6/30/2018
+ ******************************************************************************/
 #ifndef LABIOS_MAIN_DPSOLVER_H
 #define LABIOS_MAIN_DPSOLVER_H
 /******************************************************************************
-*include files
-******************************************************************************/
-#include <labios/common/solver/solver.h>
+ *include files
+ ******************************************************************************/
 #include <labios/common/data_structures.h>
+#include <labios/common/solver/solver.h>
 /******************************************************************************
-*Class
-******************************************************************************/
+ *Class
+ ******************************************************************************/
 class DPSolver : public solver {
 private:
-/******************************************************************************
-*Variables and members
-******************************************************************************/
-    int* calculate_values(solver_input input,
-                          int num_bins,
-                          const int* worker_score,
-                          const int* worker_energy);
+  /******************************************************************************
+   *Variables and members
+   ******************************************************************************/
+  int *calculate_values(solver_input input, int num_bins,
+                        const int *worker_score, const int *worker_energy);
+
 public:
-/******************************************************************************
-*Constructor
-******************************************************************************/
-    explicit DPSolver(service service)
-            :solver(service){}
-/******************************************************************************
-*Interface
-******************************************************************************/
-    solver_output solve(solver_input input) override;
-/******************************************************************************
-*Destructor
-******************************************************************************/
-    virtual ~DPSolver(){}
+  /******************************************************************************
+   *Constructor
+   ******************************************************************************/
+  explicit DPSolver(service service) : solver(service) {}
+  /******************************************************************************
+   *Interface
+   ******************************************************************************/
+  solver_output solve(solver_input input) override;
+  /******************************************************************************
+   *Destructor
+   ******************************************************************************/
+  virtual ~DPSolver() {}
 };
 
-
-#endif //LABIOS_MAIN_DPSOLVER_H
+#endif // LABIOS_MAIN_DPSOLVER_H

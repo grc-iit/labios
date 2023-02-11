@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -22,16 +22,14 @@
 //
 // Created by anthony on 4/24/18.
 //
-#include <labios/drivers/mpi.h>
 #include <labios/common/utilities.h>
+#include <labios/drivers/mpi.h>
 
 int labios::MPI_Init(int *argc, char ***argv) {
-    PMPI_Init(argc,argv);
-    ConfigManager::get_instance()->LoadConfig((*argv)[1]);
-    labios_system::getInstance(service::LIB);
-    return 0;
+  PMPI_Init(argc, argv);
+  ConfigManager::get_instance()->LoadConfig((*argv)[1]);
+  labios_system::getInstance(service::LIB);
+  return 0;
 }
 
-void labios::MPI_Finalize() {
-    PMPI_Finalize();
-}
+void labios::MPI_Finalize() { PMPI_Finalize(); }
