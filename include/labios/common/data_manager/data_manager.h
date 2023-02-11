@@ -28,9 +28,9 @@
 /******************************************************************************
  *include files
  ******************************************************************************/
-#include <cereal/types/memory.hpp>
-#include <labios/common/client_interface/distributed_hashmap.h>
 #include <labios/common/enumerations.h>
+#include <labios/common/client_interface/distributed_hashmap.h>
+#include <cereal/types/memory.hpp>
 #include <labios/labios_system.h>
 /******************************************************************************
  *Class

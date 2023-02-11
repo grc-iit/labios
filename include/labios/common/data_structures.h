@@ -28,11 +28,11 @@
 /******************************************************************************
  *include files
  ******************************************************************************/
+#include <labios/common/enumerations.h>
+#include <labios/common/constants.h>
 #include <cereal/types/common.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/string.hpp>
-#include <labios/common/constants.h>
-#include <labios/common/enumerations.h>
 #include <utility>
 #include <vector>
 /******************************************************************************

@@ -26,8 +26,10 @@
 #ifndef LABIOS_MAIN_CLIENT_H
 #define LABIOS_MAIN_CLIENT_H
 
-#include <future>
 #include <labios/common/data_structures.h>
+
+#include <future>
+#include <mpi.h>
 #include <unordered_map>
 
 class LabiosClient {

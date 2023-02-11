@@ -28,9 +28,9 @@
 /******************************************************************************
  *include files
  ******************************************************************************/
-#include <cereal/types/memory.hpp>
-#include <labios/common/constants.h>
 #include <labios/common/enumerations.h>
+#include <labios/common/constants.h>
+#include <cereal/types/memory.hpp>
 #include <labios/common/exceptions.h>
 /******************************************************************************
  *Class
