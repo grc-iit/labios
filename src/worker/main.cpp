@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,28 +20,28 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* WORKER MAIN
-* Created by hariharan on 5/10/18.
-* Updated by akougkas on 6/26/2018
-******************************************************************************/
+ * WORKER MAIN
+ * Created by hariharan on 5/10/18.
+ * Updated by akougkas on 6/26/2018
+ ******************************************************************************/
 /******************************************************************************
-*include files
-******************************************************************************/
-#include <iostream>
-#include <mpi.h>
+ *include files
+ ******************************************************************************/
 #include "worker.h"
+#include <iostream>
 #include <labios/common/utilities.h>
+#include <mpi.h>
 /******************************************************************************
-*Worker main
-******************************************************************************/
-int main(int argc, char** argv) {
-    MPI_Init(&argc,&argv);
-    ConfigManager::get_instance()->LoadConfig(argv[1]);
-    int worker_index;
-    MPI_Comm_rank(MPI_COMM_WORLD, &worker_index);
-    std::shared_ptr<worker> worker_service_i =
-            worker::getInstance(service::WORKER, worker_index);
-    worker_service_i->run();
-    MPI_Finalize();
-    return 0;
+ *Worker main
+ ******************************************************************************/
+int main(int argc, char **argv) {
+  MPI_Init(&argc, &argv);
+  ConfigManager::get_instance()->LoadConfig(argv[1]);
+  int worker_index;
+  MPI_Comm_rank(MPI_COMM_WORLD, &worker_index);
+  std::shared_ptr<worker> worker_service_i =
+      worker::getInstance(service::WORKER, worker_index);
+  worker_service_i->run();
+  MPI_Finalize();
+  return 0;
 }

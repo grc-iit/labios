@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -22,6 +22,6 @@
 #include <iostream>
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+  std::cout << "Hello, World!" << std::endl;
+  return 0;
 }

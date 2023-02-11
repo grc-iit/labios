@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,33 +20,32 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/19/18.
-* Updated by akougkas on 6/30/2018
-******************************************************************************/
+ * Created by hariharan on 5/19/18.
+ * Updated by akougkas on 6/30/2018
+ ******************************************************************************/
 #ifndef LABIOS_MAIN_RANDOM_SOLVER_H
 #define LABIOS_MAIN_RANDOM_SOLVER_H
 /******************************************************************************
-*include files
-******************************************************************************/
+ *include files
+ ******************************************************************************/
 #include <labios/common/solver/solver.h>
 /******************************************************************************
-*Class
-******************************************************************************/
-class random_solver: public solver {
+ *Class
+ ******************************************************************************/
+class random_solver : public solver {
 public:
-/******************************************************************************
-*Constructor
-******************************************************************************/
-    explicit random_solver(service service) : solver(service) {}
-/******************************************************************************
-*Interface
-******************************************************************************/
-    solver_output solve(solver_input input) override;
-/******************************************************************************
-*Destructor
-******************************************************************************/
-    virtual ~random_solver(){}
+  /******************************************************************************
+   *Constructor
+   ******************************************************************************/
+  explicit random_solver(service service) : solver(service) {}
+  /******************************************************************************
+   *Interface
+   ******************************************************************************/
+  solver_output solve(solver_input input) override;
+  /******************************************************************************
+   *Destructor
+   ******************************************************************************/
+  virtual ~random_solver() {}
 };
 
-
-#endif //LABIOS_MAIN_RANDOM_SOLVER_H
+#endif // LABIOS_MAIN_RANDOM_SOLVER_H

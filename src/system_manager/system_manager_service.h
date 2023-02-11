@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -26,24 +26,27 @@
 #ifndef LABIOS_MAIN_SYSTEM_MANAGER_SERVICE_H
 #define LABIOS_MAIN_SYSTEM_MANAGER_SERVICE_H
 
-
-#include <memory>
 #include <labios/common/enumerations.h>
+#include <memory>
 
 class system_manager_service {
-    static std::shared_ptr<system_manager_service> instance;
-    service service_i;
-    explicit system_manager_service(service service):service_i(service),kill(false){}
-    int check_applications_score();
-public:
-    int kill;
+  static std::shared_ptr<system_manager_service> instance;
+  service service_i;
+  explicit system_manager_service(service service)
+      : service_i(service), kill(false) {}
+  int check_applications_score();
 
-    inline static std::shared_ptr<system_manager_service> getInstance(service service){
-        return instance== nullptr ? instance=std::shared_ptr<system_manager_service>(new system_manager_service(service))
-                                  : instance;
-    }
-    void run();
+public:
+  int kill;
+
+  inline static std::shared_ptr<system_manager_service>
+  getInstance(service service) {
+    return instance == nullptr
+               ? instance = std::shared_ptr<system_manager_service>(
+                     new system_manager_service(service))
+               : instance;
+  }
+  void run();
 };
 
-
-#endif //LABIOS_MAIN_SYSTEM_MANAGER_SERVICE_H
+#endif // LABIOS_MAIN_SYSTEM_MANAGER_SERVICE_H

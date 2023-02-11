@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -23,36 +23,39 @@
 // Created by hdevarajan on 5/9/18.
 //
 
-#include <labios/common/timer.h>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <labios/common/timer.h>
 
-void Timer::startTime() {
-    t1 = std::chrono::high_resolution_clock::now();
-}
+void Timer::startTime() { t1 = std::chrono::high_resolution_clock::now(); }
 
 double Timer::endTimeWithPrint(std::string fnName) {
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto t =  std::chrono::duration_cast<std::chrono::nanoseconds>(
-            t2 - t1).count()/1000000000.0;
-    if( t > 0.001){
-        printf("%s : %lf\n",fnName.c_str(),t);
-    }
-    return t;
+  auto t2 = std::chrono::high_resolution_clock::now();
+  auto t =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() /
+      1000000000.0;
+  if (t > 0.001) {
+    printf("%s : %lf\n", fnName.c_str(), t);
+  }
+  return t;
 }
 
 double Timer::stopTime() {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::high_resolution_clock::now()-t1).count()/1000000000.0;
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+             std::chrono::high_resolution_clock::now() - t1)
+             .count() /
+         1000000000.0;
 }
 
 double Timer::pauseTime() {
-    elapsed_time+=std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::high_resolution_clock::now()-t1).count()/1000000000.0;
-    return elapsed_time;
+  elapsed_time += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                      std::chrono::high_resolution_clock::now() - t1)
+                      .count() /
+                  1000000000.0;
+  return elapsed_time;
 }
 
 int Timer::resumeTime() {
-    t1 = std::chrono::high_resolution_clock::now();
-    return 0;
+  t1 = std::chrono::high_resolution_clock::now();
+  return 0;
 }

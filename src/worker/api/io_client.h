@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -30,12 +30,13 @@
 
 class io_client {
 protected:
-    int worker_index;
+  int worker_index;
+
 public:
-    io_client(int worker_index):worker_index(worker_index){}
-    virtual int write(write_task task)=0;
-    virtual int read(read_task task)=0;
-    virtual int delete_file(delete_task task)=0;
-    virtual int flush_file(flush_task task)=0;
+  io_client(int worker_index) : worker_index(worker_index) {}
+  virtual int write(write_task task) = 0;
+  virtual int read(read_task task) = 0;
+  virtual int delete_file(delete_task task) = 0;
+  virtual int flush_file(flush_task task) = 0;
 };
-#endif //LABIOS_MAIN_IO_CLIENT_H
+#endif // LABIOS_MAIN_IO_CLIENT_H

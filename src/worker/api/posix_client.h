@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -26,25 +26,25 @@
 #ifndef LABIOS_MAIN_POSIXCLIENT_H
 #define LABIOS_MAIN_POSIXCLIENT_H
 
-
-#include <labios/common/data_structures.h>
 #include "io_client.h"
-#include <chrono>
 #include "labios/common/config_manager.h"
+#include <chrono>
+#include <labios/common/data_structures.h>
 
 using namespace std::chrono;
 
-class posix_client:public io_client {
-    std::string dir;
+class posix_client : public io_client {
+  std::string dir;
+
 public:
-    posix_client(int worker_index):io_client(worker_index) {
-        dir = ConfigManager::get_instance()->WORKER_PATH+"/"+std::to_string(worker_index)+"/";
-    }
-    int write(write_task task) override ;
-    int read(read_task task) override ;
-    int delete_file(delete_task task) override ;
-    int flush_file(flush_task task) override ;
+  posix_client(int worker_index) : io_client(worker_index) {
+    dir = ConfigManager::get_instance()->WORKER_PATH + "/" +
+          std::to_string(worker_index) + "/";
+  }
+  int write(write_task task) override;
+  int read(read_task task) override;
+  int delete_file(delete_task task) override;
+  int flush_file(flush_task task) override;
 };
 
-
-#endif //LABIOS_MAIN_POSIXCLIENT_H
+#endif // LABIOS_MAIN_POSIXCLIENT_H

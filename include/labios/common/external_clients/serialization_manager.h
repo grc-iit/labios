@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -26,24 +26,23 @@
 #ifndef LABIOS_MAIN_SERIALIZATION_MANAGER_H
 #define LABIOS_MAIN_SERIALIZATION_MANAGER_H
 
-#include <labios/common/data_structures.h>
 #include <cereal/archives/json.hpp>
-#include <sstream>
 #include <cereal/cereal.hpp>
+#include <labios/common/data_structures.h>
+#include <sstream>
 
 class serialization_manager {
 public:
-    //TODO: explore binary with NATS and memcached
-    std::string serialize_file_stat(file_stat stat);
+  // TODO: explore binary with NATS and memcached
+  std::string serialize_file_stat(file_stat stat);
 
-    chunk_meta deserialize_chunk(std::string chunk_str);
+  chunk_meta deserialize_chunk(std::string chunk_str);
 
-    std::string serialize_chunk(chunk_meta meta);
+  std::string serialize_chunk(chunk_meta meta);
 
-    std::string serialize_task(task *task);
+  std::string serialize_task(task *task);
 
-    task* deserialize_task(std::string string);
+  task *deserialize_task(std::string string);
 };
 
-
-#endif //LABIOS_MAIN_SERIALIZATION_MANAGER_H
+#endif // LABIOS_MAIN_SERIALIZATION_MANAGER_H

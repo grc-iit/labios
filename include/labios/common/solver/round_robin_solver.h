@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,40 +20,41 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/19/18.
-* Updated by akougkas on 6/30/2018
-******************************************************************************/
+ * Created by hariharan on 5/19/18.
+ * Updated by akougkas on 6/30/2018
+ ******************************************************************************/
 #ifndef LABIOS_MAIN_ROUND_ROBIN_SOLVER_H
 #define LABIOS_MAIN_ROUND_ROBIN_SOLVER_H
 /******************************************************************************
-*include files
-******************************************************************************/
+ *include files
+ ******************************************************************************/
 #include <labios/common/data_structures.h>
 #include <labios/common/solver/solver.h>
 /******************************************************************************
-*Class
-******************************************************************************/
-class round_robin_solver:public solver {
+ *Class
+ ******************************************************************************/
+class round_robin_solver : public solver {
 private:
-/******************************************************************************
-*Variables and members
-******************************************************************************/
-    static std::shared_ptr<round_robin_solver> instance;
-/******************************************************************************
-*Constructor
-******************************************************************************/
-    explicit round_robin_solver(service service):solver(service){}
+  /******************************************************************************
+   *Variables and members
+   ******************************************************************************/
+  static std::shared_ptr<round_robin_solver> instance;
+  /******************************************************************************
+   *Constructor
+   ******************************************************************************/
+  explicit round_robin_solver(service service) : solver(service) {}
+
 public:
-/******************************************************************************
-*Interface
-******************************************************************************/
-    inline static std::shared_ptr<round_robin_solver> getInstance(service service){
-        return instance == nullptr ? instance=
-                std::shared_ptr<round_robin_solver>
-                        (new round_robin_solver(service)) : instance;
-    }
-    solver_output solve(solver_input input) override;
+  /******************************************************************************
+   *Interface
+   ******************************************************************************/
+  inline static std::shared_ptr<round_robin_solver>
+  getInstance(service service) {
+    return instance == nullptr ? instance = std::shared_ptr<round_robin_solver>(
+                                     new round_robin_solver(service))
+                               : instance;
+  }
+  solver_output solve(solver_input input) override;
 };
 
-
-#endif //LABIOS_MAIN_ROUND_ROBIN_SOLVER_H
+#endif // LABIOS_MAIN_ROUND_ROBIN_SOLVER_H

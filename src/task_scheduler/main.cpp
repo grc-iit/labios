@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,24 +20,24 @@
  * <http://www.gnu.org/licenses/>.
  */
 /*******************************************************************************
-* Created by hariharan on 5/9/18.
-* Updated by akougkas on 6/26/2018
-******************************************************************************/
+ * Created by hariharan on 5/9/18.
+ * Updated by akougkas on 6/26/2018
+ ******************************************************************************/
 /******************************************************************************
-*include files
-******************************************************************************/
-#include <mpi.h>
-#include <labios/common/data_structures.h>
+ *include files
+ ******************************************************************************/
 #include "task_scheduler.h"
+#include <labios/common/data_structures.h>
 #include <labios/common/utilities.h>
+#include <mpi.h>
 /******************************************************************************
-*Main
-******************************************************************************/
-int main(int argc, char** argv) {
-    MPI_Init(&argc,&argv);
-    ConfigManager::get_instance()->LoadConfig(argv[1]);
-    auto scheduler_service = task_scheduler::getInstance(TASK_SCHEDULER);
-    scheduler_service->run();
-    MPI_Finalize();
-    return 0;
+ *Main
+ ******************************************************************************/
+int main(int argc, char **argv) {
+  MPI_Init(&argc, &argv);
+  ConfigManager::get_instance()->LoadConfig(argv[1]);
+  auto scheduler_service = task_scheduler::getInstance(TASK_SCHEDULER);
+  scheduler_service->run();
+  MPI_Finalize();
+  return 0;
 }

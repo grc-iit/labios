@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -20,14 +20,13 @@
  * <http://www.gnu.org/licenses/>.
  */
 /******************************************************************************
-*include files
-******************************************************************************/
+ *include files
+ ******************************************************************************/
 #include <labios/common/solver/default_solver.h>
 /******************************************************************************
-*Interface
-******************************************************************************/
+ *Interface
+ ******************************************************************************/
 solver_output default_solver::solve(solver_input input) {
 
-
-    return solver_output(0);
+  return solver_output(0);
 }

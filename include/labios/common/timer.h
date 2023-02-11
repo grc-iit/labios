@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -31,16 +31,16 @@
 
 class Timer {
 public:
-    Timer():elapsed_time(0){}
-    void startTime();
-    double endTimeWithPrint(std::string fnName);
-    double stopTime();
-    double pauseTime();
-    int resumeTime();
-    double elapsed_time;
-private:
-    std::chrono::high_resolution_clock::time_point t1;
+  Timer() : elapsed_time(0) {}
+  void startTime();
+  double endTimeWithPrint(std::string fnName);
+  double stopTime();
+  double pauseTime();
+  int resumeTime();
+  double elapsed_time;
 
+private:
+  std::chrono::high_resolution_clock::time_point t1;
 };
 
-#endif //LABIOS_TIMER_H
+#endif // LABIOS_TIMER_H

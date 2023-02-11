@@ -4,7 +4,7 @@
  * <akougkas@iit.edu>, Xian-He Sun <sun@iit.edu>
  *
  * This file is part of Labios
- * 
+ *
  * Labios is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -26,40 +26,34 @@
 #ifndef LABIOS_MAIN_CLIENT_H
 #define LABIOS_MAIN_CLIENT_H
 
-
-#include <unordered_map>
 #include <future>
 #include <labios/common/data_structures.h>
+#include <unordered_map>
 
 class LabiosClient {
 private:
-    std::unordered_map<size_t,MPI_Comm> application_map;
-    std::unordered_map<std::string,file_meta> files;
-    std::unordered_map<size_t,dataspace> dataspaces;
-    int rank;
-    size_t count;
-    MPI_Comm applications_comms,client_comms;
-    std::future<int> async_handle;
-    LabiosClient():count(0),application_map(){
+  std::unordered_map<size_t, MPI_Comm> application_map;
+  std::unordered_map<std::string, file_meta> files;
+  std::unordered_map<size_t, dataspace> dataspaces;
+  int rank;
+  size_t count;
+  MPI_Comm applications_comms, client_comms;
+  std::future<int> async_handle;
+  LabiosClient() : count(0), application_map() {}
 
-    }
 public:
-    int init();
-    int listen_application_connections();
-    int initialize_application(size_t application_id);
-    int listen_request();
-    int update_file(file_meta f,std::string key);
-    int update_chunk(file_meta f,std::string key);
-    int update_dataspace(size_t id,dataspace data);
-    int get_file(file_meta &f,std::string key);
-    int delete_file(file_meta &f,std::string key);
-    int get_dataspace(size_t id,dataspace &data);
-    int get_chunk(file_meta &f,std::string key);
-    int delete_chunk(file_meta &f,std::string key);
-
-
-
+  int init();
+  int listen_application_connections();
+  int initialize_application(size_t application_id);
+  int listen_request();
+  int update_file(file_meta f, std::string key);
+  int update_chunk(file_meta f, std::string key);
+  int update_dataspace(size_t id, dataspace data);
+  int get_file(file_meta &f, std::string key);
+  int delete_file(file_meta &f, std::string key);
+  int get_dataspace(size_t id, dataspace &data);
+  int get_chunk(file_meta &f, std::string key);
+  int delete_chunk(file_meta &f, std::string key);
 };
 
-
-#endif //LABIOS_MAIN_CLIENT_H
+#endif // LABIOS_MAIN_CLIENT_H
