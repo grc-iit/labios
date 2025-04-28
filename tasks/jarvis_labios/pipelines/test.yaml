@@ -1,0 +1,12 @@
+name: labios_pipeline
+env: chimaera
+pkgs:
+  - pkg_type: chimaera_run
+    pkg_name: chimaera_run
+    sleep: 5
+    do_dbg: false
+    dbg_port: 4000
+    port: 6000
+    modules: ['labios_labios']
+  - pkg_type: labios
+    pkg_name: labios
