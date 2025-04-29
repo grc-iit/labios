@@ -43,7 +43,7 @@ class Labios(Application):
 
         :return: None
         """
-        Exec('labios_test',
+        Exec('python3 labios_test.py',
              LocalExecInfo(env=self.env))
 
     def stop(self):
