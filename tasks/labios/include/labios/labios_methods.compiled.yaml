@@ -2,3 +2,4 @@ kCreate: {'val': 0, 'compiled': True}
 kDestroy: {'val': 1, 'compiled': True}
 kRead: {'val': 10, 'compiled': True}
 kWrite: {'val': 11, 'compiled': True}
+kMdGetOrCreate: {'val': 12, 'compiled': True}

@@ -20,6 +20,10 @@ void Run(u32 method, Task *task, RunContext &rctx) override {
       Write(reinterpret_cast<WriteTask *>(task), rctx);
       break;
     }
+    case Method::kMdGetOrCreate: {
+      MdGetOrCreate(reinterpret_cast<MdGetOrCreateTask *>(task), rctx);
+      break;
+    }
   }
 }
 /** Execute a task */
@@ -41,6 +45,10 @@ void Monitor(MonitorModeId mode, MethodId method, Task *task, RunContext &rctx) 
       MonitorWrite(mode, reinterpret_cast<WriteTask *>(task), rctx);
       break;
     }
+    case Method::kMdGetOrCreate: {
+      MonitorMdGetOrCreate(mode, reinterpret_cast<MdGetOrCreateTask *>(task), rctx);
+      break;
+    }
   }
 }
 /** Delete a task */
@@ -60,6 +68,10 @@ void Del(const hipc::MemContext &mctx, u32 method, Task *task) override {
     }
     case Method::kWrite: {
       CHI_CLIENT->DelTask<WriteTask>(mctx, reinterpret_cast<WriteTask *>(task));
+      break;
+    }
+    case Method::kMdGetOrCreate: {
+      CHI_CLIENT->DelTask<MdGetOrCreateTask>(mctx, reinterpret_cast<MdGetOrCreateTask *>(task));
       break;
     }
   }
@@ -91,6 +103,12 @@ void CopyStart(u32 method, const Task *orig_task, Task *dup_task, bool deep) ove
         reinterpret_cast<WriteTask*>(dup_task), deep);
       break;
     }
+    case Method::kMdGetOrCreate: {
+      chi::CALL_COPY_START(
+        reinterpret_cast<const MdGetOrCreateTask*>(orig_task), 
+        reinterpret_cast<MdGetOrCreateTask*>(dup_task), deep);
+      break;
+    }
   }
 }
 /** Duplicate a task */
@@ -110,6 +128,10 @@ void NewCopyStart(u32 method, const Task *orig_task, FullPtr<Task> &dup_task, bo
     }
     case Method::kWrite: {
       chi::CALL_NEW_COPY_START(reinterpret_cast<const WriteTask*>(orig_task), dup_task, deep);
+      break;
+    }
+    case Method::kMdGetOrCreate: {
+      chi::CALL_NEW_COPY_START(reinterpret_cast<const MdGetOrCreateTask*>(orig_task), dup_task, deep);
       break;
     }
   }
@@ -133,6 +155,10 @@ void SaveStart(
     }
     case Method::kWrite: {
       ar << *reinterpret_cast<WriteTask*>(task);
+      break;
+    }
+    case Method::kMdGetOrCreate: {
+      ar << *reinterpret_cast<MdGetOrCreateTask*>(task);
       break;
     }
   }
@@ -165,6 +191,12 @@ TaskPointer LoadStart(    u32 method, BinaryInputArchive<true> &ar) override {
       ar >> *reinterpret_cast<WriteTask*>(task_ptr.ptr_);
       break;
     }
+    case Method::kMdGetOrCreate: {
+      task_ptr.ptr_ = CHI_CLIENT->NewEmptyTask<MdGetOrCreateTask>(
+             HSHM_DEFAULT_MEM_CTX, task_ptr.shm_);
+      ar >> *reinterpret_cast<MdGetOrCreateTask*>(task_ptr.ptr_);
+      break;
+    }
   }
   return task_ptr;
 }
@@ -187,6 +219,10 @@ void SaveEnd(u32 method, BinaryOutputArchive<false> &ar, Task *task) override {
       ar << *reinterpret_cast<WriteTask*>(task);
       break;
     }
+    case Method::kMdGetOrCreate: {
+      ar << *reinterpret_cast<MdGetOrCreateTask*>(task);
+      break;
+    }
   }
 }
 /** Deserialize a task when popping from remote queue */
@@ -206,6 +242,10 @@ void LoadEnd(u32 method, BinaryInputArchive<false> &ar, Task *task) override {
     }
     case Method::kWrite: {
       ar >> *reinterpret_cast<WriteTask*>(task);
+      break;
+    }
+    case Method::kMdGetOrCreate: {
+      ar >> *reinterpret_cast<MdGetOrCreateTask*>(task);
       break;
     }
   }
