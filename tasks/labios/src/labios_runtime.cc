@@ -17,6 +17,7 @@
 #include "mytokenizer.cpp"
 
 namespace chi::labios {
+  Client client;
 
   class Server : public Module {
   public:
@@ -29,8 +30,8 @@ namespace chi::labios {
 
     template<typename TaskT>
     void DataRoute(TaskT *task) {
-    
-      LabiosMd md = MdGetOrCreate(DomainQuery::GetDynamic(), task->key_.str(), task->offset_, task->data_size_, DomainQuery::GetDirectId(SubDomain::kGlobalContainers,container_id_,0));
+      client.Init(id_);
+      LabiosMd md = client.MdGetOrCreate(HSHM_MCTX , DomainQuery::GetDynamic(), task->key_.str(), task->offset_, task->data_size_, DomainQuery::GetDirectId(SubDomain::kGlobalContainers,container_id_,0));
       task->dom_query_ = md.loc_;
       task->SetDirect();
       task->UnsetRouted();

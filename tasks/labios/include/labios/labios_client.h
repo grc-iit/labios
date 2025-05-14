@@ -82,7 +82,7 @@ CHI_BEGIN(Write)
 
 CHI_BEGIN(MdGetOrCreate)
   /** MdGetOrCreate task */
-  void MdGetOrCreate(const hipc::MemContext &mctx,
+  LabiosMd MdGetOrCreate(const hipc::MemContext &mctx,
                       const DomainQuery &dom_query,
                       const std::string &key,
                 size_t off,
