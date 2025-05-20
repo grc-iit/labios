@@ -80,6 +80,28 @@ CHI_BEGIN(Write)
   CHI_TASK_METHODS(Write);
   CHI_END(Write)
 
+CHI_BEGIN(MdGetOrCreate)
+  /** MdGetOrCreate task */
+  LabiosMd MdGetOrCreate(const hipc::MemContext &mctx,
+                      const DomainQuery &dom_query,
+                      const std::string &key,
+                size_t off,
+                size_t size,
+                const DomainQuery &loc) {
+    FullPtr<MdGetOrCreateTask> task =
+      AsyncMdGetOrCreate(mctx, dom_query, key, off, size, loc);
+    task->Wait();
+    CHI_CLIENT->DelTask(mctx, task);
+     LabiosMd md;
+      md.key_ = key;
+      md.offset_ = off;
+      md.size_ = size;
+      md.loc_ = loc;
+      return md;
+  }
+  CHI_TASK_METHODS(MdGetOrCreate);
+  CHI_END(MdGetOrCreate)
+
   CHI_AUTOGEN_METHODS  // keep at class bottom
 };
 
