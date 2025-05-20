@@ -38,15 +38,19 @@ int main() {
 
   hipc::FullPtr<char> new_data = CHI_CLIENT->AllocateBuffer(HSHM_MCTX, test_data.size() + 1);
 
-  client.Write(HSHM_MCTX, 
-               chi::DomainQuery::GetLocalHash(0), 
-               "first_key", 
+  std::string key = "first_key";
+  auto query = chi::DomainQuery::GetDynamic();
+  auto loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers,0,0);
+
+  client.MdGetOrCreate(HSHM_MCTX, query, key, 0, data_size + 1, loc);
+
+  client.Write(HSHM_MCTX, loc, key, 
                orig_data.shm_, 
                test_data.size() + 1);
   std::cout << "Write operation attempted" << std::endl;
 
   client.Read(HSHM_MCTX, 
-              chi::DomainQuery::GetLocalHash(0),"first_key", new_data.shm_, test_data.size() + 1);
+              loc, key, new_data.shm_, test_data.size() + 1);
   std::cout << "Input Data: " << test_data << std::endl;
   std::cout << "Read back: " << new_data.ptr_ << std::endl;
 

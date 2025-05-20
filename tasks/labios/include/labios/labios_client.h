@@ -92,6 +92,12 @@ CHI_BEGIN(MdGetOrCreate)
       AsyncMdGetOrCreate(mctx, dom_query, key, off, size, loc);
     task->Wait();
     CHI_CLIENT->DelTask(mctx, task);
+     LabiosMd md;
+      md.key_ = key;
+      md.offset_ = off;
+      md.size_ = size;
+      md.loc_ = loc;
+      return md;
   }
   CHI_TASK_METHODS(MdGetOrCreate);
   CHI_END(MdGetOrCreate)
