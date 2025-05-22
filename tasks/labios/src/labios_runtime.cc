@@ -28,13 +28,21 @@ namespace chi::labios {
   public:
     Server() = default;
 
+    template <typename TaskT>
+    void RoundRobin(TaskT *task) {
+      // Concretize the domain to map the task
+    static int round_robin = CHI_CLIENT->node_id_;
+      task->dom_query_ = chi::DomainQuery::GetDirectHash(
+          chi::SubDomainId::kGlobalContainers, round_robin++);
+      task->SetDirect();
+      task->UnsetRouted();
+    }
+
     template<typename TaskT>
     void DataRoute(TaskT *task) {
       client.Init(id_);
       LabiosMd md = client.MdGetOrCreate(HSHM_MCTX , DomainQuery::GetDynamic(), task->key_.str(), task->offset_, task->data_size_, DomainQuery::GetDirectId(SubDomain::kGlobalContainers,container_id_,0));
-      task->dom_query_ = md.loc_;
-      task->SetDirect();
-      task->UnsetRouted();
+      RoundRobin(task);
     }
     template <typename TaskT>
     void MdRoute(TaskT *task) {
