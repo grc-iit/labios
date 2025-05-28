@@ -4,7 +4,8 @@ Labios is ....
 """
 from jarvis_cd.basic.pkg import Application
 from jarvis_util import *
-
+from jarvis_util.shell.exec import Exec
+from jarvis_util.shell.mpi_exec import MpiExecInfo
 
 class Labios(Application):
     """
@@ -43,8 +44,13 @@ class Labios(Application):
 
         :return: None
         """
-        Exec('labios_test',
-             LocalExecInfo(env=self.env))
+        mpi_info = MpiExecInfo(
+            env=self.env,
+            hostfile=self.jarvis.hostfile,
+            nprocs=4,
+            ppn=2 # Set to the number of processes you want
+        )
+        Exec('mpi_labios_test', mpi_info)
 
     def stop(self):
         """
