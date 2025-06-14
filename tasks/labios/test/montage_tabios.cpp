@@ -299,13 +299,12 @@ int main(int argc, char **argv) {
 #endif
   std::string finalname = final_path + "final_" + std::to_string(rank) + ".dat";
   global_timer.Resume();
-  // Create output container for final results
-  client.Create(
-      HSHM_MCTX,
-      chi::DomainQuery::GetDirectHash(chi::SubDomainId::kGlobalContainers, rank + 10000),
-      chi::DomainQuery::GetGlobalBcast(), 
-      "montage_output_container_" + std::to_string(rank)
-  );
+  
+  if (rank == 0)
+    std::cerr << "Starting final output phase...\n";
+  
+  // FIX: Don't create separate output container - use existing one
+  // client.Create(..., rank + 10000, ...);  // COMMENTED OUT
 
   global_timer.Pause();
   for (auto i = 0; i < 32; ++i) {
@@ -326,13 +325,22 @@ int main(int argc, char **argv) {
   std::memcpy(final_data.ptr_, final_buff, 1024 * 1024);
   
   global_timer.Resume();
-  // Write final results
-  std::string final_key = finalname + "_montage_results";
+  
+  if (rank == 0)
+    std::cerr << "Writing final output...\n";
+  
+  // FIX: Use same container as original data
+  // For Montage, we use the first container (rank * 2) for final output
+  std::string final_key = "montage_final_output_" + std::to_string(rank);
   auto final_query = chi::DomainQuery::GetDynamic();
-  auto final_loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank + 10000, 0);
+  // Use existing container instead of creating new one
+  auto final_loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
   
   client.MdGetOrCreate(HSHM_MCTX, final_query, final_key, 0, 1024 * 1024, final_loc);
   client.Write(HSHM_MCTX, final_loc, final_key, final_data.shm_, 1024 * 1024);
+  
+  if (rank == 0)
+    std::cerr << "Final write completed!\n";
   
 #ifdef TIMERBASE
   a.pauseTime();
@@ -360,5 +368,10 @@ int main(int argc, char **argv) {
     stream << "average," << mean << "\n";
     std::cerr << stream.str();
   }
+
+  if (rank == 0)
+    std::cerr << "Montage test completed successfully!\n";
+
   MPI_Finalize();
+  return 0;
 }

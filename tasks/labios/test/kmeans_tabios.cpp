@@ -18,6 +18,7 @@ void gen_random(char *buf, size_t size) {
 }
 
 int main(int argc, char **argv) {
+  std::cout << "Kmeans started by Rajni" << std::endl;
   MPI_Init(&argc, &argv);
   if (argc != 5) {
     printf(
@@ -155,6 +156,10 @@ int main(int argc, char **argv) {
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0)
     std::cerr << "Read Done\n";
+
+  if (rank == 0)
+    std::cerr << "Starting final output phase...\n";
+    
 #ifdef TIMERBASE
   map.pauseTime();
 #endif
@@ -174,12 +179,11 @@ int main(int argc, char **argv) {
   Timer reduce = Timer();
   reduce.resumeTime();
 #endif
-  client.Create(
-      HSHM_MCTX,
-      chi::DomainQuery::GetDirectHash(chi::SubDomainId::kGlobalContainers, rank + 2000),
-      chi::DomainQuery::GetGlobalBcast(), 
-      "kmeans_output_container_" + std::to_string(rank)
-  );
+
+  // Use the SAME container instead of creating a new one
+  if (rank == 0)
+    std::cerr << "Creating final output (using same container)...\n";
+
 #ifdef TIMERBASE
   reduce.pauseTime();
 #endif
@@ -194,12 +198,25 @@ int main(int argc, char **argv) {
 #ifdef TIMERBASE
   reduce.resumeTime();
 #endif
-  std::string final_key = finalname + "_kmeans_results";
+
+  if (rank == 0)
+    std::cerr << "Writing final output...\n";
+
+  // Use the same container and location as the original data
+  std::string final_key = "kmeans_final_output_" + std::to_string(rank);
   auto final_query = chi::DomainQuery::GetDynamic();
-  auto final_loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank + 2000, 0);
+  // USE SAME LOCATION as original data (rank)
+  auto final_loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
   
   client.MdGetOrCreate(HSHM_MCTX, final_query, final_key, 0, 1024 * 1024, final_loc);
+  
+  if (rank == 0)
+    std::cerr << "Metadata created, performing write...\n";
+    
   client.Write(HSHM_MCTX, final_loc, final_key, output_data.shm_, 1024 * 1024);
+
+  if (rank == 0)
+    std::cerr << "Final write completed!\n";
 
 #ifdef TIMERBASE
   reduce.pauseTime();
@@ -215,6 +232,10 @@ int main(int argc, char **argv) {
   if (rank == 0)
     stream << red_mean << "," << max << "," << min;
 #endif
+
+  if (rank == 0)
+    std::cerr << "Computing final timing results...\n";
+
   auto time = global_timer.GetSec();
   double sum;
   MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -228,5 +249,10 @@ int main(int argc, char **argv) {
     stream << "average," << mean << "\n";
     std::cerr << stream.str();
   }
+
+  if (rank == 0)
+    std::cerr << "K-means test completed successfully!\n";
+
   MPI_Finalize();
+  return 0;
 }
