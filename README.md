@@ -11,7 +11,6 @@ Below are the manual build instructions
 ```
 spack install iowarp+vfd+mpiio
 spack load iowarp
-cd tasks
 mkdir build
 cd build
 cmake ../
