@@ -19,9 +19,8 @@ void gen_random(char *buf, size_t size) {
 
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
-  if (argc != 5) {
-    printf("USAGE: ./hacc_tabios [labios_conf] [file_path] [iteration] "
-           "[buf_path]\n");
+  if (argc != 4) {
+    printf("USAGE: ./hacc_base [file_path] [iteration] [buf_path]\n");
     exit(1);
   }
 
@@ -31,9 +30,9 @@ int main(int argc, char **argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
   if (rank == 0)
     stream << "hacc_base()," << std::fixed << std::setprecision(10);
-  std::string file_path = argv[2];
-  int iteration = atoi(argv[3]);
-  std::string buf_path = argv[4];
+  std::string file_path = argv[1];
+  int iteration = atoi(argv[2]);
+  std::string buf_path = argv[3];
   std::string filename = buf_path + "test_" + std::to_string(rank) + ".dat";
   size_t io_per_teration = 32 * 1024 * 1024;
   std::vector<std::array<size_t, 2>> workload =

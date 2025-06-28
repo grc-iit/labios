@@ -45,12 +45,6 @@ class Cm1Kern(Application):
                 'default': 'base',
             },
             {
-                'name': 'labios_conf',
-                'msg': 'The Labios config file',
-                'type': str,
-                'default': None,
-            },
-            {
                 'name': 'file_path',
                 'msg': 'The path to the output file directory',
                 'type': str,
@@ -72,7 +66,6 @@ class Cm1Kern(Application):
         :param kwargs: Configuration parameters for this pkg.
         :return: None
         """
-        self.config['labios_conf'] = self.config['labios_conf'] or f'{self.shared_dir}/labios_conf.json'
         if self.config['file_path'][-1] != '/':
             self.config['file_path'] += '/'
         self.config['output_file'] = f"{self.config['file_path']}test.dat"
@@ -92,13 +85,12 @@ class Cm1Kern(Application):
         
         cmd = [
             exec_path,
-            self.config['labios_conf'],
             self.config['file_path'],
             str(self.config['iterations'])
         ]
 
         self.exec_info = Exec(' '.join(cmd),
-            MpiExecInfo(env=self.env,
+            MpiExecInfo(env=self.mod_env,
                          hostfile=self.jarvis.hostfile,
                          nprocs=self.config['nprocs'],
                          ppn=self.config['ppn']))

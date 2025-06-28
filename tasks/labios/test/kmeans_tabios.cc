@@ -20,9 +20,8 @@ void gen_random(char *buf, size_t size) {
 int main(int argc, char **argv) {
   std::cout << "Kmeans started by Rajni" << std::endl;
   MPI_Init(&argc, &argv);
-  if (argc != 5) {
-    printf(
-        "USAGE: ./kmeans_tabios [labios_conf] [file_path] [iter] [pfs_path]\n");
+  if (argc != 4) {
+    printf("USAGE: ./kmeans_tabios [file_path] [iter] [pfs_path]\n");
     exit(1);
   }
 
@@ -41,9 +40,9 @@ int main(int argc, char **argv) {
   // Create Labios client
   chi::labios::Client client;
 
-  std::string file_path = argv[2];
-  int iteration = atoi(argv[3]);
-  std::string pfs_path = argv[4];
+  std::string file_path = argv[1];
+  int iteration = atoi(argv[2]);
+  std::string pfs_path = argv[3];
   std::string filename = file_path + "test_" + std::to_string(rank) + ".dat";
   size_t io_per_teration = 32 * 1024 * 1024;
   std::vector<std::array<size_t, 2>> workload =

@@ -19,9 +19,8 @@ void gen_random(char *buf, size_t size) {
 
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
-  if (argc != 5) {
-    printf("USAGE: ./montage_base [labios_conf] [file_path] [iter] "
-           "[final_path]\n");
+  if (argc != 4) {
+    printf("USAGE: ./montage_tabios [file_path] [iter] [final_path]\n");
     exit(1);
   }
 
@@ -42,9 +41,9 @@ int main(int argc, char **argv) {
   // Create Labios client
   chi::labios::Client client;
 
-  std::string file_path = argv[2];
-  int iteration = atoi(argv[3]);
-  std::string final_path = argv[4];
+  std::string file_path = argv[1];
+  int iteration = atoi(argv[2]);
+  std::string final_path = argv[3];
   std::string filename1 = file_path + "file1_" + std::to_string(rank) + ".dat";
   std::string filename2 = file_path + "file2_" + std::to_string(rank) + ".dat";
   size_t io_per_teration = 32 * 1024 * 1024;

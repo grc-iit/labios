@@ -20,8 +20,8 @@ void gen_random(char *buf, size_t size) {
 
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
-  if (argc != 4) {
-    printf("USAGE: ./cm1_tabios [labios_conf] [file_path] [iteration]\n");
+  if (argc != 3) {
+    printf("USAGE: ./cm1_tabios [file_path] [iteration]\n");
     exit(1);
   }
 
@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
   stream << "cm1_tabios," << std::fixed << std::setprecision(10);
-  std::string file_path = argv[2];
-  int iteration = atoi(argv[3]);
+  std::string file_path = argv[1];
+  int iteration = atoi(argv[2]);
   std::string filename = file_path + "/test_" + std::to_string(rank) + ".dat";
   size_t io_per_teration = 32 * 1024 * 1024;
 
