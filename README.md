@@ -9,7 +9,7 @@ Below are the manual build instructions
 
 ## Building
 ```
-spack install iowarp+nocompile+vfd+mpiio
+spack install iowarp+vfd+mpiio
 spack load iowarp
 cd tasks
 mkdir build
