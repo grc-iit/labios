@@ -2,28 +2,29 @@
 // Created by lukemartinlogan on 7/22/22.
 //
 
-#include <hermes_shm/util/timer.h>
-#include <mpi.h>
-#include <sstream>
-#include <iomanip>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <random>
+#include <hermes_shm/util/timer.h>
+#include <iomanip>
 #include <malloc.h>
+#include <mpi.h>
+#include <random>
+#include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
 
 void gen_random(char *buf, size_t size) {
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-    for (size_t i = 0; i < size; ++i) {
-        buf[i] = static_cast<char>(dist(generator));
-    }
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_int_distribution<int> dist(0, 255);
+  for (size_t i = 0; i < size; ++i) {
+    buf[i] = static_cast<char>(dist(generator));
+  }
 }
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
   if (argc != 5) {
-    printf("USAGE: ./kmean_base [labios_conf] [file_path] [iter] [pfs_path]\n");
+    printf(
+        "USAGE: ./kmeans_base [labios_conf] [file_path] [iter] [pfs_path]\n");
     exit(1);
   }
 

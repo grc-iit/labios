@@ -1,0 +1,11 @@
+name: kmeans_kern_base_pipeline
+env: labios
+pkgs:
+  - pkg_type: kmeans_kern
+    pkg_name: kmeans_kern
+    nprocs: 4
+    ppn: 4
+    mode: base
+    iterations: 2
+    file_path: /tmp/kmeans_kern_base/
+    pfs_path: /tmp/kmeans_kern_base_pfs/ 

@@ -51,7 +51,12 @@ target_include_directories(labios_wrapper PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 # Optional: set output name explicitly
 set_target_properties(labios_wrapper PROPERTIES OUTPUT_NAME "labios_wrapper")
-install(TARGETS mpi_labios_test labios_wrapper
+install(TARGETS mpi_labios_test
+    cm1_base cm1_tabios
+    hacc_base hacc_tabios
+    kmeans_base kmeans_tabios
+    montage_base montage_tabios
+    labios_wrapper
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
 )

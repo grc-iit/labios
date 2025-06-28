@@ -1,0 +1,19 @@
+name: cm1_kern_labios_pipeline
+env: labios
+pkgs:
+  - pkg_type: chimaera_run
+    pkg_name: chimaera_run
+    sleep: 5
+    do_dbg: false
+    dbg_port: 4000
+    port: 6000
+    modules: ['labios_labios']
+  - pkg_type: labios
+    pkg_name: labios
+  - pkg_type: cm1_kern
+    pkg_name: cm1_kern
+    nprocs: 4
+    ppn: 4
+    mode: labios
+    iterations: 2
+    file_path: /tmp/cm1_kern_labios/ 

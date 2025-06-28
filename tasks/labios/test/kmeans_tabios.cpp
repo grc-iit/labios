@@ -1,20 +1,20 @@
 //
 // Created by lukemartinlogan on 7/22/22.
 //
-#include <hermes_shm/util/timer.h>
-#include <sstream>
-#include <iomanip>
-#include <random>
-#include <mpi.h>
 #include "labios/labios_client.h"
+#include <hermes_shm/util/timer.h>
+#include <iomanip>
+#include <mpi.h>
+#include <random>
+#include <sstream>
 
 void gen_random(char *buf, size_t size) {
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-    for (size_t i = 0; i < size; ++i) {
-        buf[i] = static_cast<char>(dist(generator));
-    }
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_int_distribution<int> dist(0, 255);
+  for (size_t i = 0; i < size; ++i) {
+    buf[i] = static_cast<char>(dist(generator));
+  }
 }
 
 int main(int argc, char **argv) {
@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
   if (argc != 5) {
     printf(
-        "USAGE: ./kmean_tabios [labios_conf] [file_path] [iter] [pfs_path]\n");
+        "USAGE: ./kmeans_tabios [labios_conf] [file_path] [iter] [pfs_path]\n");
     exit(1);
   }
 
@@ -35,9 +35,9 @@ int main(int argc, char **argv) {
   MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
   stream << "average_kmeans_tabios," << std::fixed << std::setprecision(10);
 
-    // Initialize Chimaera client
+  // Initialize Chimaera client
   CHIMAERA_CLIENT_INIT();
-  
+
   // Create Labios client
   chi::labios::Client client;
 
@@ -55,36 +55,38 @@ int main(int argc, char **argv) {
   char *write_buf = new char[io_per_teration];
   gen_random(write_buf, io_per_teration);
 
-  hipc::FullPtr<char> initial_data = CHI_CLIENT->AllocateBuffer(HSHM_MCTX, io_per_teration);
+  hipc::FullPtr<char> initial_data =
+      CHI_CLIENT->AllocateBuffer(HSHM_MCTX, io_per_teration);
   std::memcpy(initial_data.ptr_, write_buf, io_per_teration);
   global_timer.Resume();
 #ifdef TIMERBASE
   Timer map = Timer();
   map.resumeTime();
 #endif
-   client.Create(
-      HSHM_MCTX,
-      chi::DomainQuery::GetDirectHash(chi::SubDomainId::kGlobalContainers, rank),
-      chi::DomainQuery::GetGlobalBcast(), 
-      "kmeans_container_" + std::to_string(rank)
-  );
+  client.Create(HSHM_MCTX,
+                chi::DomainQuery::GetDirectHash(
+                    chi::SubDomainId::kGlobalContainers, rank),
+                chi::DomainQuery::GetGlobalBcast(),
+                "kmeans_container_" + std::to_string(rank));
 #ifdef TIMERBASE
   map.pauseTime();
 #endif
   global_timer.Pause();
 
-// Write initial dataset to container
+  // Write initial dataset to container
   std::string dataset_key = filename + "_dataset";
   auto query = chi::DomainQuery::GetDynamic();
-  auto loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
-  
+  auto loc =
+      chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
+
   client.MdGetOrCreate(HSHM_MCTX, query, dataset_key, 0, io_per_teration, loc);
   client.Write(HSHM_MCTX, loc, dataset_key, initial_data.shm_, io_per_teration);
-  
+
   delete (write_buf);
   size_t count = 0;
-  std::vector<std::pair<size_t, std::pair<std::string, chi::DomainQuery>>> operations =
-      std::vector<std::pair<size_t, std::pair<std::string, chi::DomainQuery>>>();
+  std::vector<std::pair<size_t, std::pair<std::string, chi::DomainQuery>>>
+      operations = std::vector<
+          std::pair<size_t, std::pair<std::string, chi::DomainQuery>>>();
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0)
@@ -114,18 +116,22 @@ int main(int argc, char **argv) {
 #endif
 #ifndef COLLECT
         // Create unique key for each read operation
-        std::string read_key = dataset_key + "_read_" + std::to_string(i) + "_" + std::to_string(j) + "_offset_" + std::to_string(current_offset);
-        
+        std::string read_key = dataset_key + "_read_" + std::to_string(i) +
+                               "_" + std::to_string(j) + "_offset_" +
+                               std::to_string(current_offset);
+
         // For K-means, we simulate reading different chunks of the dataset
         // Create metadata for this specific chunk
         auto read_query = chi::DomainQuery::GetDynamic();
-        auto read_loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
-        
-        client.MdGetOrCreate(HSHM_MCTX, read_query, read_key, current_offset, item[0], read_loc);
-        
+        auto read_loc = chi::DomainQuery::GetDirectId(
+            chi::SubDomain::kGlobalContainers, rank, 0);
+
+        client.MdGetOrCreate(HSHM_MCTX, read_query, read_key, current_offset,
+                             item[0], read_loc);
+
         // Store operation info for later execution
-        operations.emplace_back(std::make_pair(
-            item[0], std::make_pair(read_key, read_loc)));
+        operations.emplace_back(
+            std::make_pair(item[0], std::make_pair(read_key, read_loc)));
 
 #endif
 #ifdef TIMERBASE
@@ -143,15 +149,16 @@ int main(int argc, char **argv) {
 #endif
   for (auto operation : operations) {
     size_t read_size = operation.first;
-      std::string read_key = operation.second.first;
-      chi::DomainQuery read_loc = operation.second.second;
-      
-      // Allocate buffer for this read operation
-      hipc::FullPtr<char> read_buffer = CHI_CLIENT->AllocateBuffer(HSHM_MCTX, read_size);
-      
-      // Perform the read operation
-      client.Read(HSHM_MCTX, read_loc, read_key, read_buffer.shm_, read_size);
-    }
+    std::string read_key = operation.second.first;
+    chi::DomainQuery read_loc = operation.second.second;
+
+    // Allocate buffer for this read operation
+    hipc::FullPtr<char> read_buffer =
+        CHI_CLIENT->AllocateBuffer(HSHM_MCTX, read_size);
+
+    // Perform the read operation
+    client.Read(HSHM_MCTX, read_loc, read_key, read_buffer.shm_, read_size);
+  }
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0)
@@ -159,7 +166,7 @@ int main(int argc, char **argv) {
 
   if (rank == 0)
     std::cerr << "Starting final output phase...\n";
-    
+
 #ifdef TIMERBASE
   map.pauseTime();
 #endif
@@ -191,7 +198,8 @@ int main(int argc, char **argv) {
 
   char out_buff[1024 * 1024];
   gen_random(out_buff, 1024 * 1024);
-  hipc::FullPtr<char> output_data = CHI_CLIENT->AllocateBuffer(HSHM_MCTX, 1024 * 1024);
+  hipc::FullPtr<char> output_data =
+      CHI_CLIENT->AllocateBuffer(HSHM_MCTX, 1024 * 1024);
   std::memcpy(output_data.ptr_, out_buff, 1024 * 1024);
 
   global_timer.Resume();
@@ -206,13 +214,15 @@ int main(int argc, char **argv) {
   std::string final_key = "kmeans_final_output_" + std::to_string(rank);
   auto final_query = chi::DomainQuery::GetDynamic();
   // USE SAME LOCATION as original data (rank)
-  auto final_loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
-  
-  client.MdGetOrCreate(HSHM_MCTX, final_query, final_key, 0, 1024 * 1024, final_loc);
-  
+  auto final_loc =
+      chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
+
+  client.MdGetOrCreate(HSHM_MCTX, final_query, final_key, 0, 1024 * 1024,
+                       final_loc);
+
   if (rank == 0)
     std::cerr << "Metadata created, performing write...\n";
-    
+
   client.Write(HSHM_MCTX, final_loc, final_key, output_data.shm_, 1024 * 1024);
 
   if (rank == 0)

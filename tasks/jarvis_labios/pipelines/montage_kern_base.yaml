@@ -1,0 +1,11 @@
+name: montage_kern_base_pipeline
+env: labios
+pkgs:
+  - pkg_type: montage_kern
+    pkg_name: montage_kern
+    nprocs: 4
+    ppn: 4
+    mode: base
+    iterations: 2
+    file_path: /tmp/montage_kern_base/
+    final_path: /tmp/montage_kern_base_final/ 

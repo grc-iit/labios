@@ -1,5 +1,5 @@
 name: labios_pipeline
-env: chimaera
+env: labios
 pkgs:
   - pkg_type: chimaera_run
     pkg_name: chimaera_run
