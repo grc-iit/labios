@@ -46,17 +46,18 @@ int main(int argc, char **argv) {
   hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
 
   mpi_timer.Resume();
-  FILE *fh = std::fopen(filename.c_str(), "w+");
-  if (fh == nullptr) {
-    fprintf(stderr, "Failed to open file for writing: %s\n", filename.c_str());
-    MPI_Abort(MPI_COMM_WORLD, 1);
-  }
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 #ifdef TIMERBASE
   Timer map = Timer();
   map.resumeTime();
 #endif
-  int fd = open(filename.c_str(), O_DIRECT | O_RDWR | O_TRUNC, mode);
+  int fd = open(filename.c_str(), O_RDWR | O_TRUNC | O_CREAT, mode);
+  if (fd < 0) {
+    perror("Failed to open file with O_CREAT");
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  fd = open(filename.c_str(), O_DIRECT | O_RDWR | O_TRUNC, mode);
   if (fd < 0) {
     perror("Failed to open file with O_DIRECT");
     MPI_Abort(MPI_COMM_WORLD, 1);
@@ -69,10 +70,12 @@ int main(int argc, char **argv) {
   char *write_buf = new char[io_per_teration];
   // Function to generate random data
   gen_random(write_buf, io_per_teration);
-  std::fwrite(write_buf, sizeof(char), io_per_teration, fh);
-  std::fflush(fh);
-  //    write(fd,write_buf,io_per_teration);
-  //    fsync(fd);
+  if (write(fd, write_buf, io_per_teration) < 0) {
+    perror("Initial write failed");
+  }
+  if (fsync(fd) < 0) {
+    perror("Initial fsync failed");
+  }
   MPI_Barrier(MPI_COMM_WORLD);
   delete (write_buf);
   int count = 0;
