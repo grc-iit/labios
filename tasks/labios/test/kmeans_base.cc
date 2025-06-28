@@ -47,10 +47,6 @@ int main(int argc, char **argv) {
 
   mpi_timer.Resume();
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-#ifdef TIMERBASE
-  Timer map = Timer();
-  map.resumeTime();
-#endif
   int fd = open(filename.c_str(), O_RDWR | O_TRUNC | O_CREAT, mode);
   if (fd < 0) {
     perror("Failed to open file with O_CREAT");
@@ -62,9 +58,6 @@ int main(int argc, char **argv) {
     perror("Failed to open file with O_DIRECT");
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
-#ifdef TIMERBASE
-  map.pauseTime();
-#endif
   mpi_timer.Pause();
 
   char *write_buf = new char[io_per_teration];
@@ -89,16 +82,10 @@ int main(int argc, char **argv) {
           std::uniform_int_distribution<int> dist(0, 31);
           auto rand_offset = (dist(generator) * 1 * 1024 * 1024);
           mpi_timer.Resume();
-#ifdef TIMERBASE
-          map.resumeTime();
-#endif
           if (lseek(fd, rand_offset, SEEK_SET) < 0) {
             perror("lseek failed");
           }
           MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-          map.pauseTime();
-#endif
           mpi_timer.Pause();
         }
         void *read_buf;
@@ -107,9 +94,6 @@ int main(int argc, char **argv) {
           std::cerr << "memalign\n";
         read_buf += align;
         mpi_timer.Resume();
-#ifdef TIMERBASE
-        map.resumeTime();
-#endif
         // auto bytes = std::fread(read_buf,sizeof(char),item[0],fh);
 
         auto bytes = read(fd, read_buf, item[0]);
@@ -119,9 +103,6 @@ int main(int argc, char **argv) {
           std::cerr << "Read failed: wanted " << item[0] << " got " << bytes
                     << "\n";
         MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-        map.pauseTime();
-#endif
         mpi_timer.Pause();
         current_offset += item[0];
         count++;
@@ -129,56 +110,27 @@ int main(int argc, char **argv) {
     }
   }
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  map.resumeTime();
-#endif
   // std::fclose(fh);
   close(fd);
   MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-  map.pauseTime();
-#endif
   mpi_timer.Pause();
-#ifdef TIMERBASE
-  if (rank == 0)
-    stream << map.elapsed_time << ",";
-#endif
-#ifdef TIMERBASE
-  Timer reduce = Timer();
-#endif
   MPI_File outFile;
   MPI_Info info;
   MPI_Info_create(&info);
   MPI_Info_set(info, "direct_write", "true");
   std::string final = pfs_path + "final.dat";
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  reduce.resumeTime();
-#endif
   MPI_File_open(MPI_COMM_WORLD, final.c_str(), MPI_MODE_CREATE | MPI_MODE_RDWR,
                 info, &outFile);
   MPI_File_set_view(outFile, static_cast<MPI_Offset>(rank * 1024 * 1024),
                     MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL);
-#ifdef TIMERBASE
-  reduce.pauseTime();
-#endif
   mpi_timer.Pause();
   char out_buff[1024 * 1024];
   gen_random(out_buff, 1024 * 1024);
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  reduce.resumeTime();
-#endif
   MPI_File_write(outFile, out_buff, (1024 * 1024), MPI_CHAR, MPI_STATUS_IGNORE);
   MPI_File_close(&outFile);
-#ifdef TIMERBASE
-  reduce.pauseTime();
-#endif
   mpi_timer.Pause();
-#ifdef TIMERBASE
-  if (rank == 0)
-    stream << reduce.elapsed_time << ",";
-#endif
   double avg = mpi_timer.CollectAvg().GetSec();
   if (rank == 0) {
     stream << "average," << avg << "\n";

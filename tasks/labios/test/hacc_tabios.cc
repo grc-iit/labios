@@ -63,10 +63,6 @@ int main(int argc, char **argv) {
   }
 
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  Timer wbb = Timer();
-  wbb.resumeTime();
-#endif
 
   // Create Labios container instead of opening file
   client.Create(HSHM_MCTX,
@@ -75,9 +71,6 @@ int main(int argc, char **argv) {
                 chi::DomainQuery::GetGlobalBcast(),
                 "hacc_container_" + std::to_string(rank));
 
-#ifdef TIMERBASE
-  wbb.pauseTime();
-#endif
   mpi_timer.Pause();
 
   // Store write operations with their keys and locations
@@ -89,9 +82,6 @@ int main(int argc, char **argv) {
     for (auto item : workload) {
       for (int j = 0; j < item[1]; ++j) {
         mpi_timer.Resume();
-#ifdef TIMERBASE
-        wbb.resumeTime();
-#endif
 
         // Create unique key for each write operation
         std::string key = filename + "_iter_" + std::to_string(i) + "_chunk_" +
@@ -113,9 +103,6 @@ int main(int argc, char **argv) {
         operations.emplace_back(
             std::make_pair(item[0], std::make_pair(key, loc)));
 
-#ifdef TIMERBASE
-        wbb.pauseTime();
-#endif
         mpi_timer.Pause();
         current_offset += item[0];
       }
@@ -123,9 +110,6 @@ int main(int argc, char **argv) {
   }
 
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  wbb.resumeTime();
-#endif
 
   // OPTIMIZATION: Simplified verification
   for (auto operation : operations) {
@@ -134,24 +118,11 @@ int main(int argc, char **argv) {
     chi::DomainQuery loc = operation.second.second;
   }
 
-#ifdef TIMERBASE
-  auto writeBB = wbb.elapsed_time;
-  double bb_sum;
-  MPI_Allreduce(&writeBB, &bb_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  double bb_mean = bb_sum / comm_size;
-  if (rank == 0)
-    stream << "write_to_BB," << bb_mean << ",";
-#endif
-
   // Use single large buffer for read operations
   hipc::FullPtr<char> read_data =
       CHI_CLIENT->AllocateBuffer(HSHM_MCTX, io_per_teration);
 
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  Timer rbb = Timer();
-  rbb.resumeTime();
-#endif
 
 #ifndef COLLECT
   // Create a bulk read key for the entire data
@@ -168,21 +139,7 @@ int main(int argc, char **argv) {
   client.Read(HSHM_MCTX, loc, bulk_read_key, read_data.shm_, io_per_teration);
 #endif
 
-#ifdef TIMERBASE
-  rbb.pauseTime();
-  auto read_time = rbb.elapsed_time;
-  double read_sum;
-  MPI_Allreduce(&read_time, &read_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  double read_mean = read_sum / comm_size;
-  if (rank == 0)
-    stream << "read_from_BB," << read_mean << ",";
-#endif
-
   std::string output = file_path + "final_" + std::to_string(rank) + ".out";
-#ifdef TIMERBASE
-  Timer pfs = Timer();
-  pfs.resumeTime();
-#endif
 
   if (rank == 0)
     std::cerr << "Starting final output phase...\n";
@@ -210,15 +167,6 @@ int main(int argc, char **argv) {
   if (rank == 0)
     std::cerr << "Final write completed!\n";
 
-#ifdef TIMERBASE
-  pfs.pauseTime();
-  auto pfs_time = pfs.elapsed_time;
-  double pfs_sum;
-  MPI_Allreduce(&pfs_time, &pfs_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  double pfs_mean = pfs_sum / comm_size;
-  if (rank == 0)
-    stream << "write_to_PFS," << pfs_mean << ",";
-#endif
   mpi_timer.Pause();
 
   double avg = mpi_timer.CollectAvg().GetSec();

@@ -2,7 +2,7 @@
 // Created by lukemartinlogan on 7/22/22.
 //
 #include "labios/labios_client.h"
-#include <hermes_shm/util/timer.h>
+#include <hermes_shm/util/timer_mpi.h>
 #include <iomanip>
 #include <mpi.h>
 #include <random>
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
   workload.push_back({32 * 1024, 1024});
 
   size_t current_offset = 0;
-  hshm::Timer global_timer = hshm::Timer();
+  hshm::MpiTimer global_timer(MPI_COMM_WORLD);
   char *write_buf = new char[io_per_teration];
   gen_random(write_buf, io_per_teration);
 
@@ -59,18 +59,11 @@ int main(int argc, char **argv) {
       CHI_CLIENT->AllocateBuffer(HSHM_MCTX, io_per_teration);
   std::memcpy(initial_data.ptr_, write_buf, io_per_teration);
   global_timer.Resume();
-#ifdef TIMERBASE
-  Timer map = Timer();
-  map.resumeTime();
-#endif
   client.Create(HSHM_MCTX,
                 chi::DomainQuery::GetDirectHash(
                     chi::SubDomainId::kGlobalContainers, rank),
                 chi::DomainQuery::GetGlobalBcast(),
                 "kmeans_container_" + std::to_string(rank));
-#ifdef TIMERBASE
-  map.pauseTime();
-#endif
   global_timer.Pause();
 
   // Write initial dataset to container
@@ -100,20 +93,11 @@ int main(int argc, char **argv) {
           std::uniform_int_distribution<int> dist(0, 31);
           auto rand_offset = (dist(generator) * 1 * 1024 * 1024);
           global_timer.Resume();
-#ifdef TIMERBASE
-          map.resumeTime();
-#endif
 
-#ifdef TIMERBASE
-          map.pauseTime();
-#endif
           global_timer.Pause();
           current_offset = static_cast<size_t>(rand_offset);
         }
         global_timer.Resume();
-#ifdef TIMERBASE
-        map.resumeTime();
-#endif
 #ifndef COLLECT
         // Create unique key for each read operation
         std::string read_key = dataset_key + "_read_" + std::to_string(i) +
@@ -134,9 +118,6 @@ int main(int argc, char **argv) {
             std::make_pair(item[0], std::make_pair(read_key, read_loc)));
 
 #endif
-#ifdef TIMERBASE
-        map.pauseTime();
-#endif
         global_timer.Pause();
         current_offset += item[0];
         count++;
@@ -144,9 +125,6 @@ int main(int argc, char **argv) {
     }
   }
   global_timer.Resume();
-#ifdef TIMERBASE
-  map.resumeTime();
-#endif
   for (auto operation : operations) {
     size_t read_size = operation.first;
     std::string read_key = operation.second.first;
@@ -167,33 +145,15 @@ int main(int argc, char **argv) {
   if (rank == 0)
     std::cerr << "Starting final output phase...\n";
 
-#ifdef TIMERBASE
-  map.pauseTime();
-#endif
   global_timer.Pause();
-#ifdef TIMERBASE
-  auto map_time = map.elapsed_time;
-  double map_sum;
-  MPI_Allreduce(&map_time, &map_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  double map_mean = map_sum / comm_size;
-  if (rank == 0)
-    stream << map_mean << ",";
-#endif
   std::string finalname = pfs_path + "final_" + std::to_string(rank) + ".dat";
 
   global_timer.Resume();
-#ifdef TIMERBASE
-  Timer reduce = Timer();
-  reduce.resumeTime();
-#endif
 
   // Use the SAME container instead of creating a new one
   if (rank == 0)
     std::cerr << "Creating final output (using same container)...\n";
 
-#ifdef TIMERBASE
-  reduce.pauseTime();
-#endif
   global_timer.Pause();
 
   char out_buff[1024 * 1024];
@@ -203,9 +163,6 @@ int main(int argc, char **argv) {
   std::memcpy(output_data.ptr_, out_buff, 1024 * 1024);
 
   global_timer.Resume();
-#ifdef TIMERBASE
-  reduce.resumeTime();
-#endif
 
   if (rank == 0)
     std::cerr << "Writing final output...\n";
@@ -228,35 +185,19 @@ int main(int argc, char **argv) {
   if (rank == 0)
     std::cerr << "Final write completed!\n";
 
-#ifdef TIMERBASE
-  reduce.pauseTime();
-#endif
   global_timer.Pause();
-#ifdef TIMERBASE
-  auto red_time = reduce.elapsed_time;
-  double red_sum, max, min;
-  MPI_Allreduce(&red_time, &red_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce(&red_time, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-  MPI_Allreduce(&red_time, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-  double red_mean = red_sum / comm_size;
-  if (rank == 0)
-    stream << red_mean << "," << max << "," << min;
-#endif
 
   if (rank == 0)
     std::cerr << "Computing final timing results...\n";
 
-  auto time = global_timer.GetSec();
-  double sum;
-  MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  double mean = sum / comm_size;
+  double avg = global_timer.CollectAvg().GetSec();
   if (rank == 0) {
 #ifdef COLLECT
     double ts = get_average_ts();
     double worker = get_average_worker();
     stream << ts << "," << worker << ",";
 #endif
-    stream << "average," << mean << "\n";
+    stream << "average," << avg << "\n";
     std::cerr << stream.str();
   }
 

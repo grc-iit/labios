@@ -43,10 +43,6 @@ int main(int argc, char **argv) {
   size_t io_per_teration = 32 * 1024 * 1024;
   std::vector<std::array<size_t, 2>> workload =
       std::vector<std::array<size_t, 2>>();
-#ifdef TIMERBASE
-  Timer c = Timer();
-  c.resumeTime();
-#endif
   int count = 0;
   for (auto i = 0; i < 32; ++i) {
     for (int j = 0; j < comm_size * 1024 * 128; ++j) {
@@ -63,18 +59,8 @@ int main(int argc, char **argv) {
     write_buf[i] = static_cast<char *>(malloc(1 * 1024 * 1024));
     gen_random(write_buf[i], 1 * 1024 * 1024);
   }
-#ifdef TIMERBASE
-  if (rank == 0) {
-    stream << "montage_base()," << std::fixed << std::setprecision(10)
-           << c.pauseTime() << ",";
-  }
-#endif
   hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  hshm::Timer w = hshm::Timer();
-  w.resumeTime();
-#endif
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
   int fd1 = -1, fd2 = -1;
   if (rank % 2 == 0) {
@@ -91,18 +77,12 @@ int main(int argc, char **argv) {
       MPI_Abort(MPI_COMM_WORLD, 1);
     }
   }
-#ifdef TIMERBASE
-  w.pauseTime();
-#endif
   mpi_timer.Pause();
 
   for (int i = 0; i < iteration; ++i) {
     for (auto item : workload) {
       for (int j = 0; j < item[1]; ++j) {
         mpi_timer.Resume();
-#ifdef TIMERBASE
-        w.resumeTime();
-#endif
         if (rank % 2 == 0) {
           if (j % 2 == 0) {
             if (write(fd1, write_buf[j], item[0]) < 0)
@@ -117,9 +97,6 @@ int main(int argc, char **argv) {
           }
         }
         MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-        w.pauseTime();
-#endif
         mpi_timer.Pause();
         current_offset += item[0];
       }
@@ -129,9 +106,6 @@ int main(int argc, char **argv) {
     free(write_buf[i]);
   }
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  w.resumeTime();
-#endif
   if (rank % 2 == 0) {
     if (fd1 >= 0)
       close(fd1);
@@ -139,19 +113,8 @@ int main(int argc, char **argv) {
       close(fd2);
   }
   MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-  w.pauseTime();
-#endif
   mpi_timer.Pause();
-#ifdef TIMERBASE
-  if (rank == 0)
-    stream << w.elapsed_time << ",";
-#endif
 
-#ifdef TIMERBASE
-  Timer r = Timer();
-  r.resumeTime();
-#endif
   size_t align = 4096;
   mpi_timer.Resume();
   if (rank % 2 != 0) {
@@ -168,9 +131,6 @@ int main(int argc, char **argv) {
       std::cerr << "Filename: " << filename2 << std::endl;
     }
   }
-#ifdef TIMERBASE
-  r.pauseTime();
-#endif
   mpi_timer.Pause();
 
   for (int i = 0; i < iteration; ++i) {
@@ -182,9 +142,6 @@ int main(int argc, char **argv) {
           std::cerr << "memalign\n";
         read_buf += align;
         mpi_timer.Resume();
-#ifdef TIMERBASE
-        r.resumeTime();
-#endif
         if (rank % 2 != 0) {
           ssize_t bytes = 0;
           if (fd1 >= 0)
@@ -198,37 +155,19 @@ int main(int argc, char **argv) {
                       << "\n";
         }
         MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-        r.pauseTime();
-#endif
         mpi_timer.Pause();
         current_offset += item[0];
       }
     }
   }
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  r.resumeTime();
-#endif
   if (rank % 2 != 0) {
     if (fd1 >= 0)
       close(fd1);
     if (fd2 >= 0)
       close(fd2);
   }
-#ifdef TIMERBASE
-  r.pauseTime();
-#endif
 
-#ifdef TIMERBASE
-  if (rank == 0)
-    stream << r.elapsed_time << ",";
-#endif
-
-#ifdef TIMERBASE
-  Timer a = Timer();
-  a.resumeTime();
-#endif
   std::string finalname = final_path + "final_" + std::to_string(rank) + ".dat";
   std::fstream outfile;
   outfile.open(finalname, std::ios::out);
@@ -254,11 +193,6 @@ int main(int argc, char **argv) {
   outfile << buff << std::endl;
   outfile.close();
   mpi_timer.Pause();
-
-#ifdef TIMERBASE
-  if (rank == 0)
-    stream << a.pauseTime() << ",";
-#endif
 
   double avg = mpi_timer.CollectAvg().GetSec();
   if (rank == 0) {

@@ -47,10 +47,6 @@ int main(int argc, char **argv) {
     gen_random(write_buf[i], 1 * 1024 * 1024);
   }
   mpi_timer.Resume();
-#ifdef TIMERBASE
-  Timer wbb = Timer();
-  wbb.resumeTime();
-#endif
   //    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
   //    int fd=open(filename.c_str(),O_CREAT|O_SYNC|O_RSYNC|O_RDWR|O_TRUNC,
   //    mode);
@@ -59,18 +55,12 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Failed to open file for writing: %s\\n", filename.c_str());
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
-#ifdef TIMERBASE
-  wbb.pauseTime();
-#endif
   mpi_timer.Pause();
 
   for (int i = 0; i < iteration; ++i) {
     for (auto item : workload) {
       for (int j = 0; j < item[1]; ++j) {
         mpi_timer.Resume();
-#ifdef TIMERBASE
-        wbb.resumeTime();
-#endif
         //                write(fd,write_buf,item[0]);
         //                fsync(fd);
         size_t bytes_written =
@@ -80,9 +70,6 @@ int main(int argc, char **argv) {
         }
         MPI_Barrier(MPI_COMM_WORLD);
         mpi_timer.Pause();
-#ifdef TIMERBASE
-        wbb.pauseTime();
-#endif
         current_offset += item[0];
       }
     }
@@ -90,18 +77,9 @@ int main(int argc, char **argv) {
   for (int i = 0; i < 32; ++i) {
     free(write_buf[i]);
   }
-#ifdef TIMERBASE
-  wbb.resumeTime();
-  if (rank == 0)
-    stream << "write_to_BB," << wbb.pauseTime() << ",";
-#endif
   auto read_buf = static_cast<char *>(calloc(io_per_teration, sizeof(char)));
   mpi_timer.Resume();
 
-#ifdef TIMERBASE
-  Timer rbb = Timer();
-  rbb.resumeTime();
-#endif
   // close(fd);
   std::fclose(fh);
   //    int in=open(filename.c_str(),O_SYNC|O_RSYNC|O_RDONLY| mode);
@@ -119,16 +97,8 @@ int main(int argc, char **argv) {
   }
   std::fclose(fh1);
   MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-  if (rank == 0)
-    stream << "read_from_BB," << rbb.pauseTime() << ",";
-#endif
 
   std::string output = file_path + "final_" + std::to_string(rank) + ".out";
-#ifdef TIMERBASE
-  Timer pfs = Timer();
-  pfs.resumeTime();
-#endif
   //    int out=open(output.c_str(),O_CREAT|O_SYNC|O_WRONLY|O_TRUNC, mode);
   //    write(out,read_buf,io_per_teration);
   //    fsync(out);
@@ -143,10 +113,6 @@ int main(int argc, char **argv) {
   std::fflush(fh2);
   std::fclose(fh2);
   MPI_Barrier(MPI_COMM_WORLD);
-#ifdef TIMERBASE
-  if (rank == 0)
-    stream << "write_to_PFS," << pfs.pauseTime() << "\\n";
-#endif
   mpi_timer.Pause();
   free(read_buf);
   double avg = mpi_timer.CollectAvg().GetSec();
