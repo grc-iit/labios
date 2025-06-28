@@ -5,3 +5,5 @@ project(
   DESCRIPTION "Labios: A Label-based I/O system")
 
 add_subdirectory(tasks)
+
+jarvis_repo_add("${CMAKE_SOURCE_DIR}/tasks/jarvis_labios" "${CMAKE_SOURCE_DIR}/tasks/jarvis_labios/pipelines")
