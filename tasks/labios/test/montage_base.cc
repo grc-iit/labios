@@ -2,24 +2,24 @@
 // Created by lukemartinlogan on 7/22/22.
 //
 
-#include <hermes_shm/util/timer.h>
-#include <sstream>
-#include <mpi.h>
-#include <iomanip>
-#include <sys/stat.h>
+#include "hermes_shm/util/timer_mpi.h"
 #include <fcntl.h>
-#include <unistd.h>
-#include <random>
 #include <fstream> // Include fstream header
+#include <iomanip>
 #include <malloc.h>
+#include <mpi.h>
+#include <random>
+#include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
 
 void gen_random(char *buf, size_t size) {
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-    for (size_t i = 0; i < size; ++i) {
-        buf[i] = static_cast<char>(dist(generator));
-    }
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_int_distribution<int> dist(0, 255);
+  for (size_t i = 0; i < size; ++i) {
+    buf[i] = static_cast<char>(dist(generator));
+  }
 }
 
 int main(int argc, char **argv) {
@@ -69,46 +69,58 @@ int main(int argc, char **argv) {
            << c.pauseTime() << ",";
   }
 #endif
-  hshm::Timer global_timer = hshm::Timer();
-  global_timer.Resume();
+  hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
+  mpi_timer.Resume();
 #ifdef TIMERBASE
   hshm::Timer w = hshm::Timer();
   w.resumeTime();
 #endif
   mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-  int fd1, fd2;
+  int fd1 = -1, fd2 = -1;
   if (rank % 2 == 0) {
     fd1 = open(filename1.c_str(),
                O_CREAT | O_SYNC | O_DSYNC | O_WRONLY | O_TRUNC, mode);
+    if (fd1 < 0) {
+      perror("Failed to open file1 for writing");
+      MPI_Abort(MPI_COMM_WORLD, 1);
+    }
     fd2 = open(filename2.c_str(),
                O_CREAT | O_SYNC | O_DSYNC | O_WRONLY | O_TRUNC, mode);
+    if (fd2 < 0) {
+      perror("Failed to open file2 for writing");
+      MPI_Abort(MPI_COMM_WORLD, 1);
+    }
   }
 #ifdef TIMERBASE
   w.pauseTime();
 #endif
-  global_timer.Pause();
+  mpi_timer.Pause();
 
   for (int i = 0; i < iteration; ++i) {
     for (auto item : workload) {
       for (int j = 0; j < item[1]; ++j) {
-        global_timer.Resume();
+        mpi_timer.Resume();
 #ifdef TIMERBASE
         w.resumeTime();
 #endif
         if (rank % 2 == 0) {
           if (j % 2 == 0) {
-            write(fd1, write_buf[j], item[0]);
-            fsync(fd1);
+            if (write(fd1, write_buf[j], item[0]) < 0)
+              perror("write failed to fd1");
+            if (fsync(fd1) < 0)
+              perror("fsync failed on fd1");
           } else {
-            write(fd2, write_buf[j], item[0]);
-            fsync(fd2);
+            if (write(fd2, write_buf[j], item[0]) < 0)
+              perror("write failed to fd2");
+            if (fsync(fd2) < 0)
+              perror("fsync failed on fd2");
           }
         }
         MPI_Barrier(MPI_COMM_WORLD);
 #ifdef TIMERBASE
         w.pauseTime();
 #endif
-        global_timer.Pause();
+        mpi_timer.Pause();
         current_offset += item[0];
       }
     }
@@ -116,19 +128,21 @@ int main(int argc, char **argv) {
   for (int i = 0; i < 32; ++i) {
     free(write_buf[i]);
   }
-  global_timer.Resume();
+  mpi_timer.Resume();
 #ifdef TIMERBASE
   w.resumeTime();
 #endif
   if (rank % 2 == 0) {
-    close(fd1);
-    close(fd2);
+    if (fd1 >= 0)
+      close(fd1);
+    if (fd2 >= 0)
+      close(fd2);
   }
   MPI_Barrier(MPI_COMM_WORLD);
 #ifdef TIMERBASE
   w.pauseTime();
 #endif
-  global_timer.Pause();
+  mpi_timer.Pause();
 #ifdef TIMERBASE
   if (rank == 0)
     stream << w.elapsed_time << ",";
@@ -139,21 +153,25 @@ int main(int argc, char **argv) {
   r.resumeTime();
 #endif
   size_t align = 4096;
-  global_timer.Resume();
+  mpi_timer.Resume();
   if (rank % 2 != 0) {
     filename1 = file_path + "file1_" + std::to_string(rank - 1) + ".dat";
     filename2 = file_path + "file2_" + std::to_string(rank - 1) + ".dat";
     fd1 = open(filename1.c_str(), O_DIRECT | O_RDONLY | mode);
-    if (fd1 == -1)
-      std::cerr << "open() failed!\n";
+    if (fd1 < 0) {
+      perror("open() failed for file1 read");
+      std::cerr << "Filename: " << filename1 << std::endl;
+    }
     fd2 = open(filename2.c_str(), O_DIRECT | O_RDONLY | mode);
-    if (fd2 == -1)
-      std::cerr << "open() failed!\n";
+    if (fd2 < 0) {
+      perror("open() failed for file2 read");
+      std::cerr << "Filename: " << filename2 << std::endl;
+    }
   }
 #ifdef TIMERBASE
   r.pauseTime();
 #endif
-  global_timer.Pause();
+  mpi_timer.Pause();
 
   for (int i = 0; i < iteration; ++i) {
     for (auto item : workload) {
@@ -163,34 +181,40 @@ int main(int argc, char **argv) {
         if (read_buf == NULL)
           std::cerr << "memalign\n";
         read_buf += align;
-        global_timer.Resume();
+        mpi_timer.Resume();
 #ifdef TIMERBASE
         r.resumeTime();
 #endif
         if (rank % 2 != 0) {
           ssize_t bytes = 0;
-          bytes = read(fd1, read_buf, item[0] / 2);
-          bytes += read(fd2, read_buf, item[0] / 2);
-          if (bytes != item[0])
-            std::cerr << "Read() failed!"
-                      << "Bytes:" << bytes << "\tError code:" << errno << "\n";
+          if (fd1 >= 0)
+            bytes += read(fd1, read_buf, item[0] / 2);
+          if (fd2 >= 0)
+            bytes += read(fd2, read_buf, item[0] / 2);
+          if (bytes < 0) {
+            perror("Read() failed!");
+          } else if (bytes != item[0])
+            std::cerr << "Read() failed! Wanted " << item[0] << " Got " << bytes
+                      << "\n";
         }
         MPI_Barrier(MPI_COMM_WORLD);
 #ifdef TIMERBASE
         r.pauseTime();
 #endif
-        global_timer.Pause();
+        mpi_timer.Pause();
         current_offset += item[0];
       }
     }
   }
-  global_timer.Resume();
+  mpi_timer.Resume();
 #ifdef TIMERBASE
   r.resumeTime();
 #endif
   if (rank % 2 != 0) {
-    close(fd1);
-    close(fd2);
+    if (fd1 >= 0)
+      close(fd1);
+    if (fd2 >= 0)
+      close(fd2);
   }
 #ifdef TIMERBASE
   r.pauseTime();
@@ -208,7 +232,10 @@ int main(int argc, char **argv) {
   std::string finalname = final_path + "final_" + std::to_string(rank) + ".dat";
   std::fstream outfile;
   outfile.open(finalname, std::ios::out);
-  global_timer.Pause();
+  if (!outfile.is_open()) {
+    std::cerr << "Failed to open final output file: " << finalname << std::endl;
+  }
+  mpi_timer.Pause();
   for (auto i = 0; i < 32; ++i) {
     for (int j = 0; j < comm_size * 1024 * 128; ++j) {
       count += 1;
@@ -223,22 +250,19 @@ int main(int argc, char **argv) {
   }
   char buff[1024 * 1024];
   gen_random(buff, 1024 * 1024);
-  global_timer.Resume();
+  mpi_timer.Resume();
   outfile << buff << std::endl;
   outfile.close();
-  global_timer.Pause();
+  mpi_timer.Pause();
 
 #ifdef TIMERBASE
   if (rank == 0)
     stream << a.pauseTime() << ",";
 #endif
 
-  auto time = global_timer.GetSec();
-  double sum;
-  MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  double mean = sum / comm_size;
+  double avg = mpi_timer.CollectAvg().GetSec();
   if (rank == 0) {
-    stream << "average," << mean << "\n";
+    stream << "average," << avg << "\n";
     std::cerr << stream.str();
   }
   MPI_Finalize();

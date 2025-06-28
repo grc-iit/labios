@@ -2,19 +2,19 @@
 // Created by lukemartinlogan on 7/22/22.
 //
 
-#include <hermes_shm/util/timer.h>
-#include <mpi.h>
-#include <sstream>
+#include "hermes_shm/util/timer_mpi.h"
 #include <iomanip>
+#include <mpi.h>
 #include <random>
+#include <sstream>
 
 void gen_random(char *buf, size_t size) {
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-    for (size_t i = 0; i < size; ++i) {
-        buf[i] = static_cast<char>(dist(generator));
-    }
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_int_distribution<int> dist(0, 255);
+  for (size_t i = 0; i < size; ++i) {
+    buf[i] = static_cast<char>(dist(generator));
+  }
 }
 
 int main(int argc, char **argv) {
@@ -40,13 +40,13 @@ int main(int argc, char **argv) {
       std::vector<std::array<size_t, 2>>();
   workload.push_back({1 * 1024 * 1024, 32});
   size_t current_offset = 0;
-  hshm::Timer global_timer = hshm::Timer();
+  hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
   char *write_buf[32];
   for (int i = 0; i < 32; ++i) {
     write_buf[i] = static_cast<char *>(malloc(1 * 1024 * 1024));
     gen_random(write_buf[i], 1 * 1024 * 1024);
   }
-  global_timer.Resume();
+  mpi_timer.Resume();
 #ifdef TIMERBASE
   Timer wbb = Timer();
   wbb.resumeTime();
@@ -55,23 +55,31 @@ int main(int argc, char **argv) {
   //    int fd=open(filename.c_str(),O_CREAT|O_SYNC|O_RSYNC|O_RDWR|O_TRUNC,
   //    mode);
   FILE *fh = std::fopen(filename.c_str(), "w+");
+  if (fh == nullptr) {
+    fprintf(stderr, "Failed to open file for writing: %s\\n", filename.c_str());
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
 #ifdef TIMERBASE
   wbb.pauseTime();
 #endif
-  global_timer.Pause();
+  mpi_timer.Pause();
 
   for (int i = 0; i < iteration; ++i) {
     for (auto item : workload) {
       for (int j = 0; j < item[1]; ++j) {
-        global_timer.Resume();
+        mpi_timer.Resume();
 #ifdef TIMERBASE
         wbb.resumeTime();
 #endif
         //                write(fd,write_buf,item[0]);
         //                fsync(fd);
-        std::fwrite(write_buf[j], sizeof(char), item[0], fh);
+        size_t bytes_written =
+            std::fwrite(write_buf[j], sizeof(char), item[0], fh);
+        if (bytes_written != item[0]) {
+          fprintf(stderr, "Short write on %s\\n", filename.c_str());
+        }
         MPI_Barrier(MPI_COMM_WORLD);
-        global_timer.Pause();
+        mpi_timer.Pause();
 #ifdef TIMERBASE
         wbb.pauseTime();
 #endif
@@ -88,7 +96,7 @@ int main(int argc, char **argv) {
     stream << "write_to_BB," << wbb.pauseTime() << ",";
 #endif
   auto read_buf = static_cast<char *>(calloc(io_per_teration, sizeof(char)));
-  global_timer.Resume();
+  mpi_timer.Resume();
 
 #ifdef TIMERBASE
   Timer rbb = Timer();
@@ -100,7 +108,15 @@ int main(int argc, char **argv) {
   //    read(in,read_buf,io_per_teration);
   //    close(in);
   FILE *fh1 = std::fopen(filename.c_str(), "r");
-  std::fread(read_buf, sizeof(char), io_per_teration, fh1);
+  if (fh1 == nullptr) {
+    fprintf(stderr, "Failed to open file for reading: %s\\n", filename.c_str());
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
+  size_t bytes_read = std::fread(read_buf, sizeof(char), io_per_teration, fh1);
+  if (bytes_read != io_per_teration) {
+    fprintf(stderr, "Short read on %s. Expected %zu, got %zu\\n",
+            filename.c_str(), io_per_teration, bytes_read);
+  }
   std::fclose(fh1);
   MPI_Barrier(MPI_COMM_WORLD);
 #ifdef TIMERBASE
@@ -118,22 +134,24 @@ int main(int argc, char **argv) {
   //    fsync(out);
   //    close(out);
   FILE *fh2 = std::fopen(output.c_str(), "w");
+  if (fh2 == nullptr) {
+    fprintf(stderr, "Failed to open file for final output: %s\\n",
+            output.c_str());
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
   std::fwrite(read_buf, sizeof(char), io_per_teration, fh2);
   std::fflush(fh2);
   std::fclose(fh2);
   MPI_Barrier(MPI_COMM_WORLD);
 #ifdef TIMERBASE
   if (rank == 0)
-    stream << "write_to_PFS," << pfs.pauseTime() << "\n";
+    stream << "write_to_PFS," << pfs.pauseTime() << "\\n";
 #endif
-  global_timer.Pause();
+  mpi_timer.Pause();
   free(read_buf);
-  auto time = global_timer.GetSec();
-  double sum;
-  MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  double mean = sum / comm_size;
+  double avg = mpi_timer.CollectAvg().GetSec();
   if (rank == 0) {
-    stream << "average," << mean << "\n";
+    stream << "average," << avg << "\\n";
     std::cerr << stream.str();
   }
 

@@ -2,22 +2,21 @@
 // Created by lukemartinlogan on 7/22/22.
 //
 
-#include <hermes_shm/util/timer.h>
-#include <sstream>
-#include <iomanip>
-#include <random>
-#include <mpi.h>
+#include "hermes_shm/util/timer_mpi.h"
 #include "labios/labios_client.h"
+#include <iomanip>
+#include <mpi.h>
+#include <random>
+#include <sstream>
 
 void gen_random(char *buf, size_t size) {
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-    for (size_t i = 0; i < size; ++i) {
-        buf[i] = static_cast<char>(dist(generator));
-    }
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::uniform_int_distribution<int> dist(0, 255);
+  for (size_t i = 0; i < size; ++i) {
+    buf[i] = static_cast<char>(dist(generator));
+  }
 }
-
 
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
@@ -45,27 +44,25 @@ int main(int argc, char **argv) {
   CHIMAERA_CLIENT_INIT();
   chi::labios::Client client;
 
-  hshm::Timer global_timer = hshm::Timer();
-  global_timer.Resume();
+  hshm::MpiTimer mpi_timer(MPI_COMM_WORLD);
+  mpi_timer.Resume();
 
-  client.Create(
-        HSHM_MCTX,
-        chi::DomainQuery::GetDirectHash(chi::SubDomainId::kGlobalContainers, rank),
-        chi::DomainQuery::GetGlobalBcast(), 
-        "labios_container_" + std::to_string(rank)
-    );
+  client.Create(HSHM_MCTX,
+                chi::DomainQuery::GetDirectHash(
+                    chi::SubDomainId::kGlobalContainers, rank),
+                chi::DomainQuery::GetGlobalBcast(),
+                "labios_container_" + std::to_string(rank));
 
-  global_timer.Pause();
+  mpi_timer.Pause();
 
   std::vector<std::array<size_t, 2>> workload =
       std::vector<std::array<size_t, 2>>();
   workload.push_back({1 * 1024 * 1024, 32});
 
-
   size_t current_offset = 0;
-  
+
   // FILE *fh = fopen(filename.c_str(), "w+");
-  
+
   char *write_buf[32];
   hipc::FullPtr<char> write_data[32];
 
@@ -75,33 +72,39 @@ int main(int argc, char **argv) {
     write_data[i] = CHI_CLIENT->AllocateBuffer(HSHM_MCTX, 1 * 1024 * 1024);
     std::memcpy(write_data[i].ptr_, write_buf[i], 1 * 1024 * 1024);
   }
-  std::vector<std::pair<size_t, std::pair<std::string, chi::DomainQuery>>> operations =
-        std::vector<std::pair<size_t, std::pair<std::string, chi::DomainQuery>>>();
+  std::vector<std::pair<size_t, std::pair<std::string, chi::DomainQuery>>>
+      operations = std::vector<
+          std::pair<size_t, std::pair<std::string, chi::DomainQuery>>>();
 
   printf("HERE1\n");
   for (int i = 0; i < iteration; ++i) {
     for (auto item : workload) {
       for (int j = 0; j < item[1]; ++j) {
-        global_timer.Resume();
-        std::string key = filename + "_iter_" + std::to_string(i) + "_chunk_" + std::to_string(j);
+        mpi_timer.Resume();
+        std::string key = filename + "_iter_" + std::to_string(i) + "_chunk_" +
+                          std::to_string(j);
         auto query = chi::DomainQuery::GetDynamic();
-        auto loc = chi::DomainQuery::GetDirectId(chi::SubDomain::kGlobalContainers, rank, 0);
-        client.MdGetOrCreate(HSHM_MCTX, query, key, current_offset, item[0], loc);
+        auto loc = chi::DomainQuery::GetDirectId(
+            chi::SubDomain::kGlobalContainers, rank, 0);
+        client.MdGetOrCreate(HSHM_MCTX, query, key, current_offset, item[0],
+                             loc);
         client.Write(HSHM_MCTX, loc, key, write_data[j].shm_, item[0]);
-        operations.emplace_back(std::make_pair(item[0], std::make_pair(key, loc)));
+        operations.emplace_back(
+            std::make_pair(item[0], std::make_pair(key, loc)));
 
-        global_timer.Pause();
+        mpi_timer.Pause();
         current_offset += item[0];
       }
     }
   }
   printf("HERE2\n");
-  global_timer.Resume();
+  mpi_timer.Resume();
   for (auto operation : operations) {
     size_t expected_size = operation.first;
     std::string key = operation.second.first;
     chi::DomainQuery loc = operation.second.second;
-    hipc::FullPtr<char> read_data = CHI_CLIENT->AllocateBuffer(HSHM_MCTX, expected_size);
+    hipc::FullPtr<char> read_data =
+        CHI_CLIENT->AllocateBuffer(HSHM_MCTX, expected_size);
     client.Read(HSHM_MCTX, loc, key, read_data.shm_, expected_size);
     printf("HERE2.5: %zu\n", expected_size);
 
@@ -110,30 +113,27 @@ int main(int argc, char **argv) {
     // if (bytes != operation.first)
     //   std::cerr << "Write failed\n";
   }
-  global_timer.Pause();
+  mpi_timer.Pause();
   for (int i = 0; i < 32; ++i) {
     free(write_buf[i]);
   }
-  global_timer.Resume();
+  mpi_timer.Resume();
   if (rank == 0)
     std::cerr << "Write finished\n";
   // fclose(fh);
-  global_timer.Pause();
+  mpi_timer.Pause();
   printf("HERE3");
 
-  auto time = global_timer.GetSec();
-  double sum, max, min;
-  MPI_Allreduce(&time, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce(&time, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-  MPI_Allreduce(&time, &min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-  double mean = sum / comm_size;
+  double avg = mpi_timer.CollectAvg().GetSec();
+  double max = mpi_timer.CollectMax().GetSec();
+  double min = mpi_timer.CollectMin().GetSec();
   if (rank == 0) {
 #ifdef COLLECT
     double ts = get_average_ts();
     double worker = get_average_worker();
     stream << ts << "," << worker << ",";
 #endif
-    stream << mean << "," << max << "," << min << "\n";
+    stream << avg << "," << max << "," << min << "\n";
     std::cerr << stream.str();
   }
   MPI_Finalize();
