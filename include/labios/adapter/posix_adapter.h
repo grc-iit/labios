@@ -23,10 +23,15 @@ public:
     int fsync(int fd);
     int stat(const char* path, struct stat* st);
     int fstat(int fd, struct stat* st);
+    int lstat(const char* path, struct stat* st);
     int unlink(const char* path);
     int access(const char* path, int mode);
     int mkdir(const char* path, mode_t mode);
+    int rmdir(const char* path);
+    int rename(const char* oldpath, const char* newpath);
     int ftruncate(int fd, off_t length);
+    int dup(int oldfd);
+    int dup2(int oldfd, int newfd);
 
 private:
     Session& session_;

@@ -27,11 +27,16 @@ using fsync_fn     = int(*)(int);
 using unlink_fn    = int(*)(const char*);
 using access_fn    = int(*)(const char*, int);
 using mkdir_fn     = int(*)(const char*, mode_t);
+using rmdir_fn     = int(*)(const char*);
+using rename_fn    = int(*)(const char*, const char*);
 using ftruncate_fn = int(*)(int, off_t);
+using dup_fn       = int(*)(int);
+using dup2_fn      = int(*)(int, int);
 
-// glibc stat interception uses __xstat/__fxstat
+// glibc stat interception uses __xstat/__fxstat/__lxstat
 using xstat_fn     = int(*)(int, const char*, struct stat*);
 using fxstat_fn    = int(*)(int, int, struct stat*);
+using lxstat_fn    = int(*)(int, const char*, struct stat*);
 
 open_fn      real_open = nullptr;
 close_fn     real_close = nullptr;
@@ -44,9 +49,14 @@ fsync_fn     real_fsync = nullptr;
 unlink_fn    real_unlink = nullptr;
 access_fn    real_access = nullptr;
 mkdir_fn     real_mkdir = nullptr;
+rmdir_fn     real_rmdir = nullptr;
+rename_fn    real_rename = nullptr;
 ftruncate_fn real_ftruncate = nullptr;
+dup_fn       real_dup = nullptr;
+dup2_fn      real_dup2 = nullptr;
 xstat_fn     real_xstat = nullptr;
 fxstat_fn    real_fxstat = nullptr;
+lxstat_fn    real_lxstat = nullptr;
 
 labios::Config g_config;
 std::unique_ptr<labios::Session> g_session;
@@ -80,9 +90,14 @@ void init_real_symbols() {
         real_unlink    = load_sym<unlink_fn>("unlink");
         real_access    = load_sym<access_fn>("access");
         real_mkdir     = load_sym<mkdir_fn>("mkdir");
+        real_rmdir     = load_sym<rmdir_fn>("rmdir");
+        real_rename    = load_sym<rename_fn>("rename");
         real_ftruncate = load_sym<ftruncate_fn>("ftruncate");
+        real_dup       = load_sym<dup_fn>("dup");
+        real_dup2      = load_sym<dup2_fn>("dup2");
         real_xstat     = load_sym<xstat_fn>("__xstat");
         real_fxstat    = load_sym<fxstat_fn>("__fxstat");
+        real_lxstat    = load_sym<lxstat_fn>("__lxstat");
         g_symbols_loaded = true;
     });
 }
@@ -337,4 +352,75 @@ extern "C" int __fxstat(int ver, int fd, struct stat* st) {
     if (real_fxstat) return real_fxstat(ver, fd, st);
     errno = ENOSYS;
     return -1;
+}
+
+extern "C" int __lxstat(int ver, const char* path, struct stat* st) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->lstat(path, st); }
+    }
+    if (real_lxstat) return real_lxstat(ver, path, st);
+    errno = ENOSYS;
+    return -1;
+}
+
+extern "C" int dup(int oldfd) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(oldfd)) return g_adapter->dup(oldfd);
+    }
+    return real_dup(oldfd);
+}
+
+extern "C" int dup2(int oldfd, int newfd) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(oldfd)) return g_adapter->dup2(oldfd, newfd);
+    }
+    return real_dup2(oldfd, newfd);
+}
+
+extern "C" int rename(const char* oldpath, const char* newpath) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(oldpath) || is_labios_path(newpath)) {
+            init_session();
+            return g_adapter->rename(oldpath, newpath);
+        }
+    }
+    return real_rename(oldpath, newpath);
+}
+
+extern "C" int rmdir(const char* path) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->rmdir(path); }
+    }
+    return real_rmdir(path);
+}
+
+// 64-bit variants (on LP64 Linux these are identical to the base calls,
+// but some applications and libc versions reference them explicitly).
+
+extern "C" off_t lseek64(int fd, off_t offset, int whence) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->lseek(fd, offset, whence);
+    }
+    return real_lseek(fd, offset, whence);
+}
+
+extern "C" int ftruncate64(int fd, off_t length) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->ftruncate(fd, length);
+    }
+    return real_ftruncate(fd, length);
 }

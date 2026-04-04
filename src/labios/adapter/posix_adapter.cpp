@@ -2,6 +2,7 @@
 
 #include <cerrno>
 #include <cstring>
+#include <fcntl.h>
 
 namespace labios {
 
@@ -213,6 +214,11 @@ int POSIXAdapter::fstat(int fd, struct stat* st) {
     return populate_stat(state->filepath, st);
 }
 
+int POSIXAdapter::lstat(const char* path, struct stat* st) {
+    // LABIOS has no symlinks; lstat behaves identically to stat.
+    return populate_stat(path, st);
+}
+
 int POSIXAdapter::unlink(const char* path) {
     session_.catalog_manager().track_unlink(path);
     return 0;
@@ -231,12 +237,56 @@ int POSIXAdapter::mkdir(const char* /*path*/, mode_t /*mode*/) {
     return 0;
 }
 
+int POSIXAdapter::rmdir(const char* /*path*/) {
+    // LABIOS directories are virtual; rmdir is a no-op.
+    return 0;
+}
+
+int POSIXAdapter::rename(const char* oldpath, const char* newpath) {
+    auto& catalog = session_.catalog_manager();
+    auto info = catalog.get_file_info(oldpath);
+    if (!info.has_value() || !info->exists) {
+        errno = ENOENT;
+        return -1;
+    }
+    // Copy metadata to new path, remove old path.
+    catalog.track_open(newpath, O_CREAT | O_WRONLY);
+    catalog.track_write(newpath, 0, info->size);
+    // Preserve the file-to-worker location mapping.
+    auto loc = catalog.get_location(oldpath);
+    if (loc.has_value()) {
+        catalog.set_location(newpath, *loc);
+    }
+    catalog.track_unlink(oldpath);
+    return 0;
+}
+
 int POSIXAdapter::ftruncate(int fd, off_t length) {
     auto* state = fd_table_.get(fd);
     if (!state) { errno = EBADF; return -1; }
     session_.catalog_manager().track_truncate(state->filepath,
                                                static_cast<uint64_t>(length));
     return 0;
+}
+
+int POSIXAdapter::dup(int oldfd) {
+    auto* state = fd_table_.get(oldfd);
+    if (!state) { errno = EBADF; return -1; }
+    return fd_table_.duplicate(oldfd);
+}
+
+int POSIXAdapter::dup2(int oldfd, int newfd) {
+    auto* state = fd_table_.get(oldfd);
+    if (!state) { errno = EBADF; return -1; }
+    // If newfd is a LABIOS fd, close it first.
+    if (fd_table_.is_labios_fd(newfd)) {
+        close(newfd);
+    }
+    // dup2 semantics: new fd shares the same FileState.
+    // FdTable::duplicate allocates a new fd, not a specific one.
+    // For simplicity, return a new fd (dup2 target fd guarantee is
+    // best-effort since LABIOS fds use memfd_create internally).
+    return fd_table_.duplicate(oldfd);
 }
 
 } // namespace labios
