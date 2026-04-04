@@ -119,6 +119,16 @@ int main() {
                 for (auto& [worker_id, assigned_labels] : assignments) {
                     catalog.set_worker(label.id, worker_id);
 
+                    // Set location at assignment time so subsequent labels
+                    // in the same async batch use write-locality. The worker
+                    // also sets location at completion (confirming the mapping).
+                    if (label.type == labios::LabelType::Write) {
+                        auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                        if (dst) {
+                            catalog.set_location(dst->path, worker_id);
+                        }
+                    }
+
                     for (auto& payload : assigned_labels) {
                         std::string subject = "labios.worker." + std::to_string(worker_id);
                         nats.publish(subject,

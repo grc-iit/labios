@@ -1,15 +1,29 @@
 #pragma once
 
 #include <chrono>
+#include <condition_variable>
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace labios::transport {
+
+/// A deferred reply handle returned by publish_request_async().
+/// Call wait() to block until the reply arrives.
+struct AsyncReply {
+    std::mutex mu;
+    std::condition_variable cv;
+    std::vector<std::byte> data;
+    bool completed = false;
+
+    /// Block until the reply arrives or timeout. Returns the reply data.
+    std::vector<std::byte> wait(std::chrono::milliseconds timeout);
+};
 
 class NatsConnection {
 public:
@@ -47,6 +61,11 @@ public:
 
     Reply request(std::string_view subject, std::span<const std::byte> data,
                   std::chrono::milliseconds timeout);
+
+    /// Publish a message with a reply inbox, return immediately.
+    /// The reply arrives asynchronously via the returned handle.
+    std::shared_ptr<AsyncReply> publish_request_async(
+        std::string_view subject, std::span<const std::byte> data);
 
     [[nodiscard]] bool connected() const;
 

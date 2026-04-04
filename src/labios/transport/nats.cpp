@@ -2,19 +2,42 @@
 
 #include <nats.h>
 
+#include <atomic>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace labios::transport {
+
+std::vector<std::byte> AsyncReply::wait(std::chrono::milliseconds timeout) {
+    std::unique_lock lock(mu);
+    cv.wait_for(lock, timeout, [this] { return completed; });
+    if (!completed) {
+        throw std::runtime_error("nats: async reply timed out");
+    }
+    return std::move(data);
+}
 
 struct NatsConnection::Impl {
     natsConnection* conn = nullptr;
     std::vector<natsSubscription*> subs;
     MessageCallback cb;
 
+    // Async reply infrastructure: a wildcard inbox subscription that
+    // routes incoming replies to the correct AsyncReply handle.
+    std::string inbox_prefix;
+    natsSubscription* inbox_sub = nullptr;
+    std::atomic<uint64_t> inbox_counter{0};
+    std::mutex reply_mu;
+    std::unordered_map<std::string, std::shared_ptr<AsyncReply>> pending_replies;
+
     ~Impl() {
+        if (inbox_sub != nullptr) {
+            natsSubscription_Drain(inbox_sub);
+            natsSubscription_Destroy(inbox_sub);
+        }
         for (auto* sub : subs) {
             natsSubscription_Drain(sub);
             natsSubscription_Destroy(sub);
@@ -23,6 +46,58 @@ struct NatsConnection::Impl {
             natsConnection_Drain(conn);
             natsConnection_Destroy(conn);
         }
+    }
+
+    void ensure_inbox_sub() {
+        if (inbox_sub != nullptr) return;
+
+        natsInbox* inbox = nullptr;
+        natsInbox_Create(&inbox);
+        inbox_prefix = std::string(inbox);
+        natsInbox_Destroy(inbox);
+        // Remove trailing dot if present, then add ".*" for wildcard
+        if (!inbox_prefix.empty() && inbox_prefix.back() == '.') {
+            inbox_prefix.pop_back();
+        }
+        std::string wildcard = inbox_prefix + ".*";
+
+        natsStatus s = natsConnection_Subscribe(
+            &inbox_sub, conn, wildcard.c_str(),
+            on_inbox_message, this);
+        if (s != NATS_OK) {
+            throw std::runtime_error("nats: inbox subscription failed");
+        }
+    }
+
+    static void on_inbox_message(natsConnection* /*nc*/,
+                                  natsSubscription* /*sub*/,
+                                  natsMsg* msg, void* closure) {
+        auto* self = static_cast<Impl*>(closure);
+        const char* subj = natsMsg_GetSubject(msg);
+        const char* raw = natsMsg_GetData(msg);
+        int len = natsMsg_GetDataLength(msg);
+
+        if (subj) {
+            std::shared_ptr<AsyncReply> reply;
+            {
+                std::lock_guard lock(self->reply_mu);
+                auto it = self->pending_replies.find(subj);
+                if (it != self->pending_replies.end()) {
+                    reply = it->second;
+                    self->pending_replies.erase(it);
+                }
+            }
+            if (reply) {
+                std::lock_guard lock(reply->mu);
+                if (raw && len > 0) {
+                    auto* begin = reinterpret_cast<const std::byte*>(raw);
+                    reply->data.assign(begin, begin + len);
+                }
+                reply->completed = true;
+                reply->cv.notify_one();
+            }
+        }
+        natsMsg_Destroy(msg);
     }
 
     static void on_message(natsConnection* /*nc*/, natsSubscription* /*sub*/,
@@ -127,6 +202,33 @@ NatsConnection::Reply NatsConnection::request(
     }
     natsMsg_Destroy(reply_msg);
     return result;
+}
+
+std::shared_ptr<AsyncReply> NatsConnection::publish_request_async(
+    std::string_view subject, std::span<const std::byte> data) {
+    impl_->ensure_inbox_sub();
+
+    uint64_t seq = impl_->inbox_counter.fetch_add(1);
+    std::string reply_to = impl_->inbox_prefix + "." + std::to_string(seq);
+
+    auto reply = std::make_shared<AsyncReply>();
+    {
+        std::lock_guard lock(impl_->reply_mu);
+        impl_->pending_replies[reply_to] = reply;
+    }
+
+    natsStatus s = natsConnection_PublishRequest(
+        impl_->conn,
+        std::string(subject).c_str(),
+        reply_to.c_str(),
+        reinterpret_cast<const void*>(data.data()),
+        static_cast<int>(data.size()));
+    if (s != NATS_OK) {
+        std::lock_guard lock(impl_->reply_mu);
+        impl_->pending_replies.erase(reply_to);
+        throw std::runtime_error("nats: async publish failed on " + std::string(subject));
+    }
+    return reply;
 }
 
 bool NatsConnection::connected() const {

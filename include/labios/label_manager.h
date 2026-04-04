@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -16,6 +17,7 @@ namespace labios {
 struct PendingLabel {
     uint64_t label_id = 0;
     std::vector<std::byte> reply_data;
+    std::shared_ptr<transport::AsyncReply> async_reply;
 };
 
 class LabelManager {

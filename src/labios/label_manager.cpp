@@ -42,15 +42,14 @@ std::vector<PendingLabel> LabelManager::publish_write(
         content_.stage(label.id, chunk);
         catalog_.create(label);
 
-        auto reply = nats_.request("labios.labels", serialized,
-                                    std::chrono::milliseconds(30000));
-
-        pending.push_back({label.id, std::move(reply.data)});
+        auto async = nats_.publish_request_async("labios.labels", serialized);
+        pending.push_back({label.id, {}, std::move(async)});
 
         pos += chunk_size;
         remaining -= chunk_size;
     }
 
+    nats_.flush();
     return pending;
 }
 
@@ -77,20 +76,27 @@ std::vector<PendingLabel> LabelManager::publish_read(
 
         catalog_.create(label);
 
-        auto reply = nats_.request("labios.labels", serialized,
-                                    std::chrono::milliseconds(30000));
-
-        pending.push_back({label.id, std::move(reply.data)});
+        auto async = nats_.publish_request_async("labios.labels", serialized);
+        pending.push_back({label.id, {}, std::move(async)});
 
         pos += chunk_size;
         remaining -= chunk_size;
     }
 
+    nats_.flush();
     return pending;
+}
+
+static void resolve_reply(PendingLabel& p) {
+    if (p.async_reply && p.reply_data.empty()) {
+        p.reply_data = p.async_reply->wait(std::chrono::milliseconds(30000));
+        p.async_reply.reset();
+    }
 }
 
 void LabelManager::wait(std::span<PendingLabel> pending) {
     for (auto& p : pending) {
+        resolve_reply(p);
         if (p.reply_data.empty()) continue;
         auto comp = deserialize_completion(p.reply_data);
         if (comp.status == CompletionStatus::Error) {
@@ -105,6 +111,7 @@ std::vector<std::byte> LabelManager::wait_read(
 
     std::vector<std::byte> result;
     for (auto& p : pending) {
+        resolve_reply(p);
         if (p.reply_data.empty()) continue;
         auto comp = deserialize_completion(p.reply_data);
         if (comp.status == CompletionStatus::Error) {
