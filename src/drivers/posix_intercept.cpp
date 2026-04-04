@@ -35,7 +35,12 @@ using ftruncate_fn = int(*)(int, off_t);
 using dup_fn       = int(*)(int);
 using dup2_fn      = int(*)(int, int);
 
-// glibc stat interception uses __xstat/__fxstat/__lxstat
+// Direct stat family (glibc 2.33+ uses these instead of __xstat/__fxstat)
+using stat_fn      = int(*)(const char*, struct stat*);
+using fstat_fn_t   = int(*)(int, struct stat*);
+using lstat_fn     = int(*)(const char*, struct stat*);
+
+// Legacy glibc stat interception (__xstat/__fxstat/__lxstat)
 using xstat_fn     = int(*)(int, const char*, struct stat*);
 using fxstat_fn    = int(*)(int, int, struct stat*);
 using lxstat_fn    = int(*)(int, const char*, struct stat*);
@@ -56,6 +61,9 @@ rename_fn    real_rename = nullptr;
 ftruncate_fn real_ftruncate = nullptr;
 dup_fn       real_dup = nullptr;
 dup2_fn      real_dup2 = nullptr;
+stat_fn      real_stat = nullptr;
+fstat_fn_t   real_fstat = nullptr;
+lstat_fn     real_lstat = nullptr;
 xstat_fn     real_xstat = nullptr;
 fxstat_fn    real_fxstat = nullptr;
 lxstat_fn    real_lxstat = nullptr;
@@ -104,6 +112,9 @@ void init_real_symbols() {
         real_ftruncate = load_sym<ftruncate_fn>("ftruncate");
         real_dup       = load_sym<dup_fn>("dup");
         real_dup2      = load_sym<dup2_fn>("dup2");
+        real_stat      = load_sym<stat_fn>("stat");
+        real_fstat     = load_sym<fstat_fn_t>("fstat");
+        real_lstat     = load_sym<lstat_fn>("lstat");
         real_xstat     = load_sym<xstat_fn>("__xstat");
         real_fxstat    = load_sym<fxstat_fn>("__fxstat");
         real_lxstat    = load_sym<lxstat_fn>("__lxstat");
@@ -356,7 +367,41 @@ extern "C" int ftruncate(int fd, off_t length) {
     return real_ftruncate(fd, length);
 }
 
-// glibc stat wrappers
+// Direct stat family (glibc 2.33+ routes here instead of __xstat/__fxstat)
+extern "C" int stat(const char* path, struct stat* st) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->stat(path, st); }
+    }
+    if (real_stat) return real_stat(path, st);
+    errno = ENOSYS;
+    return -1;
+}
+
+extern "C" int fstat(int fd, struct stat* st) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->fstat(fd, st);
+    }
+    if (real_fstat) return real_fstat(fd, st);
+    errno = ENOSYS;
+    return -1;
+}
+
+extern "C" int lstat(const char* path, struct stat* st) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->lstat(path, st); }
+    }
+    if (real_lstat) return real_lstat(path, st);
+    errno = ENOSYS;
+    return -1;
+}
+
+// Legacy glibc stat wrappers (pre-2.33)
 extern "C" int __xstat(int ver, const char* path, struct stat* st) {
     init_real_symbols();
     if (!g_in_init) {
