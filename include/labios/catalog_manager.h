@@ -44,9 +44,17 @@ public:
     std::optional<int> get_worker(uint64_t label_id);
     void schedule_batch(std::span<const ScheduleEntry> entries);
 
-    /// Track which worker holds data for a given filepath.
+    /// Track which worker holds data for a given filepath (whole-file, legacy).
     void set_location(std::string_view filepath, int worker_id);
     std::optional<int> get_location(std::string_view filepath);
+
+    /// Per-offset location tracking: records which worker holds a specific
+    /// byte range of a file, enabling correct read-locality when a single
+    /// file is split across multiple workers.
+    void set_location(std::string_view filepath, uint64_t offset,
+                      uint64_t length, int worker_id);
+    std::optional<int> get_location(std::string_view filepath,
+                                    uint64_t offset, uint64_t length);
 
     void track_open(std::string_view filepath, int flags);
     void track_write(std::string_view filepath, uint64_t offset, uint64_t size);
@@ -58,6 +66,7 @@ private:
     transport::RedisConnection& redis_;
     std::string catalog_key(uint64_t label_id) const;
     static std::string location_key(std::string_view filepath);
+    static std::string offset_location_key(std::string_view filepath);
     static std::string filemeta_key(std::string_view filepath);
 };
 

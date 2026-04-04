@@ -105,6 +105,41 @@ TEST_CASE("Catalog stores label flags as attributes", "[catalog_manager]") {
             == (labios::LabelFlags::Queued | labios::LabelFlags::Scheduled));
 }
 
+TEST_CASE("Per-offset location maps different ranges to different workers", "[catalog_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::CatalogManager catalog(redis);
+
+    // Write 3 chunks of a file to 3 different workers.
+    catalog.set_location("/test/chunked.bin", 0, 1048576, 1);       // 0-1MB -> worker 1
+    catalog.set_location("/test/chunked.bin", 1048576, 1048576, 2); // 1-2MB -> worker 2
+    catalog.set_location("/test/chunked.bin", 2097152, 1048576, 3); // 2-3MB -> worker 3
+
+    auto w1 = catalog.get_location("/test/chunked.bin", 0, 1048576);
+    REQUIRE(w1.has_value());
+    REQUIRE(*w1 == 1);
+
+    auto w2 = catalog.get_location("/test/chunked.bin", 1048576, 1048576);
+    REQUIRE(w2.has_value());
+    REQUIRE(*w2 == 2);
+
+    auto w3 = catalog.get_location("/test/chunked.bin", 2097152, 1048576);
+    REQUIRE(w3.has_value());
+    REQUIRE(*w3 == 3);
+}
+
+TEST_CASE("Per-offset location falls back to whole-file for unknown range", "[catalog_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::CatalogManager catalog(redis);
+
+    catalog.set_location("/test/fallback.bin", 0, 1024, 1);
+
+    // Query a range that was never set; should fall back to whole-file.
+    auto result = catalog.get_location("/test/fallback.bin", 99999, 1024);
+    REQUIRE(result.has_value());
+    // Whole-file key was set by set_location(path, offset, length, worker_id)
+    REQUIRE(*result == 1);
+}
+
 TEST_CASE("Catalog stores label error details", "[catalog_manager]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::CatalogManager catalog(redis);

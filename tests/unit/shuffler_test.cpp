@@ -29,7 +29,7 @@ labios::LabelData make_read(uint64_t id, const std::string& file,
     return l;
 }
 
-auto no_location = [](const std::string&) -> std::optional<int> {
+auto no_location = [](const std::string&, uint64_t, uint64_t) -> std::optional<int> {
     return std::nullopt;
 };
 
@@ -201,7 +201,7 @@ TEST_CASE("Read-locality extraction routes reads to holding worker",
     cfg.aggregation_enabled = false;
     labios::Shuffler s(cfg);
 
-    auto lookup = [](const std::string& key) -> std::optional<int> {
+    auto lookup = [](const std::string& key, uint64_t, uint64_t) -> std::optional<int> {
         if (key == "cached.dat") return 2;
         return std::nullopt;
     };
