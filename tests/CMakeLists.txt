@@ -75,3 +75,7 @@ catch_discover_tests(labios-solver-constraint-test TEST_PREFIX "unit/" PROPERTIE
 add_executable(labios-solver-minmax-test unit/solver_minmax_test.cpp)
 target_link_libraries(labios-solver-minmax-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-solver-minmax-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-scheduling-test integration/scheduling_test.cpp)
+target_link_libraries(labios-scheduling-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-scheduling-test TEST_PREFIX "integration/" PROPERTIES LABELS "integration")

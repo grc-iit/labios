@@ -79,6 +79,7 @@ COPY --from=builder /src/build/release/tests/labios-smoke-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-data-path-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-intercept-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-benchmark-test /usr/local/bin/
+COPY --from=builder /src/build/release/tests/labios-scheduling-test /usr/local/bin/
 COPY --from=builder /src/build/release/src/services/labios-demo /usr/local/bin/
 COPY --from=builder /src/build/release/lib/liblabios_intercept.so /usr/local/lib/
 COPY --from=builder /src/conf/ /etc/labios/

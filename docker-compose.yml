@@ -29,9 +29,12 @@ services:
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
+      manager: { condition: service_healthy }
     environment:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
+      LABIOS_SCHEDULER_POLICY: "${LABIOS_SCHEDULER_POLICY:-round-robin}"
+      LABIOS_SCHEDULER_PROFILE: "${LABIOS_SCHEDULER_PROFILE:-}"
     healthcheck:
       test: ["CMD-SHELL", "test -f /tmp/labios-ready"]
       interval: 2s
