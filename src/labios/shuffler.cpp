@@ -28,9 +28,10 @@ OffsetRange get_range(const Pointer& ptr) {
 }
 
 /// Get the relevant range for a label depending on its type.
-/// Writes use destination; reads use source.
+/// Write/Delete/Flush use destination; Read uses source.
 OffsetRange label_range(const LabelData& l) {
-    if (l.type == LabelType::Write) {
+    if (l.type == LabelType::Write || l.type == LabelType::Delete
+        || l.type == LabelType::Flush) {
         return get_range(l.destination);
     }
     return get_range(l.source);
@@ -74,7 +75,7 @@ ShuffleResult Shuffler::shuffle(std::vector<LabelData> batch,
     remaining.reserve(batch.size());
 
     for (auto& label : batch) {
-        if (label.type == LabelType::Read) {
+        if (label.type == LabelType::Read && lookup) {
             auto loc = lookup(label.file_key);
             if (loc.has_value()) {
                 result.direct_route.emplace_back(std::move(label), *loc);
@@ -319,7 +320,7 @@ std::vector<Supertask> Shuffler::build_supertasks(
 
         st.composite.id = first.id;
         st.composite.type = LabelType::Composite;
-        st.composite.file_key = key;
+        st.composite.file_key = first.file_key;
         st.composite.app_id = first.app_id;
         st.composite.priority = first.priority;
         st.composite.flags = first.flags;
