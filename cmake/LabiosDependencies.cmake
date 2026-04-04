@@ -10,6 +10,7 @@ FetchContent_Declare(
     hiredis
     GIT_REPOSITORY https://github.com/redis/hiredis.git
     GIT_TAG        v1.2.0
+    SYSTEM
 )
 
 FetchContent_Declare(

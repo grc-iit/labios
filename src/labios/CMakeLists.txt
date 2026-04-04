@@ -1,5 +1,6 @@
 add_library(labios STATIC
     config.cpp
+    transport/redis.cpp
 )
 
 target_include_directories(labios
