@@ -59,3 +59,7 @@ catch_discover_tests(labios-benchmark-test TEST_PREFIX "bench/" PROPERTIES LABEL
 add_executable(labios-shuffler-test unit/shuffler_test.cpp)
 target_link_libraries(labios-shuffler-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-shuffler-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-solver-random-test unit/solver_random_test.cpp)
+target_link_libraries(labios-solver-random-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-solver-random-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
