@@ -275,7 +275,12 @@ void RedisConnection::pipeline_del(std::string_view key) {
 }
 
 void RedisConnection::pipeline_exec() {
-    pipeline_exec_locked();
+    try {
+        pipeline_exec_locked();
+    } catch (...) {
+        mu_.unlock();
+        throw;
+    }
     mu_.unlock();
 }
 

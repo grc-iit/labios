@@ -36,11 +36,13 @@ public:
         auto suspended = mgr_.suspended_workers();
 
         std::vector<int> decomm_candidates;
+        std::chrono::steady_clock::time_point last_comm;
         {
             std::lock_guard lock(commissioned_mu_);
             for (int wid : idle) {
                 if (commissioned_.count(wid)) decomm_candidates.push_back(wid);
             }
+            last_comm = last_commission_time_;
         }
 
         ElasticSnapshot snap{
@@ -51,7 +53,7 @@ public:
             .max_workers = cfg_.elastic.max_workers,
             .idle_worker_ids = decomm_candidates,
             .suspended_worker_ids = suspended,
-            .last_commission = last_commission_time_,
+            .last_commission = last_comm,
             .cooldown = std::chrono::milliseconds(cfg_.elastic.commission_cooldown_ms),
         };
 
@@ -116,8 +118,8 @@ private:
             {
                 std::lock_guard lock(commissioned_mu_);
                 commissioned_[wid] = container_id;
+                last_commission_time_ = std::chrono::steady_clock::now();
             }
-            last_commission_time_ = std::chrono::steady_clock::now();
             pressure_count_.store(0);
 
             std::cout << "[elastic] commissioned worker " << wid
