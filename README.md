@@ -8,20 +8,30 @@ A distributed I/O system that converts I/O requests into self-describing labels 
 
 LABIOS 2.0 is a ground-up rewrite of the original research prototype. The old codebase is archived at tag `v1.0-archive`. See `LABIOS-2.0.md` for the full design document, milestones, and engineering principles.
 
-**Completed milestones:**
+**Milestone progress:**
 
 | Milestone | Scope | Status |
 |---|---|---|
 | M0 | Skeleton, Docker Compose, CI, stub services | Done |
 | M1 | Labels flow end-to-end, client architecture, POSIX intercept | Done |
+| M2 | Shuffler, batching, dependency detection, supertasks, aggregation | Done |
+| M3 | Smart scheduling (constraint-based, MinMax, worker scoring, weight profiles) | Next |
+| M4 | Elastic workers (commission/decommission, auto-suspend) | Planned |
+| M5 | Software-Defined Storage (function pointers on labels, dlopen) | Planned |
+| M6 | Warehouse intelligence (ephemeral rooms, pub/sub, placement) | Planned |
+| M7 | Python SDK, agent API, intent enforcement, priority lanes | Planned |
+| M8 | Four deployment models (Accelerator, Forwarder, Buffering, Remote) | Planned |
+| M9 | Benchmarks (CM1 16x, HACC 6x, Montage 17x, agent pipeline) | Planned |
 
-**Current performance (Docker Compose, localhost):**
+**Current performance (Docker Compose on WSL2):**
 
 | Benchmark | Write | Read |
 |---|---|---|
-| 100MB sequential (1MB chunks) | 70 MB/s | 93 MB/s |
-| 10MB split (10 labels, async) | 256 MB/s | 282 MB/s |
-| 1000 small files (1KB each) | 111 IOPS | 128 IOPS |
+| 100MB sequential (1MB chunks) | 62 MB/s | 82 MB/s |
+| 10MB single file (10 labels) | 168 MB/s | 197 MB/s |
+| 1000 small files (1KB each) | 122 IOPS | 152 IOPS |
+
+35 unit tests, 3 integration suites, and the demo client all pass with data verification.
 
 ## Quick Start
 
@@ -53,10 +63,11 @@ LABIOS Client
   │
   ▼                          ▼                    ▼
 Label Queue              Warehouse             Inventory
-(NATS JetStream)         (Redis 7)             (Redis 7)
+(NATS JetStream)         (DragonflyDB)         (DragonflyDB)
   │
   ▼
 Label Dispatcher
+  ├─ Shuffler (aggregation, dependency detection, supertask creation)
   ├─ Read/Write locality routing
   └─ RoundRobinSolver (constraint-based + MinMax solvers in M3)
   │
@@ -98,7 +109,7 @@ conf/                 TOML configuration
 
 ## Tech Stack
 
-C++20 | FlatBuffers | NATS JetStream | Redis 7 | io_uring (future) | Docker Compose | Catch2 | pybind11 (M7)
+C++20 | FlatBuffers | NATS JetStream | DragonflyDB (Redis-compatible) | io_uring (M4+) | Docker Compose | Catch2 | pybind11 (M7)
 
 ## Testing
 

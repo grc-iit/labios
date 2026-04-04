@@ -26,7 +26,7 @@ This is a ground-up rewrite. The old 2018 prototype has been archived at tag `v1
 | Build | CMake 3.25+ with presets |
 | Serialization | FlatBuffers |
 | Label queue | NATS 2.10+ with JetStream |
-| Warehouse + Metadata | Redis 7 |
+| Warehouse + Metadata | DragonflyDB (Redis 7 wire-compatible, multi-threaded) |
 | Async I/O | io_uring with POSIX fallback |
 | Hashing | xxHash3 |
 | Python bindings | pybind11 |
@@ -87,8 +87,34 @@ App/Agent → Client (Label Manager + Content Manager + Catalog Manager)
 
 Clients never talk to workers. The dispatcher is the only bridge. This invariant enables all four deployment models.
 
+## Current Status (as of 2026-04-04)
+
+M0, M1, and M2 are complete. 35+ unit tests pass. Docker Compose stack runs
+with NATS 2.10 (JetStream), DragonflyDB (Redis-compatible), 1 dispatcher,
+3 workers, and 1 stub manager. All benchmarks verified (100MB write/read,
+1000 small files, 10MB split).
+
+**What M2 delivered:**
+- Shuffler with aggregation, RAW/WAW/WAR dependency detection, supertask creation
+- Read-locality and write-locality routing in the dispatcher
+- Batched catalog scheduling with Redis pipelining
+- Small-I/O cache with timer-based flush in the Content Manager
+- Aggregation completion fanout via NATS reply inboxes
+- Snowflake-style label ID generation (41-bit ms + 10-bit node + 12-bit seq)
+- DragonflyDB replaces Redis 7 for ~20x warehouse throughput
+- Thread-safe RedisConnection with internal mutex
+
+**What M3 will deliver:**
+- Constraint-based solver (from the paper, completely absent today)
+- MinMax DP solver with real per-worker speed/energy from config
+- Worker scoring with all 5 variables (availability, capacity, load, speed, energy)
+- Configurable weight profiles (low_latency.toml, energy_savings.toml, high_bandwidth.toml)
+- Bucket-sorted worker list in a real Worker Manager (currently a stub)
+- Random solver alongside existing Round Robin
+
 ## Reference
 
 - `LABIOS-2.0.md` — constitutional document (milestones, architecture, principles)
 - `.planning/reference/original-paper/labios.md` — HPDC'19 paper (the specification)
+- `.planning/audits/deep-audit-2026-04-04.md` — comprehensive M0-M2 audit
 - Tag `v1.0-archive` — old 2018 prototype (reference only, do not build on it)
