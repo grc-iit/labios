@@ -30,6 +30,15 @@ public:
     void hset(std::string_view key, std::string_view field, std::string_view value);
     [[nodiscard]] std::optional<std::string> hget(std::string_view key, std::string_view field);
 
+    // --- Pipelining ---
+    void pipeline_begin();
+    void pipeline_hset(std::string_view key, std::string_view field,
+                       std::string_view value);
+    void pipeline_set(std::string_view key, std::string_view value);
+    void pipeline_set_binary(std::string_view key, std::span<const std::byte> data);
+    void pipeline_del(std::string_view key);
+    void pipeline_exec();
+
     [[nodiscard]] bool connected() const;
 
 private:

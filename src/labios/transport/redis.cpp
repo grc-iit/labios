@@ -9,6 +9,7 @@ namespace labios::transport {
 
 struct RedisConnection::Impl {
     redisContext* ctx = nullptr;
+    int pipeline_count = 0;
 
     ~Impl() {
         if (ctx != nullptr) redisFree(ctx);
@@ -123,6 +124,73 @@ std::optional<std::string> RedisConnection::hget(std::string_view key, std::stri
 
 bool RedisConnection::connected() const {
     return impl_ && impl_->ctx != nullptr && impl_->ctx->err == 0;
+}
+
+void RedisConnection::pipeline_begin() {
+    impl_->pipeline_count = 0;
+}
+
+void RedisConnection::pipeline_hset(std::string_view key,
+                                     std::string_view field,
+                                     std::string_view value) {
+    int rc = redisAppendCommand(impl_->ctx, "HSET %b %b %b",
+                                key.data(), key.size(),
+                                field.data(), field.size(),
+                                value.data(), value.size());
+    if (rc != REDIS_OK) {
+        throw std::runtime_error("redis pipeline HSET failed");
+    }
+    ++impl_->pipeline_count;
+}
+
+void RedisConnection::pipeline_set(std::string_view key,
+                                    std::string_view value) {
+    int rc = redisAppendCommand(impl_->ctx, "SET %b %b",
+                                key.data(), key.size(),
+                                value.data(), value.size());
+    if (rc != REDIS_OK) {
+        throw std::runtime_error("redis pipeline SET failed");
+    }
+    ++impl_->pipeline_count;
+}
+
+void RedisConnection::pipeline_set_binary(std::string_view key,
+                                           std::span<const std::byte> data) {
+    int rc = redisAppendCommand(impl_->ctx, "SET %b %b",
+                                key.data(), key.size(),
+                                data.data(), data.size());
+    if (rc != REDIS_OK) {
+        throw std::runtime_error("redis pipeline SET (binary) failed");
+    }
+    ++impl_->pipeline_count;
+}
+
+void RedisConnection::pipeline_del(std::string_view key) {
+    int rc = redisAppendCommand(impl_->ctx, "DEL %b",
+                                key.data(), key.size());
+    if (rc != REDIS_OK) {
+        throw std::runtime_error("redis pipeline DEL failed");
+    }
+    ++impl_->pipeline_count;
+}
+
+void RedisConnection::pipeline_exec() {
+    for (int i = 0; i < impl_->pipeline_count; ++i) {
+        redisReply* reply = nullptr;
+        int rc = redisGetReply(impl_->ctx, reinterpret_cast<void**>(&reply));
+        if (rc != REDIS_OK || reply == nullptr) {
+            for (int j = i + 1; j < impl_->pipeline_count; ++j) {
+                redisReply* drain = nullptr;
+                redisGetReply(impl_->ctx, reinterpret_cast<void**>(&drain));
+                if (drain) freeReplyObject(drain);
+            }
+            impl_->pipeline_count = 0;
+            throw std::runtime_error("redis pipeline exec failed at command "
+                                     + std::to_string(i));
+        }
+        freeReplyObject(reply);
+    }
+    impl_->pipeline_count = 0;
 }
 
 } // namespace labios::transport
