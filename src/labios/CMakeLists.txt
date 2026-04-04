@@ -14,8 +14,10 @@ add_custom_command(
 add_custom_target(labios_fbs_generated DEPENDS ${LABIOS_FBS_GEN_HEADER})
 
 add_library(labios STATIC
+    catalog.cpp
     config.cpp
     label.cpp
+    warehouse.cpp
     transport/nats.cpp
     transport/redis.cpp
 )
