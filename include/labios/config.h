@@ -27,6 +27,12 @@ struct Config {
 
     // POSIX intercept
     std::vector<std::string> intercept_prefixes = {"/labios"};
+
+    // Dispatcher / Shuffler (paper Section 2.3)
+    int dispatcher_batch_size = 100;
+    int dispatcher_batch_timeout_ms = 50;
+    bool dispatcher_aggregation_enabled = true;
+    std::string dispatcher_dep_granularity = "per-file";
 };
 
 /// Load config from TOML file. Environment variables override file values.

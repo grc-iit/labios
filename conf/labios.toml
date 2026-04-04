@@ -20,3 +20,9 @@ default_read_policy = "read-through"
 
 [intercept]
 prefixes = ["/labios"]
+
+[dispatcher]
+batch_size = 100
+batch_timeout_ms = 50
+aggregation_enabled = true
+dep_granularity = "per-file"

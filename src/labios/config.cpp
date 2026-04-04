@@ -61,6 +61,10 @@ Config load_config(const std::filesystem::path& path) {
                     cfg.intercept_prefixes.push_back(*s);
             }
         }
+        cfg.dispatcher_batch_size = tbl["dispatcher"]["batch_size"].value_or(cfg.dispatcher_batch_size);
+        cfg.dispatcher_batch_timeout_ms = tbl["dispatcher"]["batch_timeout_ms"].value_or(cfg.dispatcher_batch_timeout_ms);
+        cfg.dispatcher_aggregation_enabled = tbl["dispatcher"]["aggregation_enabled"].value_or(cfg.dispatcher_aggregation_enabled);
+        cfg.dispatcher_dep_granularity = tbl["dispatcher"]["dep_granularity"].value_or(cfg.dispatcher_dep_granularity);
     }
 
     cfg.nats_url        = env_or("LABIOS_NATS_URL", cfg.nats_url);
@@ -95,6 +99,17 @@ Config load_config(const std::filesystem::path& path) {
             pos = comma + 1;
         }
     }
+
+    cfg.dispatcher_batch_size = env_int_or("LABIOS_DISPATCHER_BATCH_SIZE", cfg.dispatcher_batch_size);
+    cfg.dispatcher_batch_timeout_ms = env_int_or("LABIOS_DISPATCHER_BATCH_TIMEOUT_MS", cfg.dispatcher_batch_timeout_ms);
+    {
+        const char* agg = std::getenv("LABIOS_DISPATCHER_AGGREGATION");
+        if (agg != nullptr && agg[0] != '\0') {
+            std::string_view sv(agg);
+            cfg.dispatcher_aggregation_enabled = (sv == "true" || sv == "1");
+        }
+    }
+    cfg.dispatcher_dep_granularity = env_or("LABIOS_DISPATCHER_DEP_GRANULARITY", cfg.dispatcher_dep_granularity);
 
     return cfg;
 }

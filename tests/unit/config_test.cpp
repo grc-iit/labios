@@ -104,3 +104,32 @@ prefixes = ["/labios", "/scratch"]
 
     fs::remove(path);
 }
+
+TEST_CASE("Dispatcher config parsed from TOML", "[config]") {
+    auto tmp = std::filesystem::temp_directory_path() / "labios_cfg_disp.toml";
+    {
+        std::ofstream f(tmp);
+        f << "[dispatcher]\n"
+          << "batch_size = 200\n"
+          << "batch_timeout_ms = 75\n"
+          << "aggregation_enabled = false\n"
+          << "dep_granularity = \"per-application\"\n";
+    }
+    auto cfg = labios::load_config(tmp);
+    CHECK(cfg.dispatcher_batch_size == 200);
+    CHECK(cfg.dispatcher_batch_timeout_ms == 75);
+    CHECK(cfg.dispatcher_aggregation_enabled == false);
+    CHECK(cfg.dispatcher_dep_granularity == "per-application");
+    std::filesystem::remove(tmp);
+}
+
+TEST_CASE("Dispatcher config defaults", "[config]") {
+    auto tmp = std::filesystem::temp_directory_path() / "labios_cfg_empty.toml";
+    { std::ofstream f(tmp); f << "\n"; }
+    auto cfg = labios::load_config(tmp);
+    CHECK(cfg.dispatcher_batch_size == 100);
+    CHECK(cfg.dispatcher_batch_timeout_ms == 50);
+    CHECK(cfg.dispatcher_aggregation_enabled == true);
+    CHECK(cfg.dispatcher_dep_granularity == "per-file");
+    std::filesystem::remove(tmp);
+}
