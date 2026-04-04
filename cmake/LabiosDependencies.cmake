@@ -1,28 +1,25 @@
 include(FetchContent)
 
+# Use source archives instead of git clones for Docker compatibility.
+# Git clones require .git in the source tree for FetchContent update steps.
 FetchContent_Declare(
     cnats
-    GIT_REPOSITORY https://github.com/nats-io/nats.c.git
-    GIT_TAG        v3.9.1
+    URL https://github.com/nats-io/nats.c/archive/refs/tags/v3.9.1.tar.gz
 )
 
 FetchContent_Declare(
     hiredis
-    GIT_REPOSITORY https://github.com/redis/hiredis.git
-    GIT_TAG        v1.2.0
-    SYSTEM
+    URL https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz
 )
 
 FetchContent_Declare(
     tomlplusplus
-    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
-    GIT_TAG        v3.4.0
+    URL https://github.com/marzer/tomlplusplus/archive/refs/tags/v3.4.0.tar.gz
 )
 
 FetchContent_Declare(
     Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v3.7.1
+    URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.7.1.tar.gz
 )
 
 # cnats build options
@@ -36,7 +33,6 @@ set(DISABLE_TESTS ON CACHE BOOL "" FORCE)
 set(ENABLE_SSL OFF CACHE BOOL "" FORCE)
 
 # Build hiredis as a static library so Docker runtime images stay minimal.
-# Use CACHE FORCE because hiredis option(BUILD_SHARED_LIBS) clears normal vars.
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 # Disable dependency test suites from polluting our CTest
@@ -45,7 +41,14 @@ set(BUILD_TESTING OFF)
 FetchContent_MakeAvailable(cnats hiredis tomlplusplus)
 set(BUILD_TESTING ${_save_build_testing})
 
-# Restore BUILD_SHARED_LIBS for the rest of the project
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+# Mark hiredis includes as SYSTEM to suppress -Wpedantic warnings from its C headers
+get_target_property(_hiredis_inc hiredis INTERFACE_INCLUDE_DIRECTORIES)
+if(_hiredis_inc)
+    set_target_properties(hiredis PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_hiredis_inc}")
+endif()
 
+# Keep BUILD_SHARED_LIBS OFF for Catch2 too so the test binary is self-contained
 FetchContent_MakeAvailable(Catch2)
+
+# Restore for the rest of the project
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
