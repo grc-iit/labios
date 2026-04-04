@@ -3,6 +3,7 @@
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
+#include <algorithm>
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
@@ -60,7 +61,16 @@ int main() {
             if (std::getline(iss, token, ',')) energy = std::stoi(token);
             if (std::getline(iss, token, ',')) capacity_str = token;
 
-            labios::WorkerInfo info{id, true, 1.0, 0.0, speed, energy};
+            double cap_ratio = 1.0;
+            if (!capacity_str.empty() && cfg.max_worker_capacity > 0) {
+                uint64_t cap_bytes = labios::parse_size(capacity_str);
+                cap_ratio = std::min(
+                    static_cast<double>(cap_bytes) /
+                    static_cast<double>(cfg.max_worker_capacity),
+                    1.0);
+            }
+
+            labios::WorkerInfo info{id, true, cap_ratio, 0.0, speed, energy};
             worker_mgr.register_worker(info);
 
             std::cout << "[" << timestamp() << "] manager: registered worker "

@@ -70,6 +70,8 @@ Config load_config(const std::filesystem::path& path) {
         cfg.scheduler_profile_path = tbl["scheduler"]["profile_path"].value_or(cfg.scheduler_profile_path);
         cfg.scheduler_worker_refresh_ms = tbl["scheduler"]["worker_refresh_ms"].value_or(cfg.scheduler_worker_refresh_ms);
         cfg.worker_energy = tbl["worker"]["energy"].value_or(cfg.worker_energy);
+        if (auto v = tbl["manager"]["max_worker_capacity"].value<std::string>())
+            cfg.max_worker_capacity = parse_size(*v);
     }
 
     cfg.nats_url        = env_or("LABIOS_NATS_URL", cfg.nats_url);
@@ -121,6 +123,7 @@ Config load_config(const std::filesystem::path& path) {
     cfg.scheduler_profile_path = env_or("LABIOS_SCHEDULER_PROFILE", cfg.scheduler_profile_path);
     cfg.scheduler_worker_refresh_ms = env_int_or("LABIOS_SCHEDULER_WORKER_REFRESH_MS", cfg.scheduler_worker_refresh_ms);
     cfg.worker_energy = env_int_or("LABIOS_WORKER_ENERGY", cfg.worker_energy);
+    cfg.max_worker_capacity = env_size("LABIOS_MAX_WORKER_CAPACITY", cfg.max_worker_capacity);
 
     return cfg;
 }

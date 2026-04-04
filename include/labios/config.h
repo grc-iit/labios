@@ -46,6 +46,9 @@ struct Config {
 
     // Worker energy (paper Section 2.5)
     int worker_energy = 1;  // [1,5] power wattage class
+
+    // Manager: max worker capacity for normalization (default 1TB)
+    uint64_t max_worker_capacity = 1024ULL * 1024 * 1024 * 1024;
 };
 
 /// Load config from TOML file. Environment variables override file values.
