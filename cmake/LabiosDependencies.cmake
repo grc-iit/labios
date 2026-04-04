@@ -28,9 +28,16 @@ FetchContent_Declare(
 # cnats build options
 set(NATS_BUILD_STREAMING OFF CACHE BOOL "" FORCE)
 set(NATS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(NATS_BUILD_LIB_STATIC ON CACHE BOOL "" FORCE)
 
 # hiredis build options
 set(DISABLE_TESTS ON CACHE BOOL "" FORCE)
 set(ENABLE_SSL OFF CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(cnats hiredis tomlplusplus Catch2)
+# Disable dependency test suites from polluting our CTest
+set(_save_build_testing ${BUILD_TESTING})
+set(BUILD_TESTING OFF)
+FetchContent_MakeAvailable(cnats hiredis tomlplusplus)
+set(BUILD_TESTING ${_save_build_testing})
+
+FetchContent_MakeAvailable(Catch2)
