@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake git libssl-dev
+
+      - name: Configure
+        run: cmake --preset ci
+
+      - name: Build
+        run: cmake --build build/ci -j"$(nproc)"
+
+      - name: Run unit tests
+        run: ctest --test-dir build/ci --output-on-failure -L unit
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start system
+        run: docker compose up -d
+
+      - name: Run smoke test
+        run: docker compose run --rm test
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
