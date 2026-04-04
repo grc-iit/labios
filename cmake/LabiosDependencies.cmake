@@ -22,6 +22,11 @@ FetchContent_Declare(
     URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.7.1.tar.gz
 )
 
+FetchContent_Declare(
+    flatbuffers
+    URL https://github.com/google/flatbuffers/archive/refs/tags/v24.3.25.tar.gz
+)
+
 # cnats build options
 set(NATS_BUILD_STREAMING OFF CACHE BOOL "" FORCE)
 set(NATS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -32,13 +37,17 @@ set(NATS_BUILD_LIB_SHARED OFF CACHE BOOL "" FORCE)
 set(DISABLE_TESTS ON CACHE BOOL "" FORCE)
 set(ENABLE_SSL OFF CACHE BOOL "" FORCE)
 
+# FlatBuffers build options
+set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(FLATBUFFERS_BUILD_FLATHASH OFF CACHE BOOL "" FORCE)
+
 # Build hiredis as a static library so Docker runtime images stay minimal.
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 # Disable dependency test suites from polluting our CTest
 set(_save_build_testing ${BUILD_TESTING})
 set(BUILD_TESTING OFF)
-FetchContent_MakeAvailable(cnats hiredis tomlplusplus)
+FetchContent_MakeAvailable(cnats hiredis tomlplusplus flatbuffers)
 set(BUILD_TESTING ${_save_build_testing})
 
 # Mark hiredis includes as SYSTEM to suppress -Wpedantic warnings from its C headers

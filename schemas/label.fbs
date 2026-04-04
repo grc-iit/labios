@@ -1,0 +1,54 @@
+namespace labios.schema;
+
+enum LabelType : byte { Read, Write, Delete, Flush, Composite }
+enum CompletionStatus : byte { Complete, Error }
+enum Intent : byte { None, Checkpoint, Cache, ToolOutput, FinalResult, Intermediate, SharedState }
+enum Isolation : byte { None, Application, Agent }
+
+union PointerVariant { MemoryPtr, FilePath, NetworkEndpoint }
+
+table MemoryPtr {
+  address: uint64;
+  size:    uint64;
+}
+
+table FilePath {
+  path:   string;
+  offset: uint64;
+  length: uint64;
+}
+
+table NetworkEndpoint {
+  host: string;
+  port: uint16;
+}
+
+table Pointer {
+  ptr: PointerVariant;
+}
+
+table Label {
+  id:           uint64;
+  type:         LabelType;
+  source:       Pointer;
+  destination:  Pointer;
+  operation:    string;
+  flags:        uint32;
+  priority:     uint8;
+  app_id:       uint32;
+  dependencies: [uint64];
+  data_size:    uint64;
+  intent:       Intent;
+  ttl_seconds:  uint32;
+  isolation:    Isolation;
+  reply_to:     string;
+}
+
+table Completion {
+  label_id: uint64;
+  status:   CompletionStatus;
+  error:    string;
+  data_key: string;
+}
+
+root_type Label;
