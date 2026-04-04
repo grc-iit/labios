@@ -76,6 +76,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /src/build/release/tests/labios-smoke-test /usr/local/bin/
+COPY --from=builder /src/build/release/tests/labios-data-path-test /usr/local/bin/
+COPY --from=builder /src/build/release/src/services/labios-demo /usr/local/bin/
 
 ENV LABIOS_NATS_URL=nats://nats:4222
 ENV LABIOS_REDIS_HOST=redis
