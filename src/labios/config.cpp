@@ -72,6 +72,22 @@ Config load_config(const std::filesystem::path& path) {
         cfg.worker_energy = tbl["worker"]["energy"].value_or(cfg.worker_energy);
         if (auto v = tbl["manager"]["max_worker_capacity"].value<std::string>())
             cfg.max_worker_capacity = parse_size(*v);
+
+        // [elastic]
+        cfg.elastic.enabled = tbl["elastic"]["enabled"].value_or(cfg.elastic.enabled);
+        cfg.elastic.min_workers = tbl["elastic"]["min_workers"].value_or(cfg.elastic.min_workers);
+        cfg.elastic.max_workers = tbl["elastic"]["max_workers"].value_or(cfg.elastic.max_workers);
+        cfg.elastic.pressure_threshold = tbl["elastic"]["pressure_threshold"].value_or(cfg.elastic.pressure_threshold);
+        cfg.elastic.worker_idle_timeout_ms = tbl["elastic"]["worker_idle_timeout_ms"].value_or(cfg.elastic.worker_idle_timeout_ms);
+        cfg.elastic.decommission_timeout_ms = tbl["elastic"]["decommission_timeout_ms"].value_or(cfg.elastic.decommission_timeout_ms);
+        cfg.elastic.commission_cooldown_ms = tbl["elastic"]["commission_cooldown_ms"].value_or(cfg.elastic.commission_cooldown_ms);
+        cfg.elastic.eval_interval_ms = tbl["elastic"]["eval_interval_ms"].value_or(cfg.elastic.eval_interval_ms);
+        cfg.elastic.docker_socket = tbl["elastic"]["docker_socket"].value_or(cfg.elastic.docker_socket);
+        cfg.elastic.docker_image = tbl["elastic"]["docker_image"].value_or(cfg.elastic.docker_image);
+        cfg.elastic.docker_network = tbl["elastic"]["docker_network"].value_or(cfg.elastic.docker_network);
+        cfg.elastic.elastic_worker_speed = tbl["elastic"]["elastic_worker_speed"].value_or(cfg.elastic.elastic_worker_speed);
+        cfg.elastic.elastic_worker_energy = tbl["elastic"]["elastic_worker_energy"].value_or(cfg.elastic.elastic_worker_energy);
+        cfg.elastic.elastic_worker_capacity = tbl["elastic"]["elastic_worker_capacity"].value_or(cfg.elastic.elastic_worker_capacity);
     }
 
     cfg.nats_url        = env_or("LABIOS_NATS_URL", cfg.nats_url);
@@ -124,6 +140,36 @@ Config load_config(const std::filesystem::path& path) {
     cfg.scheduler_worker_refresh_ms = env_int_or("LABIOS_SCHEDULER_WORKER_REFRESH_MS", cfg.scheduler_worker_refresh_ms);
     cfg.worker_energy = env_int_or("LABIOS_WORKER_ENERGY", cfg.worker_energy);
     cfg.max_worker_capacity = env_size("LABIOS_MAX_WORKER_CAPACITY", cfg.max_worker_capacity);
+
+    // Elastic env overrides.
+    {
+        auto e = std::getenv("LABIOS_ELASTIC_ENABLED");
+        if (e) cfg.elastic.enabled = (std::string(e) == "true" || std::string(e) == "1");
+    }
+    cfg.elastic.docker_socket = env_or("LABIOS_DOCKER_SOCKET", cfg.elastic.docker_socket);
+    cfg.elastic.docker_image = env_or("LABIOS_DOCKER_IMAGE", cfg.elastic.docker_image);
+    cfg.elastic.docker_network = env_or("LABIOS_DOCKER_NETWORK", cfg.elastic.docker_network);
+    {
+        auto e = std::getenv("LABIOS_ELASTIC_MIN_WORKERS");
+        if (e) cfg.elastic.min_workers = std::stoi(e);
+    }
+    {
+        auto e = std::getenv("LABIOS_ELASTIC_MAX_WORKERS");
+        if (e) cfg.elastic.max_workers = std::stoi(e);
+    }
+    {
+        auto e = std::getenv("LABIOS_ELASTIC_WORKER_SPEED");
+        if (e) cfg.elastic.elastic_worker_speed = std::stoi(e);
+    }
+    {
+        auto e = std::getenv("LABIOS_ELASTIC_WORKER_ENERGY");
+        if (e) cfg.elastic.elastic_worker_energy = std::stoi(e);
+    }
+    cfg.elastic.elastic_worker_capacity = env_or("LABIOS_ELASTIC_WORKER_CAPACITY", cfg.elastic.elastic_worker_capacity);
+    {
+        auto e = std::getenv("LABIOS_WORKER_IDLE_TIMEOUT_MS");
+        if (e) cfg.elastic.worker_idle_timeout_ms = std::stoi(e);
+    }
 
     return cfg;
 }

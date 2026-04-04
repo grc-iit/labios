@@ -33,3 +33,19 @@ dep_granularity = "per-file"
 [scheduler]
 policy = "round-robin"
 profile_path = ""
+
+[elastic]
+enabled = false
+min_workers = 1
+max_workers = 10
+pressure_threshold = 5
+worker_idle_timeout_ms = 30000
+decommission_timeout_ms = 60000
+commission_cooldown_ms = 5000
+eval_interval_ms = 2000
+docker_socket = "/var/run/docker.sock"
+docker_image = ""
+docker_network = ""
+elastic_worker_speed = 3
+elastic_worker_energy = 3
+elastic_worker_capacity = "50GB"

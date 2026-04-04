@@ -49,6 +49,26 @@ struct Config {
 
     // Manager: max worker capacity for normalization (default 1TB)
     uint64_t max_worker_capacity = 1024ULL * 1024 * 1024 * 1024;
+
+    // Elastic worker management (paper Section 2.8, M4)
+    struct ElasticConfig {
+        bool enabled = false;
+        int min_workers = 1;
+        int max_workers = 10;
+        int pressure_threshold = 5;            // Consecutive full batches before commission
+        int worker_idle_timeout_ms = 30000;    // 30s idle before worker self-suspends
+        int decommission_timeout_ms = 60000;   // 60s suspended before container removed
+        int commission_cooldown_ms = 5000;     // 5s minimum between commissions
+        int eval_interval_ms = 2000;           // How often the orchestrator evaluates
+        std::string docker_socket = "/var/run/docker.sock";
+        std::string docker_image;              // Worker Docker image name
+        std::string docker_network;            // Docker network for new containers
+        int elastic_worker_speed = 3;          // Default speed class [1,5]
+        int elastic_worker_energy = 3;         // Default energy class [1,5]
+        std::string elastic_worker_capacity = "50GB";
+    };
+
+    ElasticConfig elastic;
 };
 
 /// Load config from TOML file. Environment variables override file values.
