@@ -2,6 +2,7 @@
 #include <labios/config.h>
 #include <labios/label.h>
 #include <labios/content_manager.h>
+#include <labios/shuffler.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
@@ -60,7 +61,7 @@ int main() {
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&content_manager, &catalog, &nats, &worker_mu, &storage_root, worker_id](
+        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -168,6 +169,121 @@ int main() {
                     std::cout << "[" << timestamp() << "] worker " << worker_id
                               << ": READ " << src->path << " ("
                               << file_data.size() << " bytes)\n" << std::flush;
+                } else if (label.type == labios::LabelType::Composite) {
+                    // Supertask: retrieve packed children from Redis and execute in order.
+                    std::string pack_key = "labios:supertask:" + std::to_string(label.id);
+                    auto packed = redis.get_binary(pack_key);
+                    if (packed.empty()) {
+                        throw std::runtime_error(
+                            "supertask children not found for " + std::to_string(label.id));
+                    }
+
+                    auto child_payloads = labios::unpack_labels(packed);
+
+                    std::cout << "[" << timestamp() << "] worker " << worker_id
+                              << ": SUPERTASK " << label.id << " ("
+                              << child_payloads.size() << " children)\n" << std::flush;
+
+                    for (auto& payload : child_payloads) {
+                        auto child = labios::deserialize_label(payload);
+                        labios::CompletionData child_comp{};
+                        child_comp.label_id = child.id;
+
+                        catalog.set_status(child.id, labios::LabelStatus::Executing);
+                        child.flags |= labios::LabelFlags::Pending;
+                        catalog.set_flags(child.id, child.flags);
+
+                        if (child.type == labios::LabelType::Write) {
+                            auto blob = content_manager.retrieve(child.id);
+                            auto* dst = std::get_if<labios::FilePath>(&child.destination);
+                            if (!dst) {
+                                throw std::runtime_error("WRITE child missing FilePath destination");
+                            }
+                            auto full_path = storage_root / dst->path;
+                            std::filesystem::create_directories(full_path.parent_path());
+
+                            if (dst->offset > 0 && std::filesystem::exists(full_path)) {
+                                std::ofstream ofs(full_path,
+                                    std::ios::binary | std::ios::in | std::ios::out);
+                                if (!ofs) throw std::runtime_error("failed to open " + full_path.string());
+                                ofs.seekp(static_cast<std::streamoff>(dst->offset));
+                                ofs.write(reinterpret_cast<const char*>(blob.data()),
+                                          static_cast<std::streamsize>(blob.size()));
+                            } else {
+                                std::ofstream ofs(full_path, std::ios::binary | std::ios::out);
+                                if (!ofs) throw std::runtime_error("failed to open " + full_path.string());
+                                if (dst->offset > 0) {
+                                    ofs.seekp(static_cast<std::streamoff>(dst->offset));
+                                }
+                                ofs.write(reinterpret_cast<const char*>(blob.data()),
+                                          static_cast<std::streamsize>(blob.size()));
+                            }
+
+                            content_manager.remove(child.id);
+                            catalog.set_location(dst->path, worker_id);
+                            child_comp.status = labios::CompletionStatus::Complete;
+
+                            std::cout << "[" << timestamp() << "] worker " << worker_id
+                                      << ":   child WRITE " << full_path.string() << " ("
+                                      << blob.size() << " bytes)\n" << std::flush;
+
+                        } else if (child.type == labios::LabelType::Read) {
+                            auto* src = std::get_if<labios::FilePath>(&child.source);
+                            if (!src) {
+                                throw std::runtime_error("READ child missing FilePath source");
+                            }
+                            uint64_t read_size = child.data_size > 0 ? child.data_size : src->length;
+
+                            auto full_path = storage_root / src->path;
+                            std::ifstream ifs(full_path, std::ios::binary);
+                            if (!ifs) {
+                                throw std::runtime_error(
+                                    "data not found on this worker for " + src->path);
+                            }
+                            if (src->offset > 0) {
+                                ifs.seekg(static_cast<std::streamoff>(src->offset));
+                            }
+                            std::vector<std::byte> file_data(read_size);
+                            ifs.read(reinterpret_cast<char*>(file_data.data()),
+                                     static_cast<std::streamsize>(read_size));
+                            file_data.resize(static_cast<size_t>(ifs.gcount()));
+
+                            content_manager.stage(child.id, std::span<const std::byte>(file_data));
+                            child_comp.data_key = labios::ContentManager::data_key(child.id);
+                            child_comp.status = labios::CompletionStatus::Complete;
+
+                            std::cout << "[" << timestamp() << "] worker " << worker_id
+                                      << ":   child READ " << src->path << " ("
+                                      << file_data.size() << " bytes)\n" << std::flush;
+                        }
+
+                        catalog.set_status(child.id, labios::LabelStatus::Complete);
+
+                        // Send completion for each child individually.
+                        if (!child.reply_to.empty()) {
+                            auto reply = labios::serialize_completion(child_comp);
+                            nats.publish(child.reply_to, std::span<const std::byte>(reply));
+                        }
+                    }
+
+                    // Clean up packed data from Redis.
+                    redis.del(pack_key);
+
+                    // Mark composite complete.
+                    completion.status = labios::CompletionStatus::Complete;
+                    catalog.set_status(label.id, labios::LabelStatus::Complete);
+
+                    std::cout << "[" << timestamp() << "] worker " << worker_id
+                              << ": SUPERTASK " << label.id << " complete\n" << std::flush;
+
+                    // The composite's own reply_to is typically empty (no client waits on it).
+                    if (!label.reply_to.empty()) {
+                        auto reply_payload = labios::serialize_completion(completion);
+                        nats.publish(label.reply_to, std::span<const std::byte>(reply_payload));
+                    }
+                    nats.flush();
+                    return; // Early return; skip the normal completion path below.
+
                 } else {
                     throw std::runtime_error(
                         "unsupported label type: " +
