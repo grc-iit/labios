@@ -1,0 +1,147 @@
+#include <labios/content_manager.h>
+
+#include <algorithm>
+
+namespace labios {
+
+ReadPolicy read_policy_from_string(std::string_view s) {
+    if (s == "write-only") return ReadPolicy::WriteOnly;
+    return ReadPolicy::ReadThrough;
+}
+
+ContentManager::ContentManager(transport::RedisConnection& redis,
+                               uint64_t min_label_size,
+                               int flush_interval_ms,
+                               ReadPolicy default_read_policy)
+    : redis_(redis),
+      min_label_size_(min_label_size),
+      flush_interval_ms_(flush_interval_ms),
+      default_read_policy_(default_read_policy) {}
+
+ContentManager::~ContentManager() {
+    if (flush_thread_.joinable()) {
+        flush_thread_.request_stop();
+    }
+}
+
+std::string ContentManager::data_key(uint64_t label_id) {
+    return "labios:data:" + std::to_string(label_id);
+}
+
+void ContentManager::stage(uint64_t label_id, std::span<const std::byte> data) {
+    redis_.set_binary(data_key(label_id), data);
+}
+
+std::vector<std::byte> ContentManager::retrieve(uint64_t label_id) {
+    return redis_.get_binary(data_key(label_id));
+}
+
+void ContentManager::remove(uint64_t label_id) {
+    redis_.del(data_key(label_id));
+}
+
+bool ContentManager::exists(uint64_t label_id) {
+    return redis_.get(data_key(label_id)).has_value();
+}
+
+std::vector<FlushRegion> ContentManager::cache_write(
+    int fd, std::string_view filepath, uint64_t offset,
+    std::span<const std::byte> data) {
+
+    std::unique_lock lock(cache_mu_);
+    auto& cache = caches_[fd];
+    if (cache.filepath.empty()) {
+        cache.filepath = std::string(filepath);
+        cache.read_policy = default_read_policy_;
+    }
+
+    cache.regions[offset].assign(data.begin(), data.end());
+    cache.total_bytes += data.size();
+
+    if (cache.total_bytes >= min_label_size_) {
+        return flush_locked(cache);
+    }
+    return {};
+}
+
+std::optional<std::vector<std::byte>> ContentManager::cache_read(
+    int fd, uint64_t offset, uint64_t size) {
+
+    std::shared_lock lock(cache_mu_);
+    auto it = caches_.find(fd);
+    if (it == caches_.end()) return std::nullopt;
+    if (it->second.read_policy == ReadPolicy::WriteOnly) return std::nullopt;
+
+    auto& regions = it->second.regions;
+    auto rit = regions.find(offset);
+    if (rit == regions.end()) return std::nullopt;
+    if (rit->second.size() < size) return std::nullopt;
+
+    std::vector<std::byte> result(rit->second.begin(),
+                                   rit->second.begin() + size);
+    return result;
+}
+
+std::vector<FlushRegion> ContentManager::flush(int fd) {
+    std::unique_lock lock(cache_mu_);
+    auto it = caches_.find(fd);
+    if (it == caches_.end()) return {};
+    return flush_locked(it->second);
+}
+
+std::vector<std::pair<int, std::vector<FlushRegion>>>
+ContentManager::flush_all() {
+    std::unique_lock lock(cache_mu_);
+    std::vector<std::pair<int, std::vector<FlushRegion>>> result;
+    for (auto& [fd, cache] : caches_) {
+        if (cache.total_bytes > 0) {
+            result.emplace_back(fd, flush_locked(cache));
+        }
+    }
+    return result;
+}
+
+void ContentManager::evict(int fd) {
+    std::unique_lock lock(cache_mu_);
+    caches_.erase(fd);
+}
+
+void ContentManager::set_read_policy(int fd, ReadPolicy policy) {
+    std::unique_lock lock(cache_mu_);
+    caches_[fd].read_policy = policy;
+}
+
+std::vector<FlushRegion> ContentManager::flush_locked(FdCache& cache) {
+    std::vector<FlushRegion> result;
+    for (auto& [offset, data] : cache.regions) {
+        result.push_back({cache.filepath, offset, std::move(data)});
+    }
+    cache.regions.clear();
+    cache.total_bytes = 0;
+    return result;
+}
+
+void ContentManager::set_flush_callback(FlushCallback cb) {
+    flush_callback_ = std::move(cb);
+}
+
+void ContentManager::start_flush_timer() {
+    if (flush_interval_ms_ <= 0) return;
+
+    flush_thread_ = std::jthread([this](std::stop_token stoken) {
+        while (!stoken.stop_requested()) {
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(flush_interval_ms_));
+            if (stoken.stop_requested()) break;
+
+            auto flushed = flush_all();
+            if (flush_callback_) {
+                for (auto& [fd, regions] : flushed) {
+                    flush_callback_(fd, std::move(regions));
+                }
+            }
+        }
+    });
+}
+
+} // namespace labios

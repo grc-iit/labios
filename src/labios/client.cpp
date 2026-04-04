@@ -3,7 +3,7 @@
 #include <labios/catalog_manager.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
-#include <labios/warehouse.h>
+#include <labios/content_manager.h>
 
 #include <chrono>
 #include <mutex>
@@ -71,7 +71,7 @@ struct Client::Impl {
     Config cfg;
     transport::RedisConnection redis;
     transport::NatsConnection nats;
-    Warehouse warehouse;
+    ContentManager content_manager;
     CatalogManager catalog;
     uint32_t app_id;
 
@@ -79,7 +79,8 @@ struct Client::Impl {
         : cfg(c),
           redis(c.redis_host, c.redis_port),
           nats(c.nats_url),
-          warehouse(redis),
+          content_manager(redis, c.label_min_size, c.cache_flush_interval_ms,
+                          read_policy_from_string(c.cache_read_policy)),
           catalog(redis),
           app_id(static_cast<uint32_t>(getpid())) {}
 };
@@ -110,7 +111,7 @@ Status Client::publish(const Label& label, std::span<const std::byte> data) {
 
     if (label.type() == LabelType::Write && !data.empty()) {
         // Stage data in the warehouse before dispatching.
-        impl_->warehouse.stage(id, data);
+        impl_->content_manager.stage(id, data);
     }
 
     // Create catalog entry with Queued status.

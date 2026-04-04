@@ -1,7 +1,7 @@
 #include <labios/catalog_manager.h>
 #include <labios/config.h>
 #include <labios/label.h>
-#include <labios/warehouse.h>
+#include <labios/content_manager.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
@@ -44,7 +44,7 @@ int main() {
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
     labios::transport::NatsConnection nats(cfg.nats_url);
 
-    labios::Warehouse warehouse(redis);
+    labios::ContentManager content_manager(redis, cfg.label_min_size, 0, labios::ReadPolicy::ReadThrough);
     labios::CatalogManager catalog(redis);
 
     const char* storage_env = std::getenv("LABIOS_STORAGE_ROOT");
@@ -60,7 +60,7 @@ int main() {
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&warehouse, &catalog, &nats, &worker_mu, &storage_root, worker_id](
+        [&content_manager, &catalog, &nats, &worker_mu, &storage_root, worker_id](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -74,7 +74,7 @@ int main() {
                 catalog.set_status(label.id, labios::LabelStatus::Executing);
 
                 if (label.type == labios::LabelType::Write) {
-                    auto blob = warehouse.retrieve(label.id);
+                    auto blob = content_manager.retrieve(label.id);
 
                     auto* dst = std::get_if<labios::FilePath>(&label.destination);
                     if (!dst) {
@@ -111,7 +111,7 @@ int main() {
                                   static_cast<std::streamsize>(blob.size()));
                     }
 
-                    warehouse.remove(label.id);
+                    content_manager.remove(label.id);
 
                     // Record which worker holds this file so the dispatcher
                     // can route READs here (read-locality, paper Section 2.3).
@@ -154,10 +154,10 @@ int main() {
                              static_cast<std::streamsize>(read_size));
                     file_data.resize(static_cast<size_t>(ifs.gcount()));
 
-                    warehouse.stage(label.id,
+                    content_manager.stage(label.id,
                                     std::span<const std::byte>(file_data));
                     completion.data_key =
-                        labios::Warehouse::data_key(label.id);
+                        labios::ContentManager::data_key(label.id);
                     completion.status = labios::CompletionStatus::Complete;
 
                     std::cout << "[" << timestamp() << "] worker " << worker_id
