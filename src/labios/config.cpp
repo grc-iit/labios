@@ -61,6 +61,7 @@ Config load_config(const std::filesystem::path& path) {
                     cfg.intercept_prefixes.push_back(*s);
             }
         }
+        cfg.reply_timeout_ms = tbl["client"]["reply_timeout_ms"].value_or(cfg.reply_timeout_ms);
         cfg.dispatcher_batch_size = tbl["dispatcher"]["batch_size"].value_or(cfg.dispatcher_batch_size);
         cfg.dispatcher_batch_timeout_ms = tbl["dispatcher"]["batch_timeout_ms"].value_or(cfg.dispatcher_batch_timeout_ms);
         cfg.dispatcher_aggregation_enabled = tbl["dispatcher"]["aggregation_enabled"].value_or(cfg.dispatcher_aggregation_enabled);
@@ -100,6 +101,7 @@ Config load_config(const std::filesystem::path& path) {
         }
     }
 
+    cfg.reply_timeout_ms = env_int_or("LABIOS_REPLY_TIMEOUT_MS", cfg.reply_timeout_ms);
     cfg.dispatcher_batch_size = env_int_or("LABIOS_DISPATCHER_BATCH_SIZE", cfg.dispatcher_batch_size);
     cfg.dispatcher_batch_timeout_ms = env_int_or("LABIOS_DISPATCHER_BATCH_TIMEOUT_MS", cfg.dispatcher_batch_timeout_ms);
     {

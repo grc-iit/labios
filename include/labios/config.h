@@ -28,6 +28,9 @@ struct Config {
     // POSIX intercept
     std::vector<std::string> intercept_prefixes = {"/labios"};
 
+    // Client
+    int reply_timeout_ms = 30000;
+
     // Dispatcher / Shuffler (paper Section 2.3)
     int dispatcher_batch_size = 100;
     int dispatcher_batch_timeout_ms = 50;

@@ -21,7 +21,7 @@ struct Session::Impl {
                   read_policy_from_string(c.cache_read_policy)),
           catalog(redis),
           labels(content, catalog, nats, c.label_max_size,
-                 static_cast<uint32_t>(getpid())),
+                 static_cast<uint32_t>(getpid()), c.reply_timeout_ms),
           app_id(static_cast<uint32_t>(getpid())) {}
 };
 

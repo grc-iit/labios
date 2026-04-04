@@ -10,6 +10,9 @@ id = 0
 speed = 1
 capacity = "1GB"
 
+[client]
+reply_timeout_ms = 30000
+
 [label]
 min_size = "64KB"
 max_size = "1MB"
