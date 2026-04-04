@@ -15,7 +15,7 @@ LABIOS 2.0 is a ground-up rewrite of the original research prototype. The old co
 | M0 | Skeleton, Docker Compose, CI, stub services | Done |
 | M1 | Labels flow end-to-end, client architecture, POSIX intercept | Done |
 | M2 | Shuffler, batching, dependency detection, supertasks, aggregation | Done |
-| M3 | Smart scheduling (constraint-based, MinMax, worker scoring, weight profiles) | Next |
+| M3 | Smart scheduling (constraint-based, MinMax, worker scoring, weight profiles) | Done |
 | M4 | Elastic workers (commission/decommission, auto-suspend) | Planned |
 | M5 | Software-Defined Storage (function pointers on labels, dlopen) | Planned |
 | M6 | Warehouse intelligence (ephemeral rooms, pub/sub, placement) | Planned |
@@ -31,7 +31,7 @@ LABIOS 2.0 is a ground-up rewrite of the original research prototype. The old co
 | 10MB single file (10 labels) | 168 MB/s | 197 MB/s |
 | 1000 small files (1KB each) | 122 IOPS | 152 IOPS |
 
-35 unit tests, 3 integration suites, and the demo client all pass with data verification.
+50+ unit tests, 4 integration suites, and the demo client all pass with data verification.
 
 ## Quick Start
 
@@ -69,7 +69,7 @@ Label Queue              Warehouse             Inventory
 Label Dispatcher
   ├─ Shuffler (aggregation, dependency detection, supertask creation)
   ├─ Read/Write locality routing
-  └─ RoundRobinSolver (constraint-based + MinMax solvers in M3)
+  └─ Solver (round-robin / random / constraint / minmax)
   │
   ▼
 Workers (1..N)
@@ -81,6 +81,34 @@ Workers (1..N)
 Labels are immutable, self-describing units of I/O work. Each carries: operation type, source/destination pointers, flags, priority, dependency chain (with RAW/WAW/WAR hazard types), file key for shuffler grouping, and child label IDs for supertask composition. The dispatcher preprocesses labels before scheduling them to workers.
 
 **Key invariant:** Clients never talk to workers. The dispatcher is the only bridge. This enables all four deployment models from the paper (Accelerator, Forwarder, Buffering, Remote Distributed Storage).
+
+## Scheduling Policies
+
+LABIOS supports four scheduling policies from the HPDC'19 paper:
+
+| Policy | Description |
+|---|---|
+| `round-robin` | Cyclic distribution across available workers (default) |
+| `random` | Uniform random to all workers including suspended |
+| `constraint` | Score workers by weight profile, distribute to top-N |
+| `minmax` | Maximize performance, minimize energy, subject to capacity/load |
+
+Switch policies via environment variable or TOML config:
+
+```bash
+# Via environment (Docker Compose)
+LABIOS_SCHEDULER_POLICY=constraint \
+LABIOS_SCHEDULER_PROFILE=/etc/labios/profiles/high_bandwidth.toml \
+docker compose up -d
+
+# Via TOML
+[scheduler]
+policy = "constraint"
+profile_path = "conf/profiles/high_bandwidth.toml"
+```
+
+Three weight profiles from Table 2 of the paper are included in `conf/profiles/`:
+`low_latency.toml`, `energy_savings.toml`, `high_bandwidth.toml`.
 
 ## POSIX Intercept
 
@@ -121,6 +149,7 @@ ctest --test-dir build/dev -L unit
 docker compose up -d
 docker compose run --rm --entrypoint labios-data-path-test test
 docker compose run --rm --entrypoint labios-benchmark-test test
+docker compose run --rm --entrypoint labios-scheduling-test test
 docker compose run --rm --entrypoint sh test \
   -c "LD_PRELOAD=/usr/local/lib/liblabios_intercept.so labios-intercept-test"
 docker compose down -v

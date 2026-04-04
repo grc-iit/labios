@@ -89,10 +89,11 @@ Clients never talk to workers. The dispatcher is the only bridge. This invariant
 
 ## Current Status (as of 2026-04-04)
 
-M0, M1, and M2 are complete. 35+ unit tests pass. Docker Compose stack runs
-with NATS 2.10 (JetStream), DragonflyDB (Redis-compatible), 1 dispatcher,
-3 workers, and 1 stub manager. All benchmarks verified (100MB write/read,
-1000 small files, 10MB split).
+M0, M1, M2, and M3 are complete. 50+ unit tests pass. Docker Compose stack
+runs with NATS 2.10 (JetStream), DragonflyDB (Redis-compatible), 1 dispatcher,
+3 workers, and 1 real Worker Manager. All benchmarks verified (100MB write/read,
+1000 small files, 10MB split). Scheduling demo shows different routing under
+different weight profiles.
 
 **What M2 delivered:**
 - Shuffler with aggregation, RAW/WAW/WAR dependency detection, supertask creation
@@ -104,13 +105,22 @@ with NATS 2.10 (JetStream), DragonflyDB (Redis-compatible), 1 dispatcher,
 - DragonflyDB replaces Redis 7 for ~20x warehouse throughput
 - Thread-safe RedisConnection with internal mutex
 
-**What M3 will deliver:**
-- Constraint-based solver (from the paper, completely absent today)
-- MinMax DP solver with real per-worker speed/energy from config
-- Worker scoring with all 5 variables (availability, capacity, load, speed, energy)
-- Configurable weight profiles (low_latency.toml, energy_savings.toml, high_bandwidth.toml)
-- Bucket-sorted worker list in a real Worker Manager (currently a stub)
-- Random solver alongside existing Round Robin
+**What M3 delivered:**
+- All four scheduling policies from the paper: Round Robin, Random, Constraint-based, MinMax DP
+- Constraint-based solver scores workers by weight profile and distributes to top-N
+- MinMax DP solver with real per-worker speed/energy profit function
+- Worker score computation: all 5 variables (availability, capacity, load, speed, energy)
+- Three weight profiles from Table 2: low_latency.toml, energy_savings.toml, high_bandwidth.toml
+- Real Worker Manager service with NATS-based registration/deregistration
+- Workers self-register on startup, deregister on shutdown
+- Dispatcher dynamically queries manager for live workers per batch
+- Solver selection via LABIOS_SCHEDULER_POLICY env var or TOML config
+
+**What M4 will deliver:**
+- Elastic worker commission/decommission
+- Auto-suspend on idle queue with configurable timeout
+- Worker activation via IPMI/SSH/Wake-on-LAN
+- Energy-aware allocation strategy
 
 ## Reference
 
