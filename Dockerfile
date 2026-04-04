@@ -83,6 +83,7 @@ COPY --from=builder /src/build/release/tests/labios-scheduling-test /usr/local/b
 COPY --from=builder /src/build/release/tests/labios-elastic-flood-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-kernel-cm1-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-kernel-hacc-test /usr/local/bin/
+COPY --from=builder /src/build/release/tests/labios-kernel-montage-test /usr/local/bin/
 COPY --from=builder /src/build/release/src/services/labios-demo /usr/local/bin/
 COPY --from=builder /src/build/release/lib/liblabios_intercept.so /usr/local/lib/
 COPY --from=builder /src/conf/ /etc/labios/
