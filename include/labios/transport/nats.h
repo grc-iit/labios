@@ -9,6 +9,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace labios::transport {
@@ -66,6 +67,10 @@ public:
     /// The reply arrives asynchronously via the returned handle.
     std::shared_ptr<AsyncReply> publish_request_async(
         std::string_view subject, std::span<const std::byte> data);
+
+    /// Create a reply inbox without publishing. Returns the inbox subject
+    /// and a handle that completes when a message arrives at that subject.
+    std::pair<std::string, std::shared_ptr<AsyncReply>> create_reply_inbox();
 
     [[nodiscard]] bool connected() const;
 

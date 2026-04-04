@@ -231,6 +231,21 @@ std::shared_ptr<AsyncReply> NatsConnection::publish_request_async(
     return reply;
 }
 
+std::pair<std::string, std::shared_ptr<AsyncReply>>
+NatsConnection::create_reply_inbox() {
+    impl_->ensure_inbox_sub();
+
+    uint64_t seq = impl_->inbox_counter.fetch_add(1);
+    std::string reply_to = impl_->inbox_prefix + "." + std::to_string(seq);
+
+    auto reply = std::make_shared<AsyncReply>();
+    {
+        std::lock_guard lock(impl_->reply_mu);
+        impl_->pending_replies[reply_to] = reply;
+    }
+    return {reply_to, reply};
+}
+
 bool NatsConnection::connected() const {
     return impl_ && impl_->conn != nullptr &&
            natsConnection_Status(impl_->conn) == NATS_CONN_STATUS_CONNECTED;
