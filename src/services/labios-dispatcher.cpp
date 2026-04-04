@@ -71,10 +71,9 @@ int main() {
             // Update catalog: mark label as Scheduled.
             catalog.set_status(label.id, labios::LabelStatus::Scheduled);
 
-            // Read-locality routing: READ labels go to the worker holding
-            // the file data, bypassing the solver (paper Section 2.3).
             int target_worker = -1;
 
+            // Read-locality: READs go to the worker holding the file data
             if (label.type == labios::LabelType::Read) {
                 auto* src = std::get_if<labios::FilePath>(&label.source);
                 if (src) {
@@ -85,25 +84,46 @@ int main() {
                 }
             }
 
+            // Write-locality: WRITEs for a file with existing location go to same worker
+            if (target_worker <= 0 && label.type == labios::LabelType::Write) {
+                auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                if (dst) {
+                    auto loc = catalog.get_location(dst->path);
+                    if (loc.has_value()) {
+                        target_worker = *loc;
+                    }
+                }
+            }
+
             if (target_worker > 0) {
-                // Direct assignment to the worker holding the data.
+                // Direct assignment (read-locality or write-locality)
                 catalog.set_worker(label.id, target_worker);
                 std::string subject = "labios.worker." + std::to_string(target_worker);
                 nats.publish(subject,
                              std::span<const std::byte>(reserialized.data(), reserialized.size()));
                 nats.flush();
 
+                const char* reason = (label.type == labios::LabelType::Read) ? "read" : "write";
                 std::cout << "[" << timestamp() << "] dispatcher: label "
-                          << label.id << " READ -> worker " << target_worker
-                          << " (locality)\n" << std::flush;
+                          << label.id << " -> worker " << target_worker
+                          << " (" << reason << " locality)\n" << std::flush;
             } else {
-                // WRITE labels (and READs without a known location) use the solver.
+                // First assignment for this file: use solver
                 std::vector<std::vector<std::byte>> label_batch;
                 label_batch.push_back(std::move(reserialized));
                 auto assignments = solver.assign(std::move(label_batch), workers);
 
                 for (auto& [worker_id, assigned_labels] : assignments) {
                     catalog.set_worker(label.id, worker_id);
+
+                    // Set location at assignment time so subsequent chunks use write-locality
+                    if (label.type == labios::LabelType::Write) {
+                        auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                        if (dst) {
+                            catalog.set_location(dst->path, worker_id);
+                        }
+                    }
+
                     for (auto& payload : assigned_labels) {
                         std::string subject = "labios.worker." + std::to_string(worker_id);
                         nats.publish(subject,
