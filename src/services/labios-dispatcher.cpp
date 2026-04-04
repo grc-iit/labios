@@ -1,4 +1,7 @@
+#include <labios/catalog.h>
 #include <labios/config.h>
+#include <labios/label.h>
+#include <labios/solver/round_robin.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
@@ -7,7 +10,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 #include <thread>
+#include <vector>
 
 static std::jthread g_service_thread;
 
@@ -34,19 +39,62 @@ int main() {
     const char* config_path = std::getenv("LABIOS_CONFIG_PATH");
     auto cfg = labios::load_config(config_path ? config_path : "conf/labios.toml");
 
+    // Redis constructed before NATS so it outlives NATS on destruction.
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
     labios::transport::NatsConnection nats(cfg.nats_url);
 
+    // Hardcoded worker list for M1a. M3 will replace with dynamic registry.
+    std::vector<labios::WorkerInfo> workers = {
+        {1, true},
+        {2, true},
+        {3, true},
+    };
+
+    labios::CatalogManager catalog(redis);
+    labios::RoundRobinSolver solver;
+    std::mutex dispatch_mutex;
+
     nats.subscribe("labios.labels",
-        [](std::string_view /*subject*/, std::span<const std::byte> data,
-           std::string_view /*reply_to*/) {
-            std::cout << "[" << timestamp() << "] dispatcher: received label ("
-                      << data.size() << " bytes)\n";
+        [&](std::string_view /*subject*/, std::span<const std::byte> data,
+            std::string_view reply_to) {
+            std::lock_guard lock(dispatch_mutex);
+
+            // Deserialize the incoming label.
+            auto label = labios::deserialize_label(data);
+
+            // Inject the NATS reply_to so the worker can respond to the client.
+            label.reply_to = std::string(reply_to);
+
+            // Re-serialize with the injected reply_to.
+            auto reserialized = labios::serialize_label(label);
+
+            // Update catalog: mark label as Scheduled.
+            catalog.set_status(label.id, labios::LabelStatus::Scheduled);
+
+            // Ask the solver for a worker assignment.
+            std::vector<std::vector<std::byte>> label_batch;
+            label_batch.push_back(std::move(reserialized));
+            auto assignments = solver.assign(std::move(label_batch), workers);
+
+            // Publish each assignment to the appropriate per-worker subject.
+            for (auto& [worker_id, assigned_labels] : assignments) {
+                catalog.set_worker(label.id, worker_id);
+                for (auto& payload : assigned_labels) {
+                    std::string subject = "labios.worker." + std::to_string(worker_id);
+                    nats.publish(subject,
+                                 std::span<const std::byte>(payload.data(), payload.size()));
+                }
+                nats.flush();
+
+                std::cout << "[" << timestamp() << "] dispatcher: label "
+                          << label.id << " -> worker " << worker_id << "\n"
+                          << std::flush;
+            }
         });
 
     redis.set("labios:ready:dispatcher", "1");
 
-    // Signal healthcheck
+    // Signal healthcheck.
     { std::ofstream touch("/tmp/labios-ready"); }
 
     std::cout << "[" << timestamp() << "] dispatcher ready\n" << std::flush;
