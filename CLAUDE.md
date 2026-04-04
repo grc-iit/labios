@@ -89,7 +89,7 @@ Clients never talk to workers. The dispatcher is the only bridge. This invariant
 
 ## Current Status (as of 2026-04-04)
 
-M0, M1, M2, and M3 are complete. 50+ unit tests pass. Docker Compose stack
+M0, M1, M2, M3, and M4 are complete. 79+ unit tests pass. Docker Compose stack
 runs with NATS 2.10 (JetStream), DragonflyDB (Redis-compatible), 1 dispatcher,
 3 workers, and 1 real Worker Manager. All benchmarks verified (100MB write/read,
 1000 small files, 10MB split). Scheduling demo shows different routing under
@@ -116,11 +116,20 @@ different weight profiles.
 - Dispatcher dynamically queries manager for live workers per batch
 - Solver selection via LABIOS_SCHEDULER_POLICY env var or TOML config
 
-**What M4 will deliver:**
-- Elastic worker commission/decommission
-- Auto-suspend on idle queue with configurable timeout
-- Worker activation via IPMI/SSH/Wake-on-LAN
-- Energy-aware allocation strategy
+**What M4 delivered:**
+- Dynamic commission/decommission via Docker Engine API over Unix socket
+- Elastic decision engine with pressure-based commission and idle-based decommission
+- Queue pressure tracking from dispatcher to manager via NATS
+- Worker self-suspend on configurable idle timeout
+- Worker resume via manager NATS command
+- ContainerRuntime concept for testable orchestration
+- docker-compose.elastic.yml for single-worker elastic mode
+- Demo script showing scale-up to 3 workers and scale-down to 1
+
+**What M5 will deliver:**
+- SDS: labels carry function references from a shared program repository
+- Workers load user functions via dlopen
+- Builtin transforms: compress_lz4, filter, deduplicate, sum, median, sort
 
 ## Reference
 

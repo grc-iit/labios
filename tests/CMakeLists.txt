@@ -91,3 +91,6 @@ catch_discover_tests(labios-docker-client-test TEST_PREFIX "unit/" PROPERTIES LA
 add_executable(labios-elastic-orchestrator-test unit/elastic_orchestrator_test.cpp)
 target_link_libraries(labios-elastic-orchestrator-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-elastic-orchestrator-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-elastic-flood-test integration/elastic_flood_test.cpp)
+target_link_libraries(labios-elastic-flood-test PRIVATE labios)

@@ -1,0 +1,104 @@
+# docker-compose.elastic.yml
+# M4 Elastic Workers Demo
+# Usage: docker compose -f docker-compose.elastic.yml up -d
+
+services:
+  nats:
+    image: nats:2.10-alpine
+    command: ["--jetstream", "--store_dir=/data", "--http_port=8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8222/healthz > /dev/null 2>&1"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+      start_period: 2s
+
+  redis:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    command: ["--logtostderr"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+      start_period: 2s
+
+  dispatcher:
+    build: { context: ., target: dispatcher }
+    depends_on:
+      nats: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      manager: { condition: service_healthy }
+    environment:
+      LABIOS_NATS_URL: "nats://nats:4222"
+      LABIOS_REDIS_HOST: "redis"
+      LABIOS_SCHEDULER_POLICY: "${LABIOS_SCHEDULER_POLICY:-round-robin}"
+      LABIOS_SCHEDULER_PROFILE: "${LABIOS_SCHEDULER_PROFILE:-}"
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/labios-ready"]
+      interval: 2s
+      retries: 10
+      start_period: 3s
+
+  worker-1:
+    image: labios-worker:latest
+    build: { context: ., target: worker }
+    depends_on:
+      nats: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      manager: { condition: service_healthy }
+    environment:
+      LABIOS_NATS_URL: "nats://nats:4222"
+      LABIOS_REDIS_HOST: "redis"
+      LABIOS_WORKER_ID: "1"
+      LABIOS_WORKER_SPEED: "5"
+      LABIOS_WORKER_ENERGY: "1"
+      LABIOS_WORKER_CAPACITY: "10GB"
+      LABIOS_WORKER_IDLE_TIMEOUT_MS: "15000"
+    volumes:
+      - worker-1-data:/labios/data
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/labios-ready"]
+      interval: 2s
+      retries: 10
+      start_period: 3s
+
+  manager:
+    build: { context: ., target: manager }
+    depends_on:
+      nats: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    environment:
+      LABIOS_NATS_URL: "nats://nats:4222"
+      LABIOS_REDIS_HOST: "redis"
+      LABIOS_ELASTIC_ENABLED: "true"
+      LABIOS_ELASTIC_MIN_WORKERS: "1"
+      LABIOS_ELASTIC_MAX_WORKERS: "3"
+      LABIOS_DOCKER_IMAGE: "labios-worker"
+      LABIOS_DOCKER_NETWORK: "labios_default"
+      LABIOS_WORKER_IDLE_TIMEOUT_MS: "15000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/labios-ready"]
+      interval: 2s
+      retries: 10
+      start_period: 3s
+
+  test:
+    build: { context: ., target: test }
+    depends_on:
+      dispatcher: { condition: service_healthy }
+      worker-1: { condition: service_healthy }
+      manager: { condition: service_healthy }
+    environment:
+      LABIOS_NATS_URL: "nats://nats:4222"
+      LABIOS_REDIS_HOST: "redis"
+
+volumes:
+  worker-1-data:
