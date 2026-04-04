@@ -182,13 +182,13 @@ std::optional<int> CatalogManager::get_location(std::string_view filepath) {
 void CatalogManager::set_location(std::string_view filepath,
                                    uint64_t offset, uint64_t length,
                                    int worker_id) {
-    // Store in a sorted set keyed by file. Each member encodes the range
-    // as "start-end" and the score is the worker_id (for fast lookup).
-    // Also set the per-file key to the latest writer for backward compat.
+    // Store in a sorted set keyed by file. Score = start_offset so
+    // ZRANGEBYSCORE can narrow by offset range. Member = "worker_id:end"
+    // encodes the worker and the exclusive end of the range.
     auto key = offset_location_key(filepath);
-    std::string member = std::to_string(offset) + "-"
+    std::string member = std::to_string(worker_id) + ":"
                        + std::to_string(offset + length);
-    redis_.zadd(key, static_cast<double>(worker_id), member);
+    redis_.zadd(key, static_cast<double>(offset), member);
 
     // Update whole-file key to the latest writer.
     redis_.set(location_key(filepath), std::to_string(worker_id));
@@ -201,20 +201,20 @@ std::optional<int> CatalogManager::get_location(std::string_view filepath,
         return get_location(filepath);
     }
 
-    // Query the sorted set for all entries. We need to find a range that
-    // contains [offset, offset+length). Since scores encode worker_id
-    // (not offsets), we scan all members with ZRANGEBYSCORE -inf +inf.
+    // Score = start_offset, member = "worker_id:end". Query only entries
+    // whose start_offset <= our offset (a containing range must start at
+    // or before the queried offset).
     auto key = offset_location_key(filepath);
-    auto entries = redis_.zrangebyscore(key, -1e18, 1e18);
+    auto entries = redis_.zrangebyscore(key, 0, static_cast<double>(offset));
 
     for (auto& entry : entries) {
-        auto dash = entry.member.find('-');
-        if (dash == std::string::npos) continue;
+        auto colon = entry.member.find(':');
+        if (colon == std::string::npos) continue;
         try {
-            uint64_t start = std::stoull(entry.member.substr(0, dash));
-            uint64_t end = std::stoull(entry.member.substr(dash + 1));
-            if (offset >= start && offset + length <= end) {
-                return static_cast<int>(entry.score);
+            int wid = std::stoi(entry.member.substr(0, colon));
+            uint64_t end = std::stoull(entry.member.substr(colon + 1));
+            if (offset + length <= end) {
+                return wid;
             }
         } catch (const std::exception& e) {
             std::cerr << "catalog: malformed offset entry: " << e.what() << "\n";
