@@ -65,3 +65,36 @@ TEST_CASE("NATS message flows from client to worker", "[smoke]") {
     REQUIRE(result.has_value());
     REQUIRE(result.value() == "received_by_worker_1");
 }
+
+TEST_CASE("Each worker receives on its own subject", "[smoke]") {
+    labios::transport::NatsConnection nats(nats_url());
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+
+    auto ts = std::chrono::steady_clock::now().time_since_epoch().count();
+
+    // Send a unique message to each of the 3 workers
+    for (int id = 1; id <= 3; ++id) {
+        std::string subject = "labios.worker." + std::to_string(id);
+        std::string msg_id = "multi_" + std::to_string(ts) + "_w" + std::to_string(id);
+        nats.publish(subject, msg_id);
+    }
+    nats.drain();
+
+    // Verify each worker wrote its confirmation
+    for (int id = 1; id <= 3; ++id) {
+        std::string msg_id = "multi_" + std::to_string(ts) + "_w" + std::to_string(id);
+        std::string key = "labios:confirmation:" + msg_id;
+        std::string expected = "received_by_worker_" + std::to_string(id);
+
+        std::optional<std::string> result;
+        for (int attempt = 0; attempt < 20; ++attempt) {
+            result = redis.get(key);
+            if (result.has_value()) break;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        INFO("worker " << id << " confirmation key: " << key);
+        REQUIRE(result.has_value());
+        REQUIRE(result.value() == expected);
+    }
+}

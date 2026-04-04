@@ -17,8 +17,10 @@ static void signal_handler(int /*sig*/) { g_running.store(false); }
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
+    std::tm tm_buf{};
+    gmtime_r(&time, &tm_buf);
     char buf[32];
-    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", std::gmtime(&time));
+    std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm_buf);
     return buf;
 }
 
@@ -29,8 +31,8 @@ int main() {
     const char* config_path = std::getenv("LABIOS_CONFIG_PATH");
     auto cfg = labios::load_config(config_path ? config_path : "conf/labios.toml");
 
-    labios::transport::NatsConnection nats(cfg.nats_url);
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
+    labios::transport::NatsConnection nats(cfg.nats_url);
 
     nats.subscribe("labios.labels",
         [](std::string_view /*subject*/, std::span<const std::byte> data) {
