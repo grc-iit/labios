@@ -18,7 +18,10 @@ std::string env_or(const char* name, const std::string& fallback) {
 
 int env_int_or(const char* name, int fallback) {
     const char* val = std::getenv(name);
-    if (val != nullptr && val[0] != '\0') return std::stoi(val);
+    if (val != nullptr && val[0] != '\0') {
+        try { return std::stoi(val); }
+        catch (...) { return fallback; }
+    }
     return fallback;
 }
 
@@ -151,24 +154,24 @@ Config load_config(const std::filesystem::path& path) {
     cfg.elastic.docker_network = env_or("LABIOS_DOCKER_NETWORK", cfg.elastic.docker_network);
     {
         auto e = std::getenv("LABIOS_ELASTIC_MIN_WORKERS");
-        if (e) cfg.elastic.min_workers = std::stoi(e);
+        if (e) { try { cfg.elastic.min_workers = std::stoi(e); } catch (...) {} }
     }
     {
         auto e = std::getenv("LABIOS_ELASTIC_MAX_WORKERS");
-        if (e) cfg.elastic.max_workers = std::stoi(e);
+        if (e) { try { cfg.elastic.max_workers = std::stoi(e); } catch (...) {} }
     }
     {
         auto e = std::getenv("LABIOS_ELASTIC_WORKER_SPEED");
-        if (e) cfg.elastic.elastic_worker_speed = std::stoi(e);
+        if (e) { try { cfg.elastic.elastic_worker_speed = std::stoi(e); } catch (...) {} }
     }
     {
         auto e = std::getenv("LABIOS_ELASTIC_WORKER_ENERGY");
-        if (e) cfg.elastic.elastic_worker_energy = std::stoi(e);
+        if (e) { try { cfg.elastic.elastic_worker_energy = std::stoi(e); } catch (...) {} }
     }
     cfg.elastic.elastic_worker_capacity = env_or("LABIOS_ELASTIC_WORKER_CAPACITY", cfg.elastic.elastic_worker_capacity);
     {
         auto e = std::getenv("LABIOS_WORKER_IDLE_TIMEOUT_MS");
-        if (e) cfg.elastic.worker_idle_timeout_ms = std::stoi(e);
+        if (e) { try { cfg.elastic.worker_idle_timeout_ms = std::stoi(e); } catch (...) {} }
     }
 
     return cfg;

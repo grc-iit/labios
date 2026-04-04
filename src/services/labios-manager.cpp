@@ -72,38 +72,52 @@ int main() {
 
         if (subject == "labios.worker.register") {
             // Parse: "id,speed,energy,capacity"
-            std::istringstream iss(msg);
-            std::string token;
-            int id = 0, speed = 1, energy = 1;
-            std::string capacity_str;
+            try {
+                std::istringstream iss(msg);
+                std::string token;
+                int id = 0, speed = 1, energy = 1;
+                std::string capacity_str;
 
-            if (std::getline(iss, token, ',')) id = std::stoi(token);
-            if (std::getline(iss, token, ',')) speed = std::stoi(token);
-            if (std::getline(iss, token, ',')) energy = std::stoi(token);
-            if (std::getline(iss, token, ',')) capacity_str = token;
+                if (std::getline(iss, token, ',')) id = std::stoi(token);
+                if (std::getline(iss, token, ',')) speed = std::stoi(token);
+                if (std::getline(iss, token, ',')) energy = std::stoi(token);
+                if (std::getline(iss, token, ',')) capacity_str = token;
 
-            double cap_ratio = 1.0;
-            if (!capacity_str.empty() && cfg.max_worker_capacity > 0) {
-                uint64_t cap_bytes = labios::parse_size(capacity_str);
-                cap_ratio = std::min(
-                    static_cast<double>(cap_bytes) /
-                    static_cast<double>(cfg.max_worker_capacity),
-                    1.0);
+                double cap_ratio = 1.0;
+                if (!capacity_str.empty() && cfg.max_worker_capacity > 0) {
+                    uint64_t cap_bytes = labios::parse_size(capacity_str);
+                    cap_ratio = std::min(
+                        static_cast<double>(cap_bytes) /
+                        static_cast<double>(cfg.max_worker_capacity),
+                        1.0);
+                }
+
+                labios::WorkerInfo info{id, true, cap_ratio, 0.0, speed, energy};
+                worker_mgr.register_worker(info);
+
+                std::cout << "[" << timestamp() << "] manager: registered worker "
+                          << id << " (speed=" << speed << ", energy=" << energy
+                          << ", capacity=" << capacity_str << ")\n" << std::flush;
+            } catch (const std::exception& e) {
+                std::cerr << "[" << timestamp()
+                          << "] manager: malformed register message: "
+                          << e.what() << "\n" << std::flush;
+                return;
             }
 
-            labios::WorkerInfo info{id, true, cap_ratio, 0.0, speed, energy};
-            worker_mgr.register_worker(info);
-
-            std::cout << "[" << timestamp() << "] manager: registered worker "
-                      << id << " (speed=" << speed << ", energy=" << energy
-                      << ", capacity=" << capacity_str << ")\n" << std::flush;
-
         } else if (subject == "labios.worker.deregister") {
-            int id = std::stoi(msg);
-            worker_mgr.deregister_worker(id);
+            try {
+                int id = std::stoi(msg);
+                worker_mgr.deregister_worker(id);
 
-            std::cout << "[" << timestamp() << "] manager: deregistered worker "
-                      << id << "\n" << std::flush;
+                std::cout << "[" << timestamp() << "] manager: deregistered worker "
+                          << id << "\n" << std::flush;
+            } catch (const std::exception& e) {
+                std::cerr << "[" << timestamp()
+                          << "] manager: malformed deregister message: "
+                          << e.what() << "\n" << std::flush;
+                return;
+            }
 
         } else if (subject == "labios.manager.workers") {
             auto all = worker_mgr.all_workers();
@@ -133,26 +147,32 @@ int main() {
                        std::span<const std::byte> data,
                        std::string_view /*reply_to*/) {
             std::string msg(reinterpret_cast<const char*>(data.data()), data.size());
-            std::istringstream iss(msg);
-            std::string token;
-            int id = 0;
-            double capacity = 1.0, load = 0.0;
-            bool available = true;
+            try {
+                std::istringstream iss(msg);
+                std::string token;
+                int id = 0;
+                double capacity = 1.0, load = 0.0;
+                bool available = true;
 
-            if (std::getline(iss, token, ',')) id = std::stoi(token);
-            if (std::getline(iss, token, ',')) capacity = std::stod(token);
-            if (std::getline(iss, token, ',')) load = std::stod(token);
-            if (std::getline(iss, token, ',')) available = (token == "1");
+                if (std::getline(iss, token, ',')) id = std::stoi(token);
+                if (std::getline(iss, token, ',')) capacity = std::stod(token);
+                if (std::getline(iss, token, ',')) load = std::stod(token);
+                if (std::getline(iss, token, ',')) available = (token == "1");
 
-            auto all = worker_mgr.all_workers();
-            for (auto& w : all) {
-                if (w.id == id) {
-                    w.capacity = capacity;
-                    w.load = load;
-                    w.available = available;
-                    worker_mgr.update_score(id, w);
-                    break;
+                auto all = worker_mgr.all_workers();
+                for (auto& w : all) {
+                    if (w.id == id) {
+                        w.capacity = capacity;
+                        w.load = load;
+                        w.available = available;
+                        worker_mgr.update_score(id, w);
+                        break;
+                    }
                 }
+            } catch (const std::exception& e) {
+                std::cerr << "[" << timestamp()
+                          << "] manager: malformed score_update: "
+                          << e.what() << "\n" << std::flush;
             }
         });
 

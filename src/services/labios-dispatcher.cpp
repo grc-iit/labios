@@ -52,17 +52,24 @@ static std::vector<labios::WorkerInfo> query_workers(
         std::string line;
         while (std::getline(iss, line)) {
             if (line.empty()) continue;
-            // Parse: id,available,capacity,load,speed,energy
-            std::istringstream ls(line);
-            std::string token;
-            labios::WorkerInfo w{};
-            if (std::getline(ls, token, ',')) w.id = std::stoi(token);
-            if (std::getline(ls, token, ',')) w.available = (token == "1");
-            if (std::getline(ls, token, ',')) w.capacity = std::stod(token);
-            if (std::getline(ls, token, ',')) w.load = std::stod(token);
-            if (std::getline(ls, token, ',')) w.speed = std::stoi(token);
-            if (std::getline(ls, token, ',')) w.energy = std::stoi(token);
-            workers.push_back(w);
+            try {
+                // Parse: id,available,capacity,load,speed,energy
+                std::istringstream ls(line);
+                std::string token;
+                labios::WorkerInfo w{};
+                if (std::getline(ls, token, ',')) w.id = std::stoi(token);
+                if (std::getline(ls, token, ',')) w.available = (token == "1");
+                if (std::getline(ls, token, ',')) w.capacity = std::stod(token);
+                if (std::getline(ls, token, ',')) w.load = std::stod(token);
+                if (std::getline(ls, token, ',')) w.speed = std::stoi(token);
+                if (std::getline(ls, token, ',')) w.energy = std::stoi(token);
+                workers.push_back(w);
+            } catch (const std::exception&) {
+                std::cerr << "[" << timestamp()
+                          << "] dispatcher: malformed worker entry, skipping\n"
+                          << std::flush;
+                continue;
+            }
         }
     } catch (const std::exception& e) {
         std::cerr << "[" << timestamp() << "] dispatcher: manager query failed: "

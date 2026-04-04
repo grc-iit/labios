@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <fcntl.h>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -100,7 +101,12 @@ uint32_t CatalogManager::get_flags(uint64_t label_id) {
         throw std::runtime_error(
             "catalog flags not found for label " + std::to_string(label_id));
     }
-    return static_cast<uint32_t>(std::stoul(*val));
+    try {
+        return static_cast<uint32_t>(std::stoul(*val));
+    } catch (const std::exception& e) {
+        std::cerr << "catalog: malformed flags value: " << e.what() << "\n";
+        return 0;
+    }
 }
 
 void CatalogManager::set_error(uint64_t label_id, std::string_view error) {
@@ -123,7 +129,12 @@ std::optional<int> CatalogManager::get_worker(uint64_t label_id) {
     if (!val.has_value()) {
         return std::nullopt;
     }
-    return std::stoi(*val);
+    try {
+        return std::stoi(*val);
+    } catch (const std::exception& e) {
+        std::cerr << "catalog: malformed worker_id value: " << e.what() << "\n";
+        return std::nullopt;
+    }
 }
 
 void CatalogManager::schedule_batch(std::span<const ScheduleEntry> entries) {
@@ -160,7 +171,12 @@ std::optional<int> CatalogManager::get_location(std::string_view filepath) {
     if (!val.has_value()) {
         return std::nullopt;
     }
-    return std::stoi(*val);
+    try {
+        return std::stoi(*val);
+    } catch (const std::exception& e) {
+        std::cerr << "catalog: malformed location value: " << e.what() << "\n";
+        return std::nullopt;
+    }
 }
 
 void CatalogManager::set_location(std::string_view filepath,
@@ -194,10 +210,15 @@ std::optional<int> CatalogManager::get_location(std::string_view filepath,
     for (auto& entry : entries) {
         auto dash = entry.member.find('-');
         if (dash == std::string::npos) continue;
-        uint64_t start = std::stoull(entry.member.substr(0, dash));
-        uint64_t end = std::stoull(entry.member.substr(dash + 1));
-        if (offset >= start && offset + length <= end) {
-            return static_cast<int>(entry.score);
+        try {
+            uint64_t start = std::stoull(entry.member.substr(0, dash));
+            uint64_t end = std::stoull(entry.member.substr(dash + 1));
+            if (offset >= start && offset + length <= end) {
+                return static_cast<int>(entry.score);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "catalog: malformed offset entry: " << e.what() << "\n";
+            continue;
         }
     }
 
@@ -232,7 +253,11 @@ void CatalogManager::track_write(std::string_view filepath,
     redis_.hset(key, "exists", "1");
     uint64_t end = offset + size;
     auto cur = redis_.hget(key, "size");
-    uint64_t cur_size = cur.has_value() ? std::stoull(*cur) : 0;
+    uint64_t cur_size = 0;
+    if (cur.has_value()) {
+        try { cur_size = std::stoull(*cur); }
+        catch (...) {}
+    }
     if (end > cur_size) {
         redis_.hset(key, "size", std::to_string(end));
     }
@@ -265,11 +290,13 @@ std::optional<FileInfo> CatalogManager::get_file_info(std::string_view filepath)
     info.exists = (*exists_val == "1");
     auto size_val = redis_.hget(key, "size");
     if (size_val.has_value()) {
-        info.size = std::stoull(*size_val);
+        try { info.size = std::stoull(*size_val); }
+        catch (...) {}
     }
     auto mtime_val = redis_.hget(key, "mtime");
     if (mtime_val.has_value()) {
-        info.mtime_ms = std::stoull(*mtime_val);
+        try { info.mtime_ms = std::stoull(*mtime_val); }
+        catch (...) {}
     }
     return info;
 }
