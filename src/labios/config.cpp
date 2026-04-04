@@ -68,6 +68,7 @@ Config load_config(const std::filesystem::path& path) {
         cfg.dispatcher_dep_granularity = tbl["dispatcher"]["dep_granularity"].value_or(cfg.dispatcher_dep_granularity);
         cfg.scheduler_policy = tbl["scheduler"]["policy"].value_or(cfg.scheduler_policy);
         cfg.scheduler_profile_path = tbl["scheduler"]["profile_path"].value_or(cfg.scheduler_profile_path);
+        cfg.scheduler_worker_refresh_ms = tbl["scheduler"]["worker_refresh_ms"].value_or(cfg.scheduler_worker_refresh_ms);
         cfg.worker_energy = tbl["worker"]["energy"].value_or(cfg.worker_energy);
     }
 
@@ -118,6 +119,7 @@ Config load_config(const std::filesystem::path& path) {
 
     cfg.scheduler_policy = env_or("LABIOS_SCHEDULER_POLICY", cfg.scheduler_policy);
     cfg.scheduler_profile_path = env_or("LABIOS_SCHEDULER_PROFILE", cfg.scheduler_profile_path);
+    cfg.scheduler_worker_refresh_ms = env_int_or("LABIOS_SCHEDULER_WORKER_REFRESH_MS", cfg.scheduler_worker_refresh_ms);
     cfg.worker_energy = env_int_or("LABIOS_WORKER_ENERGY", cfg.worker_energy);
 
     return cfg;

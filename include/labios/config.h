@@ -42,6 +42,7 @@ struct Config {
     // Scheduler (paper Section 2.4)
     std::string scheduler_policy = "round-robin";      // round-robin, random, constraint, minmax
     std::string scheduler_profile_path;                 // path to weight profile TOML
+    int scheduler_worker_refresh_ms = 5000;             // worker list cache refresh interval
 
     // Worker energy (paper Section 2.5)
     int worker_energy = 1;  // [1,5] power wattage class

@@ -22,8 +22,13 @@
 #include <vector>
 
 static std::jthread g_batch_thread;
+static std::jthread g_worker_refresh_thread;
 static std::vector<std::jthread> g_fanout_threads;
 static std::mutex g_fanout_mu;
+
+// Cached worker list, refreshed periodically by g_worker_refresh_thread.
+static std::mutex g_workers_mu;
+static std::vector<labios::WorkerInfo> g_cached_workers;
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -108,6 +113,25 @@ int main() {
     auto batch_size = static_cast<size_t>(cfg.dispatcher_batch_size);
     auto batch_timeout = std::chrono::milliseconds(cfg.dispatcher_batch_timeout_ms);
 
+    // Seed the worker cache before accepting labels.
+    {
+        auto initial = query_workers(nats);
+        std::lock_guard lock(g_workers_mu);
+        g_cached_workers = std::move(initial);
+    }
+
+    // Background thread: periodically refresh the cached worker list.
+    auto refresh_ms = std::chrono::milliseconds(cfg.scheduler_worker_refresh_ms);
+    g_worker_refresh_thread = std::jthread([&nats, refresh_ms](std::stop_token stoken) {
+        while (!stoken.stop_requested()) {
+            std::this_thread::sleep_for(refresh_ms);
+            if (stoken.stop_requested()) break;
+            auto fresh = query_workers(nats);
+            std::lock_guard lock(g_workers_mu);
+            g_cached_workers = std::move(fresh);
+        }
+    });
+
     // NATS subscription: buffer incoming labels without routing.
     nats.subscribe("labios.labels",
         [&](std::string_view /*subject*/, std::span<const std::byte> data,
@@ -147,8 +171,12 @@ int main() {
 
             auto result = shuffler.shuffle(std::move(batch), location_lookup);
 
-            // Query manager for live worker list.
-            auto workers = query_workers(nats);
+            // Read cached worker list (refreshed by background thread).
+            std::vector<labios::WorkerInfo> workers;
+            {
+                std::lock_guard lock(g_workers_mu);
+                workers = g_cached_workers;
+            }
             if (workers.empty()) {
                 std::cerr << "[" << timestamp()
                           << "] dispatcher: no workers available, skipping batch\n"
@@ -359,6 +387,12 @@ int main() {
               << ")\n" << std::flush;
 
     g_batch_thread.join();
+
+    // Stop the worker refresh thread.
+    if (g_worker_refresh_thread.joinable()) {
+        g_worker_refresh_thread.request_stop();
+        g_worker_refresh_thread.join();
+    }
 
     // Join all tracked fanout threads for clean shutdown.
     {
