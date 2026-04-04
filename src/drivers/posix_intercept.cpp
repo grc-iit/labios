@@ -10,9 +10,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string_view>
+#include <thread>
 
 namespace {
 
@@ -68,9 +70,16 @@ std::once_flag g_session_flag;
 bool g_symbols_loaded = false;
 bool g_initialized = false;
 
+// When true, all intercepted calls fall through to the real filesystem.
+// Set when LABIOS infrastructure is persistently unavailable.
+bool g_fallback_mode = false;
+
 // Prevents deadlock when config loading or session creation triggers
 // intercepted I/O calls (e.g., TOML parsing calls open() internally).
 thread_local bool g_in_init = false;
+
+constexpr int MAX_SESSION_RETRIES = 3;
+constexpr int RETRY_DELAY_MS = 500;
 
 template<typename T>
 T load_sym(const char* name) {
@@ -117,32 +126,48 @@ void init_config() {
 void init_session() {
     std::call_once(g_session_flag, []() {
         g_in_init = true;
-        g_session = std::make_unique<labios::Session>(g_config);
-        g_adapter = std::make_unique<labios::POSIXAdapter>(
-            *g_session, *g_fd_table);
 
-        // Start the cache flush timer (spec Section 5, flush trigger #4).
-        auto& cm = g_session->content_manager();
-        cm.set_flush_callback([](int /*fd*/, std::vector<labios::FlushRegion> regions) {
-            if (!g_session) return;
-            for (auto& region : regions) {
-                try {
-                    auto pending = g_session->label_manager().publish_write(
-                        region.filepath, region.offset, region.data);
-                    g_session->label_manager().wait(pending);
-                    g_session->catalog_manager().track_write(
-                        region.filepath, region.offset, region.data.size());
-                } catch (...) {}
+        for (int attempt = 0; attempt < MAX_SESSION_RETRIES; ++attempt) {
+            try {
+                g_session = std::make_unique<labios::Session>(g_config);
+                g_adapter = std::make_unique<labios::POSIXAdapter>(
+                    *g_session, *g_fd_table);
+
+                auto& cm = g_session->content_manager();
+                cm.set_flush_callback([](int /*fd*/, std::vector<labios::FlushRegion> regions) {
+                    if (!g_session) return;
+                    for (auto& region : regions) {
+                        try {
+                            auto pending = g_session->label_manager().publish_write(
+                                region.filepath, region.offset, region.data);
+                            g_session->label_manager().wait(pending);
+                            g_session->catalog_manager().track_write(
+                                region.filepath, region.offset, region.data.size());
+                        } catch (...) {}
+                    }
+                });
+                cm.start_flush_timer();
+
+                g_in_init = false;
+                return;
+            } catch (...) {
+                g_session.reset();
+                g_adapter.reset();
+                if (attempt + 1 < MAX_SESSION_RETRIES) {
+                    std::this_thread::sleep_for(
+                        std::chrono::milliseconds(RETRY_DELAY_MS));
+                }
             }
-        });
-        cm.start_flush_timer();
+        }
 
+        // All retries exhausted. Fall through to real FS.
+        g_fallback_mode = true;
         g_in_init = false;
     });
 }
 
 bool is_labios_path(const char* path) {
-    if (!path || !g_initialized || g_in_init) return false;
+    if (!path || !g_initialized || g_in_init || g_fallback_mode) return false;
     std::string_view sv(path);
     for (auto& prefix : g_config.intercept_prefixes) {
         if (sv.starts_with(prefix)) return true;
@@ -151,7 +176,7 @@ bool is_labios_path(const char* path) {
 }
 
 bool is_labios_fd(int fd) {
-    if (!g_fd_table || g_in_init) return false;
+    if (!g_fd_table || g_in_init || g_fallback_mode) return false;
     return g_fd_table->is_labios_fd(fd);
 }
 
