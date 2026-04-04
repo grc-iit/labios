@@ -5,6 +5,8 @@
 
 #include <atomic>
 #include <chrono>
+#include <random>
+#include <thread>
 
 namespace labios {
 
@@ -32,17 +34,78 @@ Pointer network_endpoint(std::string_view host, uint16_t port) {
 // ID generation
 // ---------------------------------------------------------------------------
 
+// Snowflake-style 64-bit ID generator.
+//   Bits 63-22: millisecond timestamp (41 bits, ~69 years from epoch)
+//   Bits 21-12: node/process ID (10 bits, 1024 unique sources)
+//   Bits 11-0:  sequence counter (12 bits, 4096 per ms per node)
+//
+// The node ID combines app_id with a process-lifetime random component
+// to disambiguate across machines sharing the same PID.
+
+namespace {
+
+struct SnowflakeState {
+    std::atomic<uint64_t> last_ms{0};
+    std::atomic<uint32_t> sequence{0};
+    uint16_t node_id = 0;
+
+    explicit SnowflakeState(uint32_t app_id) {
+        std::random_device rd;
+        uint32_t rand_bits = rd();
+        node_id = static_cast<uint16_t>((app_id ^ rand_bits) & 0x3FF);
+    }
+};
+
+} // namespace
+
 uint64_t generate_label_id(uint32_t app_id) {
-    static std::atomic<uint32_t> counter{0};
-    auto now = std::chrono::high_resolution_clock::now();
-    auto nanos = static_cast<uint64_t>(
-        now.time_since_epoch().count());
-    uint32_t seq = counter.fetch_add(1, std::memory_order_relaxed);
-    // Pack: upper 32 bits from nanosecond timestamp, lower 32 bits combine
-    // app_id (upper 16 bits) and atomic counter (lower 16 bits).
-    return (nanos & 0xFFFFFFFF00000000ULL)
-         | (static_cast<uint64_t>(app_id & 0xFFFF) << 16)
-         | (seq & 0xFFFF);
+    // Use a process-global state for consistency across threads.
+    static SnowflakeState state(app_id);
+
+    auto now_ms = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+
+    uint64_t prev_ms = state.last_ms.load(std::memory_order_acquire);
+    uint32_t seq;
+
+    for (;;) {
+        if (now_ms > prev_ms) {
+            // New millisecond: reset counter and claim this timestamp.
+            if (state.last_ms.compare_exchange_strong(
+                    prev_ms, now_ms, std::memory_order_acq_rel)) {
+                state.sequence.store(1, std::memory_order_relaxed);
+                seq = 0;
+                break;
+            }
+            // CAS failed; prev_ms reloaded, retry.
+            now_ms = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count());
+            continue;
+        }
+
+        // Same millisecond: increment sequence.
+        seq = state.sequence.fetch_add(1, std::memory_order_relaxed);
+        if (seq < 4096) {
+            now_ms = prev_ms; // Use the timestamp from last_ms for consistency.
+            break;
+        }
+
+        // Sequence overflow: spin-wait for the next millisecond.
+        std::this_thread::yield();
+        now_ms = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch())
+                .count());
+        prev_ms = state.last_ms.load(std::memory_order_acquire);
+    }
+
+    return ((now_ms & 0x1FFFFFFFFFFULL) << 22)
+         | (static_cast<uint64_t>(state.node_id & 0x3FF) << 12)
+         | (static_cast<uint64_t>(seq & 0xFFF));
 }
 
 // ---------------------------------------------------------------------------

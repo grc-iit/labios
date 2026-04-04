@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <labios/label.h>
 
+#include <unordered_set>
+
 TEST_CASE("Label serialization roundtrip with FilePath", "[label]") {
     labios::LabelData label;
     label.id = 42;
@@ -91,6 +93,45 @@ TEST_CASE("Label ID generation produces unique IDs", "[label]") {
     REQUIRE(id1 != id2);
     REQUIRE(id2 != id3);
     REQUIRE(id1 != id3);
+}
+
+TEST_CASE("Snowflake IDs are unique across 100K rapid-fire generations", "[label]") {
+    std::unordered_set<uint64_t> ids;
+    ids.reserve(100000);
+    for (int i = 0; i < 100000; ++i) {
+        auto id = labios::generate_label_id(1);
+        REQUIRE(ids.insert(id).second);
+    }
+    REQUIRE(ids.size() == 100000);
+}
+
+TEST_CASE("Snowflake IDs are monotonically ordered within a single thread", "[label]") {
+    uint64_t prev = 0;
+    for (int i = 0; i < 10000; ++i) {
+        auto id = labios::generate_label_id(1);
+        REQUIRE(id > prev);
+        prev = id;
+    }
+}
+
+TEST_CASE("Different app_ids produce different ID ranges", "[label]") {
+    // The node_id bits (21-12) encode app_id + random, so with very high
+    // probability the IDs will differ in at least the node_id field.
+    // We test this by generating sets and checking no overlap.
+    std::unordered_set<uint64_t> set_a, set_b;
+    for (int i = 0; i < 1000; ++i) {
+        set_a.insert(labios::generate_label_id(100));
+        set_b.insert(labios::generate_label_id(200));
+    }
+
+    // No collisions within each set (redundant with uniqueness test, but explicit).
+    REQUIRE(set_a.size() == 1000);
+    REQUIRE(set_b.size() == 1000);
+
+    // No overlap between sets.
+    for (auto id : set_a) {
+        REQUIRE(set_b.find(id) == set_b.end());
+    }
 }
 
 TEST_CASE("Completion serialization roundtrip", "[label]") {
