@@ -10,7 +10,9 @@
 #include <labios/client.h>
 #include <labios/config.h>
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -42,45 +44,141 @@ static void simulate_compute(int timestep_ms) {
     }
 }
 
+// --- Benchmark helpers ---
+
+constexpr int default_trials = 5;
+constexpr int default_warmup = 1;
+
+struct TrialResult {
+    double elapsed_sec;
+    double throughput_mbps;
+};
+
+static std::vector<TrialResult> run_trials(
+    labios::Client& client,
+    int num_trials,
+    const std::string& prefix,
+    size_t output_size,
+    int timesteps,
+    int compute_ms,
+    bool use_async,
+    int barrier_interval = 0)
+{
+    std::vector<TrialResult> results;
+    double data_mb = static_cast<double>(timesteps * output_size) / (1024.0 * 1024.0);
+
+    for (int trial = 0; trial < num_trials; ++trial) {
+        std::vector<std::byte> grid(output_size);
+        std::iota(reinterpret_cast<uint8_t*>(grid.data()),
+                  reinterpret_cast<uint8_t*>(grid.data()) + output_size,
+                  static_cast<uint8_t>(0));
+
+        auto t0 = std::chrono::steady_clock::now();
+
+        if (!use_async) {
+            for (int t = 0; t < timesteps; ++t) {
+                simulate_compute(compute_ms);
+                std::string path = prefix + "t" + std::to_string(trial) +
+                    "_s" + std::to_string(t) + ".dat";
+                grid[0] = static_cast<std::byte>(t);
+                client.write(path, grid);
+            }
+        } else if (barrier_interval <= 0) {
+            std::vector<labios::PendingIO> pending;
+            for (int t = 0; t < timesteps; ++t) {
+                simulate_compute(compute_ms);
+                std::string path = prefix + "t" + std::to_string(trial) +
+                    "_s" + std::to_string(t) + ".dat";
+                grid[0] = static_cast<std::byte>(t);
+                pending.push_back(client.async_write(path, grid));
+            }
+            for (auto& p : pending) client.wait(p);
+        } else {
+            std::vector<labios::PendingIO> batch;
+            for (int t = 0; t < timesteps; ++t) {
+                simulate_compute(compute_ms);
+                std::string path = prefix + "t" + std::to_string(trial) +
+                    "_s" + std::to_string(t) + ".dat";
+                grid[0] = static_cast<std::byte>(t);
+                batch.push_back(client.async_write(path, grid));
+                if ((t + 1) % barrier_interval == 0) {
+                    for (auto& p : batch) client.wait(p);
+                    batch.clear();
+                }
+            }
+            for (auto& p : batch) client.wait(p);
+        }
+
+        auto t1 = std::chrono::steady_clock::now();
+        double elapsed = std::chrono::duration<double>(t1 - t0).count();
+        results.push_back({elapsed, data_mb / elapsed});
+    }
+    return results;
+}
+
+static void print_stats(const std::string& label,
+                         const std::vector<TrialResult>& results,
+                         int warmup = default_warmup) {
+    size_t start = static_cast<size_t>(warmup);
+    if (start >= results.size()) start = 0;
+    size_t n = results.size() - start;
+
+    double sum_t = 0, sum_tp = 0;
+    double min_t = 1e30, max_t = 0;
+    for (size_t i = start; i < results.size(); ++i) {
+        sum_t += results[i].elapsed_sec;
+        sum_tp += results[i].throughput_mbps;
+        min_t = std::min(min_t, results[i].elapsed_sec);
+        max_t = std::max(max_t, results[i].elapsed_sec);
+    }
+    double mean_t = sum_t / static_cast<double>(n);
+    double mean_tp = sum_tp / static_cast<double>(n);
+
+    double var = 0;
+    for (size_t i = start; i < results.size(); ++i) {
+        double d = results[i].elapsed_sec - mean_t;
+        var += d * d;
+    }
+    double stddev = std::sqrt(var / static_cast<double>(n));
+
+    std::cout << "\n=== " << label << " ===\n"
+              << "  Trials: " << results.size() << " (warmup: " << warmup << ")\n"
+              << "  Time:   " << mean_t << "s  (stddev=" << stddev
+              << ", min=" << min_t << ", max=" << max_t << ")\n"
+              << "  Throughput: " << mean_tp << " MB/s\n";
+}
+
+static double mean_elapsed(const std::vector<TrialResult>& results, int warmup) {
+    double sum = 0;
+    int n = 0;
+    for (size_t i = static_cast<size_t>(warmup); i < results.size(); ++i) {
+        sum += results[i].elapsed_sec;
+        ++n;
+    }
+    return sum / n;
+}
+
+// --- Test cases ---
+
 TEST_CASE("CM1 kernel: sync write burst", "[kernel][cm1]") {
     auto cfg = test_config();
     auto client = labios::connect(cfg);
 
     constexpr int timesteps = 10;
-    constexpr size_t output_size = 1024 * 1024; // 1MB per timestep (scaled down for Docker)
-    constexpr int compute_ms = 50; // 50ms compute per timestep
+    constexpr size_t output_size = 1024 * 1024;
+    constexpr int compute_ms = 50;
 
-    std::vector<std::byte> grid(output_size);
-    std::iota(reinterpret_cast<uint8_t*>(grid.data()),
-              reinterpret_cast<uint8_t*>(grid.data()) + output_size,
-              static_cast<uint8_t>(0));
+    auto results = run_trials(client, default_trials, "/cm1/sync/",
+                              output_size, timesteps, compute_ms, false);
+    print_stats("CM1 Sync Mode", results);
 
-    auto t0 = std::chrono::steady_clock::now();
-
-    for (int t = 0; t < timesteps; ++t) {
-        // Compute phase.
-        simulate_compute(compute_ms);
-
-        // I/O phase: sync, blocks until done.
-        std::string path = "/cm1/sync/step_" + std::to_string(t) + ".dat";
-        grid[0] = static_cast<std::byte>(t); // Mark timestep in data.
-        client.write(path, grid);
-    }
-
-    auto t1 = std::chrono::steady_clock::now();
-    double total_sec = std::chrono::duration<double>(t1 - t0).count();
-    double data_mb = static_cast<double>(timesteps * output_size) / (1024.0 * 1024.0);
-
-    std::cout << "\n=== CM1 Sync Mode ===\n"
-              << "  Timesteps: " << timesteps << "\n"
-              << "  Total time: " << total_sec << "s\n"
-              << "  I/O throughput: " << (data_mb / total_sec) << " MB/s\n"
-              << "  Effective rate: " << (timesteps / total_sec) << " steps/s\n";
-
-    // Verify last timestep data.
-    auto result = client.read("/cm1/sync/step_9.dat", 0, output_size);
+    // Verify last trial, last timestep.
+    int last_trial = default_trials - 1;
+    std::string path = "/cm1/sync/t" + std::to_string(last_trial) +
+        "_s" + std::to_string(timesteps - 1) + ".dat";
+    auto result = client.read(path, 0, output_size);
     REQUIRE(result.size() == output_size);
-    CHECK(result[0] == static_cast<std::byte>(9));
+    CHECK(result[0] == static_cast<std::byte>(timesteps - 1));
 }
 
 TEST_CASE("CM1 kernel: async write burst", "[kernel][cm1]") {
@@ -91,44 +189,16 @@ TEST_CASE("CM1 kernel: async write burst", "[kernel][cm1]") {
     constexpr size_t output_size = 1024 * 1024;
     constexpr int compute_ms = 50;
 
-    std::vector<std::byte> grid(output_size);
-    std::iota(reinterpret_cast<uint8_t*>(grid.data()),
-              reinterpret_cast<uint8_t*>(grid.data()) + output_size,
-              static_cast<uint8_t>(0));
+    auto results = run_trials(client, default_trials, "/cm1/async/",
+                              output_size, timesteps, compute_ms, true);
+    print_stats("CM1 Async Mode", results);
 
-    std::vector<labios::PendingIO> pending;
-
-    auto t0 = std::chrono::steady_clock::now();
-
-    for (int t = 0; t < timesteps; ++t) {
-        // Compute phase runs while previous I/O completes in background.
-        simulate_compute(compute_ms);
-
-        // I/O phase: async, returns immediately.
-        std::string path = "/cm1/async/step_" + std::to_string(t) + ".dat";
-        grid[0] = static_cast<std::byte>(t);
-        pending.push_back(client.async_write(path, grid));
-    }
-
-    // Barrier: wait for all outstanding I/O.
-    for (auto& p : pending) {
-        client.wait(p);
-    }
-
-    auto t1 = std::chrono::steady_clock::now();
-    double total_sec = std::chrono::duration<double>(t1 - t0).count();
-    double data_mb = static_cast<double>(timesteps * output_size) / (1024.0 * 1024.0);
-
-    std::cout << "\n=== CM1 Async Mode ===\n"
-              << "  Timesteps: " << timesteps << "\n"
-              << "  Total time: " << total_sec << "s\n"
-              << "  I/O throughput: " << (data_mb / total_sec) << " MB/s\n"
-              << "  Effective rate: " << (timesteps / total_sec) << " steps/s\n";
-
-    // Verify last timestep data.
-    auto result = client.read("/cm1/async/step_9.dat", 0, output_size);
+    int last_trial = default_trials - 1;
+    std::string path = "/cm1/async/t" + std::to_string(last_trial) +
+        "_s" + std::to_string(timesteps - 1) + ".dat";
+    auto result = client.read(path, 0, output_size);
     REQUIRE(result.size() == output_size);
-    CHECK(result[0] == static_cast<std::byte>(9));
+    CHECK(result[0] == static_cast<std::byte>(timesteps - 1));
 }
 
 TEST_CASE("CM1 kernel: async pipelined with periodic barriers", "[kernel][cm1]") {
@@ -138,48 +208,51 @@ TEST_CASE("CM1 kernel: async pipelined with periodic barriers", "[kernel][cm1]")
     constexpr int timesteps = 10;
     constexpr size_t output_size = 1024 * 1024;
     constexpr int compute_ms = 50;
-    constexpr int barrier_interval = 3; // Wait every 3 timesteps.
+    constexpr int barrier_interval = 3;
 
-    std::vector<std::byte> grid(output_size);
-    std::iota(reinterpret_cast<uint8_t*>(grid.data()),
-              reinterpret_cast<uint8_t*>(grid.data()) + output_size,
-              static_cast<uint8_t>(0));
+    auto results = run_trials(client, default_trials, "/cm1/pipelined/",
+                              output_size, timesteps, compute_ms, true,
+                              barrier_interval);
+    print_stats("CM1 Pipelined Mode (barrier every 3)", results);
 
-    std::vector<labios::PendingIO> batch;
-
-    auto t0 = std::chrono::steady_clock::now();
-
+    // Verify all timesteps from last trial.
+    int last_trial = default_trials - 1;
     for (int t = 0; t < timesteps; ++t) {
-        simulate_compute(compute_ms);
-
-        std::string path = "/cm1/pipelined/step_" + std::to_string(t) + ".dat";
-        grid[0] = static_cast<std::byte>(t);
-        batch.push_back(client.async_write(path, grid));
-
-        // Periodic barrier to bound outstanding I/O.
-        if ((t + 1) % barrier_interval == 0) {
-            for (auto& p : batch) client.wait(p);
-            batch.clear();
-        }
-    }
-    // Drain remaining.
-    for (auto& p : batch) client.wait(p);
-
-    auto t1 = std::chrono::steady_clock::now();
-    double total_sec = std::chrono::duration<double>(t1 - t0).count();
-    double data_mb = static_cast<double>(timesteps * output_size) / (1024.0 * 1024.0);
-
-    std::cout << "\n=== CM1 Pipelined Mode (barrier every " << barrier_interval << ") ===\n"
-              << "  Timesteps: " << timesteps << "\n"
-              << "  Total time: " << total_sec << "s\n"
-              << "  I/O throughput: " << (data_mb / total_sec) << " MB/s\n"
-              << "  Effective rate: " << (timesteps / total_sec) << " steps/s\n";
-
-    // Verify data integrity across all timesteps.
-    for (int t = 0; t < timesteps; ++t) {
-        std::string path = "/cm1/pipelined/step_" + std::to_string(t) + ".dat";
+        std::string path = "/cm1/pipelined/t" + std::to_string(last_trial) +
+            "_s" + std::to_string(t) + ".dat";
         auto result = client.read(path, 0, output_size);
         REQUIRE(result.size() == output_size);
         CHECK(result[0] == static_cast<std::byte>(t));
     }
+}
+
+TEST_CASE("CM1 kernel: mode comparison summary", "[kernel][cm1]") {
+    auto cfg = test_config();
+    auto client = labios::connect(cfg);
+
+    constexpr int trials = default_trials;
+    constexpr int timesteps = 10;
+    constexpr size_t output_size = 1024 * 1024;
+    constexpr int compute_ms = 50;
+
+    auto sync_r = run_trials(client, trials, "/cm1/cmp/sync/", output_size,
+                              timesteps, compute_ms, false);
+    auto async_r = run_trials(client, trials, "/cm1/cmp/async/", output_size,
+                               timesteps, compute_ms, true);
+    auto pipe_r = run_trials(client, trials, "/cm1/cmp/pipe/", output_size,
+                              timesteps, compute_ms, true, 3);
+
+    print_stats("Sync", sync_r);
+    print_stats("Async", async_r);
+    print_stats("Pipelined (barrier=3)", pipe_r);
+
+    double sync_mean = mean_elapsed(sync_r, default_warmup);
+    double async_mean = mean_elapsed(async_r, default_warmup);
+    double pipe_mean = mean_elapsed(pipe_r, default_warmup);
+
+    std::cout << "\n  Async speedup over sync: " << (sync_mean / async_mean) << "x\n"
+              << "  Pipelined speedup over sync: " << (sync_mean / pipe_mean) << "x\n";
+
+    // Async should not be slower than sync (sanity check).
+    CHECK(async_mean <= sync_mean * 1.5);
 }
