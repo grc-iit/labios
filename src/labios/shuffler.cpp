@@ -86,7 +86,7 @@ ShuffleResult Shuffler::shuffle(std::vector<LabelData> batch,
     }
 
     // Phase 2: aggregate consecutive writes.
-    remaining = aggregate(remaining);
+    remaining = aggregate(remaining, result.reply_fanout);
 
     // Phase 3: detect RAW/WAW/WAR dependencies.
     detect_dependencies(remaining);
@@ -102,7 +102,9 @@ ShuffleResult Shuffler::shuffle(std::vector<LabelData> batch,
 // aggregate()
 // ---------------------------------------------------------------------------
 
-std::vector<LabelData> Shuffler::aggregate(std::vector<LabelData>& labels) {
+std::vector<LabelData> Shuffler::aggregate(
+    std::vector<LabelData>& labels,
+    std::unordered_map<uint64_t, std::vector<std::string>>& reply_fanout) {
     if (!config_.aggregation_enabled) {
         return std::move(labels);
     }
@@ -191,6 +193,19 @@ std::vector<LabelData> Shuffler::aggregate(std::vector<LabelData>& labels) {
                 merged.data_size = total_size;
                 merged.children = std::move(child_ids);
                 merged.reply_to = first.reply_to;
+
+                // Collect all original reply_to addresses for fanout.
+                std::vector<std::string> replies;
+                replies.reserve(j - run_start);
+                for (size_t k = run_start; k < j; ++k) {
+                    if (!writes[k].reply_to.empty()) {
+                        replies.push_back(writes[k].reply_to);
+                    }
+                }
+                if (replies.size() > 1) {
+                    reply_fanout[merged.id] = std::move(replies);
+                }
+
                 merged.file_key = first.file_key;
                 merged.app_id = first.app_id;
                 merged.flags = first.flags;

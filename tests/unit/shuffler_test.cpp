@@ -282,3 +282,38 @@ TEST_CASE("unpack_labels handles empty input", "[shuffler]") {
     auto result = labios::unpack_labels(empty);
     CHECK(result.empty());
 }
+
+TEST_CASE("Aggregation preserves all original reply_to addresses", "[shuffler]") {
+    labios::ShufflerConfig cfg{.aggregation_enabled = true};
+    labios::Shuffler shuffler(cfg);
+
+    std::vector<labios::LabelData> batch;
+    batch.push_back(make_write(1, "/data/file.dat", 0, 1024));
+    batch.push_back(make_write(2, "/data/file.dat", 1024, 1024));
+    batch.push_back(make_write(3, "/data/file.dat", 2048, 1024));
+
+    auto result = shuffler.shuffle(std::move(batch), no_location);
+
+    REQUIRE(result.independent.size() == 1);
+    auto& merged = result.independent[0];
+    CHECK(merged.reply_to == "inbox.1");
+
+    auto it = result.reply_fanout.find(merged.id);
+    REQUIRE(it != result.reply_fanout.end());
+    REQUIRE(it->second.size() == 3);
+    CHECK(it->second[0] == "inbox.1");
+    CHECK(it->second[1] == "inbox.2");
+    CHECK(it->second[2] == "inbox.3");
+}
+
+TEST_CASE("Non-aggregated labels have no reply_fanout entry", "[shuffler]") {
+    labios::ShufflerConfig cfg{.aggregation_enabled = false};
+    labios::Shuffler shuffler(cfg);
+
+    std::vector<labios::LabelData> batch;
+    batch.push_back(make_write(1, "/data/file.dat", 0, 1024));
+
+    auto result = shuffler.shuffle(std::move(batch), no_location);
+
+    CHECK(result.reply_fanout.empty());
+}

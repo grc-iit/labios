@@ -8,6 +8,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace labios {
@@ -26,6 +27,9 @@ struct ShuffleResult {
     std::vector<std::pair<LabelData, int>> direct_route;
     std::vector<Supertask> supertasks;
     std::vector<LabelData> independent;
+
+    // For aggregated labels: merged_label_id -> all original reply_to addresses.
+    std::unordered_map<uint64_t, std::vector<std::string>> reply_fanout;
 };
 
 class Shuffler {
@@ -39,7 +43,9 @@ public:
 private:
     ShufflerConfig config_;
 
-    std::vector<LabelData> aggregate(std::vector<LabelData>& labels);
+    std::vector<LabelData> aggregate(
+        std::vector<LabelData>& labels,
+        std::unordered_map<uint64_t, std::vector<std::string>>& reply_fanout);
     void detect_dependencies(std::vector<LabelData>& labels);
     std::vector<Supertask> build_supertasks(std::vector<LabelData>& labels);
 };
