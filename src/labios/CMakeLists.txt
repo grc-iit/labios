@@ -1,5 +1,5 @@
 add_library(labios STATIC
-    labios.cpp
+    config.cpp
 )
 
 target_include_directories(labios

@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(cmake/LabiosDependencies.cmake)
 
+enable_testing()
+
 add_subdirectory(src/labios)
 add_subdirectory(src/services)
 add_subdirectory(tests)
