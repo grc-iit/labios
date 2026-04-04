@@ -24,6 +24,7 @@ add_library(labios STATIC
     solver/round_robin.cpp
     transport/nats.cpp
     transport/redis.cpp
+    adapter/fd_table.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)
@@ -41,6 +42,7 @@ target_link_libraries(labios
         hiredis
         tomlplusplus::tomlplusplus
         flatbuffers
+        ${CMAKE_DL_LIBS}
 )
 
 target_compile_features(labios PUBLIC cxx_std_20)
