@@ -20,6 +20,14 @@ ContentManager::ContentManager(transport::RedisConnection& redis,
       default_read_policy_(default_read_policy) {}
 
 ContentManager::~ContentManager() {
+    // Drain any buffered small-I/O writes before shutting down.
+    auto regions = flush_all();
+    if (flush_callback_) {
+        for (auto& [fd, fd_regions] : regions) {
+            flush_callback_(fd, std::move(fd_regions));
+        }
+    }
+
     if (flush_thread_.joinable()) {
         flush_thread_.request_stop();
     }

@@ -26,7 +26,14 @@ struct Session::Impl {
 };
 
 Session::Session(const Config& cfg) : impl_(std::make_unique<Impl>(cfg)) {}
-Session::~Session() = default;
+
+Session::~Session() {
+    // Flush NATS to ensure all published labels reach the server before
+    // the transport connections are destroyed. ContentManager's destructor
+    // handles draining the small-I/O cache. Destruction order (reverse of
+    // declaration) then tears down: labels, catalog, content, nats, redis.
+    impl_->nats.flush();
+}
 
 LabelManager& Session::label_manager() { return impl_->labels; }
 ContentManager& Session::content_manager() { return impl_->content; }
