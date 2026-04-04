@@ -1,6 +1,7 @@
 #include <labios/content_manager.h>
 
 #include <algorithm>
+#include <cstring>
 
 namespace labios {
 
@@ -77,12 +78,38 @@ std::optional<std::vector<std::byte>> ContentManager::cache_read(
     if (it->second.read_policy == ReadPolicy::WriteOnly) return std::nullopt;
 
     auto& regions = it->second.regions;
-    auto rit = regions.find(offset);
-    if (rit == regions.end()) return std::nullopt;
-    if (rit->second.size() < size) return std::nullopt;
+    uint64_t req_end = offset + size;
 
-    std::vector<std::byte> result(rit->second.begin(),
-                                   rit->second.begin() + size);
+    // Track which bytes of the requested range are covered by cached regions.
+    std::vector<std::byte> result(size, std::byte{0});
+    uint64_t covered = 0;
+
+    // Iterate regions that could overlap [offset, offset+size).
+    // regions is a std::map<uint64_t, vector<byte>> sorted by offset.
+    // Start at the first region whose offset is <= offset (it might cover us).
+    auto rit = regions.upper_bound(offset);
+    if (rit != regions.begin()) --rit;
+
+    for (; rit != regions.end(); ++rit) {
+        uint64_t reg_start = rit->first;
+        uint64_t reg_end = reg_start + rit->second.size();
+
+        if (reg_start >= req_end) break;          // past our range
+        if (reg_end <= offset) { continue; }       // before our range
+
+        // Compute the overlap [ov_start, ov_end)
+        uint64_t ov_start = std::max(reg_start, offset);
+        uint64_t ov_end = std::min(reg_end, req_end);
+        uint64_t ov_len = ov_end - ov_start;
+
+        std::memcpy(result.data() + (ov_start - offset),
+                     rit->second.data() + (ov_start - reg_start),
+                     ov_len);
+        covered += ov_len;
+    }
+
+    if (covered == 0) return std::nullopt;
+    if (covered < size) return std::nullopt;  // partial hit: let caller issue READ labels
     return result;
 }
 

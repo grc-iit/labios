@@ -67,6 +67,62 @@ TEST_CASE("Read-through returns cached data", "[content_manager]") {
     REQUIRE((*result)[255] == std::byte{255});
 }
 
+TEST_CASE("Read-through with range overlap returns data from covering region",
+          "[content_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::ContentManager cm(redis, 1048576, 0, labios::ReadPolicy::ReadThrough);
+
+    // Write 1024 bytes at offset 0
+    std::vector<std::byte> data(1024);
+    std::iota(reinterpret_cast<uint8_t*>(data.data()),
+              reinterpret_cast<uint8_t*>(data.data()) + 1024,
+              static_cast<uint8_t>(0));
+
+    cm.cache_write(35, "/test/overlap.bin", 0, data);
+
+    // Read 256 bytes at offset 512 (within the cached region)
+    auto result = cm.cache_read(35, 512, 256);
+    REQUIRE(result.has_value());
+    REQUIRE(result->size() == 256);
+    REQUIRE((*result)[0] == data[512]);
+    REQUIRE((*result)[255] == data[767]);
+}
+
+TEST_CASE("Read-through with adjacent regions assembles full range",
+          "[content_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::ContentManager cm(redis, 1048576, 0, labios::ReadPolicy::ReadThrough);
+
+    // Write two adjacent 512-byte regions
+    std::vector<std::byte> chunk1(512, std::byte{0xAA});
+    std::vector<std::byte> chunk2(512, std::byte{0xBB});
+
+    cm.cache_write(36, "/test/adjacent.bin", 0, chunk1);
+    cm.cache_write(36, "/test/adjacent.bin", 512, chunk2);
+
+    // Read the full 1024 bytes spanning both regions
+    auto result = cm.cache_read(36, 0, 1024);
+    REQUIRE(result.has_value());
+    REQUIRE(result->size() == 1024);
+    REQUIRE((*result)[0] == std::byte{0xAA});
+    REQUIRE((*result)[511] == std::byte{0xAA});
+    REQUIRE((*result)[512] == std::byte{0xBB});
+    REQUIRE((*result)[1023] == std::byte{0xBB});
+}
+
+TEST_CASE("cache_read returns nullopt for partially covered range",
+          "[content_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::ContentManager cm(redis, 1048576, 0, labios::ReadPolicy::ReadThrough);
+
+    std::vector<std::byte> data(256, std::byte{0xCC});
+    cm.cache_write(37, "/test/partial.bin", 0, data);
+
+    // Request 512 bytes but only 256 are cached
+    auto result = cm.cache_read(37, 0, 512);
+    REQUIRE_FALSE(result.has_value());
+}
+
 TEST_CASE("Write-only cache_read returns nullopt", "[content_manager]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::ContentManager cm(redis, 1048576, 0, labios::ReadPolicy::WriteOnly);
