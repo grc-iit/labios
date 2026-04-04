@@ -3,6 +3,9 @@
 #include <labios/content_manager.h>
 #include <labios/label.h>
 #include <labios/shuffler.h>
+#include <labios/solver/constraint.h>
+#include <labios/solver/minmax.h>
+#include <labios/solver/random.h>
 #include <labios/solver/round_robin.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
@@ -14,6 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <mutex>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -29,6 +33,37 @@ static std::string timestamp() {
     char buf[32];
     std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm_buf);
     return buf;
+}
+
+static std::vector<labios::WorkerInfo> query_workers(
+    labios::transport::NatsConnection& nats) {
+    std::vector<labios::WorkerInfo> workers;
+    try {
+        auto reply = nats.request("labios.manager.workers", {},
+                                  std::chrono::milliseconds(2000));
+        std::string data(reinterpret_cast<const char*>(reply.data.data()),
+                         reply.data.size());
+        std::istringstream iss(data);
+        std::string line;
+        while (std::getline(iss, line)) {
+            if (line.empty()) continue;
+            // Parse: id,available,capacity,load,speed,energy
+            std::istringstream ls(line);
+            std::string token;
+            labios::WorkerInfo w{};
+            if (std::getline(ls, token, ',')) w.id = std::stoi(token);
+            if (std::getline(ls, token, ',')) w.available = (token == "1");
+            if (std::getline(ls, token, ',')) w.capacity = std::stod(token);
+            if (std::getline(ls, token, ',')) w.load = std::stod(token);
+            if (std::getline(ls, token, ',')) w.speed = std::stoi(token);
+            if (std::getline(ls, token, ',')) w.energy = std::stoi(token);
+            workers.push_back(w);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[" << timestamp() << "] dispatcher: manager query failed: "
+                  << e.what() << "\n" << std::flush;
+    }
+    return workers;
 }
 
 static void signal_handler(int /*sig*/) {
@@ -48,15 +83,18 @@ int main() {
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
     labios::transport::NatsConnection nats(cfg.nats_url);
 
-    // Hardcoded worker list for M2. M3 will replace with dynamic registry.
-    std::vector<labios::WorkerInfo> workers = {
-        {1, true},
-        {2, true},
-        {3, true},
-    };
-
     labios::CatalogManager catalog(redis);
-    labios::RoundRobinSolver solver;
+
+    // Load weight profile for constraint-based solver.
+    auto profile = cfg.scheduler_profile_path.empty()
+        ? labios::WeightProfile{"default", 0.5, 0.0, 0.35, 0.15, 0.0}
+        : labios::load_weight_profile(cfg.scheduler_profile_path);
+
+    // Solver instances (one of these is used per batch based on config).
+    labios::RoundRobinSolver rr_solver;
+    labios::RandomSolver random_solver;
+    labios::ConstraintSolver constraint_solver(profile);
+    labios::MinMaxSolver minmax_solver;
 
     labios::ShufflerConfig shuf_cfg{
         .aggregation_enabled = cfg.dispatcher_aggregation_enabled,
@@ -109,6 +147,32 @@ int main() {
 
             auto result = shuffler.shuffle(std::move(batch), location_lookup);
 
+            // Query manager for live worker list.
+            auto workers = query_workers(nats);
+            if (workers.empty()) {
+                std::cerr << "[" << timestamp()
+                          << "] dispatcher: no workers available, skipping batch\n"
+                          << std::flush;
+                continue;
+            }
+
+            // Solver dispatch based on configured policy.
+            auto solve = [&](std::vector<std::vector<std::byte>> solver_batch)
+                -> labios::AssignmentMap {
+                if (cfg.scheduler_policy == "random") {
+                    return random_solver.assign(std::move(solver_batch), workers);
+                } else if (cfg.scheduler_policy == "constraint") {
+                    return constraint_solver.assign(std::move(solver_batch), workers);
+                } else if (cfg.scheduler_policy == "minmax") {
+                    return minmax_solver.assign(std::move(solver_batch), workers);
+                }
+                return rr_solver.assign(std::move(solver_batch), workers);
+            };
+
+            std::cout << "[" << timestamp() << "] dispatcher: policy="
+                      << cfg.scheduler_policy << ", workers="
+                      << workers.size() << "\n" << std::flush;
+
             // (A) Direct-route labels (read-locality)
             if (!result.direct_route.empty()) {
                 std::vector<labios::ScheduleEntry> sched;
@@ -135,7 +199,7 @@ int main() {
                 auto dummy = labios::serialize_label(st.composite);
                 std::vector<std::vector<std::byte>> solver_batch;
                 solver_batch.push_back(std::move(dummy));
-                auto assignments = solver.assign(std::move(solver_batch), workers);
+                auto assignments = solve(std::move(solver_batch));
 
                 for (auto& [wid, _] : assignments) {
                     std::vector<labios::ScheduleEntry> sched;
@@ -256,7 +320,7 @@ int main() {
                         auto serialized = labios::serialize_label(label);
                         std::vector<std::vector<std::byte>> solver_batch;
                         solver_batch.push_back(std::move(serialized));
-                        auto assignments = solver.assign(std::move(solver_batch), workers);
+                        auto assignments = solve(std::move(solver_batch));
 
                         for (auto& [wid, payloads] : assignments) {
                             sched.push_back({label.id, wid, label.flags});
