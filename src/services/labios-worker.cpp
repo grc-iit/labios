@@ -16,6 +16,21 @@
 #include <string>
 #include <thread>
 
+struct CompletionResult {
+    labios::CompletionStatus status = labios::CompletionStatus::Complete;
+    std::string data_key;
+};
+
+static CompletionResult execute_write(
+    labios::ContentManager& cm, labios::CatalogManager& cat,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id);
+
+static CompletionResult execute_read(
+    labios::ContentManager& cm, labios::CatalogManager& cat,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id);
+
 static std::jthread g_service_thread;
 
 static std::string timestamp() {
@@ -32,6 +47,88 @@ static void signal_handler(int /*sig*/) {
     if (g_service_thread.joinable()) {
         g_service_thread.request_stop();
     }
+}
+
+static CompletionResult execute_write(
+    labios::ContentManager& cm, labios::CatalogManager& cat,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id) {
+
+    auto blob = cm.retrieve(label.id);
+
+    auto* dst = std::get_if<labios::FilePath>(&label.destination);
+    if (!dst) {
+        throw std::runtime_error("WRITE label missing FilePath destination");
+    }
+
+    auto full_path = storage_root / dst->path;
+    std::filesystem::create_directories(full_path.parent_path());
+
+    if (dst->offset > 0 && std::filesystem::exists(full_path)) {
+        std::ofstream ofs(full_path,
+            std::ios::binary | std::ios::in | std::ios::out);
+        if (!ofs) {
+            throw std::runtime_error("failed to open " + full_path.string());
+        }
+        ofs.seekp(static_cast<std::streamoff>(dst->offset));
+        ofs.write(reinterpret_cast<const char*>(blob.data()),
+                  static_cast<std::streamsize>(blob.size()));
+    } else {
+        std::ofstream ofs(full_path, std::ios::binary | std::ios::out);
+        if (!ofs) {
+            throw std::runtime_error("failed to open " + full_path.string());
+        }
+        if (dst->offset > 0) {
+            ofs.seekp(static_cast<std::streamoff>(dst->offset));
+        }
+        ofs.write(reinterpret_cast<const char*>(blob.data()),
+                  static_cast<std::streamsize>(blob.size()));
+    }
+
+    cm.remove(label.id);
+    cat.set_location(dst->path, dst->offset, dst->length, worker_id);
+
+    std::cout << "[" << timestamp() << "] worker " << worker_id
+              << ": WRITE " << full_path.string() << " ("
+              << blob.size() << " bytes)\n" << std::flush;
+
+    return {labios::CompletionStatus::Complete, {}};
+}
+
+static CompletionResult execute_read(
+    labios::ContentManager& cm, labios::CatalogManager& /*cat*/,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id) {
+
+    auto* src = std::get_if<labios::FilePath>(&label.source);
+    if (!src) {
+        throw std::runtime_error("READ label missing FilePath source");
+    }
+
+    uint64_t read_size = label.data_size > 0 ? label.data_size : src->length;
+
+    auto full_path = storage_root / src->path;
+    std::ifstream ifs(full_path, std::ios::binary);
+    if (!ifs) {
+        throw std::runtime_error(
+            "data not found on this worker for " + src->path);
+    }
+    if (src->offset > 0) {
+        ifs.seekg(static_cast<std::streamoff>(src->offset));
+    }
+    std::vector<std::byte> file_data(read_size);
+    ifs.read(reinterpret_cast<char*>(file_data.data()),
+             static_cast<std::streamsize>(read_size));
+    file_data.resize(static_cast<size_t>(ifs.gcount()));
+
+    cm.stage(label.id, std::span<const std::byte>(file_data));
+
+    std::cout << "[" << timestamp() << "] worker " << worker_id
+              << ": READ " << src->path << " ("
+              << file_data.size() << " bytes)\n" << std::flush;
+
+    return {labios::CompletionStatus::Complete,
+            labios::ContentManager::data_key(label.id)};
 }
 
 int main() {
@@ -80,95 +177,16 @@ int main() {
                 catalog.set_flags(label.id, label.flags);
 
                 if (label.type == labios::LabelType::Write) {
-                    auto blob = content_manager.retrieve(label.id);
-
-                    auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                    if (!dst) {
-                        throw std::runtime_error(
-                            "WRITE label missing FilePath destination");
-                    }
-
-                    auto full_path = storage_root / dst->path;
-                    std::filesystem::create_directories(full_path.parent_path());
-
-                    if (dst->offset > 0 &&
-                        std::filesystem::exists(full_path)) {
-                        std::ofstream ofs(full_path,
-                            std::ios::binary | std::ios::in | std::ios::out);
-                        if (!ofs) {
-                            throw std::runtime_error(
-                                "failed to open " + full_path.string());
-                        }
-                        ofs.seekp(static_cast<std::streamoff>(dst->offset));
-                        ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                  static_cast<std::streamsize>(blob.size()));
-                    } else {
-                        std::ofstream ofs(full_path,
-                            std::ios::binary | std::ios::out);
-                        if (!ofs) {
-                            throw std::runtime_error(
-                                "failed to open " + full_path.string());
-                        }
-                        if (dst->offset > 0) {
-                            ofs.seekp(
-                                static_cast<std::streamoff>(dst->offset));
-                        }
-                        ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                  static_cast<std::streamsize>(blob.size()));
-                    }
-
-                    content_manager.remove(label.id);
-
-                    // Record which worker holds this file so the dispatcher
-                    // can route READs here (read-locality, paper Section 2.3).
-                    catalog.set_location(dst->path, worker_id);
-
-                    completion.status = labios::CompletionStatus::Complete;
-
-                    std::cout << "[" << timestamp() << "] worker " << worker_id
-                              << ": WRITE " << full_path.string() << " ("
-                              << blob.size() << " bytes)\n" << std::flush;
+                    auto result = execute_write(
+                        content_manager, catalog, label, storage_root, worker_id);
+                    completion.status = result.status;
 
                 } else if (label.type == labios::LabelType::Read) {
-                    auto* src = std::get_if<labios::FilePath>(&label.source);
-                    if (!src) {
-                        throw std::runtime_error(
-                            "READ label missing FilePath source");
-                    }
+                    auto result = execute_read(
+                        content_manager, catalog, label, storage_root, worker_id);
+                    completion.status = result.status;
+                    completion.data_key = std::move(result.data_key);
 
-                    uint64_t read_size = label.data_size > 0
-                        ? label.data_size
-                        : src->length;
-
-                    std::vector<std::byte> file_data;
-
-                    // The dispatcher routes READs to the worker holding the
-                    // file (read-locality, paper Section 2.3). Read from
-                    // local storage directly.
-                    auto full_path = storage_root / src->path;
-                    std::ifstream ifs(full_path, std::ios::binary);
-                    if (!ifs) {
-                        throw std::runtime_error(
-                            "data not found on this worker for "
-                            + src->path);
-                    }
-                    if (src->offset > 0) {
-                        ifs.seekg(static_cast<std::streamoff>(src->offset));
-                    }
-                    file_data.resize(read_size);
-                    ifs.read(reinterpret_cast<char*>(file_data.data()),
-                             static_cast<std::streamsize>(read_size));
-                    file_data.resize(static_cast<size_t>(ifs.gcount()));
-
-                    content_manager.stage(label.id,
-                                    std::span<const std::byte>(file_data));
-                    completion.data_key =
-                        labios::ContentManager::data_key(label.id);
-                    completion.status = labios::CompletionStatus::Complete;
-
-                    std::cout << "[" << timestamp() << "] worker " << worker_id
-                              << ": READ " << src->path << " ("
-                              << file_data.size() << " bytes)\n" << std::flush;
                 } else if (label.type == labios::LabelType::Composite) {
                     // Supertask: retrieve packed children from Redis and execute in order.
                     std::string pack_key = "labios:supertask:" + std::to_string(label.id);
@@ -194,67 +212,16 @@ int main() {
                         catalog.set_flags(child.id, child.flags);
 
                         if (child.type == labios::LabelType::Write) {
-                            auto blob = content_manager.retrieve(child.id);
-                            auto* dst = std::get_if<labios::FilePath>(&child.destination);
-                            if (!dst) {
-                                throw std::runtime_error("WRITE child missing FilePath destination");
-                            }
-                            auto full_path = storage_root / dst->path;
-                            std::filesystem::create_directories(full_path.parent_path());
-
-                            if (dst->offset > 0 && std::filesystem::exists(full_path)) {
-                                std::ofstream ofs(full_path,
-                                    std::ios::binary | std::ios::in | std::ios::out);
-                                if (!ofs) throw std::runtime_error("failed to open " + full_path.string());
-                                ofs.seekp(static_cast<std::streamoff>(dst->offset));
-                                ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                          static_cast<std::streamsize>(blob.size()));
-                            } else {
-                                std::ofstream ofs(full_path, std::ios::binary | std::ios::out);
-                                if (!ofs) throw std::runtime_error("failed to open " + full_path.string());
-                                if (dst->offset > 0) {
-                                    ofs.seekp(static_cast<std::streamoff>(dst->offset));
-                                }
-                                ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                          static_cast<std::streamsize>(blob.size()));
-                            }
-
-                            content_manager.remove(child.id);
-                            catalog.set_location(dst->path, worker_id);
-                            child_comp.status = labios::CompletionStatus::Complete;
-
-                            std::cout << "[" << timestamp() << "] worker " << worker_id
-                                      << ":   child WRITE " << full_path.string() << " ("
-                                      << blob.size() << " bytes)\n" << std::flush;
+                            auto result = execute_write(
+                                content_manager, catalog, child, storage_root, worker_id);
+                            child_comp.status = result.status;
 
                         } else if (child.type == labios::LabelType::Read) {
-                            auto* src = std::get_if<labios::FilePath>(&child.source);
-                            if (!src) {
-                                throw std::runtime_error("READ child missing FilePath source");
-                            }
-                            uint64_t read_size = child.data_size > 0 ? child.data_size : src->length;
+                            auto result = execute_read(
+                                content_manager, catalog, child, storage_root, worker_id);
+                            child_comp.status = result.status;
+                            child_comp.data_key = std::move(result.data_key);
 
-                            auto full_path = storage_root / src->path;
-                            std::ifstream ifs(full_path, std::ios::binary);
-                            if (!ifs) {
-                                throw std::runtime_error(
-                                    "data not found on this worker for " + src->path);
-                            }
-                            if (src->offset > 0) {
-                                ifs.seekg(static_cast<std::streamoff>(src->offset));
-                            }
-                            std::vector<std::byte> file_data(read_size);
-                            ifs.read(reinterpret_cast<char*>(file_data.data()),
-                                     static_cast<std::streamsize>(read_size));
-                            file_data.resize(static_cast<size_t>(ifs.gcount()));
-
-                            content_manager.stage(child.id, std::span<const std::byte>(file_data));
-                            child_comp.data_key = labios::ContentManager::data_key(child.id);
-                            child_comp.status = labios::CompletionStatus::Complete;
-
-                            std::cout << "[" << timestamp() << "] worker " << worker_id
-                                      << ":   child READ " << src->path << " ("
-                                      << file_data.size() << " bytes)\n" << std::flush;
                         } else {
                             throw std::runtime_error(
                                 "unsupported child label type: "
