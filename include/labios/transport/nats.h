@@ -48,9 +48,8 @@ public:
     /// Subscribe to a subject. The callback is invoked on a cnats-managed thread.
     /// The subscription lives until this NatsConnection is destroyed.
     ///
-    /// Note: calling subscribe() multiple times replaces the previous callback.
-    /// All subscriptions share a single callback. This is sufficient for M0
-    /// where each service subscribes once.
+    /// Each subject gets its own callback. Subscribing to the same subject
+    /// again replaces that subject's callback, but other subjects are unaffected.
     void subscribe(std::string_view subject, MessageCallback callback);
 
     /// Flush the outbound buffer so published messages reach the server.
