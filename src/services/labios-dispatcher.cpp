@@ -195,6 +195,29 @@ int main() {
                         std::cout << "[" << timestamp() << "] dispatcher: aggregated "
                                   << label.children.size() << " labels for "
                                   << label.file_key << "\n" << std::flush;
+
+                        // Fan out completion to all original clients.
+                        if (result.reply_fanout.count(label.id)) {
+                            auto& original_replies = result.reply_fanout[label.id];
+                            auto [inbox, reply_handle] = nats.create_reply_inbox();
+                            label.reply_to = inbox;
+
+                            std::thread([reply_handle,
+                                         replies = original_replies,
+                                         &nats]() {
+                                try {
+                                    auto data = reply_handle->wait(
+                                        std::chrono::seconds(60));
+                                    for (auto& reply_to : replies) {
+                                        nats.publish(reply_to,
+                                            std::span<const std::byte>(data));
+                                    }
+                                    nats.flush();
+                                } catch (...) {
+                                    // Timeout; clients will timeout on their end.
+                                }
+                            }).detach();
+                        }
                     }
 
                     label.flags |= labios::LabelFlags::Scheduled;
