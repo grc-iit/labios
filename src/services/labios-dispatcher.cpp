@@ -1,11 +1,14 @@
 #include <labios/catalog_manager.h>
 #include <labios/config.h>
+#include <labios/content_manager.h>
 #include <labios/label.h>
+#include <labios/shuffler.h>
 #include <labios/solver/round_robin.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
 #include <chrono>
+#include <condition_variable>
 #include <csignal>
 #include <cstdlib>
 #include <fstream>
@@ -14,7 +17,7 @@
 #include <thread>
 #include <vector>
 
-static std::jthread g_service_thread;
+static std::jthread g_batch_thread;
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -27,8 +30,8 @@ static std::string timestamp() {
 }
 
 static void signal_handler(int /*sig*/) {
-    if (g_service_thread.joinable()) {
-        g_service_thread.request_stop();
+    if (g_batch_thread.joinable()) {
+        g_batch_thread.request_stop();
     }
 }
 
@@ -43,7 +46,7 @@ int main() {
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
     labios::transport::NatsConnection nats(cfg.nats_url);
 
-    // Hardcoded worker list for M1a. M3 will replace with dynamic registry.
+    // Hardcoded worker list for M2. M3 will replace with dynamic registry.
     std::vector<labios::WorkerInfo> workers = {
         {1, true},
         {2, true},
@@ -52,110 +55,206 @@ int main() {
 
     labios::CatalogManager catalog(redis);
     labios::RoundRobinSolver solver;
-    std::mutex dispatch_mutex;
 
+    labios::ShufflerConfig shuf_cfg{
+        .aggregation_enabled = cfg.dispatcher_aggregation_enabled,
+        .dep_granularity = cfg.dispatcher_dep_granularity,
+    };
+    labios::Shuffler shuffler(shuf_cfg);
+
+    std::vector<labios::LabelData> batch_buffer;
+    std::mutex batch_mu;
+    std::condition_variable batch_cv;
+    auto batch_size = static_cast<size_t>(cfg.dispatcher_batch_size);
+    auto batch_timeout = std::chrono::milliseconds(cfg.dispatcher_batch_timeout_ms);
+
+    // NATS subscription: buffer incoming labels without routing.
     nats.subscribe("labios.labels",
         [&](std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view reply_to) {
-            std::lock_guard lock(dispatch_mutex);
-
-            // Deserialize the incoming label.
             auto label = labios::deserialize_label(data);
-
-            label.flags |= labios::LabelFlags::Scheduled;
-
-            // Inject the NATS reply_to so the worker can respond to the client.
             label.reply_to = std::string(reply_to);
-
-            // Re-serialize with the injected reply_to.
-            auto reserialized = labios::serialize_label(label);
-
-            // Update catalog: mark label as Scheduled.
-            catalog.set_status(label.id, labios::LabelStatus::Scheduled);
-            catalog.set_flags(label.id, label.flags);
-
-            int target_worker = -1;
-
-            // Read-locality: READs go to the worker holding the file data
-            if (label.type == labios::LabelType::Read) {
-                auto* src = std::get_if<labios::FilePath>(&label.source);
-                if (src) {
-                    auto loc = catalog.get_location(src->path);
-                    if (loc.has_value()) {
-                        target_worker = *loc;
-                    }
-                }
+            {
+                std::lock_guard lock(batch_mu);
+                batch_buffer.push_back(std::move(label));
             }
+            batch_cv.notify_one();
+        });
 
-            // Write-locality: WRITEs for a file with existing location go to same worker
-            if (target_worker <= 0 && label.type == labios::LabelType::Write) {
-                auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                if (dst) {
-                    auto loc = catalog.get_location(dst->path);
-                    if (loc.has_value()) {
-                        target_worker = *loc;
-                    }
-                }
+    // Batch processing thread: collect -> shuffle -> dispatch.
+    g_batch_thread = std::jthread([&](std::stop_token stoken) {
+        auto location_lookup = [&](const std::string& file) -> std::optional<int> {
+            return catalog.get_location(file);
+        };
+
+        while (!stoken.stop_requested()) {
+            std::vector<labios::LabelData> batch;
+            {
+                std::unique_lock lock(batch_mu);
+                batch_cv.wait_for(lock, batch_timeout, [&] {
+                    return stoken.stop_requested() ||
+                           batch_buffer.size() >= batch_size;
+                });
+                if (stoken.stop_requested() && batch_buffer.empty()) break;
+                batch = std::move(batch_buffer);
+                batch_buffer.clear();
             }
+            if (batch.empty()) continue;
 
-            if (target_worker > 0) {
-                // Direct assignment (read-locality or write-locality)
-                catalog.set_worker(label.id, target_worker);
-                std::string subject = "labios.worker." + std::to_string(target_worker);
-                nats.publish(subject,
-                             std::span<const std::byte>(reserialized.data(), reserialized.size()));
-                nats.flush();
+            std::cout << "[" << timestamp() << "] dispatcher: processing batch of "
+                      << batch.size() << " labels\n" << std::flush;
 
-                const char* reason = (label.type == labios::LabelType::Read) ? "read" : "write";
+            auto result = shuffler.shuffle(std::move(batch), location_lookup);
+
+            // (A) Direct-route labels (read-locality)
+            for (auto& [label, worker_id] : result.direct_route) {
+                label.flags |= labios::LabelFlags::Scheduled;
+                catalog.set_status(label.id, labios::LabelStatus::Scheduled);
+                catalog.set_flags(label.id, label.flags);
+                catalog.set_worker(label.id, worker_id);
+
+                auto serialized = labios::serialize_label(label);
+                std::string subject = "labios.worker." + std::to_string(worker_id);
+                nats.publish(subject, std::span<const std::byte>(serialized));
+
                 std::cout << "[" << timestamp() << "] dispatcher: label "
-                          << label.id << " -> worker " << target_worker
-                          << " (" << reason << " locality)\n" << std::flush;
-            } else {
-                // First assignment for this file: use solver
-                std::vector<std::vector<std::byte>> label_batch;
-                label_batch.push_back(std::move(reserialized));
-                auto assignments = solver.assign(std::move(label_batch), workers);
+                          << label.id << " -> worker " << worker_id
+                          << " (read locality)\n" << std::flush;
+            }
 
-                for (auto& [worker_id, assigned_labels] : assignments) {
-                    catalog.set_worker(label.id, worker_id);
+            // (B) Supertasks
+            for (auto& st : result.supertasks) {
+                auto dummy = labios::serialize_label(st.composite);
+                std::vector<std::vector<std::byte>> solver_batch;
+                solver_batch.push_back(std::move(dummy));
+                auto assignments = solver.assign(std::move(solver_batch), workers);
 
-                    // Set location at assignment time so subsequent labels
-                    // in the same async batch use write-locality. The worker
-                    // also sets location at completion (confirming the mapping).
-                    if (label.type == labios::LabelType::Write) {
-                        auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                        if (dst) {
-                            catalog.set_location(dst->path, worker_id);
+                for (auto& [wid, _] : assignments) {
+                    // Pack and store serialized children in Redis.
+                    std::vector<std::vector<std::byte>> child_payloads;
+                    child_payloads.reserve(st.children.size());
+                    for (auto& child : st.children) {
+                        child.flags |= labios::LabelFlags::Scheduled;
+                        catalog.set_status(child.id, labios::LabelStatus::Scheduled);
+                        catalog.set_flags(child.id, child.flags);
+                        catalog.set_worker(child.id, wid);
+                        child_payloads.push_back(labios::serialize_label(child));
+                    }
+
+                    auto packed = labios::pack_labels(child_payloads);
+                    std::string pack_key = "labios:supertask:" + std::to_string(st.composite.id);
+                    redis.set_binary(pack_key, std::span<const std::byte>(packed));
+
+                    // Record file location for write children.
+                    for (auto& child : st.children) {
+                        if (child.type == labios::LabelType::Write) {
+                            auto* dst = std::get_if<labios::FilePath>(&child.destination);
+                            if (dst) catalog.set_location(dst->path, wid);
                         }
                     }
 
-                    for (auto& payload : assigned_labels) {
-                        std::string subject = "labios.worker." + std::to_string(worker_id);
-                        nats.publish(subject,
-                                     std::span<const std::byte>(payload.data(), payload.size()));
-                    }
-                    nats.flush();
+                    // Send composite label to the chosen worker.
+                    catalog.set_worker(st.composite.id, wid);
+                    auto serialized = labios::serialize_label(st.composite);
+                    std::string subject = "labios.worker." + std::to_string(wid);
+                    nats.publish(subject, std::span<const std::byte>(serialized));
 
-                    std::cout << "[" << timestamp() << "] dispatcher: label "
-                              << label.id << " -> worker " << worker_id << "\n"
-                              << std::flush;
+                    std::cout << "[" << timestamp() << "] dispatcher: supertask "
+                              << st.composite.id << " (" << st.children.size()
+                              << " children) -> worker " << wid << "\n" << std::flush;
+                    break; // One worker per supertask
                 }
             }
-        });
+
+            // (C) Independent labels
+            for (auto& label : result.independent) {
+                // Merge aggregated child data in warehouse.
+                bool aggregated = (!label.children.empty() &&
+                                   label.type == labios::LabelType::Write);
+                if (aggregated) {
+                    std::vector<std::byte> combined;
+                    combined.reserve(label.data_size);
+                    for (auto child_id : label.children) {
+                        auto key = labios::ContentManager::data_key(child_id);
+                        auto chunk = redis.get_binary(key);
+                        combined.insert(combined.end(), chunk.begin(), chunk.end());
+                        redis.del(key);
+                    }
+                    redis.set_binary(labios::ContentManager::data_key(label.id),
+                                     std::span<const std::byte>(combined));
+
+                    std::cout << "[" << timestamp() << "] dispatcher: aggregated "
+                              << label.children.size() << " labels for "
+                              << label.file_key << "\n" << std::flush;
+                }
+
+                label.flags |= labios::LabelFlags::Scheduled;
+
+                // Write-locality: route to existing worker for this file.
+                int target_worker = -1;
+                if (label.type == labios::LabelType::Write) {
+                    auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                    if (dst) {
+                        auto loc = catalog.get_location(dst->path);
+                        if (loc.has_value()) target_worker = *loc;
+                    }
+                }
+
+                if (target_worker > 0) {
+                    catalog.set_status(label.id, labios::LabelStatus::Scheduled);
+                    catalog.set_flags(label.id, label.flags);
+                    catalog.set_worker(label.id, target_worker);
+
+                    auto serialized = labios::serialize_label(label);
+                    std::string subject = "labios.worker." + std::to_string(target_worker);
+                    nats.publish(subject, std::span<const std::byte>(serialized));
+
+                    std::cout << "[" << timestamp() << "] dispatcher: label "
+                              << label.id << " -> worker " << target_worker
+                              << " (write locality)\n" << std::flush;
+                } else {
+                    // No locality match; use solver for assignment.
+                    auto serialized = labios::serialize_label(label);
+                    std::vector<std::vector<std::byte>> solver_batch;
+                    solver_batch.push_back(std::move(serialized));
+                    auto assignments = solver.assign(std::move(solver_batch), workers);
+
+                    for (auto& [wid, payloads] : assignments) {
+                        catalog.set_status(label.id, labios::LabelStatus::Scheduled);
+                        catalog.set_flags(label.id, label.flags);
+                        catalog.set_worker(label.id, wid);
+
+                        if (label.type == labios::LabelType::Write) {
+                            auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                            if (dst) catalog.set_location(dst->path, wid);
+                        }
+
+                        for (auto& payload : payloads) {
+                            std::string subject = "labios.worker." + std::to_string(wid);
+                            nats.publish(subject, std::span<const std::byte>(payload));
+                        }
+
+                        std::cout << "[" << timestamp() << "] dispatcher: label "
+                                  << label.id << " -> worker " << wid << "\n"
+                                  << std::flush;
+                    }
+                }
+            }
+
+            nats.flush();
+        }
+    });
 
     redis.set("labios:ready:dispatcher", "1");
 
     // Signal healthcheck.
     { std::ofstream touch("/tmp/labios-ready"); }
 
-    std::cout << "[" << timestamp() << "] dispatcher ready\n" << std::flush;
+    std::cout << "[" << timestamp() << "] dispatcher ready (batch_size="
+              << batch_size << ", timeout_ms=" << cfg.dispatcher_batch_timeout_ms
+              << ")\n" << std::flush;
 
-    g_service_thread = std::jthread([](std::stop_token stoken) {
-        while (!stoken.stop_requested()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-    });
-    g_service_thread.join();
+    g_batch_thread.join();
 
     std::cout << "[" << timestamp() << "] dispatcher shutting down\n";
     return 0;
