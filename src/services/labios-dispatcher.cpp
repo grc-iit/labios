@@ -164,6 +164,11 @@ int main() {
                 batch = std::move(batch_buffer);
                 batch_buffer.clear();
             }
+            // Report queue depth to manager for elastic scaling.
+            try {
+                nats.publish("labios.queue.depth",
+                             std::to_string(batch.size()));
+            } catch (...) {}
             if (batch.empty()) continue;
 
             std::cout << "[" << timestamp() << "] dispatcher: processing batch of "

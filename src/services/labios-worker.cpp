@@ -37,6 +37,9 @@ static std::jthread g_service_thread;
 static std::jthread g_score_thread;
 static std::atomic<int> g_active_labels{0};
 static constexpr int kMaxQueueSize = 100;
+static std::atomic<bool> g_suspended{false};
+static std::chrono::steady_clock::time_point g_last_label_time{
+    std::chrono::steady_clock::now()};
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -172,6 +175,10 @@ int main() {
 
             try {
                 g_active_labels.fetch_add(1);
+                g_last_label_time = std::chrono::steady_clock::now();
+                if (g_suspended.load()) {
+                    g_suspended.store(false);
+                }
                 label = labios::deserialize_label(data);
                 have_label = true;
                 completion.label_id = label.id;
@@ -320,8 +327,19 @@ int main() {
     nats.publish("labios.worker.register", reg_msg);
     nats.flush();
 
+    // Subscribe to resume commands from the elastic orchestrator.
+    nats.subscribe("labios.worker.resume." + std::to_string(cfg.worker_id),
+        [worker_id, &worker_name](std::string_view /*subject*/,
+            std::span<const std::byte> /*data*/,
+            std::string_view /*reply_to*/) {
+            g_suspended.store(false);
+            g_last_label_time = std::chrono::steady_clock::now();
+            std::cout << "[" << timestamp() << "] " << worker_name
+                      << ": resumed by manager\n" << std::flush;
+        });
+
     // Periodic score update thread: publishes load and capacity every 2 seconds.
-    g_score_thread = std::jthread([&nats, &storage_root, worker_id](std::stop_token stoken) {
+    g_score_thread = std::jthread([&nats, &storage_root, worker_id, cfg, &worker_name](std::stop_token stoken) {
         while (!stoken.stop_requested()) {
             std::this_thread::sleep_for(std::chrono::seconds(2));
             if (stoken.stop_requested()) break;
@@ -338,16 +356,31 @@ int main() {
                             static_cast<double>(space.capacity);
             }
 
-            // Format: "id,capacity,load"
+            // Self-suspend if idle beyond configured timeout.
+            if (!g_suspended.load() && g_active_labels.load() == 0) {
+                auto idle = std::chrono::steady_clock::now() - g_last_label_time;
+                auto timeout = std::chrono::milliseconds(
+                    cfg.elastic.worker_idle_timeout_ms);
+                if (idle > timeout) {
+                    g_suspended.store(true);
+                    std::cout << "[" << timestamp() << "] " << worker_name
+                              << ": self-suspending after "
+                              << std::chrono::duration_cast<std::chrono::seconds>(idle).count()
+                              << "s idle\n" << std::flush;
+                }
+            }
+
+            bool available = !g_suspended.load();
+
+            // Format: "id,capacity,load,available"
             std::string msg = std::to_string(worker_id) + ","
                 + std::to_string(cap_ratio) + ","
-                + std::to_string(load);
+                + std::to_string(load) + ","
+                + (available ? "1" : "0");
             try {
                 nats.publish("labios.worker.score_update", msg);
                 nats.flush();
-            } catch (...) {
-                // Best effort; manager may be temporarily unavailable.
-            }
+            } catch (...) {}
         }
     });
 
