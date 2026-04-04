@@ -26,6 +26,9 @@ public:
     std::string create_and_start(const ContainerSpec& spec);
     void stop_and_remove(const std::string& container_id);
 
+    /// Parse chunked transfer-encoding body. Public for testability.
+    static std::string dechunk(const std::string& chunked);
+
 private:
     std::string socket_path_;
 
@@ -37,7 +40,6 @@ private:
     HttpResponse http_request(const std::string& method,
                               const std::string& path,
                               const std::string& body = "");
-    static std::string dechunk(const std::string& chunked);
 };
 
 static_assert(ContainerRuntime<DockerClient>);

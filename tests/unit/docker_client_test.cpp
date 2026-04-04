@@ -9,6 +9,24 @@ TEST_CASE("MockRuntime satisfies ContainerRuntime concept", "[docker]") {
     static_assert(labios::elastic::ContainerRuntime<labios::elastic::MockRuntime>);
 }
 
+TEST_CASE("dechunk parses chunked HTTP body correctly", "[docker]") {
+    std::string chunked = "18\r\n{\"Id\":\"abc123def456789\"}\r\n0\r\n\r\n";
+    auto result = labios::elastic::DockerClient::dechunk(chunked);
+    CHECK(result == "{\"Id\":\"abc123def456789\"}");
+}
+
+TEST_CASE("dechunk handles empty chunks", "[docker]") {
+    std::string chunked = "0\r\n\r\n";
+    auto result = labios::elastic::DockerClient::dechunk(chunked);
+    CHECK(result.empty());
+}
+
+TEST_CASE("dechunk handles multiple chunks", "[docker]") {
+    std::string chunked = "5\r\nhello\r\n6\r\n world\r\n0\r\n\r\n";
+    auto result = labios::elastic::DockerClient::dechunk(chunked);
+    CHECK(result == "hello world");
+}
+
 TEST_CASE("MockRuntime records commission and decommission", "[docker]") {
     labios::elastic::MockRuntime mock;
 

@@ -4,6 +4,8 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <cerrno>
 #include <cstring>
 #include <stdexcept>
 
@@ -20,6 +22,7 @@ std::string DockerClient::dechunk(const std::string& chunked) {
         if (crlf == std::string::npos) break;
         auto chunk_size = std::stoul(chunked.substr(pos, crlf - pos), nullptr, 16);
         if (chunk_size == 0) break;
+        if (chunk_size > 10 * 1024 * 1024) break;  // Sanity limit.
         pos = crlf + 2;
         if (pos + chunk_size > chunked.size()) break;
         result.append(chunked, pos, chunk_size);
@@ -32,17 +35,22 @@ DockerClient::HttpResponse DockerClient::http_request(
     const std::string& method, const std::string& path,
     const std::string& body) {
 
-    int fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
-    if (fd < 0) {
+    struct FdGuard {
+        int fd;
+        ~FdGuard() { if (fd >= 0) ::close(fd); }
+    };
+
+    int raw_fd = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if (raw_fd < 0) {
         throw std::runtime_error("socket() failed: " + std::string(std::strerror(errno)));
     }
+    FdGuard guard{raw_fd};
 
     struct sockaddr_un addr{};
     addr.sun_family = AF_UNIX;
     std::strncpy(addr.sun_path, socket_path_.c_str(), sizeof(addr.sun_path) - 1);
 
-    if (::connect(fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
-        ::close(fd);
+    if (::connect(guard.fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) < 0) {
         throw std::runtime_error(
             "connect() to " + socket_path_ + " failed: " + std::strerror(errno));
     }
@@ -58,21 +66,30 @@ DockerClient::HttpResponse DockerClient::http_request(
     auto total = request.size();
     size_t sent = 0;
     while (sent < total) {
-        auto n = ::write(fd, request.c_str() + sent, total - sent);
-        if (n <= 0) {
-            ::close(fd);
-            throw std::runtime_error("write() failed");
+        auto n = ::write(guard.fd, request.c_str() + sent, total - sent);
+        if (n > 0) {
+            sent += static_cast<size_t>(n);
+        } else if (n < 0 && errno == EINTR) {
+            continue;
+        } else {
+            throw std::runtime_error("write() failed: " + std::string(std::strerror(errno)));
         }
-        sent += static_cast<size_t>(n);
     }
 
     std::string response;
     char buf[4096];
-    ssize_t n;
-    while ((n = ::read(fd, buf, sizeof(buf))) > 0) {
-        response.append(buf, static_cast<size_t>(n));
+    while (true) {
+        ssize_t n = ::read(guard.fd, buf, sizeof(buf));
+        if (n > 0) {
+            response.append(buf, static_cast<size_t>(n));
+        } else if (n == 0) {
+            break;
+        } else if (errno == EINTR) {
+            continue;
+        } else {
+            break;
+        }
     }
-    ::close(fd);
 
     HttpResponse result;
     auto status_pos = response.find(' ');
@@ -83,7 +100,11 @@ DockerClient::HttpResponse DockerClient::http_request(
     auto body_pos = response.find("\r\n\r\n");
     if (body_pos != std::string::npos) {
         std::string raw_body = response.substr(body_pos + 4);
-        if (response.find("Transfer-Encoding: chunked") != std::string::npos) {
+        // Case-insensitive check for chunked transfer encoding.
+        auto lower_headers = response.substr(0, body_pos);
+        std::transform(lower_headers.begin(), lower_headers.end(),
+                       lower_headers.begin(), ::tolower);
+        if (lower_headers.find("transfer-encoding: chunked") != std::string::npos) {
             result.body = dechunk(raw_body);
         } else {
             result.body = raw_body;
