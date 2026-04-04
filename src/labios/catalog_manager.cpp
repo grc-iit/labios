@@ -1,4 +1,4 @@
-#include <labios/catalog.h>
+#include <labios/catalog_manager.h>
 
 #include <chrono>
 #include <stdexcept>
@@ -100,6 +100,69 @@ std::optional<int> CatalogManager::get_location(std::string_view filepath) {
         return std::nullopt;
     }
     return std::stoi(*val);
+}
+
+std::string CatalogManager::filemeta_key(std::string_view filepath) {
+    return "labios:filemeta:" + std::string(filepath);
+}
+
+void CatalogManager::track_open(std::string_view filepath, int flags) {
+    auto key = filemeta_key(filepath);
+    if (flags & 0100) {  // O_CREAT
+        redis_.hset(key, "exists", "1");
+        auto existing = redis_.hget(key, "size");
+        if (!existing.has_value()) {
+            redis_.hset(key, "size", "0");
+        }
+        redis_.hset(key, "mtime", now_ms());
+    }
+}
+
+void CatalogManager::track_write(std::string_view filepath,
+                                  uint64_t offset, uint64_t size) {
+    auto key = filemeta_key(filepath);
+    redis_.hset(key, "exists", "1");
+    uint64_t end = offset + size;
+    auto cur = redis_.hget(key, "size");
+    uint64_t cur_size = cur.has_value() ? std::stoull(*cur) : 0;
+    if (end > cur_size) {
+        redis_.hset(key, "size", std::to_string(end));
+    }
+    redis_.hset(key, "mtime", now_ms());
+}
+
+void CatalogManager::track_unlink(std::string_view filepath) {
+    auto key = filemeta_key(filepath);
+    redis_.hset(key, "exists", "0");
+    redis_.hset(key, "size", "0");
+    redis_.hset(key, "mtime", now_ms());
+    redis_.del(location_key(filepath));
+}
+
+void CatalogManager::track_truncate(std::string_view filepath,
+                                     uint64_t new_size) {
+    auto key = filemeta_key(filepath);
+    redis_.hset(key, "size", std::to_string(new_size));
+    redis_.hset(key, "mtime", now_ms());
+}
+
+std::optional<FileInfo> CatalogManager::get_file_info(std::string_view filepath) {
+    auto key = filemeta_key(filepath);
+    auto exists_val = redis_.hget(key, "exists");
+    if (!exists_val.has_value()) {
+        return std::nullopt;
+    }
+    FileInfo info;
+    info.exists = (*exists_val == "1");
+    auto size_val = redis_.hget(key, "size");
+    if (size_val.has_value()) {
+        info.size = std::stoull(*size_val);
+    }
+    auto mtime_val = redis_.hget(key, "mtime");
+    if (mtime_val.has_value()) {
+        info.mtime_ms = std::stoull(*mtime_val);
+    }
+    return info;
 }
 
 } // namespace labios

@@ -1,4 +1,4 @@
-#include <labios/catalog.h>
+#include <labios/catalog_manager.h>
 #include <labios/config.h>
 #include <labios/label.h>
 #include <labios/warehouse.h>

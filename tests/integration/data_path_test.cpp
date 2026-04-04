@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <labios/client.h>
-#include <labios/catalog.h>
+#include <labios/catalog_manager.h>
 #include <labios/config.h>
 #include <labios/transport/redis.h>
 

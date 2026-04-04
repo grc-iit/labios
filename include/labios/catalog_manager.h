@@ -15,6 +15,12 @@ enum class LabelStatus : uint8_t { Queued, Scheduled, Executing, Complete, Error
 std::string to_string(LabelStatus status);
 LabelStatus label_status_from_string(std::string_view s);
 
+struct FileInfo {
+    uint64_t size = 0;
+    uint64_t mtime_ms = 0;
+    bool exists = false;
+};
+
 class CatalogManager {
 public:
     explicit CatalogManager(transport::RedisConnection& redis);
@@ -29,10 +35,17 @@ public:
     void set_location(std::string_view filepath, int worker_id);
     std::optional<int> get_location(std::string_view filepath);
 
+    void track_open(std::string_view filepath, int flags);
+    void track_write(std::string_view filepath, uint64_t offset, uint64_t size);
+    void track_unlink(std::string_view filepath);
+    void track_truncate(std::string_view filepath, uint64_t new_size);
+    std::optional<FileInfo> get_file_info(std::string_view filepath);
+
 private:
     transport::RedisConnection& redis_;
     std::string catalog_key(uint64_t label_id) const;
     static std::string location_key(std::string_view filepath);
+    static std::string filemeta_key(std::string_view filepath);
 };
 
 } // namespace labios

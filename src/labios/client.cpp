@@ -1,6 +1,6 @@
 #include <labios/client.h>
 
-#include <labios/catalog.h>
+#include <labios/catalog_manager.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 #include <labios/warehouse.h>

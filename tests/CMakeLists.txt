@@ -22,6 +22,10 @@ catch_discover_tests(labios-solver-test
     PROPERTIES LABELS "unit"
 )
 
+add_executable(labios-catalog-manager-test unit/catalog_manager_test.cpp)
+target_link_libraries(labios-catalog-manager-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-catalog-manager-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
 add_executable(labios-smoke-test integration/smoke_test.cpp)
 target_link_libraries(labios-smoke-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-smoke-test
