@@ -107,19 +107,24 @@ int main() {
             auto result = shuffler.shuffle(std::move(batch), location_lookup);
 
             // (A) Direct-route labels (read-locality)
-            for (auto& [label, worker_id] : result.direct_route) {
-                label.flags |= labios::LabelFlags::Scheduled;
-                catalog.set_status(label.id, labios::LabelStatus::Scheduled);
-                catalog.set_flags(label.id, label.flags);
-                catalog.set_worker(label.id, worker_id);
+            if (!result.direct_route.empty()) {
+                std::vector<labios::ScheduleEntry> sched;
+                sched.reserve(result.direct_route.size());
 
-                auto serialized = labios::serialize_label(label);
-                std::string subject = "labios.worker." + std::to_string(worker_id);
-                nats.publish(subject, std::span<const std::byte>(serialized));
+                for (auto& [label, worker_id] : result.direct_route) {
+                    label.flags |= labios::LabelFlags::Scheduled;
+                    sched.push_back({label.id, worker_id, label.flags});
 
-                std::cout << "[" << timestamp() << "] dispatcher: label "
-                          << label.id << " -> worker " << worker_id
-                          << " (read locality)\n" << std::flush;
+                    auto serialized = labios::serialize_label(label);
+                    std::string subject = "labios.worker." + std::to_string(worker_id);
+                    nats.publish(subject, std::span<const std::byte>(serialized));
+
+                    std::cout << "[" << timestamp() << "] dispatcher: label "
+                              << label.id << " -> worker " << worker_id
+                              << " (read locality)\n" << std::flush;
+                }
+
+                catalog.schedule_batch(sched);
             }
 
             // (B) Supertasks
@@ -130,14 +135,14 @@ int main() {
                 auto assignments = solver.assign(std::move(solver_batch), workers);
 
                 for (auto& [wid, _] : assignments) {
-                    // Pack and store serialized children in Redis.
+                    std::vector<labios::ScheduleEntry> sched;
+                    sched.reserve(st.children.size() + 1);
+
                     std::vector<std::vector<std::byte>> child_payloads;
                     child_payloads.reserve(st.children.size());
                     for (auto& child : st.children) {
                         child.flags |= labios::LabelFlags::Scheduled;
-                        catalog.set_status(child.id, labios::LabelStatus::Scheduled);
-                        catalog.set_flags(child.id, child.flags);
-                        catalog.set_worker(child.id, wid);
+                        sched.push_back({child.id, wid, child.flags});
                         child_payloads.push_back(labios::serialize_label(child));
                     }
 
@@ -145,7 +150,6 @@ int main() {
                     std::string pack_key = "labios:supertask:" + std::to_string(st.composite.id);
                     redis.set_binary(pack_key, std::span<const std::byte>(packed));
 
-                    // Record file location for write children.
                     for (auto& child : st.children) {
                         if (child.type == labios::LabelType::Write) {
                             auto* dst = std::get_if<labios::FilePath>(&child.destination);
@@ -153,11 +157,10 @@ int main() {
                         }
                     }
 
-                    // Send composite label to the chosen worker.
-                    catalog.set_worker(st.composite.id, wid);
-                    catalog.set_status(st.composite.id, labios::LabelStatus::Scheduled);
                     st.composite.flags |= labios::LabelFlags::Scheduled;
-                    catalog.set_flags(st.composite.id, st.composite.flags);
+                    sched.push_back({st.composite.id, wid, st.composite.flags});
+                    catalog.schedule_batch(sched);
+
                     auto serialized = labios::serialize_label(st.composite);
                     std::string subject = "labios.worker." + std::to_string(wid);
                     nats.publish(subject, std::span<const std::byte>(serialized));
@@ -165,83 +168,83 @@ int main() {
                     std::cout << "[" << timestamp() << "] dispatcher: supertask "
                               << st.composite.id << " (" << st.children.size()
                               << " children) -> worker " << wid << "\n" << std::flush;
-                    break; // One worker per supertask
+                    break;
                 }
             }
 
             // (C) Independent labels
-            for (auto& label : result.independent) {
-                // Merge aggregated child data in warehouse.
-                bool aggregated = (!label.children.empty() &&
-                                   label.type == labios::LabelType::Write);
-                if (aggregated) {
-                    std::vector<std::byte> combined;
-                    combined.reserve(label.data_size);
-                    for (auto child_id : label.children) {
-                        auto key = labios::ContentManager::data_key(child_id);
-                        auto chunk = redis.get_binary(key);
-                        combined.insert(combined.end(), chunk.begin(), chunk.end());
-                        redis.del(key);
-                    }
-                    redis.set_binary(labios::ContentManager::data_key(label.id),
-                                     std::span<const std::byte>(combined));
+            {
+                std::vector<labios::ScheduleEntry> sched;
+                sched.reserve(result.independent.size());
 
-                    std::cout << "[" << timestamp() << "] dispatcher: aggregated "
-                              << label.children.size() << " labels for "
-                              << label.file_key << "\n" << std::flush;
-                }
-
-                label.flags |= labios::LabelFlags::Scheduled;
-
-                // Write-locality: route to existing worker for this file.
-                int target_worker = -1;
-                if (label.type == labios::LabelType::Write) {
-                    auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                    if (dst) {
-                        auto loc = catalog.get_location(dst->path);
-                        if (loc.has_value()) target_worker = *loc;
-                    }
-                }
-
-                if (target_worker > 0) {
-                    catalog.set_status(label.id, labios::LabelStatus::Scheduled);
-                    catalog.set_flags(label.id, label.flags);
-                    catalog.set_worker(label.id, target_worker);
-
-                    auto serialized = labios::serialize_label(label);
-                    std::string subject = "labios.worker." + std::to_string(target_worker);
-                    nats.publish(subject, std::span<const std::byte>(serialized));
-
-                    std::cout << "[" << timestamp() << "] dispatcher: label "
-                              << label.id << " -> worker " << target_worker
-                              << " (write locality)\n" << std::flush;
-                } else {
-                    // No locality match; use solver for assignment.
-                    auto serialized = labios::serialize_label(label);
-                    std::vector<std::vector<std::byte>> solver_batch;
-                    solver_batch.push_back(std::move(serialized));
-                    auto assignments = solver.assign(std::move(solver_batch), workers);
-
-                    for (auto& [wid, payloads] : assignments) {
-                        catalog.set_status(label.id, labios::LabelStatus::Scheduled);
-                        catalog.set_flags(label.id, label.flags);
-                        catalog.set_worker(label.id, wid);
-
-                        if (label.type == labios::LabelType::Write) {
-                            auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                            if (dst) catalog.set_location(dst->path, wid);
+                for (auto& label : result.independent) {
+                    bool aggregated = (!label.children.empty() &&
+                                       label.type == labios::LabelType::Write);
+                    if (aggregated) {
+                        std::vector<std::byte> combined;
+                        combined.reserve(label.data_size);
+                        for (auto child_id : label.children) {
+                            auto key = labios::ContentManager::data_key(child_id);
+                            auto chunk = redis.get_binary(key);
+                            combined.insert(combined.end(), chunk.begin(), chunk.end());
+                            redis.del(key);
                         }
+                        redis.set_binary(labios::ContentManager::data_key(label.id),
+                                         std::span<const std::byte>(combined));
 
-                        for (auto& payload : payloads) {
-                            std::string subject = "labios.worker." + std::to_string(wid);
-                            nats.publish(subject, std::span<const std::byte>(payload));
+                        std::cout << "[" << timestamp() << "] dispatcher: aggregated "
+                                  << label.children.size() << " labels for "
+                                  << label.file_key << "\n" << std::flush;
+                    }
+
+                    label.flags |= labios::LabelFlags::Scheduled;
+
+                    int target_worker = -1;
+                    if (label.type == labios::LabelType::Write) {
+                        auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                        if (dst) {
+                            auto loc = catalog.get_location(dst->path);
+                            if (loc.has_value()) target_worker = *loc;
                         }
+                    }
+
+                    if (target_worker > 0) {
+                        sched.push_back({label.id, target_worker, label.flags});
+
+                        auto serialized = labios::serialize_label(label);
+                        std::string subject = "labios.worker." + std::to_string(target_worker);
+                        nats.publish(subject, std::span<const std::byte>(serialized));
 
                         std::cout << "[" << timestamp() << "] dispatcher: label "
-                                  << label.id << " -> worker " << wid << "\n"
-                                  << std::flush;
+                                  << label.id << " -> worker " << target_worker
+                                  << " (write locality)\n" << std::flush;
+                    } else {
+                        auto serialized = labios::serialize_label(label);
+                        std::vector<std::vector<std::byte>> solver_batch;
+                        solver_batch.push_back(std::move(serialized));
+                        auto assignments = solver.assign(std::move(solver_batch), workers);
+
+                        for (auto& [wid, payloads] : assignments) {
+                            sched.push_back({label.id, wid, label.flags});
+
+                            if (label.type == labios::LabelType::Write) {
+                                auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                                if (dst) catalog.set_location(dst->path, wid);
+                            }
+
+                            for (auto& payload : payloads) {
+                                std::string subject = "labios.worker." + std::to_string(wid);
+                                nats.publish(subject, std::span<const std::byte>(payload));
+                            }
+
+                            std::cout << "[" << timestamp() << "] dispatcher: label "
+                                      << label.id << " -> worker " << wid << "\n"
+                                      << std::flush;
+                        }
                     }
                 }
+
+                catalog.schedule_batch(sched);
             }
 
             nats.flush();
