@@ -102,3 +102,7 @@ target_link_libraries(labios-elastic-flood-test PRIVATE labios)
 add_executable(labios-kernel-cm1-test integration/kernel_cm1_test.cpp)
 target_link_libraries(labios-kernel-cm1-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-kernel-cm1-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
+
+add_executable(labios-kernel-hacc-test integration/kernel_hacc_test.cpp)
+target_link_libraries(labios-kernel-hacc-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-kernel-hacc-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
