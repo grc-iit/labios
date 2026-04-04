@@ -2,6 +2,8 @@
 #include <labios/worker_manager.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
+#include <labios/elastic/docker_client.h>
+#include <labios/elastic/orchestrator.h>
 
 #include <algorithm>
 #include <chrono>
@@ -9,11 +11,13 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <thread>
 
 static std::jthread g_service_thread;
+static std::jthread g_elastic_thread;
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -42,6 +46,23 @@ int main() {
     labios::transport::NatsConnection nats(cfg.nats_url);
 
     labios::InMemoryWorkerManager worker_mgr;
+
+    // Elastic orchestrator (conditionally enabled).
+    std::unique_ptr<labios::elastic::DockerClient> docker_client;
+    using OrchestratorType = labios::elastic::Orchestrator<labios::elastic::DockerClient>;
+    std::unique_ptr<OrchestratorType> orchestrator;
+
+    if (cfg.elastic.enabled) {
+        docker_client = std::make_unique<labios::elastic::DockerClient>(
+            cfg.elastic.docker_socket);
+        orchestrator = std::make_unique<OrchestratorType>(
+            worker_mgr, *docker_client, cfg);
+
+        std::cout << "[" << timestamp()
+                  << "] manager: elastic mode enabled (min=" << cfg.elastic.min_workers
+                  << ", max=" << cfg.elastic.max_workers
+                  << ", image=" << cfg.elastic.docker_image << ")\n" << std::flush;
+    }
 
     // Combined handler for all manager subjects.
     auto handler = [&](std::string_view subject,
@@ -106,7 +127,7 @@ int main() {
     nats.subscribe("labios.worker.deregister", handler);
     nats.subscribe("labios.manager.workers", handler);
 
-    // Score update handler: workers publish "id,capacity,load" every 2 seconds.
+    // Score update handler: workers publish "id,capacity,load[,available]" every 2 seconds.
     nats.subscribe("labios.worker.score_update",
         [&worker_mgr](std::string_view /*subject*/,
                        std::span<const std::byte> data,
@@ -116,21 +137,39 @@ int main() {
             std::string token;
             int id = 0;
             double capacity = 1.0, load = 0.0;
+            bool available = true;
 
             if (std::getline(iss, token, ',')) id = std::stoi(token);
             if (std::getline(iss, token, ',')) capacity = std::stod(token);
             if (std::getline(iss, token, ',')) load = std::stod(token);
+            if (std::getline(iss, token, ',')) available = (token == "1");
 
             auto all = worker_mgr.all_workers();
             for (auto& w : all) {
                 if (w.id == id) {
                     w.capacity = capacity;
                     w.load = load;
+                    w.available = available;
                     worker_mgr.update_score(id, w);
                     break;
                 }
             }
         });
+
+    // Queue depth subscription (for elastic scaling).
+    if (orchestrator) {
+        nats.subscribe("labios.queue.depth",
+            [&orchestrator](std::string_view /*subject*/,
+                            std::span<const std::byte> data,
+                            std::string_view /*reply_to*/) {
+                std::string msg(reinterpret_cast<const char*>(data.data()),
+                                data.size());
+                try {
+                    int depth = std::stoi(msg);
+                    orchestrator->update_queue_depth(depth);
+                } catch (...) {}
+            });
+    }
 
     redis.set("labios:ready:manager", "1");
 
@@ -139,12 +178,41 @@ int main() {
 
     std::cout << "[" << timestamp() << "] manager ready\n" << std::flush;
 
+    // Start elastic orchestrator thread.
+    if (orchestrator) {
+        g_elastic_thread = std::jthread([&orchestrator, &nats](std::stop_token stoken) {
+            while (!stoken.stop_requested()) {
+                // Run one evaluation cycle.
+                orchestrator->run(stoken);
+
+                // Check for pending resume commands.
+                int resume_id = orchestrator->consume_pending_resume();
+                if (resume_id > 0) {
+                    std::string subject = "labios.worker.resume."
+                        + std::to_string(resume_id);
+                    try {
+                        nats.publish(subject, "resume");
+                        nats.flush();
+                        std::cout << "[elastic] sent resume to worker "
+                                  << resume_id << "\n" << std::flush;
+                    } catch (...) {}
+                }
+            }
+        });
+    }
+
     g_service_thread = std::jthread([](std::stop_token stoken) {
         while (!stoken.stop_requested()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     });
     g_service_thread.join();
+
+    // Stop elastic thread.
+    if (g_elastic_thread.joinable()) {
+        g_elastic_thread.request_stop();
+        g_elastic_thread.join();
+    }
 
     std::cout << "[" << timestamp() << "] manager shutting down\n";
     return 0;
