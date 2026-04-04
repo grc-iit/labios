@@ -6,3 +6,6 @@ target_link_libraries(labios-worker PRIVATE labios)
 
 add_executable(labios-manager labios-manager.cpp)
 target_link_libraries(labios-manager PRIVATE labios)
+
+add_executable(labios-demo labios-demo.cpp)
+target_link_libraries(labios-demo PRIVATE labios)
