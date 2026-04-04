@@ -5,12 +5,19 @@
 
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
 namespace labios {
 
 enum class LabelStatus : uint8_t { Queued, Scheduled, Executing, Complete, Error };
+
+struct ScheduleEntry {
+    uint64_t label_id;
+    int worker_id;
+    uint32_t flags;
+};
 
 std::string to_string(LabelStatus status);
 LabelStatus label_status_from_string(std::string_view s);
@@ -35,6 +42,7 @@ public:
     std::optional<std::string> get_error(uint64_t label_id);
     void set_worker(uint64_t label_id, int worker_id);
     std::optional<int> get_worker(uint64_t label_id);
+    void schedule_batch(std::span<const ScheduleEntry> entries);
 
     /// Track which worker holds data for a given filepath.
     void set_location(std::string_view filepath, int worker_id);

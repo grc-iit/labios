@@ -124,6 +124,23 @@ std::optional<int> CatalogManager::get_worker(uint64_t label_id) {
     return std::stoi(*val);
 }
 
+void CatalogManager::schedule_batch(std::span<const ScheduleEntry> entries) {
+    if (entries.empty()) return;
+
+    auto ts = now_ms();
+    redis_.pipeline_begin();
+
+    for (auto& e : entries) {
+        auto key = catalog_key(e.label_id);
+        redis_.pipeline_hset(key, "status", "scheduled");
+        redis_.pipeline_hset(key, "flags", std::to_string(e.flags));
+        redis_.pipeline_hset(key, "worker_id", std::to_string(e.worker_id));
+        redis_.pipeline_hset(key, "updated_at", ts);
+    }
+
+    redis_.pipeline_exec();
+}
+
 std::string CatalogManager::location_key(std::string_view filepath) {
     return "labios:location:" + std::string(filepath);
 }
