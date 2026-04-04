@@ -119,9 +119,23 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
     // Create all strings and vectors before building tables.
     auto operation_off = fbb.CreateString(label.operation);
     auto reply_to_off  = fbb.CreateString(label.reply_to);
-    flatbuffers::Offset<flatbuffers::Vector<uint64_t>> deps_off = 0;
+    auto file_key_off  = fbb.CreateString(label.file_key);
+
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::LabelDependency>>> deps_off = 0;
     if (!label.dependencies.empty()) {
-        deps_off = fbb.CreateVector(label.dependencies);
+        std::vector<flatbuffers::Offset<schema::LabelDependency>> dep_offsets;
+        dep_offsets.reserve(label.dependencies.size());
+        for (auto& dep : label.dependencies) {
+            dep_offsets.push_back(schema::CreateLabelDependency(
+                fbb, dep.label_id,
+                static_cast<schema::HazardType>(dep.hazard_type)));
+        }
+        deps_off = fbb.CreateVector(dep_offsets);
+    }
+
+    flatbuffers::Offset<flatbuffers::Vector<uint64_t>> children_off = 0;
+    if (!label.children.empty()) {
+        children_off = fbb.CreateVector(label.children);
     }
 
     // Build pointer sub-tables.
@@ -145,7 +159,9 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
         static_cast<schema::Intent>(label.intent),
         label.ttl_seconds,
         static_cast<schema::Isolation>(label.isolation),
-        reply_to_off);
+        reply_to_off,
+        file_key_off,
+        children_off);
 
     schema::FinishLabelBuffer(fbb, label_off);
 
@@ -173,9 +189,20 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     out.isolation   = static_cast<Isolation>(fb->isolation());
     out.reply_to    = fb->reply_to() ? fb->reply_to()->str() : std::string{};
 
+    out.file_key    = fb->file_key() ? fb->file_key()->str() : std::string{};
+
     if (fb->dependencies()) {
-        auto* deps = fb->dependencies();
-        out.dependencies.assign(deps->begin(), deps->end());
+        for (auto* dep : *fb->dependencies()) {
+            out.dependencies.push_back({
+                dep->label_id(),
+                static_cast<HazardType>(dep->hazard_type())
+            });
+        }
+    }
+
+    if (fb->children()) {
+        auto* ch = fb->children();
+        out.children.assign(ch->begin(), ch->end());
     }
 
     return out;

@@ -35,6 +35,7 @@ std::vector<PendingLabel> LabelManager::publish_write(
         label.destination = file_path(filepath, offset + pos, chunk_size);
         label.operation = "write";
         label.flags = LabelFlags::Queued;
+        label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
         auto serialized = serialize_label(label);
@@ -70,6 +71,7 @@ std::vector<PendingLabel> LabelManager::publish_read(
         label.destination = memory_ptr(nullptr, chunk_size);
         label.operation = "read";
         label.flags = LabelFlags::Queued;
+        label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
         auto serialized = serialize_label(label);

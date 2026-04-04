@@ -15,6 +15,7 @@ enum class Intent : uint8_t {
     None, Checkpoint, Cache, ToolOutput, FinalResult, Intermediate, SharedState
 };
 enum class Isolation : uint8_t { None, Application, Agent };
+enum class HazardType : uint8_t { RAW, WAW, WAR };
 enum class CompletionStatus : uint8_t { Complete, Error };
 
 namespace LabelFlags {
@@ -49,6 +50,11 @@ Pointer file_path(std::string_view path);
 Pointer file_path(std::string_view path, uint64_t offset, uint64_t length);
 Pointer network_endpoint(std::string_view host, uint16_t port);
 
+struct LabelDependency {
+    uint64_t label_id = 0;
+    HazardType hazard_type = HazardType::RAW;
+};
+
 struct LabelData {
     uint64_t id = 0;
     LabelType type = LabelType::Write;
@@ -58,12 +64,14 @@ struct LabelData {
     uint32_t flags = 0;
     uint8_t priority = 0;
     uint32_t app_id = 0;
-    std::vector<uint64_t> dependencies;
+    std::vector<LabelDependency> dependencies;
     uint64_t data_size = 0;
     Intent intent = Intent::None;
     uint32_t ttl_seconds = 0;
     Isolation isolation = Isolation::None;
     std::string reply_to;
+    std::string file_key;              // Normalized path for shuffler grouping
+    std::vector<uint64_t> children;    // Supertask child label IDs
 };
 
 struct LabelParams {

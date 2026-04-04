@@ -11,12 +11,18 @@ TEST_CASE("Label serialization roundtrip with FilePath", "[label]") {
     label.flags = labios::LabelFlags::Queued | labios::LabelFlags::Async;
     label.priority = 5;
     label.app_id = 100;
-    label.dependencies = {10, 20, 30};
+    label.dependencies = {
+        {10, labios::HazardType::RAW},
+        {20, labios::HazardType::WAW},
+        {30, labios::HazardType::WAR},
+    };
     label.data_size = 4096;
     label.intent = labios::Intent::Checkpoint;
     label.ttl_seconds = 3600;
     label.isolation = labios::Isolation::Agent;
     label.reply_to = "reply.subject.42";
+    label.file_key = "/tmp/input.dat";
+    label.children = {100, 200, 300};
 
     auto buf = labios::serialize_label(label);
     REQUIRE(!buf.empty());
@@ -29,7 +35,14 @@ TEST_CASE("Label serialization roundtrip with FilePath", "[label]") {
     REQUIRE(result.flags == (labios::LabelFlags::Queued | labios::LabelFlags::Async));
     REQUIRE(result.priority == 5);
     REQUIRE(result.app_id == 100);
-    REQUIRE(result.dependencies == std::vector<uint64_t>{10, 20, 30});
+    REQUIRE(result.dependencies.size() == 3);
+    REQUIRE(result.dependencies[0].label_id == 10);
+    REQUIRE(result.dependencies[0].hazard_type == labios::HazardType::RAW);
+    REQUIRE(result.dependencies[1].label_id == 20);
+    REQUIRE(result.dependencies[1].hazard_type == labios::HazardType::WAW);
+    REQUIRE(result.dependencies[2].hazard_type == labios::HazardType::WAR);
+    REQUIRE(result.file_key == "/tmp/input.dat");
+    REQUIRE(result.children == std::vector<uint64_t>{100, 200, 300});
     REQUIRE(result.data_size == 4096);
     REQUIRE(result.intent == labios::Intent::Checkpoint);
     REQUIRE(result.ttl_seconds == 3600);

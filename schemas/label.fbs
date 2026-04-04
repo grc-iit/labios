@@ -2,6 +2,7 @@ namespace labios.schema;
 
 enum LabelType : byte { Read, Write, Delete, Flush, Composite }
 enum CompletionStatus : byte { Complete, Error }
+enum HazardType : byte { RAW, WAW, WAR }
 enum Intent : byte { None, Checkpoint, Cache, ToolOutput, FinalResult, Intermediate, SharedState }
 enum Isolation : byte { None, Application, Agent }
 
@@ -27,6 +28,11 @@ table Pointer {
   ptr: PointerVariant;
 }
 
+table LabelDependency {
+  label_id:    uint64;
+  hazard_type: HazardType;
+}
+
 table Label {
   id:           uint64;
   type:         LabelType;
@@ -36,12 +42,14 @@ table Label {
   flags:        uint32;
   priority:     uint8;
   app_id:       uint32;
-  dependencies: [uint64];
+  dependencies: [LabelDependency];
   data_size:    uint64;
   intent:       Intent;
   ttl_seconds:  uint32;
   isolation:    Isolation;
   reply_to:     string;
+  file_key:     string;
+  children:     [uint64];
 }
 
 table Completion {
