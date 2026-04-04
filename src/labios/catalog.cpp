@@ -86,4 +86,20 @@ std::optional<int> CatalogManager::get_worker(uint64_t label_id) {
     return std::stoi(*val);
 }
 
+std::string CatalogManager::location_key(std::string_view filepath) {
+    return "labios:location:" + std::string(filepath);
+}
+
+void CatalogManager::set_location(std::string_view filepath, int worker_id) {
+    redis_.set(location_key(filepath), std::to_string(worker_id));
+}
+
+std::optional<int> CatalogManager::get_location(std::string_view filepath) {
+    auto val = redis_.get(location_key(filepath));
+    if (!val.has_value()) {
+        return std::nullopt;
+    }
+    return std::stoi(*val);
+}
+
 } // namespace labios

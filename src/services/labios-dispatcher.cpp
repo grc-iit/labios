@@ -71,24 +71,50 @@ int main() {
             // Update catalog: mark label as Scheduled.
             catalog.set_status(label.id, labios::LabelStatus::Scheduled);
 
-            // Ask the solver for a worker assignment.
-            std::vector<std::vector<std::byte>> label_batch;
-            label_batch.push_back(std::move(reserialized));
-            auto assignments = solver.assign(std::move(label_batch), workers);
+            // Read-locality routing: READ labels go to the worker holding
+            // the file data, bypassing the solver (paper Section 2.3).
+            int target_worker = -1;
 
-            // Publish each assignment to the appropriate per-worker subject.
-            for (auto& [worker_id, assigned_labels] : assignments) {
-                catalog.set_worker(label.id, worker_id);
-                for (auto& payload : assigned_labels) {
-                    std::string subject = "labios.worker." + std::to_string(worker_id);
-                    nats.publish(subject,
-                                 std::span<const std::byte>(payload.data(), payload.size()));
+            if (label.type == labios::LabelType::Read) {
+                auto* src = std::get_if<labios::FilePath>(&label.source);
+                if (src) {
+                    auto loc = catalog.get_location(src->path);
+                    if (loc.has_value()) {
+                        target_worker = *loc;
+                    }
                 }
+            }
+
+            if (target_worker > 0) {
+                // Direct assignment to the worker holding the data.
+                catalog.set_worker(label.id, target_worker);
+                std::string subject = "labios.worker." + std::to_string(target_worker);
+                nats.publish(subject,
+                             std::span<const std::byte>(reserialized.data(), reserialized.size()));
                 nats.flush();
 
                 std::cout << "[" << timestamp() << "] dispatcher: label "
-                          << label.id << " -> worker " << worker_id << "\n"
-                          << std::flush;
+                          << label.id << " READ -> worker " << target_worker
+                          << " (locality)\n" << std::flush;
+            } else {
+                // WRITE labels (and READs without a known location) use the solver.
+                std::vector<std::vector<std::byte>> label_batch;
+                label_batch.push_back(std::move(reserialized));
+                auto assignments = solver.assign(std::move(label_batch), workers);
+
+                for (auto& [worker_id, assigned_labels] : assignments) {
+                    catalog.set_worker(label.id, worker_id);
+                    for (auto& payload : assigned_labels) {
+                        std::string subject = "labios.worker." + std::to_string(worker_id);
+                        nats.publish(subject,
+                                     std::span<const std::byte>(payload.data(), payload.size()));
+                    }
+                    nats.flush();
+
+                    std::cout << "[" << timestamp() << "] dispatcher: label "
+                              << label.id << " -> worker " << worker_id << "\n"
+                              << std::flush;
+                }
             }
         });
 

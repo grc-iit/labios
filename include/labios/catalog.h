@@ -25,9 +25,14 @@ public:
     void set_worker(uint64_t label_id, int worker_id);
     std::optional<int> get_worker(uint64_t label_id);
 
+    /// Track which worker holds data for a given filepath.
+    void set_location(std::string_view filepath, int worker_id);
+    std::optional<int> get_location(std::string_view filepath);
+
 private:
     transport::RedisConnection& redis_;
     std::string catalog_key(uint64_t label_id) const;
+    static std::string location_key(std::string_view filepath);
 };
 
 } // namespace labios

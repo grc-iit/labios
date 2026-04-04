@@ -60,7 +60,7 @@ int main() {
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&warehouse, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id](
+        [&warehouse, &catalog, &nats, &worker_mu, &storage_root, worker_id](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -113,12 +113,9 @@ int main() {
 
                     warehouse.remove(label.id);
 
-                    // Stage under a path-based key so any worker can serve
-                    // reads for this file. M2 adds read-locality routing
-                    // which eliminates this redundancy.
-                    std::string path_key = "labios:file:" + dst->path;
-                    redis.set_binary(path_key,
-                        std::span<const std::byte>(blob));
+                    // Record which worker holds this file so the dispatcher
+                    // can route READs here (read-locality, paper Section 2.3).
+                    catalog.set_location(dst->path, worker_id);
 
                     completion.status = labios::CompletionStatus::Complete;
 
@@ -139,30 +136,23 @@ int main() {
 
                     std::vector<std::byte> file_data;
 
-                    // Try local storage first, fall back to warehouse.
-                    // Without read-locality routing (M2), the read may land
-                    // on a different worker than the one that wrote the file.
+                    // The dispatcher routes READs to the worker holding the
+                    // file (read-locality, paper Section 2.3). Read from
+                    // local storage directly.
                     auto full_path = storage_root / src->path;
                     std::ifstream ifs(full_path, std::ios::binary);
-                    if (ifs) {
-                        if (src->offset > 0) {
-                            ifs.seekg(static_cast<std::streamoff>(src->offset));
-                        }
-                        file_data.resize(read_size);
-                        ifs.read(reinterpret_cast<char*>(file_data.data()),
-                                 static_cast<std::streamsize>(read_size));
-                        file_data.resize(static_cast<size_t>(ifs.gcount()));
-                    } else {
-                        // File not on this worker; read from path-based
-                        // warehouse key staged by the write worker.
-                        std::string path_key = "labios:file:" + src->path;
-                        file_data = redis.get_binary(path_key);
-                        if (file_data.empty()) {
-                            throw std::runtime_error(
-                                "data not found locally or in warehouse for "
-                                + src->path);
-                        }
+                    if (!ifs) {
+                        throw std::runtime_error(
+                            "data not found on this worker for "
+                            + src->path);
                     }
+                    if (src->offset > 0) {
+                        ifs.seekg(static_cast<std::streamoff>(src->offset));
+                    }
+                    file_data.resize(read_size);
+                    ifs.read(reinterpret_cast<char*>(file_data.data()),
+                             static_cast<std::streamsize>(read_size));
+                    file_data.resize(static_cast<size_t>(ifs.gcount()));
 
                     warehouse.stage(label.id,
                                     std::span<const std::byte>(file_data));
