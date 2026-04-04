@@ -1,10 +1,14 @@
+#include <labios/catalog.h>
 #include <labios/config.h>
+#include <labios/label.h>
+#include <labios/warehouse.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -36,40 +40,157 @@ int main() {
     const char* config_path = std::getenv("LABIOS_CONFIG_PATH");
     auto cfg = labios::load_config(config_path ? config_path : "conf/labios.toml");
 
-    // Redis must outlive nats: the NATS callback captures &redis, so redis
-    // must still be valid when nats drains its subscriptions during destruction.
+    // Redis constructed before NATS so it outlives NATS on destruction.
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
     labios::transport::NatsConnection nats(cfg.nats_url);
+
+    labios::Warehouse warehouse(redis);
+    labios::CatalogManager catalog(redis);
+
+    const char* storage_env = std::getenv("LABIOS_STORAGE_ROOT");
+    std::filesystem::path storage_root =
+        storage_env ? storage_env : "/labios/data";
+    std::filesystem::create_directories(storage_root);
 
     std::string worker_subject = "labios.worker." + std::to_string(cfg.worker_id);
     std::string worker_name = "worker-" + std::to_string(cfg.worker_id);
 
-    // Mutex protects redis from concurrent access: the NATS callback runs on
-    // a cnats-managed thread while the main thread may also use redis.
-    std::mutex redis_mu;
+    // Mutex protects all Redis (warehouse + catalog) and file operations.
+    std::mutex worker_mu;
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&redis, &redis_mu, worker_id](std::string_view /*subject*/,
-                                       std::span<const std::byte> data,
-                                       std::string_view /*reply_to*/) {
-            std::string msg_id(reinterpret_cast<const char*>(data.data()),
-                               data.size());
-            std::cout << "[" << timestamp() << "] worker " << worker_id
-                      << ": received message " << msg_id << "\n" << std::flush;
+        [&warehouse, &catalog, &nats, &worker_mu, &storage_root, worker_id](
+            std::string_view /*subject*/, std::span<const std::byte> data,
+            std::string_view /*reply_to*/) {
+            labios::CompletionData completion{};
 
-            std::string key = "labios:confirmation:" + msg_id;
-            std::string val = "received_by_worker_" + std::to_string(worker_id);
-            std::lock_guard lock(redis_mu);
-            redis.set(key, val);
+            try {
+                auto label = labios::deserialize_label(data);
+                completion.label_id = label.id;
+
+                std::lock_guard lock(worker_mu);
+
+                catalog.set_status(label.id, labios::LabelStatus::Executing);
+
+                if (label.type == labios::LabelType::Write) {
+                    auto blob = warehouse.retrieve(label.id);
+
+                    auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                    if (!dst) {
+                        throw std::runtime_error(
+                            "WRITE label missing FilePath destination");
+                    }
+
+                    auto full_path = storage_root / dst->path;
+                    std::filesystem::create_directories(full_path.parent_path());
+
+                    if (dst->offset > 0 &&
+                        std::filesystem::exists(full_path)) {
+                        std::ofstream ofs(full_path,
+                            std::ios::binary | std::ios::in | std::ios::out);
+                        if (!ofs) {
+                            throw std::runtime_error(
+                                "failed to open " + full_path.string());
+                        }
+                        ofs.seekp(static_cast<std::streamoff>(dst->offset));
+                        ofs.write(reinterpret_cast<const char*>(blob.data()),
+                                  static_cast<std::streamsize>(blob.size()));
+                    } else {
+                        std::ofstream ofs(full_path,
+                            std::ios::binary | std::ios::out);
+                        if (!ofs) {
+                            throw std::runtime_error(
+                                "failed to open " + full_path.string());
+                        }
+                        if (dst->offset > 0) {
+                            ofs.seekp(
+                                static_cast<std::streamoff>(dst->offset));
+                        }
+                        ofs.write(reinterpret_cast<const char*>(blob.data()),
+                                  static_cast<std::streamsize>(blob.size()));
+                    }
+
+                    warehouse.remove(label.id);
+                    completion.status = labios::CompletionStatus::Complete;
+
+                    std::cout << "[" << timestamp() << "] worker " << worker_id
+                              << ": WRITE " << full_path.string() << " ("
+                              << blob.size() << " bytes)\n" << std::flush;
+
+                } else if (label.type == labios::LabelType::Read) {
+                    auto* src = std::get_if<labios::FilePath>(&label.source);
+                    if (!src) {
+                        throw std::runtime_error(
+                            "READ label missing FilePath source");
+                    }
+
+                    auto full_path = storage_root / src->path;
+
+                    std::ifstream ifs(full_path, std::ios::binary);
+                    if (!ifs) {
+                        throw std::runtime_error(
+                            "failed to open " + full_path.string());
+                    }
+
+                    if (src->offset > 0) {
+                        ifs.seekg(static_cast<std::streamoff>(src->offset));
+                    }
+
+                    uint64_t read_size = label.data_size > 0
+                        ? label.data_size
+                        : src->length;
+
+                    std::vector<std::byte> file_data(read_size);
+                    ifs.read(reinterpret_cast<char*>(file_data.data()),
+                             static_cast<std::streamsize>(read_size));
+                    auto bytes_read =
+                        static_cast<size_t>(ifs.gcount());
+                    file_data.resize(bytes_read);
+
+                    warehouse.stage(label.id,
+                                    std::span<const std::byte>(file_data));
+                    completion.data_key =
+                        labios::Warehouse::data_key(label.id);
+                    completion.status = labios::CompletionStatus::Complete;
+
+                    std::cout << "[" << timestamp() << "] worker " << worker_id
+                              << ": READ " << full_path.string() << " ("
+                              << bytes_read << " bytes)\n" << std::flush;
+                } else {
+                    throw std::runtime_error(
+                        "unsupported label type: " +
+                        std::to_string(static_cast<int>(label.type)));
+                }
+
+                catalog.set_status(label.id, labios::LabelStatus::Complete);
+
+                if (!label.reply_to.empty()) {
+                    auto reply_payload = labios::serialize_completion(completion);
+                    nats.publish(label.reply_to,
+                                 std::span<const std::byte>(reply_payload));
+                    nats.flush();
+                }
+
+            } catch (const std::exception& e) {
+                completion.status = labios::CompletionStatus::Error;
+                completion.error = e.what();
+
+                std::cerr << "[" << timestamp() << "] worker " << worker_id
+                          << ": ERROR " << e.what() << "\n" << std::flush;
+
+                try {
+                    catalog.set_status(completion.label_id,
+                                       labios::LabelStatus::Error);
+                } catch (...) {
+                    // Best effort catalog update on error path.
+                }
+            }
         });
 
-    {
-        std::lock_guard lock(redis_mu);
-        redis.set("labios:ready:" + worker_name, "1");
-    }
+    redis.set("labios:ready:" + worker_name, "1");
 
-    // Signal healthcheck
+    // Signal healthcheck.
     { std::ofstream touch("/tmp/labios-ready"); }
 
     std::cout << "[" << timestamp() << "] " << worker_name
