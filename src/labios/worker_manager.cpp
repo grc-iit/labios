@@ -83,7 +83,16 @@ void InMemoryWorkerManager::update_score(int worker_id, WorkerInfo info) {
     std::lock_guard lock(mu_);
     auto it = workers_.find(worker_id);
     if (it != workers_.end()) {
+        bool was_available = it->second.available;
         it->second = info;
+
+        // Track suspension transitions.
+        if (was_available && !info.available) {
+            suspended_since_[worker_id] = std::chrono::steady_clock::now();
+        } else if (!was_available && info.available) {
+            suspended_since_.erase(worker_id);
+        }
+
         // Re-bucket if we have a profile.
         if (!last_profile_.name.empty()) {
             remove_from_buckets(worker_id);
@@ -107,6 +116,48 @@ void InMemoryWorkerManager::deregister_worker(int worker_id) {
     std::lock_guard lock(mu_);
     remove_from_buckets(worker_id);
     workers_.erase(worker_id);
+    suspended_since_.erase(worker_id);
+}
+
+size_t InMemoryWorkerManager::worker_count() {
+    std::lock_guard lock(mu_);
+    return workers_.size();
+}
+
+int InMemoryWorkerManager::next_worker_id() {
+    std::lock_guard lock(mu_);
+    return next_elastic_id_++;
+}
+
+std::vector<int> InMemoryWorkerManager::suspended_workers() {
+    std::lock_guard lock(mu_);
+    std::vector<int> result;
+    for (auto& [id, w] : workers_) {
+        if (!w.available) result.push_back(id);
+    }
+    return result;
+}
+
+std::vector<int> InMemoryWorkerManager::decommissionable_workers(
+    std::chrono::milliseconds threshold) {
+    std::lock_guard lock(mu_);
+    auto now = std::chrono::steady_clock::now();
+    std::vector<int> result;
+    for (auto& [id, tp] : suspended_since_) {
+        if (workers_.count(id) && !workers_[id].available) {
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - tp);
+            if (elapsed > threshold) {
+                result.push_back(id);
+            }
+        }
+    }
+    return result;
+}
+
+void InMemoryWorkerManager::set_suspended_since_for_test(
+    int worker_id, std::chrono::steady_clock::time_point tp) {
+    std::lock_guard lock(mu_);
+    suspended_since_[worker_id] = tp;
 }
 
 } // namespace labios

@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
+#include <chrono>
 
 using Catch::Matchers::WithinAbs;
 
@@ -110,4 +111,71 @@ TEST_CASE("update_score replaces worker info", "[worker_manager]") {
     REQUIRE(all.size() == 1);
     CHECK(all[0].capacity == Catch::Approx(0.5));
     CHECK(all[0].load == Catch::Approx(0.5));
+}
+
+TEST_CASE("worker_count returns registered count", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    CHECK(mgr.worker_count() == 0);
+    mgr.register_worker({1, true});
+    mgr.register_worker({2, true});
+    CHECK(mgr.worker_count() == 2);
+    mgr.deregister_worker(1);
+    CHECK(mgr.worker_count() == 1);
+}
+
+TEST_CASE("next_worker_id starts at 100 and increments", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    mgr.register_worker({1, true});
+    mgr.register_worker({2, true});
+    CHECK(mgr.next_worker_id() == 100);
+    CHECK(mgr.next_worker_id() == 101);
+    CHECK(mgr.next_worker_id() == 102);
+}
+
+TEST_CASE("suspended_workers returns workers with available=false", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    mgr.register_worker({1, true, 0.9, 0.0, 5, 1});
+    mgr.register_worker({2, true, 0.5, 0.0, 3, 3});
+
+    CHECK(mgr.suspended_workers().empty());
+
+    // Simulate worker 2 self-suspending via score update.
+    mgr.update_score(2, {2, false, 0.5, 0.0, 3, 3});
+
+    auto susp = mgr.suspended_workers();
+    REQUIRE(susp.size() == 1);
+    CHECK(susp[0] == 2);
+}
+
+TEST_CASE("decommissionable_workers returns workers suspended beyond timeout", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    mgr.register_worker({1, true, 0.9, 0.0, 5, 1});
+
+    // Simulate suspension.
+    mgr.update_score(1, {1, false, 0.9, 0.0, 5, 1});
+
+    // Just suspended: not decommissionable at 1-hour threshold.
+    auto decomm = mgr.decommissionable_workers(std::chrono::hours(1));
+    CHECK(decomm.empty());
+
+    // Backdate the suspension timestamp for testing.
+    mgr.set_suspended_since_for_test(1,
+        std::chrono::steady_clock::now() - std::chrono::seconds(120));
+
+    decomm = mgr.decommissionable_workers(std::chrono::seconds(60));
+    REQUIRE(decomm.size() == 1);
+    CHECK(decomm[0] == 1);
+}
+
+TEST_CASE("Resuming worker clears suspension state", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    mgr.register_worker({1, true, 0.9, 0.0, 5, 1});
+
+    // Suspend.
+    mgr.update_score(1, {1, false, 0.9, 0.0, 5, 1});
+    CHECK(mgr.suspended_workers().size() == 1);
+
+    // Resume: worker reports available=true again.
+    mgr.update_score(1, {1, true, 0.9, 0.5, 5, 1});
+    CHECK(mgr.suspended_workers().empty());
 }

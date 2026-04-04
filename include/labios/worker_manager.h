@@ -2,6 +2,7 @@
 #include <labios/solver/solver.h>
 
 #include <array>
+#include <chrono>
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
@@ -33,6 +34,16 @@ public:
     void register_worker(WorkerInfo info);
     void deregister_worker(int worker_id);
 
+    // M4: Elastic worker tracking.
+    size_t worker_count();
+    int next_worker_id();
+    std::vector<int> suspended_workers();
+    std::vector<int> decommissionable_workers(std::chrono::milliseconds threshold);
+
+    // Test helper: set the suspension start time for a worker.
+    void set_suspended_since_for_test(int worker_id,
+        std::chrono::steady_clock::time_point tp);
+
 private:
     static int bucket_index(double score);
     void place_in_bucket(int worker_id, double score);
@@ -45,6 +56,8 @@ private:
     // Buckets: index 0 = lowest scores (0.0-0.2), index 4 = highest (0.8-1.0).
     std::array<std::unordered_set<int>, kNumBuckets> buckets_;
     WeightProfile last_profile_;
+    int next_elastic_id_ = 100;
+    std::unordered_map<int, std::chrono::steady_clock::time_point> suspended_since_;
 };
 
 static_assert(WorkerManager<InMemoryWorkerManager>);
