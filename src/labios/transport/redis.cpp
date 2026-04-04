@@ -58,6 +58,69 @@ std::optional<std::string> RedisConnection::get(std::string_view key) {
     return result;
 }
 
+void RedisConnection::set_binary(std::string_view key, std::span<const std::byte> data) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "SET %b %b",
+                     key.data(), key.size(),
+                     data.data(), data.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis SET (binary) failed: " + std::string(impl_->ctx->errstr));
+    }
+    freeReplyObject(reply);
+}
+
+std::vector<std::byte> RedisConnection::get_binary(std::string_view key) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "GET %b", key.data(), key.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis GET (binary) failed: " + std::string(impl_->ctx->errstr));
+    }
+    std::vector<std::byte> result;
+    if (reply->type == REDIS_REPLY_STRING) {
+        auto* raw = reinterpret_cast<const std::byte*>(reply->str);
+        result.assign(raw, raw + reply->len);
+    }
+    freeReplyObject(reply);
+    return result;
+}
+
+void RedisConnection::del(std::string_view key) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "DEL %b", key.data(), key.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis DEL failed: " + std::string(impl_->ctx->errstr));
+    }
+    freeReplyObject(reply);
+}
+
+void RedisConnection::hset(std::string_view key, std::string_view field, std::string_view value) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "HSET %b %b %b",
+                     key.data(), key.size(),
+                     field.data(), field.size(),
+                     value.data(), value.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis HSET failed: " + std::string(impl_->ctx->errstr));
+    }
+    freeReplyObject(reply);
+}
+
+std::optional<std::string> RedisConnection::hget(std::string_view key, std::string_view field) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "HGET %b %b",
+                     key.data(), key.size(),
+                     field.data(), field.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis HGET failed: " + std::string(impl_->ctx->errstr));
+    }
+    std::optional<std::string> result;
+    if (reply->type == REDIS_REPLY_STRING) {
+        result.emplace(reply->str, reply->len);
+    }
+    freeReplyObject(reply);
+    return result;
+}
+
 bool RedisConnection::connected() const {
     return impl_ && impl_->ctx != nullptr && impl_->ctx->err == 0;
 }
