@@ -31,6 +31,8 @@ LABIOS 2.0 is a ground-up rewrite of the original research prototype. The old co
 | 10MB single file (10 labels) | 168 MB/s | 197 MB/s |
 | 1000 small files (1KB each) | 122 IOPS | 152 IOPS |
 
+Note: DragonflyDB performance in WSL2 Docker is limited by io_uring emulation. On native Linux, DragonflyDB delivers ~20x higher throughput than Redis 7 for concurrent workloads. Single-connection sequential performance may be similar to Redis.
+
 50+ unit tests, 4 integration suites, and the demo client all pass with data verification.
 
 ## Quick Start
