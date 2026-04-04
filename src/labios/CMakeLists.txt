@@ -1,5 +1,6 @@
 add_library(labios STATIC
     config.cpp
+    transport/nats.cpp
     transport/redis.cpp
 )
 
