@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <span>
 #include <string>
@@ -18,8 +19,8 @@ public:
 
     RedisConnection(const RedisConnection&) = delete;
     RedisConnection& operator=(const RedisConnection&) = delete;
-    RedisConnection(RedisConnection&&) noexcept;
-    RedisConnection& operator=(RedisConnection&&) noexcept;
+    RedisConnection(RedisConnection&&) = delete;
+    RedisConnection& operator=(RedisConnection&&) = delete;
 
     void set(std::string_view key, std::string_view value);
     [[nodiscard]] std::optional<std::string> get(std::string_view key);
@@ -39,11 +40,43 @@ public:
     void pipeline_del(std::string_view key);
     void pipeline_exec();
 
+    // --- Sorted sets (for per-offset location tracking) ---
+    void zadd(std::string_view key, double score, std::string_view member);
+    struct ZRangeEntry { std::string member; double score; };
+    [[nodiscard]] std::vector<ZRangeEntry> zrangebyscore(
+        std::string_view key, double min, double max);
+
     [[nodiscard]] bool connected() const;
+
+    /// RAII guard that holds the connection mutex for the duration of a
+    /// pipeline sequence. Calls pipeline_exec() on destruction.
+    class PipelineGuard {
+    public:
+        explicit PipelineGuard(RedisConnection& conn);
+        ~PipelineGuard();
+        PipelineGuard(const PipelineGuard&) = delete;
+        PipelineGuard& operator=(const PipelineGuard&) = delete;
+    private:
+        RedisConnection& conn_;
+        std::unique_lock<std::mutex> lock_;
+    };
 
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;
+    std::mutex mu_;
+
+    // Unlocked versions for use by PipelineGuard and internal callers
+    // that already hold mu_.
+    void set_locked(std::string_view key, std::string_view value);
+    std::optional<std::string> get_locked(std::string_view key);
+    void set_binary_locked(std::string_view key, std::span<const std::byte> data);
+    std::vector<std::byte> get_binary_locked(std::string_view key);
+    void del_locked(std::string_view key);
+    void hset_locked(std::string_view key, std::string_view field, std::string_view value);
+    std::optional<std::string> hget_locked(std::string_view key, std::string_view field);
+    void pipeline_begin_locked();
+    void pipeline_exec_locked();
 };
 
 } // namespace labios::transport
