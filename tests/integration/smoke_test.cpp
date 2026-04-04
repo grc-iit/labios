@@ -51,7 +51,7 @@ TEST_CASE("NATS message flows from client to worker", "[smoke]") {
 
     // Publish to worker-1's subject
     nats.publish("labios.worker.1", msg_id);
-    nats.drain();
+    nats.flush();
 
     // Poll Redis for the confirmation key the worker writes
     std::string key = "labios:confirmation:" + msg_id;
@@ -78,7 +78,7 @@ TEST_CASE("Each worker receives on its own subject", "[smoke]") {
         std::string msg_id = "multi_" + std::to_string(ts) + "_w" + std::to_string(id);
         nats.publish(subject, msg_id);
     }
-    nats.drain();
+    nats.flush();
 
     // Verify each worker wrote its confirmation
     for (int id = 1; id <= 3; ++id) {

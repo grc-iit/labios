@@ -35,9 +35,8 @@ public:
     /// where each service subscribes once.
     void subscribe(std::string_view subject, MessageCallback callback);
 
-    /// Drain pending messages and flush. Call before destruction if you need
-    /// all published messages to reach the server.
-    void drain();
+    /// Flush the outbound buffer so published messages reach the server.
+    void flush();
 
     [[nodiscard]] bool connected() const;
 

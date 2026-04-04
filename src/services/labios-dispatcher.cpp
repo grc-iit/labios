@@ -2,7 +2,6 @@
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
-#include <atomic>
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
@@ -10,9 +9,7 @@
 #include <iostream>
 #include <thread>
 
-static std::atomic<bool> g_running{true};
-
-static void signal_handler(int /*sig*/) { g_running.store(false); }
+static std::jthread g_service_thread;
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -22,6 +19,12 @@ static std::string timestamp() {
     char buf[32];
     std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm_buf);
     return buf;
+}
+
+static void signal_handler(int /*sig*/) {
+    if (g_service_thread.joinable()) {
+        g_service_thread.request_stop();
+    }
 }
 
 int main() {
@@ -47,9 +50,12 @@ int main() {
 
     std::cout << "[" << timestamp() << "] dispatcher ready\n" << std::flush;
 
-    while (g_running.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+    g_service_thread = std::jthread([](std::stop_token stoken) {
+        while (!stoken.stop_requested()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    });
+    g_service_thread.join();
 
     std::cout << "[" << timestamp() << "] dispatcher shutting down\n";
     return 0;

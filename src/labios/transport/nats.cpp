@@ -96,7 +96,7 @@ void NatsConnection::subscribe(std::string_view subject,
     impl_->subs.push_back(sub);
 }
 
-void NatsConnection::drain() {
+void NatsConnection::flush() {
     if (impl_->conn != nullptr) {
         natsConnection_FlushTimeout(impl_->conn, 2000);
     }
