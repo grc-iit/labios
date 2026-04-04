@@ -11,6 +11,16 @@
 
 namespace labios::transport {
 
+namespace {
+
+struct StringHash {
+    using is_transparent = void;
+    size_t operator()(std::string_view sv) const { return std::hash<std::string_view>{}(sv); }
+    size_t operator()(const std::string& s) const { return std::hash<std::string_view>{}(s); }
+};
+
+} // namespace
+
 std::vector<std::byte> AsyncReply::wait(std::chrono::milliseconds timeout) {
     std::unique_lock lock(mu);
     cv.wait_for(lock, timeout, [this] { return completed; });
@@ -24,7 +34,7 @@ struct NatsConnection::Impl {
     natsConnection* conn = nullptr;
     std::vector<natsSubscription*> subs;
     std::mutex cb_mu;
-    std::unordered_map<std::string, MessageCallback> callbacks;
+    std::unordered_map<std::string, MessageCallback, StringHash, std::equal_to<>> callbacks;
 
     // Async reply infrastructure: a wildcard inbox subscription that
     // routes incoming replies to the correct AsyncReply handle.
@@ -111,12 +121,12 @@ struct NatsConnection::Impl {
                            natsMsg* msg, void* closure) {
         auto* self = static_cast<Impl*>(closure);
         const char* subj = natsMsg_GetSubject(msg);
-        std::string subject_str(subj != nullptr ? subj : "");
+        std::string_view subject_sv(subj != nullptr ? subj : "");
 
         MessageCallback cb;
         {
             std::lock_guard lock(self->cb_mu);
-            auto it = self->callbacks.find(subject_str);
+            auto it = self->callbacks.find(subject_sv);
             if (it != self->callbacks.end()) {
                 cb = it->second;
             }
@@ -130,7 +140,7 @@ struct NatsConnection::Impl {
                 static_cast<size_t>(len));
             const char* reply = natsMsg_GetReply(msg);
             try {
-                cb(subject_str, span, reply != nullptr ? reply : "");
+                cb(subject_sv, span, reply != nullptr ? reply : "");
             } catch (const std::exception& e) {
                 fprintf(stderr, "[nats] callback exception: %s\n", e.what());
             } catch (...) {

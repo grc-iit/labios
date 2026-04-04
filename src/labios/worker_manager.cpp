@@ -1,5 +1,6 @@
 #include <labios/worker_manager.h>
 #include <algorithm>
+#include <ranges>
 
 namespace labios {
 
@@ -39,7 +40,8 @@ std::vector<WorkerInfo> InMemoryWorkerManager::all_workers() {
     std::lock_guard lock(mu_);
     std::vector<WorkerInfo> result;
     result.reserve(workers_.size());
-    for (auto& [_, w] : workers_) result.push_back(w);
+    std::ranges::transform(workers_, std::back_inserter(result),
+                           [](auto& pair) { return pair.second; });
     return result;
 }
 
