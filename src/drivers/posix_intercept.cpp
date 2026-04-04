@@ -99,11 +99,6 @@ void init_config() {
     });
 }
 
-void init_symbols() {
-    init_real_symbols();
-    init_config();
-}
-
 void init_session() {
     std::call_once(g_session_flag, []() {
         g_in_init = true;
