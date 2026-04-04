@@ -18,6 +18,8 @@
 #include <vector>
 
 static std::jthread g_batch_thread;
+static std::vector<std::jthread> g_fanout_threads;
+static std::mutex g_fanout_mu;
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -83,8 +85,9 @@ int main() {
 
     // Batch processing thread: collect -> shuffle -> dispatch.
     g_batch_thread = std::jthread([&](std::stop_token stoken) {
-        auto location_lookup = [&](const std::string& file) -> std::optional<int> {
-            return catalog.get_location(file);
+        auto location_lookup = [&](const std::string& file, uint64_t offset,
+                                   uint64_t length) -> std::optional<int> {
+            return catalog.get_location(file, offset, length);
         };
 
         while (!stoken.stop_requested()) {
@@ -153,7 +156,7 @@ int main() {
                     for (auto& child : st.children) {
                         if (child.type == labios::LabelType::Write) {
                             auto* dst = std::get_if<labios::FilePath>(&child.destination);
-                            if (dst) catalog.set_location(dst->path, wid);
+                            if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
                         }
                     }
 
@@ -202,12 +205,13 @@ int main() {
                             auto [inbox, reply_handle] = nats.create_reply_inbox();
                             label.reply_to = inbox;
 
-                            std::thread([reply_handle,
+                            auto fanout = std::jthread([reply_handle,
                                          replies = original_replies,
-                                         &nats]() {
+                                         &nats](std::stop_token stoken) {
                                 try {
                                     auto data = reply_handle->wait(
                                         std::chrono::seconds(60));
+                                    if (stoken.stop_requested()) return;
                                     for (auto& reply_to : replies) {
                                         nats.publish(reply_to,
                                             std::span<const std::byte>(data));
@@ -216,7 +220,14 @@ int main() {
                                 } catch (...) {
                                     // Timeout; clients will timeout on their end.
                                 }
-                            }).detach();
+                            });
+
+                            std::lock_guard flock(g_fanout_mu);
+                            // Clean up completed threads before adding new one.
+                            std::erase_if(g_fanout_threads, [](std::jthread& t) {
+                                return !t.joinable();
+                            });
+                            g_fanout_threads.push_back(std::move(fanout));
                         }
                     }
 
@@ -252,7 +263,7 @@ int main() {
 
                             if (label.type == labios::LabelType::Write) {
                                 auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                                if (dst) catalog.set_location(dst->path, wid);
+                                if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
                             }
 
                             for (auto& payload : payloads) {
@@ -284,6 +295,18 @@ int main() {
               << ")\n" << std::flush;
 
     g_batch_thread.join();
+
+    // Join all tracked fanout threads for clean shutdown.
+    {
+        std::lock_guard flock(g_fanout_mu);
+        for (auto& t : g_fanout_threads) {
+            if (t.joinable()) {
+                t.request_stop();
+                t.join();
+            }
+        }
+        g_fanout_threads.clear();
+    }
 
     std::cout << "[" << timestamp() << "] dispatcher shutting down\n";
     return 0;
