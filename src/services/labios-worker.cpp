@@ -64,14 +64,19 @@ int main() {
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
+            labios::LabelData label{};
+            bool have_label = false;
 
             try {
-                auto label = labios::deserialize_label(data);
+                label = labios::deserialize_label(data);
+                have_label = true;
                 completion.label_id = label.id;
 
                 std::lock_guard lock(worker_mu);
 
                 catalog.set_status(label.id, labios::LabelStatus::Executing);
+                label.flags |= labios::LabelFlags::Pending;
+                catalog.set_flags(label.id, label.flags);
 
                 if (label.type == labios::LabelType::Write) {
                     auto blob = content_manager.retrieve(label.id);
@@ -186,10 +191,24 @@ int main() {
                           << ": ERROR " << e.what() << "\n" << std::flush;
 
                 try {
-                    catalog.set_status(completion.label_id,
-                                       labios::LabelStatus::Error);
+                    if (completion.label_id != 0) {
+                        catalog.set_status(completion.label_id,
+                                           labios::LabelStatus::Error);
+                        catalog.set_error(completion.label_id, e.what());
+                    }
                 } catch (...) {
                     // Best effort catalog update on error path.
+                }
+
+                if (have_label && !label.reply_to.empty()) {
+                    try {
+                        auto reply_payload = labios::serialize_completion(completion);
+                        nats.publish(label.reply_to,
+                                     std::span<const std::byte>(reply_payload));
+                        nats.flush();
+                    } catch (...) {
+                        // Best effort completion notification on error path.
+                    }
                 }
             }
         });

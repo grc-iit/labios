@@ -62,6 +62,8 @@ int main() {
             // Deserialize the incoming label.
             auto label = labios::deserialize_label(data);
 
+            label.flags |= labios::LabelFlags::Scheduled;
+
             // Inject the NATS reply_to so the worker can respond to the client.
             label.reply_to = std::string(reply_to);
 
@@ -70,6 +72,7 @@ int main() {
 
             // Update catalog: mark label as Scheduled.
             catalog.set_status(label.id, labios::LabelStatus::Scheduled);
+            catalog.set_flags(label.id, label.flags);
 
             int target_worker = -1;
 
@@ -115,14 +118,6 @@ int main() {
 
                 for (auto& [worker_id, assigned_labels] : assignments) {
                     catalog.set_worker(label.id, worker_id);
-
-                    // Set location at assignment time so subsequent chunks use write-locality
-                    if (label.type == labios::LabelType::Write) {
-                        auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                        if (dst) {
-                            catalog.set_location(dst->path, worker_id);
-                        }
-                    }
 
                     for (auto& payload : assigned_labels) {
                         std::string subject = "labios.worker." + std::to_string(worker_id);

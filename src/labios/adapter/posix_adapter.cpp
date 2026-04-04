@@ -112,6 +112,11 @@ ssize_t POSIXAdapter::do_read(FileState* state, int fd, void* buf,
             return static_cast<ssize_t>(count);
         }
 
+        // Preserve read-after-write consistency: if the requested range is not
+        // fully available from the small-I/O cache, flush staged writes first
+        // so the READ labels observe the latest data.
+        flush_and_publish(fd);
+
         auto pending = label_mgr.publish_read(
             state->filepath, static_cast<uint64_t>(off), count);
         auto data = label_mgr.wait_read(pending);

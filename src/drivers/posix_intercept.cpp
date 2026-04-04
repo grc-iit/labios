@@ -159,6 +159,8 @@ static void labios_intercept_fini() {
                     auto pending = g_session->label_manager().publish_write(
                         region.filepath, region.offset, region.data);
                     g_session->label_manager().wait(pending);
+                    g_session->catalog_manager().track_write(
+                        region.filepath, region.offset, region.data.size());
                 }
             }
         } catch (...) {}
