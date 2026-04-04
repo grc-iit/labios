@@ -98,3 +98,7 @@ catch_discover_tests(labios-client-async-test TEST_PREFIX "unit/" PROPERTIES LAB
 
 add_executable(labios-elastic-flood-test integration/elastic_flood_test.cpp)
 target_link_libraries(labios-elastic-flood-test PRIVATE labios)
+
+add_executable(labios-kernel-cm1-test integration/kernel_cm1_test.cpp)
+target_link_libraries(labios-kernel-cm1-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-kernel-cm1-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
