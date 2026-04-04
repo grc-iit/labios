@@ -105,6 +105,23 @@ void init_session() {
         g_session = std::make_unique<labios::Session>(g_config);
         g_adapter = std::make_unique<labios::POSIXAdapter>(
             *g_session, *g_fd_table);
+
+        // Start the cache flush timer (spec Section 5, flush trigger #4).
+        auto& cm = g_session->content_manager();
+        cm.set_flush_callback([](int /*fd*/, std::vector<labios::FlushRegion> regions) {
+            if (!g_session) return;
+            for (auto& region : regions) {
+                try {
+                    auto pending = g_session->label_manager().publish_write(
+                        region.filepath, region.offset, region.data);
+                    g_session->label_manager().wait(pending);
+                    g_session->catalog_manager().track_write(
+                        region.filepath, region.offset, region.data.size());
+                } catch (...) {}
+            }
+        });
+        cm.start_flush_timer();
+
         g_in_init = false;
     });
 }
@@ -133,6 +150,19 @@ static void labios_intercept_init() {
 
 __attribute__((destructor))
 static void labios_intercept_fini() {
+    // Flush all cached data before teardown.
+    if (g_session) {
+        try {
+            auto flushed = g_session->content_manager().flush_all();
+            for (auto& [fd, regions] : flushed) {
+                for (auto& region : regions) {
+                    auto pending = g_session->label_manager().publish_write(
+                        region.filepath, region.offset, region.data);
+                    g_session->label_manager().wait(pending);
+                }
+            }
+        } catch (...) {}
+    }
     g_adapter.reset();
     g_session.reset();
     g_fd_table.reset();

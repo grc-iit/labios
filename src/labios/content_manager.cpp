@@ -55,6 +55,10 @@ std::vector<FlushRegion> ContentManager::cache_write(
         cache.read_policy = default_read_policy_;
     }
 
+    auto it = cache.regions.find(offset);
+    if (it != cache.regions.end()) {
+        cache.total_bytes -= it->second.size();
+    }
     cache.regions[offset].assign(data.begin(), data.end());
     cache.total_bytes += data.size();
 

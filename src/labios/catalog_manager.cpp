@@ -1,6 +1,7 @@
 #include <labios/catalog_manager.h>
 
 #include <chrono>
+#include <fcntl.h>
 #include <stdexcept>
 #include <string>
 
@@ -108,7 +109,7 @@ std::string CatalogManager::filemeta_key(std::string_view filepath) {
 
 void CatalogManager::track_open(std::string_view filepath, int flags) {
     auto key = filemeta_key(filepath);
-    if (flags & 0100) {  // O_CREAT
+    if (flags & O_CREAT) {
         redis_.hset(key, "exists", "1");
         auto existing = redis_.hget(key, "size");
         if (!existing.has_value()) {

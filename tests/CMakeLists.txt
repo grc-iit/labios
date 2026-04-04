@@ -51,3 +51,7 @@ catch_discover_tests(labios-fd-table-test TEST_PREFIX "unit/" PROPERTIES LABELS 
 
 add_executable(labios-intercept-test integration/intercept_test.cpp)
 target_link_libraries(labios-intercept-test PRIVATE Catch2::Catch2WithMain)
+
+add_executable(labios-benchmark-test integration/benchmark_test.cpp)
+target_link_libraries(labios-benchmark-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-benchmark-test TEST_PREFIX "bench/" PROPERTIES LABELS "bench")

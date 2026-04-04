@@ -1,5 +1,6 @@
 #pragma once
 
+#include <labios/adapter/adapter.h>
 #include <labios/adapter/fd_table.h>
 #include <labios/session.h>
 
@@ -38,5 +39,7 @@ private:
     int populate_stat(std::string_view filepath, struct stat* st);
     void flush_and_publish(int fd);
 };
+
+static_assert(IOAdapter<POSIXAdapter>);
 
 } // namespace labios

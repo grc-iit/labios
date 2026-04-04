@@ -18,8 +18,8 @@ struct Config {
     std::string service_name;
 
     // Label granularity (paper Section 2.2)
-    uint64_t label_min_size = 64 * 1024;       // 64KB - below this, writes go to cache
-    uint64_t label_max_size = 1024 * 1024;     // 1MB - above this, writes get split
+    uint64_t label_min_size = 64 * 1024;       // 64KB, writes below go to cache
+    uint64_t label_max_size = 1024 * 1024;     // 1MB, writes above get split
 
     // Small-I/O cache (Content Manager)
     int cache_flush_interval_ms = 500;

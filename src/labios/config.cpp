@@ -80,6 +80,22 @@ Config load_config(const std::filesystem::path& path) {
     cfg.cache_flush_interval_ms = env_int_or("LABIOS_CACHE_FLUSH_MS", cfg.cache_flush_interval_ms);
     cfg.cache_read_policy = env_or("LABIOS_CACHE_READ_POLICY", cfg.cache_read_policy);
 
+    const char* prefixes_env = std::getenv("LABIOS_INTERCEPT_PREFIXES");
+    if (prefixes_env != nullptr && prefixes_env[0] != '\0') {
+        cfg.intercept_prefixes.clear();
+        std::string_view sv(prefixes_env);
+        size_t pos = 0;
+        while (pos < sv.size()) {
+            auto comma = sv.find(',', pos);
+            if (comma == std::string_view::npos) comma = sv.size();
+            auto token = sv.substr(pos, comma - pos);
+            if (!token.empty()) {
+                cfg.intercept_prefixes.emplace_back(token);
+            }
+            pos = comma + 1;
+        }
+    }
+
     return cfg;
 }
 

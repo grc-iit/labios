@@ -19,12 +19,13 @@ int POSIXAdapter::close(int fd) {
     auto* state = fd_table_.get(fd);
     if (!state) { errno = EBADF; return -1; }
 
-    try {
-        flush_and_publish(fd);
-    } catch (...) {}
-
-    session_.content_manager().evict(fd);
-    fd_table_.release(fd);
+    bool was_last = fd_table_.release(fd);
+    if (was_last) {
+        try {
+            flush_and_publish(fd);
+        } catch (...) {}
+        session_.content_manager().evict(fd);
+    }
     return 0;
 }
 
@@ -46,6 +47,8 @@ ssize_t POSIXAdapter::pwrite(int fd, const void* buf, size_t count,
 
 ssize_t POSIXAdapter::do_write(FileState* state, int fd, const void* buf,
                                 size_t count, off_t off, bool update_offset) {
+    if (!buf && count > 0) { errno = EFAULT; return -1; }
+    if (count == 0) return 0;
     auto data = std::span<const std::byte>(
         static_cast<const std::byte*>(buf), count);
     auto& cfg = session_.config();
@@ -130,15 +133,21 @@ off_t POSIXAdapter::lseek(int fd, off_t offset, int whence) {
 
     switch (whence) {
         case SEEK_SET:
+            if (offset < 0) { errno = EINVAL; return -1; }
             state->offset = static_cast<uint64_t>(offset);
             break;
-        case SEEK_CUR:
-            state->offset += offset;
+        case SEEK_CUR: {
+            int64_t new_pos = static_cast<int64_t>(state->offset) + offset;
+            if (new_pos < 0) { errno = EINVAL; return -1; }
+            state->offset = static_cast<uint64_t>(new_pos);
             break;
+        }
         case SEEK_END: {
             auto info = session_.catalog_manager().get_file_info(state->filepath);
-            uint64_t file_size = info.has_value() ? info->size : 0;
-            state->offset = file_size + static_cast<uint64_t>(offset);
+            int64_t file_size = info.has_value() ? static_cast<int64_t>(info->size) : 0;
+            int64_t new_pos = file_size + offset;
+            if (new_pos < 0) { errno = EINVAL; return -1; }
+            state->offset = static_cast<uint64_t>(new_pos);
             break;
         }
         default:
