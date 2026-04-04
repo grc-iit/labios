@@ -6,6 +6,8 @@
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
@@ -32,6 +34,9 @@ static CompletionResult execute_read(
     const std::filesystem::path& storage_root, int worker_id);
 
 static std::jthread g_service_thread;
+static std::jthread g_score_thread;
+static std::atomic<int> g_active_labels{0};
+static constexpr int kMaxQueueSize = 100;
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -166,6 +171,7 @@ int main() {
             bool have_label = false;
 
             try {
+                g_active_labels.fetch_add(1);
                 label = labios::deserialize_label(data);
                 have_label = true;
                 completion.label_id = label.id;
@@ -253,6 +259,7 @@ int main() {
                         nats.publish(label.reply_to, std::span<const std::byte>(reply_payload));
                     }
                     nats.flush();
+                    g_active_labels.fetch_sub(1);
                     return; // Early return; skip the normal completion path below.
 
                 } else {
@@ -270,7 +277,10 @@ int main() {
                     nats.flush();
                 }
 
+                g_active_labels.fetch_sub(1);
+
             } catch (const std::exception& e) {
+                g_active_labels.fetch_sub(1);
                 completion.status = labios::CompletionStatus::Error;
                 completion.error = e.what();
 
@@ -310,6 +320,37 @@ int main() {
     nats.publish("labios.worker.register", reg_msg);
     nats.flush();
 
+    // Periodic score update thread: publishes load and capacity every 2 seconds.
+    g_score_thread = std::jthread([&nats, &storage_root, worker_id](std::stop_token stoken) {
+        while (!stoken.stop_requested()) {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            if (stoken.stop_requested()) break;
+
+            double load = static_cast<double>(g_active_labels.load()) /
+                          static_cast<double>(kMaxQueueSize);
+            load = std::min(load, 1.0);
+
+            double cap_ratio = 1.0;
+            std::error_code ec;
+            auto space = std::filesystem::space(storage_root, ec);
+            if (!ec && space.capacity > 0) {
+                cap_ratio = static_cast<double>(space.available) /
+                            static_cast<double>(space.capacity);
+            }
+
+            // Format: "id,capacity,load"
+            std::string msg = std::to_string(worker_id) + ","
+                + std::to_string(cap_ratio) + ","
+                + std::to_string(load);
+            try {
+                nats.publish("labios.worker.score_update", msg);
+                nats.flush();
+            } catch (...) {
+                // Best effort; manager may be temporarily unavailable.
+            }
+        }
+    });
+
     // Signal healthcheck.
     { std::ofstream touch("/tmp/labios-ready"); }
 
@@ -325,6 +366,12 @@ int main() {
         }
     });
     g_service_thread.join();
+
+    // Stop the score update thread.
+    if (g_score_thread.joinable()) {
+        g_score_thread.request_stop();
+        g_score_thread.join();
+    }
 
     // Deregister from manager before shutdown.
     nats.publish("labios.worker.deregister", std::to_string(cfg.worker_id));

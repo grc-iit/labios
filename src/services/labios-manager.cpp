@@ -106,6 +106,32 @@ int main() {
     nats.subscribe("labios.worker.deregister", handler);
     nats.subscribe("labios.manager.workers", handler);
 
+    // Score update handler: workers publish "id,capacity,load" every 2 seconds.
+    nats.subscribe("labios.worker.score_update",
+        [&worker_mgr](std::string_view /*subject*/,
+                       std::span<const std::byte> data,
+                       std::string_view /*reply_to*/) {
+            std::string msg(reinterpret_cast<const char*>(data.data()), data.size());
+            std::istringstream iss(msg);
+            std::string token;
+            int id = 0;
+            double capacity = 1.0, load = 0.0;
+
+            if (std::getline(iss, token, ',')) id = std::stoi(token);
+            if (std::getline(iss, token, ',')) capacity = std::stod(token);
+            if (std::getline(iss, token, ',')) load = std::stod(token);
+
+            auto all = worker_mgr.all_workers();
+            for (auto& w : all) {
+                if (w.id == id) {
+                    w.capacity = capacity;
+                    w.load = load;
+                    worker_mgr.update_score(id, w);
+                    break;
+                }
+            }
+        });
+
     redis.set("labios:ready:manager", "1");
 
     // Signal healthcheck
