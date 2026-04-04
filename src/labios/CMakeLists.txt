@@ -23,6 +23,7 @@ add_library(labios STATIC
     session.cpp
     shuffler.cpp
     solver/constraint.cpp
+    solver/minmax.cpp
     solver/random.cpp
     solver/round_robin.cpp
     transport/nats.cpp

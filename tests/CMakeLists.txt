@@ -71,3 +71,7 @@ catch_discover_tests(labios-worker-manager-test TEST_PREFIX "unit/" PROPERTIES L
 add_executable(labios-solver-constraint-test unit/solver_constraint_test.cpp)
 target_link_libraries(labios-solver-constraint-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-solver-constraint-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-solver-minmax-test unit/solver_minmax_test.cpp)
+target_link_libraries(labios-solver-minmax-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-solver-minmax-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
