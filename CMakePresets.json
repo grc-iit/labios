@@ -23,7 +23,8 @@
             "name": "ci",
             "binaryDir": "${sourceDir}/build/ci",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Werror"
             }
         }
     ]
