@@ -25,6 +25,7 @@ add_library(labios STATIC
     transport/nats.cpp
     transport/redis.cpp
     adapter/fd_table.cpp
+    adapter/posix_adapter.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)

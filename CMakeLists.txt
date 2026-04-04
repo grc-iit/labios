@@ -5,10 +5,23 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# All targets need -fPIC so the static lib can link into the LD_PRELOAD .so
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 include(cmake/LabiosDependencies.cmake)
 
 enable_testing()
 
 add_subdirectory(src/labios)
 add_subdirectory(src/services)
+
+# POSIX intercept shared library (LD_PRELOAD)
+add_library(labios_intercept SHARED src/drivers/posix_intercept.cpp)
+target_link_libraries(labios_intercept PRIVATE labios ${CMAKE_DL_LIBS})
+set_target_properties(labios_intercept PROPERTIES
+    OUTPUT_NAME "labios_intercept"
+    PREFIX "lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+)
+
 add_subdirectory(tests)
