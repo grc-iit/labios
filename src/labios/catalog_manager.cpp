@@ -49,11 +49,22 @@ std::string CatalogManager::catalog_key(uint64_t label_id) const {
 
 void CatalogManager::create(uint64_t label_id, uint32_t app_id,
                              LabelType type) {
-    auto key = catalog_key(label_id);
+    LabelData label;
+    label.id = label_id;
+    label.type = type;
+    label.app_id = app_id;
+    create(label);
+}
+
+void CatalogManager::create(const LabelData& label) {
+    auto key = catalog_key(label.id);
     auto ts = now_ms();
     redis_.hset(key, "status", "queued");
-    redis_.hset(key, "app_id", std::to_string(app_id));
-    redis_.hset(key, "type", std::to_string(static_cast<int>(type)));
+    redis_.hset(key, "app_id", std::to_string(label.app_id));
+    redis_.hset(key, "type", std::to_string(static_cast<int>(label.type)));
+    redis_.hset(key, "flags", std::to_string(label.flags));
+    redis_.hset(key, "priority", std::to_string(label.priority));
+    redis_.hset(key, "operation", label.operation);
     redis_.hset(key, "created_at", ts);
     redis_.hset(key, "updated_at", ts);
 }
@@ -72,6 +83,32 @@ LabelStatus CatalogManager::get_status(uint64_t label_id) {
             "catalog entry not found for label " + std::to_string(label_id));
     }
     return label_status_from_string(*val);
+}
+
+void CatalogManager::set_flags(uint64_t label_id, uint32_t flags) {
+    auto key = catalog_key(label_id);
+    redis_.hset(key, "flags", std::to_string(flags));
+    redis_.hset(key, "updated_at", now_ms());
+}
+
+uint32_t CatalogManager::get_flags(uint64_t label_id) {
+    auto key = catalog_key(label_id);
+    auto val = redis_.hget(key, "flags");
+    if (!val.has_value()) {
+        throw std::runtime_error(
+            "catalog flags not found for label " + std::to_string(label_id));
+    }
+    return static_cast<uint32_t>(std::stoul(*val));
+}
+
+void CatalogManager::set_error(uint64_t label_id, std::string_view error) {
+    auto key = catalog_key(label_id);
+    redis_.hset(key, "error", std::string(error));
+    redis_.hset(key, "updated_at", now_ms());
+}
+
+std::optional<std::string> CatalogManager::get_error(uint64_t label_id) {
+    return redis_.hget(catalog_key(label_id), "error");
 }
 
 void CatalogManager::set_worker(uint64_t label_id, int worker_id) {
@@ -117,6 +154,11 @@ void CatalogManager::track_open(std::string_view filepath, int flags) {
         }
         redis_.hset(key, "mtime", now_ms());
     }
+    if (flags & O_TRUNC) {
+        redis_.hset(key, "exists", "1");
+        redis_.hset(key, "size", "0");
+        redis_.hset(key, "mtime", now_ms());
+    }
 }
 
 void CatalogManager::track_write(std::string_view filepath,
@@ -143,6 +185,7 @@ void CatalogManager::track_unlink(std::string_view filepath) {
 void CatalogManager::track_truncate(std::string_view filepath,
                                      uint64_t new_size) {
     auto key = filemeta_key(filepath);
+    redis_.hset(key, "exists", "1");
     redis_.hset(key, "size", std::to_string(new_size));
     redis_.hset(key, "mtime", now_ms());
 }

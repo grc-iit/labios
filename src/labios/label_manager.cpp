@@ -33,12 +33,14 @@ std::vector<PendingLabel> LabelManager::publish_write(
         label.type = LabelType::Write;
         label.source = memory_ptr(chunk.data(), chunk_size);
         label.destination = file_path(filepath, offset + pos, chunk_size);
+        label.operation = "write";
+        label.flags = LabelFlags::Queued;
         label.app_id = app_id_;
         label.data_size = chunk_size;
         auto serialized = serialize_label(label);
 
         content_.stage(label.id, chunk);
-        catalog_.create(label.id, app_id_, LabelType::Write);
+        catalog_.create(label);
 
         auto reply = nats_.request("labios.labels", serialized,
                                     std::chrono::milliseconds(30000));
@@ -66,11 +68,14 @@ std::vector<PendingLabel> LabelManager::publish_read(
         label.id = generate_label_id(app_id_);
         label.type = LabelType::Read;
         label.source = file_path(filepath, offset + pos, chunk_size);
+        label.destination = memory_ptr(nullptr, chunk_size);
+        label.operation = "read";
+        label.flags = LabelFlags::Queued;
         label.app_id = app_id_;
         label.data_size = chunk_size;
         auto serialized = serialize_label(label);
 
-        catalog_.create(label.id, app_id_, LabelType::Read);
+        catalog_.create(label);
 
         auto reply = nats_.request("labios.labels", serialized,
                                     std::chrono::milliseconds(30000));

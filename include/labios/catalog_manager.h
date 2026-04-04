@@ -26,8 +26,13 @@ public:
     explicit CatalogManager(transport::RedisConnection& redis);
 
     void create(uint64_t label_id, uint32_t app_id, LabelType type);
+    void create(const LabelData& label);
     void set_status(uint64_t label_id, LabelStatus status);
     LabelStatus get_status(uint64_t label_id);
+    void set_flags(uint64_t label_id, uint32_t flags);
+    uint32_t get_flags(uint64_t label_id);
+    void set_error(uint64_t label_id, std::string_view error);
+    std::optional<std::string> get_error(uint64_t label_id);
     void set_worker(uint64_t label_id, int worker_id);
     std::optional<int> get_worker(uint64_t label_id);
 

@@ -62,10 +62,57 @@ TEST_CASE("File metadata tracks truncate", "[catalog_manager]") {
     REQUIRE(info->size == 5000);
 }
 
+TEST_CASE("Open with O_TRUNC resets file size", "[catalog_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::CatalogManager catalog(redis);
+
+    catalog.track_open("/test/trunc_on_open.bin", O_CREAT | O_WRONLY);
+    catalog.track_write("/test/trunc_on_open.bin", 0, 2048);
+    catalog.track_open("/test/trunc_on_open.bin", O_TRUNC | O_WRONLY);
+
+    auto info = catalog.get_file_info("/test/trunc_on_open.bin");
+    REQUIRE(info.has_value());
+    REQUIRE(info->exists == true);
+    REQUIRE(info->size == 0);
+}
+
 TEST_CASE("get_file_info returns nullopt for unknown file", "[catalog_manager]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::CatalogManager catalog(redis);
 
     auto info = catalog.get_file_info("/nonexistent/file.bin");
     REQUIRE_FALSE(info.has_value());
+}
+
+TEST_CASE("Catalog stores label flags as attributes", "[catalog_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::CatalogManager catalog(redis);
+
+    labios::LabelData label;
+    label.id = 123456;
+    label.type = labios::LabelType::Write;
+    label.operation = "write";
+    label.flags = labios::LabelFlags::Queued;
+    label.priority = 3;
+    label.app_id = 99;
+
+    catalog.create(label);
+    REQUIRE(catalog.get_flags(label.id) == labios::LabelFlags::Queued);
+
+    catalog.set_flags(label.id,
+                      labios::LabelFlags::Queued | labios::LabelFlags::Scheduled);
+    REQUIRE(catalog.get_flags(label.id)
+            == (labios::LabelFlags::Queued | labios::LabelFlags::Scheduled));
+}
+
+TEST_CASE("Catalog stores label error details", "[catalog_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::CatalogManager catalog(redis);
+
+    catalog.create(98765, 7, labios::LabelType::Read);
+    catalog.set_error(98765, "data not found");
+
+    auto error = catalog.get_error(98765);
+    REQUIRE(error.has_value());
+    REQUIRE(*error == "data not found");
 }
