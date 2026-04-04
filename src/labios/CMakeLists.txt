@@ -18,6 +18,7 @@ add_library(labios STATIC
     client.cpp
     config.cpp
     label.cpp
+    label_manager.cpp
     content_manager.cpp
     solver/round_robin.cpp
     transport/nats.cpp

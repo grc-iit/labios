@@ -40,3 +40,7 @@ catch_discover_tests(labios-content-manager-test TEST_PREFIX "smoke/" PROPERTIES
 add_executable(labios-data-path-test integration/data_path_test.cpp)
 target_link_libraries(labios-data-path-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-data-path-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
+add_executable(labios-label-manager-test unit/label_manager_test.cpp)
+target_link_libraries(labios-label-manager-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-label-manager-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
