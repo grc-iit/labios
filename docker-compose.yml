@@ -43,11 +43,13 @@ services:
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
+      manager: { condition: service_healthy }
     environment:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
       LABIOS_WORKER_ID: "1"
       LABIOS_WORKER_SPEED: "5"
+      LABIOS_WORKER_ENERGY: "1"
       LABIOS_WORKER_CAPACITY: "10GB"
     volumes:
       - worker-1-data:/labios/data
@@ -62,11 +64,13 @@ services:
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
+      manager: { condition: service_healthy }
     environment:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
       LABIOS_WORKER_ID: "2"
       LABIOS_WORKER_SPEED: "3"
+      LABIOS_WORKER_ENERGY: "3"
       LABIOS_WORKER_CAPACITY: "50GB"
     volumes:
       - worker-2-data:/labios/data
@@ -81,11 +85,13 @@ services:
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
+      manager: { condition: service_healthy }
     environment:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
       LABIOS_WORKER_ID: "3"
       LABIOS_WORKER_SPEED: "1"
+      LABIOS_WORKER_ENERGY: "5"
       LABIOS_WORKER_CAPACITY: "200GB"
     volumes:
       - worker-3-data:/labios/data

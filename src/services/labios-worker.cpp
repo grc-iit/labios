@@ -302,11 +302,20 @@ int main() {
 
     redis.set("labios:ready:" + worker_name, "1");
 
+    // Publish registration to manager.
+    std::string reg_msg = std::to_string(cfg.worker_id) + ","
+        + std::to_string(cfg.worker_speed) + ","
+        + std::to_string(cfg.worker_energy) + ","
+        + cfg.worker_capacity;
+    nats.publish("labios.worker.register", reg_msg);
+    nats.flush();
+
     // Signal healthcheck.
     { std::ofstream touch("/tmp/labios-ready"); }
 
     std::cout << "[" << timestamp() << "] " << worker_name
               << " ready (speed=" << cfg.worker_speed
+              << ", energy=" << cfg.worker_energy
               << ", capacity=" << cfg.worker_capacity << ")\n"
               << std::flush;
 
@@ -316,6 +325,10 @@ int main() {
         }
     });
     g_service_thread.join();
+
+    // Deregister from manager before shutdown.
+    nats.publish("labios.worker.deregister", std::to_string(cfg.worker_id));
+    nats.flush();
 
     std::cout << "[" << timestamp() << "] " << worker_name
               << " shutting down\n";

@@ -1,4 +1,5 @@
 #include <labios/config.h>
+#include <labios/worker_manager.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
@@ -7,6 +8,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <thread>
 
 static std::jthread g_service_thread;
@@ -36,6 +39,62 @@ int main() {
 
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
     labios::transport::NatsConnection nats(cfg.nats_url);
+
+    labios::InMemoryWorkerManager worker_mgr;
+
+    // Combined handler for all manager subjects.
+    auto handler = [&](std::string_view subject,
+                       std::span<const std::byte> data,
+                       std::string_view reply_to) {
+        std::string msg(reinterpret_cast<const char*>(data.data()), data.size());
+
+        if (subject == "labios.worker.register") {
+            // Parse: "id,speed,energy,capacity"
+            std::istringstream iss(msg);
+            std::string token;
+            int id = 0, speed = 1, energy = 1;
+            std::string capacity_str;
+
+            if (std::getline(iss, token, ',')) id = std::stoi(token);
+            if (std::getline(iss, token, ',')) speed = std::stoi(token);
+            if (std::getline(iss, token, ',')) energy = std::stoi(token);
+            if (std::getline(iss, token, ',')) capacity_str = token;
+
+            labios::WorkerInfo info{id, true, 1.0, 0.0, speed, energy};
+            worker_mgr.register_worker(info);
+
+            std::cout << "[" << timestamp() << "] manager: registered worker "
+                      << id << " (speed=" << speed << ", energy=" << energy
+                      << ", capacity=" << capacity_str << ")\n" << std::flush;
+
+        } else if (subject == "labios.worker.deregister") {
+            int id = std::stoi(msg);
+            worker_mgr.deregister_worker(id);
+
+            std::cout << "[" << timestamp() << "] manager: deregistered worker "
+                      << id << "\n" << std::flush;
+
+        } else if (subject == "labios.manager.workers") {
+            auto all = worker_mgr.all_workers();
+            std::string response;
+            for (auto& w : all) {
+                response += std::to_string(w.id) + ","
+                    + (w.available ? "1" : "0") + ","
+                    + std::to_string(w.capacity) + ","
+                    + std::to_string(w.load) + ","
+                    + std::to_string(w.speed) + ","
+                    + std::to_string(w.energy) + "\n";
+            }
+            if (!reply_to.empty()) {
+                nats.publish(reply_to, response);
+                nats.flush();
+            }
+        }
+    };
+
+    nats.subscribe("labios.worker.register", handler);
+    nats.subscribe("labios.worker.deregister", handler);
+    nats.subscribe("labios.manager.workers", handler);
 
     redis.set("labios:ready:manager", "1");
 
