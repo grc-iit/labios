@@ -21,6 +21,7 @@ add_library(labios STATIC
     label_manager.cpp
     content_manager.cpp
     session.cpp
+    shuffler.cpp
     solver/round_robin.cpp
     transport/nats.cpp
     transport/redis.cpp

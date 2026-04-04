@@ -55,3 +55,7 @@ target_link_libraries(labios-intercept-test PRIVATE Catch2::Catch2WithMain)
 add_executable(labios-benchmark-test integration/benchmark_test.cpp)
 target_link_libraries(labios-benchmark-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-benchmark-test TEST_PREFIX "bench/" PROPERTIES LABELS "bench")
+
+add_executable(labios-shuffler-test unit/shuffler_test.cpp)
+target_link_libraries(labios-shuffler-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-shuffler-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
