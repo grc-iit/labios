@@ -41,6 +41,29 @@ TEST_CASE("Constraint solver skips unavailable workers", "[solver]") {
     CHECK(result.count(1) == 0);
 }
 
+TEST_CASE("Constraint solver skips unavailable worker even with zero availability weight", "[solver]") {
+    // high_bandwidth has availability weight = 0.0, so an unavailable worker
+    // would score non-zero on speed alone without the explicit filter.
+    labios::WeightProfile wp{"high_bandwidth", 0.0, 0.15, 0.15, 0.70, 0.0};
+    labios::ConstraintSolver solver(wp);
+
+    std::vector<labios::WorkerInfo> workers = {
+        {1, false, 0.9, 0.1, 5, 1},  // unavailable, high speed
+        {2, true,  0.5, 0.5, 2, 3},
+        {3, true,  0.2, 0.8, 1, 5},
+    };
+
+    std::vector<std::vector<std::byte>> labels(6);
+    auto result = solver.assign(std::move(labels), workers);
+
+    // Worker 1 must receive zero labels despite having the highest speed.
+    CHECK(result.count(1) == 0);
+
+    size_t total = 0;
+    for (auto& [wid, payloads] : result) total += payloads.size();
+    CHECK(total == 6);
+}
+
 TEST_CASE("Constraint solver empty workers returns empty", "[solver]") {
     labios::WeightProfile wp{"low_latency", 0.5, 0.0, 0.35, 0.15, 0.0};
     labios::ConstraintSolver solver(wp);

@@ -14,10 +14,11 @@ AssignmentMap ConstraintSolver::assign(
     std::vector<WorkerInfo> workers) {
     if (workers.empty() || labels.empty()) return {};
 
-    // Score and sort workers by the weight profile.
+    // Filter out unavailable workers, then score and sort by the weight profile.
     std::vector<std::pair<double, WorkerInfo>> scored;
     scored.reserve(workers.size());
     for (auto& w : workers) {
+        if (!w.available) continue;
         scored.emplace_back(compute_score(w, profile_), w);
     }
     std::sort(scored.begin(), scored.end(),
