@@ -110,3 +110,7 @@ catch_discover_tests(labios-kernel-hacc-test TEST_PREFIX "kernel/" PROPERTIES LA
 add_executable(labios-kernel-montage-test integration/kernel_montage_test.cpp)
 target_link_libraries(labios-kernel-montage-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-kernel-montage-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
+
+add_executable(labios-kernel-kmeans-test integration/kernel_kmeans_test.cpp)
+target_link_libraries(labios-kernel-kmeans-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-kernel-kmeans-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
