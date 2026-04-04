@@ -86,3 +86,19 @@ TEST_CASE("No decommission while queue has pressure", "[elastic]") {
     auto d = evaluate(snap);
     CHECK(d.action == Action::None);
 }
+
+TEST_CASE("Evaluate handles zero workers gracefully", "[elastic]") {
+    ElasticSnapshot snap{
+        .pressure_count = 10,
+        .pressure_threshold = 5,
+        .current_workers = 0,
+        .min_workers = 0,
+        .max_workers = 5,
+        .idle_worker_ids = {},
+        .suspended_worker_ids = {},
+        .last_commission = clk::now() - std::chrono::seconds(60),
+        .cooldown = std::chrono::seconds(5),
+    };
+    auto d = evaluate(snap);
+    CHECK(d.action == Action::Commission);
+}

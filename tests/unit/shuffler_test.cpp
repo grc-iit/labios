@@ -306,6 +306,41 @@ TEST_CASE("Aggregation preserves all original reply_to addresses", "[shuffler]")
     CHECK(it->second[2] == "inbox.3");
 }
 
+TEST_CASE("Shuffler handles single-label batch", "[shuffler]") {
+    labios::Shuffler s(labios::ShufflerConfig{});
+    std::vector<labios::LabelData> batch;
+    batch.push_back(make_write(1, "/test.dat", 0, 1024));
+
+    auto result = s.shuffle(std::move(batch), no_location);
+    CHECK(result.independent.size() == 1);
+    CHECK(result.supertasks.empty());
+    CHECK(result.direct_route.empty());
+}
+
+TEST_CASE("Shuffler handles empty batch", "[shuffler]") {
+    labios::Shuffler s(labios::ShufflerConfig{});
+
+    auto result = s.shuffle({}, no_location);
+    CHECK(result.independent.empty());
+    CHECK(result.supertasks.empty());
+    CHECK(result.direct_route.empty());
+}
+
+TEST_CASE("Shuffler detects WAW between writes to same offset", "[shuffler]") {
+    labios::ShufflerConfig cfg;
+    cfg.aggregation_enabled = false;
+    cfg.dep_granularity = "per-file";
+    labios::Shuffler s(cfg);
+
+    std::vector<labios::LabelData> batch;
+    batch.push_back(make_write(1, "/test.dat", 0, 1024));
+    batch.push_back(make_write(2, "/test.dat", 0, 1024));
+
+    auto result = s.shuffle(std::move(batch), no_location);
+    REQUIRE(result.supertasks.size() == 1);
+    CHECK(result.supertasks[0].children.size() == 2);
+}
+
 TEST_CASE("Non-aggregated labels have no reply_fanout entry", "[shuffler]") {
     labios::ShufflerConfig cfg{.aggregation_enabled = false};
     labios::Shuffler shuffler(cfg);
