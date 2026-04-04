@@ -11,7 +11,7 @@ target_include_directories(labios
 
 target_link_libraries(labios
     PUBLIC
-        nats
+        nats_static
         hiredis
         tomlplusplus::tomlplusplus
 )
