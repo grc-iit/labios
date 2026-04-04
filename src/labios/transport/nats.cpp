@@ -35,7 +35,9 @@ struct NatsConnection::Impl {
             auto span = std::span<const std::byte>(
                 reinterpret_cast<const std::byte*>(raw),
                 static_cast<size_t>(len));
-            self->cb(subj != nullptr ? subj : "", span);
+            const char* reply = natsMsg_GetReply(msg);
+            self->cb(subj != nullptr ? subj : "", span,
+                     reply != nullptr ? reply : "");
         }
         natsMsg_Destroy(msg);
     }
@@ -100,6 +102,31 @@ void NatsConnection::flush() {
     if (impl_->conn != nullptr) {
         natsConnection_FlushTimeout(impl_->conn, 2000);
     }
+}
+
+NatsConnection::Reply NatsConnection::request(
+    std::string_view subject,
+    std::span<const std::byte> data,
+    std::chrono::milliseconds timeout) {
+    natsMsg* reply_msg = nullptr;
+    natsStatus s = natsConnection_Request(
+        &reply_msg, impl_->conn,
+        std::string(subject).c_str(),
+        reinterpret_cast<const void*>(data.data()),
+        static_cast<int>(data.size()),
+        static_cast<int64_t>(timeout.count()));
+    if (s != NATS_OK) {
+        throw std::runtime_error("nats: request failed on " + std::string(subject));
+    }
+    Reply result;
+    const char* rdata = natsMsg_GetData(reply_msg);
+    int rlen = natsMsg_GetDataLength(reply_msg);
+    if (rdata != nullptr && rlen > 0) {
+        auto* begin = reinterpret_cast<const std::byte*>(rdata);
+        result.data.assign(begin, begin + rlen);
+    }
+    natsMsg_Destroy(reply_msg);
+    return result;
 }
 
 bool NatsConnection::connected() const {

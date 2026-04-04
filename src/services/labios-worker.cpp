@@ -51,7 +51,8 @@ int main() {
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
         [&redis, &redis_mu, worker_id](std::string_view /*subject*/,
-                                       std::span<const std::byte> data) {
+                                       std::span<const std::byte> data,
+                                       std::string_view /*reply_to*/) {
             std::string msg_id(reinterpret_cast<const char*>(data.data()),
                                data.size());
             std::cout << "[" << timestamp() << "] worker " << worker_id

@@ -38,7 +38,8 @@ int main() {
     labios::transport::NatsConnection nats(cfg.nats_url);
 
     nats.subscribe("labios.labels",
-        [](std::string_view /*subject*/, std::span<const std::byte> data) {
+        [](std::string_view /*subject*/, std::span<const std::byte> data,
+           std::string_view /*reply_to*/) {
             std::cout << "[" << timestamp() << "] dispatcher: received label ("
                       << data.size() << " bytes)\n";
         });

@@ -1,11 +1,13 @@
 #pragma once
 
+#include <chrono>
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace labios::transport {
 
@@ -25,7 +27,8 @@ public:
     void publish(std::string_view subject, std::string_view data);
 
     using MessageCallback = std::function<void(std::string_view subject,
-                                               std::span<const std::byte> data)>;
+                                               std::span<const std::byte> data,
+                                               std::string_view reply_to)>;
 
     /// Subscribe to a subject. The callback is invoked on a cnats-managed thread.
     /// The subscription lives until this NatsConnection is destroyed.
@@ -37,6 +40,13 @@ public:
 
     /// Flush the outbound buffer so published messages reach the server.
     void flush();
+
+    struct Reply {
+        std::vector<std::byte> data;
+    };
+
+    Reply request(std::string_view subject, std::span<const std::byte> data,
+                  std::chrono::milliseconds timeout);
 
     [[nodiscard]] bool connected() const;
 
