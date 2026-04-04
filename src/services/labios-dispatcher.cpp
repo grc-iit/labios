@@ -155,6 +155,9 @@ int main() {
 
                     // Send composite label to the chosen worker.
                     catalog.set_worker(st.composite.id, wid);
+                    catalog.set_status(st.composite.id, labios::LabelStatus::Scheduled);
+                    st.composite.flags |= labios::LabelFlags::Scheduled;
+                    catalog.set_flags(st.composite.id, st.composite.flags);
                     auto serialized = labios::serialize_label(st.composite);
                     std::string subject = "labios.worker." + std::to_string(wid);
                     nats.publish(subject, std::span<const std::byte>(serialized));

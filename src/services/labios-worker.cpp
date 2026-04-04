@@ -255,6 +255,10 @@ int main() {
                             std::cout << "[" << timestamp() << "] worker " << worker_id
                                       << ":   child READ " << src->path << " ("
                                       << file_data.size() << " bytes)\n" << std::flush;
+                        } else {
+                            throw std::runtime_error(
+                                "unsupported child label type: "
+                                + std::to_string(static_cast<int>(child.type)));
                         }
 
                         catalog.set_status(child.id, labios::LabelStatus::Complete);
