@@ -9,3 +9,14 @@ port = 6379
 id = 0
 speed = 1
 capacity = "1GB"
+
+[label]
+min_size = "64KB"
+max_size = "1MB"
+
+[cache]
+flush_interval_ms = 500
+default_read_policy = "read-through"
+
+[intercept]
+prefixes = ["/labios"]

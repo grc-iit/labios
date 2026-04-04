@@ -67,3 +67,40 @@ port = 6379
     unsetenv("LABIOS_REDIS_HOST");
     fs::remove(path);
 }
+
+TEST_CASE("parse_size handles units", "[config]") {
+    REQUIRE(labios::parse_size("64KB") == 65536);
+    REQUIRE(labios::parse_size("1MB") == 1048576);
+    REQUIRE(labios::parse_size("2GB") == 2147483648ULL);
+    REQUIRE(labios::parse_size("4096") == 4096);
+    REQUIRE(labios::parse_size("") == 0);
+}
+
+TEST_CASE("load_config reads label and cache settings", "[config]") {
+    auto path = write_temp_toml(R"(
+[nats]
+url = "nats://localhost:4222"
+
+[label]
+min_size = "128KB"
+max_size = "4MB"
+
+[cache]
+flush_interval_ms = 1000
+default_read_policy = "write-only"
+
+[intercept]
+prefixes = ["/labios", "/scratch"]
+)");
+
+    auto cfg = labios::load_config(path);
+    REQUIRE(cfg.label_min_size == 128 * 1024);
+    REQUIRE(cfg.label_max_size == 4 * 1024 * 1024);
+    REQUIRE(cfg.cache_flush_interval_ms == 1000);
+    REQUIRE(cfg.cache_read_policy == "write-only");
+    REQUIRE(cfg.intercept_prefixes.size() == 2);
+    REQUIRE(cfg.intercept_prefixes[0] == "/labios");
+    REQUIRE(cfg.intercept_prefixes[1] == "/scratch");
+
+    fs::remove(path);
+}

@@ -24,6 +24,17 @@ int env_int_or(const char* name, int fallback) {
 
 } // namespace
 
+uint64_t parse_size(std::string_view s) {
+    if (s.empty()) return 0;
+    char* end = nullptr;
+    double val = std::strtod(std::string(s).c_str(), &end);
+    std::string_view suffix(end);
+    if (suffix == "KB" || suffix == "kb") return static_cast<uint64_t>(val * 1024);
+    if (suffix == "MB" || suffix == "mb") return static_cast<uint64_t>(val * 1024 * 1024);
+    if (suffix == "GB" || suffix == "gb") return static_cast<uint64_t>(val * 1024 * 1024 * 1024);
+    return static_cast<uint64_t>(val);
+}
+
 Config load_config(const std::filesystem::path& path) {
     Config cfg;
 
@@ -36,6 +47,20 @@ Config load_config(const std::filesystem::path& path) {
         cfg.worker_id       = tbl["worker"]["id"].value_or(cfg.worker_id);
         cfg.worker_speed    = tbl["worker"]["speed"].value_or(cfg.worker_speed);
         cfg.worker_capacity = tbl["worker"]["capacity"].value_or(cfg.worker_capacity);
+
+        if (auto v = tbl["label"]["min_size"].value<std::string>())
+            cfg.label_min_size = parse_size(*v);
+        if (auto v = tbl["label"]["max_size"].value<std::string>())
+            cfg.label_max_size = parse_size(*v);
+        cfg.cache_flush_interval_ms = tbl["cache"]["flush_interval_ms"].value_or(cfg.cache_flush_interval_ms);
+        cfg.cache_read_policy = tbl["cache"]["default_read_policy"].value_or(cfg.cache_read_policy);
+        if (auto arr = tbl["intercept"]["prefixes"].as_array()) {
+            cfg.intercept_prefixes.clear();
+            for (auto& elem : *arr) {
+                if (auto s = elem.value<std::string>())
+                    cfg.intercept_prefixes.push_back(*s);
+            }
+        }
     }
 
     cfg.nats_url        = env_or("LABIOS_NATS_URL", cfg.nats_url);
@@ -44,6 +69,16 @@ Config load_config(const std::filesystem::path& path) {
     cfg.worker_id       = env_int_or("LABIOS_WORKER_ID", cfg.worker_id);
     cfg.worker_speed    = env_int_or("LABIOS_WORKER_SPEED", cfg.worker_speed);
     cfg.worker_capacity = env_or("LABIOS_WORKER_CAPACITY", cfg.worker_capacity);
+
+    auto env_size = [](const char* name, uint64_t fallback) -> uint64_t {
+        const char* val = std::getenv(name);
+        if (val != nullptr && val[0] != '\0') return parse_size(val);
+        return fallback;
+    };
+    cfg.label_min_size = env_size("LABIOS_LABEL_MIN_SIZE", cfg.label_min_size);
+    cfg.label_max_size = env_size("LABIOS_LABEL_MAX_SIZE", cfg.label_max_size);
+    cfg.cache_flush_interval_ms = env_int_or("LABIOS_CACHE_FLUSH_MS", cfg.cache_flush_interval_ms);
+    cfg.cache_read_policy = env_or("LABIOS_CACHE_READ_POLICY", cfg.cache_read_policy);
 
     return cfg;
 }
