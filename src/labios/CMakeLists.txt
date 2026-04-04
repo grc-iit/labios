@@ -29,6 +29,8 @@ add_library(labios STATIC
     transport/nats.cpp
     transport/redis.cpp
     worker_manager.cpp
+    elastic/decision_engine.cpp
+    elastic/docker_client.cpp
     adapter/fd_table.cpp
     adapter/posix_adapter.cpp
 )
