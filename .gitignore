@@ -1,54 +1,60 @@
-/bin/
-/.idea/
-/cmake-build-debug/
-/testing/traces
-/testing/chameleon_nodes.txt
-*~
-/cmake-*
-/build
-# Prerequisites
-*.d
+# Build
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+CMakeLists.txt.user
 
-# Compiled Object files
-*.slo
-*.lo
+# Compiled objects and libraries
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
 *.a
 *.lib
+*.lo
+*.slo
+*.lai
+*.la
+*.gch
+*.pch
+*.d
 
 # Executables
 *.exe
 *.out
 *.app
 
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
+# Docker
+.docker/
 
-build/
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+*.whl
+
+# Git worktrees (superpowers)
+.worktrees/
+
+# Testing artifacts
+Testing/
+
+# Internal
+.planning/
+.claude/
