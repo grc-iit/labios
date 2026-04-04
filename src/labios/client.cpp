@@ -42,26 +42,20 @@ bool Status::ready() const {
 }
 
 CompletionStatus Status::result() const {
+    const_cast<Status*>(this)->wait();
     std::lock_guard lock(impl_->mu);
-    if (!impl_->completed) {
-        throw std::logic_error("Status::result() called before wait()");
-    }
     return impl_->completion.status;
 }
 
 std::string Status::error() const {
+    const_cast<Status*>(this)->wait();
     std::lock_guard lock(impl_->mu);
-    if (!impl_->completed) {
-        throw std::logic_error("Status::error() called before wait()");
-    }
     return impl_->completion.error;
 }
 
 std::string Status::data_key() const {
+    const_cast<Status*>(this)->wait();
     std::lock_guard lock(impl_->mu);
-    if (!impl_->completed) {
-        throw std::logic_error("Status::data_key() called before wait()");
-    }
     return impl_->completion.data_key;
 }
 
