@@ -1,5 +1,7 @@
 #pragma once
 
+#include <labios/solver/solver.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -36,6 +38,13 @@ struct Config {
     int dispatcher_batch_timeout_ms = 50;
     bool dispatcher_aggregation_enabled = true;
     std::string dispatcher_dep_granularity = "per-file";
+
+    // Scheduler (paper Section 2.4)
+    std::string scheduler_policy = "round-robin";      // round-robin, random, constraint, minmax
+    std::string scheduler_profile_path;                 // path to weight profile TOML
+
+    // Worker energy (paper Section 2.5)
+    int worker_energy = 1;  // [1,5] power wattage class
 };
 
 /// Load config from TOML file. Environment variables override file values.
@@ -45,5 +54,8 @@ Config load_config(const std::filesystem::path& path);
 
 /// Parse a human-readable size string (e.g. "64KB", "1MB", "2GB") into bytes.
 uint64_t parse_size(std::string_view s);
+
+/// Load a weight profile from a TOML file.
+WeightProfile load_weight_profile(const std::filesystem::path& path);
 
 } // namespace labios

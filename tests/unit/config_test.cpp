@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <labios/config.h>
 #include <cstdlib>
 #include <fstream>
@@ -120,6 +121,35 @@ TEST_CASE("Dispatcher config parsed from TOML", "[config]") {
     CHECK(cfg.dispatcher_batch_timeout_ms == 75);
     CHECK(cfg.dispatcher_aggregation_enabled == false);
     CHECK(cfg.dispatcher_dep_granularity == "per-application");
+    std::filesystem::remove(tmp);
+}
+
+TEST_CASE("load_weight_profile reads TOML weights", "[config]") {
+    auto tmp = std::filesystem::temp_directory_path() / "test_profile.toml";
+    {
+        std::ofstream f(tmp);
+        f << "[weights]\navailability = 0.5\ncapacity = 0.0\n"
+          << "load = 0.35\nspeed = 0.15\nenergy = 0.0\n";
+    }
+    auto wp = labios::load_weight_profile(tmp);
+    CHECK(wp.name == "test_profile");
+    CHECK(wp.availability == Catch::Approx(0.5));
+    CHECK(wp.capacity == Catch::Approx(0.0));
+    CHECK(wp.load == Catch::Approx(0.35));
+    CHECK(wp.speed == Catch::Approx(0.15));
+    CHECK(wp.energy == Catch::Approx(0.0));
+    std::filesystem::remove(tmp);
+}
+
+TEST_CASE("Config reads scheduler policy and profile path", "[config]") {
+    auto tmp = std::filesystem::temp_directory_path() / "sched_test.toml";
+    {
+        std::ofstream f(tmp);
+        f << "[scheduler]\npolicy = \"constraint\"\nprofile_path = \"/etc/labios/profiles/low_latency.toml\"\n";
+    }
+    auto cfg = labios::load_config(tmp);
+    CHECK(cfg.scheduler_policy == "constraint");
+    CHECK(cfg.scheduler_profile_path == "/etc/labios/profiles/low_latency.toml");
     std::filesystem::remove(tmp);
 }
 

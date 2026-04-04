@@ -29,3 +29,7 @@ batch_size = 100
 batch_timeout_ms = 50
 aggregation_enabled = true
 dep_granularity = "per-file"
+
+[scheduler]
+policy = "round-robin"
+profile_path = ""

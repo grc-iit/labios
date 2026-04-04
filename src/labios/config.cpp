@@ -66,6 +66,9 @@ Config load_config(const std::filesystem::path& path) {
         cfg.dispatcher_batch_timeout_ms = tbl["dispatcher"]["batch_timeout_ms"].value_or(cfg.dispatcher_batch_timeout_ms);
         cfg.dispatcher_aggregation_enabled = tbl["dispatcher"]["aggregation_enabled"].value_or(cfg.dispatcher_aggregation_enabled);
         cfg.dispatcher_dep_granularity = tbl["dispatcher"]["dep_granularity"].value_or(cfg.dispatcher_dep_granularity);
+        cfg.scheduler_policy = tbl["scheduler"]["policy"].value_or(cfg.scheduler_policy);
+        cfg.scheduler_profile_path = tbl["scheduler"]["profile_path"].value_or(cfg.scheduler_profile_path);
+        cfg.worker_energy = tbl["worker"]["energy"].value_or(cfg.worker_energy);
     }
 
     cfg.nats_url        = env_or("LABIOS_NATS_URL", cfg.nats_url);
@@ -113,7 +116,25 @@ Config load_config(const std::filesystem::path& path) {
     }
     cfg.dispatcher_dep_granularity = env_or("LABIOS_DISPATCHER_DEP_GRANULARITY", cfg.dispatcher_dep_granularity);
 
+    cfg.scheduler_policy = env_or("LABIOS_SCHEDULER_POLICY", cfg.scheduler_policy);
+    cfg.scheduler_profile_path = env_or("LABIOS_SCHEDULER_PROFILE", cfg.scheduler_profile_path);
+    cfg.worker_energy = env_int_or("LABIOS_WORKER_ENERGY", cfg.worker_energy);
+
     return cfg;
+}
+
+WeightProfile load_weight_profile(const std::filesystem::path& path) {
+    WeightProfile wp;
+    wp.name = path.stem().string();
+    if (!std::filesystem::exists(path)) return wp;
+
+    auto tbl = toml::parse_file(path.string());
+    wp.availability = tbl["weights"]["availability"].value_or(0.0);
+    wp.capacity     = tbl["weights"]["capacity"].value_or(0.0);
+    wp.load         = tbl["weights"]["load"].value_or(0.0);
+    wp.speed        = tbl["weights"]["speed"].value_or(0.0);
+    wp.energy       = tbl["weights"]["energy"].value_or(0.0);
+    return wp;
 }
 
 } // namespace labios
