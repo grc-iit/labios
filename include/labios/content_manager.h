@@ -39,11 +39,17 @@ public:
     ContentManager& operator=(const ContentManager&) = delete;
 
     // --- Warehouse (label-ID keyed staging) ---
-    void stage(uint64_t label_id, std::span<const std::byte> data);
-    std::vector<std::byte> retrieve(uint64_t label_id);
-    void remove(uint64_t label_id);
-    bool exists(uint64_t label_id);
-    static std::string data_key(uint64_t label_id);
+    void stage(uint64_t label_id, std::span<const std::byte> data,
+               uint32_t app_id = 0, std::string_view room_id = "");
+    std::vector<std::byte> retrieve(uint64_t label_id,
+                                     uint32_t app_id = 0,
+                                     std::string_view room_id = "");
+    void remove(uint64_t label_id, uint32_t app_id = 0,
+                std::string_view room_id = "");
+    bool exists(uint64_t label_id, uint32_t app_id = 0,
+                std::string_view room_id = "");
+    static std::string data_key(uint64_t label_id, uint32_t app_id = 0,
+                                 std::string_view room_id = "");
 
     // --- Small-I/O Cache ---
     std::vector<FlushRegion> cache_write(int fd, std::string_view filepath,

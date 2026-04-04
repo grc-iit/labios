@@ -25,24 +25,36 @@ ContentManager::~ContentManager() {
     }
 }
 
-std::string ContentManager::data_key(uint64_t label_id) {
+std::string ContentManager::data_key(uint64_t label_id, uint32_t app_id,
+                                      std::string_view room_id) {
+    if (!room_id.empty()) {
+        return "labios:room:" + std::string(room_id) + ":" + std::to_string(label_id);
+    }
+    if (app_id != 0) {
+        return "labios:data:" + std::to_string(app_id) + ":" + std::to_string(label_id);
+    }
     return "labios:data:" + std::to_string(label_id);
 }
 
-void ContentManager::stage(uint64_t label_id, std::span<const std::byte> data) {
-    redis_.set_binary(data_key(label_id), data);
+void ContentManager::stage(uint64_t label_id, std::span<const std::byte> data,
+                            uint32_t app_id, std::string_view room_id) {
+    redis_.set_binary(data_key(label_id, app_id, room_id), data);
 }
 
-std::vector<std::byte> ContentManager::retrieve(uint64_t label_id) {
-    return redis_.get_binary(data_key(label_id));
+std::vector<std::byte> ContentManager::retrieve(uint64_t label_id,
+                                                  uint32_t app_id,
+                                                  std::string_view room_id) {
+    return redis_.get_binary(data_key(label_id, app_id, room_id));
 }
 
-void ContentManager::remove(uint64_t label_id) {
-    redis_.del(data_key(label_id));
+void ContentManager::remove(uint64_t label_id, uint32_t app_id,
+                              std::string_view room_id) {
+    redis_.del(data_key(label_id, app_id, room_id));
 }
 
-bool ContentManager::exists(uint64_t label_id) {
-    return redis_.get(data_key(label_id)).has_value();
+bool ContentManager::exists(uint64_t label_id, uint32_t app_id,
+                              std::string_view room_id) {
+    return redis_.get(data_key(label_id, app_id, room_id)).has_value();
 }
 
 std::vector<FlushRegion> ContentManager::cache_write(
