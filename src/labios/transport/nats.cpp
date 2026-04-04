@@ -78,25 +78,31 @@ struct NatsConnection::Impl {
         const char* raw = natsMsg_GetData(msg);
         int len = natsMsg_GetDataLength(msg);
 
-        if (subj) {
-            std::shared_ptr<AsyncReply> reply;
-            {
-                std::lock_guard lock(self->reply_mu);
-                auto it = self->pending_replies.find(subj);
-                if (it != self->pending_replies.end()) {
-                    reply = it->second;
-                    self->pending_replies.erase(it);
+        try {
+            if (subj) {
+                std::shared_ptr<AsyncReply> reply;
+                {
+                    std::lock_guard lock(self->reply_mu);
+                    auto it = self->pending_replies.find(subj);
+                    if (it != self->pending_replies.end()) {
+                        reply = it->second;
+                        self->pending_replies.erase(it);
+                    }
+                }
+                if (reply) {
+                    std::lock_guard lock(reply->mu);
+                    if (raw && len > 0) {
+                        auto* begin = reinterpret_cast<const std::byte*>(raw);
+                        reply->data.assign(begin, begin + len);
+                    }
+                    reply->completed = true;
+                    reply->cv.notify_one();
                 }
             }
-            if (reply) {
-                std::lock_guard lock(reply->mu);
-                if (raw && len > 0) {
-                    auto* begin = reinterpret_cast<const std::byte*>(raw);
-                    reply->data.assign(begin, begin + len);
-                }
-                reply->completed = true;
-                reply->cv.notify_one();
-            }
+        } catch (const std::exception& e) {
+            fprintf(stderr, "[nats] inbox callback exception: %s\n", e.what());
+        } catch (...) {
+            fprintf(stderr, "[nats] inbox callback unknown exception\n");
         }
         natsMsg_Destroy(msg);
     }
@@ -123,7 +129,13 @@ struct NatsConnection::Impl {
                 reinterpret_cast<const std::byte*>(raw),
                 static_cast<size_t>(len));
             const char* reply = natsMsg_GetReply(msg);
-            cb(subject_str, span, reply != nullptr ? reply : "");
+            try {
+                cb(subject_str, span, reply != nullptr ? reply : "");
+            } catch (const std::exception& e) {
+                fprintf(stderr, "[nats] callback exception: %s\n", e.what());
+            } catch (...) {
+                fprintf(stderr, "[nats] callback unknown exception\n");
+            }
         }
         natsMsg_Destroy(msg);
     }
