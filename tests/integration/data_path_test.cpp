@@ -1,8 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <labios/client.h>
-#include <labios/catalog_manager.h>
 #include <labios/config.h>
-#include <labios/transport/redis.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -39,27 +37,18 @@ TEST_CASE("Write 1MB and read it back", "[data_path]") {
 TEST_CASE("Write 10 labels and verify all complete", "[data_path]") {
     auto cfg = test_config();
     auto client = labios::connect(cfg);
-    labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
-    labios::CatalogManager catalog(redis);
 
-    std::vector<uint64_t> label_ids;
     for (int i = 0; i < 10; ++i) {
         std::vector<std::byte> data(1024, static_cast<std::byte>(i));
         std::string path = "/test/batch_" + std::to_string(i) + ".bin";
-
-        labios::LabelParams params;
-        params.type = labios::LabelType::Write;
-        params.source = labios::memory_ptr(data.data(), data.size());
-        params.destination = labios::file_path(path);
-        auto label = client.create_label(params);
-
-        auto status = client.publish(label, data);
-        REQUIRE(status.result() == labios::CompletionStatus::Complete);
-        label_ids.push_back(status.label_id());
+        client.write(path, data);
     }
 
-    for (auto id : label_ids) {
-        auto status = catalog.get_status(id);
-        REQUIRE(status == labios::LabelStatus::Complete);
+    // Verify all files can be read back
+    for (int i = 0; i < 10; ++i) {
+        std::string path = "/test/batch_" + std::to_string(i) + ".bin";
+        auto result = client.read(path, 0, 1024);
+        REQUIRE(result.size() == 1024);
+        REQUIRE(result[0] == static_cast<std::byte>(i));
     }
 }
