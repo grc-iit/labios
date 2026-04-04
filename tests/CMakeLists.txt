@@ -24,7 +24,7 @@ catch_discover_tests(labios-solver-test
 
 add_executable(labios-catalog-manager-test unit/catalog_manager_test.cpp)
 target_link_libraries(labios-catalog-manager-test PRIVATE labios Catch2::Catch2WithMain)
-catch_discover_tests(labios-catalog-manager-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+catch_discover_tests(labios-catalog-manager-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
 add_executable(labios-smoke-test integration/smoke_test.cpp)
 target_link_libraries(labios-smoke-test PRIVATE labios Catch2::Catch2WithMain)
@@ -35,7 +35,7 @@ catch_discover_tests(labios-smoke-test
 
 add_executable(labios-content-manager-test unit/content_manager_test.cpp)
 target_link_libraries(labios-content-manager-test PRIVATE labios Catch2::Catch2WithMain)
-catch_discover_tests(labios-content-manager-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+catch_discover_tests(labios-content-manager-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
 add_executable(labios-data-path-test integration/data_path_test.cpp)
 target_link_libraries(labios-data-path-test PRIVATE labios Catch2::Catch2WithMain)
@@ -43,7 +43,7 @@ catch_discover_tests(labios-data-path-test TEST_PREFIX "smoke/" PROPERTIES LABEL
 
 add_executable(labios-label-manager-test unit/label_manager_test.cpp)
 target_link_libraries(labios-label-manager-test PRIVATE labios Catch2::Catch2WithMain)
-catch_discover_tests(labios-label-manager-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+catch_discover_tests(labios-label-manager-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
 add_executable(labios-fd-table-test unit/fd_table_test.cpp)
 target_link_libraries(labios-fd-table-test PRIVATE labios Catch2::Catch2WithMain)
