@@ -26,6 +26,7 @@ add_library(labios STATIC
     solver/round_robin.cpp
     transport/nats.cpp
     transport/redis.cpp
+    worker_manager.cpp
     adapter/fd_table.cpp
     adapter/posix_adapter.cpp
 )
