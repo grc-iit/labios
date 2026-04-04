@@ -16,6 +16,25 @@ double compute_score(const WorkerInfo& w, const WeightProfile& wp) {
          + wp.energy * energy_norm;
 }
 
+int InMemoryWorkerManager::bucket_index(double score) {
+    // Buckets: [0.0, 0.2), [0.2, 0.4), [0.4, 0.6), [0.6, 0.8), [0.8, 1.0]
+    int idx = static_cast<int>(score * kNumBuckets);
+    return std::clamp(idx, 0, kNumBuckets - 1);
+}
+
+void InMemoryWorkerManager::place_in_bucket(int worker_id, double score) {
+    scores_[worker_id] = score;
+    buckets_[bucket_index(score)].insert(worker_id);
+}
+
+void InMemoryWorkerManager::remove_from_buckets(int worker_id) {
+    auto it = scores_.find(worker_id);
+    if (it != scores_.end()) {
+        buckets_[bucket_index(it->second)].erase(worker_id);
+        scores_.erase(it);
+    }
+}
+
 std::vector<WorkerInfo> InMemoryWorkerManager::all_workers() {
     std::lock_guard lock(mu_);
     std::vector<WorkerInfo> result;
@@ -27,18 +46,35 @@ std::vector<WorkerInfo> InMemoryWorkerManager::all_workers() {
 std::vector<WorkerInfo> InMemoryWorkerManager::top_n_workers(
     int n, const WeightProfile& wp) {
     std::lock_guard lock(mu_);
-    std::vector<std::pair<double, WorkerInfo>> scored;
-    scored.reserve(workers_.size());
-    for (auto& [_, w] : workers_) {
-        scored.emplace_back(compute_score(w, wp), w);
-    }
-    std::sort(scored.begin(), scored.end(),
-              [](auto& a, auto& b) { return a.first > b.first; });
 
+    // If the profile changed, rebuild all bucket assignments.
+    if (wp.name != last_profile_.name ||
+        wp.availability != last_profile_.availability ||
+        wp.capacity != last_profile_.capacity ||
+        wp.load != last_profile_.load ||
+        wp.speed != last_profile_.speed ||
+        wp.energy != last_profile_.energy) {
+
+        for (auto& bucket : buckets_) bucket.clear();
+        scores_.clear();
+        for (auto& [id, w] : workers_) {
+            place_in_bucket(id, compute_score(w, wp));
+        }
+        last_profile_ = wp;
+    }
+
+    // Pick from highest bucket first.
     std::vector<WorkerInfo> result;
-    int count = std::min(n, static_cast<int>(scored.size()));
-    for (int i = 0; i < count; ++i) {
-        result.push_back(scored[i].second);
+    int remaining = n;
+    for (int b = kNumBuckets - 1; b >= 0 && remaining > 0; --b) {
+        for (int wid : buckets_[b]) {
+            if (remaining <= 0) break;
+            auto it = workers_.find(wid);
+            if (it != workers_.end()) {
+                result.push_back(it->second);
+                --remaining;
+            }
+        }
     }
     return result;
 }
@@ -46,16 +82,30 @@ std::vector<WorkerInfo> InMemoryWorkerManager::top_n_workers(
 void InMemoryWorkerManager::update_score(int worker_id, WorkerInfo info) {
     std::lock_guard lock(mu_);
     auto it = workers_.find(worker_id);
-    if (it != workers_.end()) it->second = info;
+    if (it != workers_.end()) {
+        it->second = info;
+        // Re-bucket if we have a profile.
+        if (!last_profile_.name.empty()) {
+            remove_from_buckets(worker_id);
+            place_in_bucket(worker_id, compute_score(info, last_profile_));
+        }
+    }
 }
 
 void InMemoryWorkerManager::register_worker(WorkerInfo info) {
     std::lock_guard lock(mu_);
-    workers_[info.id] = info;
+    int id = info.id;
+    workers_[id] = info;
+    // Bucket only if a profile has been set (by a prior top_n_workers call).
+    if (!last_profile_.name.empty()) {
+        remove_from_buckets(id);
+        place_in_bucket(id, compute_score(info, last_profile_));
+    }
 }
 
 void InMemoryWorkerManager::deregister_worker(int worker_id) {
     std::lock_guard lock(mu_);
+    remove_from_buckets(worker_id);
     workers_.erase(worker_id);
 }
 

@@ -62,6 +62,45 @@ TEST_CASE("Deregistered workers are not returned", "[worker_manager]") {
     CHECK(all[0].id == 2);
 }
 
+TEST_CASE("Bucket-sorted top_n picks highest-scored workers from 12", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    // Register 12 workers with varying speed (dominant factor under high_bandwidth).
+    for (int i = 1; i <= 12; ++i) {
+        int speed = (i % 5) + 1;  // speeds cycle 2,3,4,5,1,2,3,4,5,1,2,3
+        mgr.register_worker({i, true, 0.8, 0.1, speed, 2});
+    }
+
+    labios::WeightProfile wp{"high_bandwidth", 0.0, 0.15, 0.15, 0.70, 0.0};
+    auto top3 = mgr.top_n_workers(3, wp);
+    REQUIRE(top3.size() == 3);
+
+    // All returned workers should have speed >= 4 (the top bucket).
+    for (auto& w : top3) {
+        CHECK(w.speed >= 4);
+    }
+}
+
+TEST_CASE("Bucket placement updates on score change", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    for (int i = 1; i <= 10; ++i) {
+        mgr.register_worker({i, true, 0.5, 0.5, i <= 5 ? 1 : 5, 2});
+    }
+
+    labios::WeightProfile wp{"high_bandwidth", 0.0, 0.15, 0.15, 0.70, 0.0};
+    // Initialize buckets.
+    auto initial = mgr.top_n_workers(5, wp);
+    REQUIRE(initial.size() == 5);
+
+    // Boost worker 1 (was speed=1) to speed=5. It should now appear in top results.
+    mgr.update_score(1, {1, true, 0.9, 0.0, 5, 1});
+    auto updated = mgr.top_n_workers(5, wp);
+    bool found = false;
+    for (auto& w : updated) {
+        if (w.id == 1) { found = true; break; }
+    }
+    CHECK(found);
+}
+
 TEST_CASE("update_score replaces worker info", "[worker_manager]") {
     labios::InMemoryWorkerManager mgr;
     mgr.register_worker({1, true, 0.9, 0.1, 5, 1});
