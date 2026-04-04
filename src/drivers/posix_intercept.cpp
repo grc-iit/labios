@@ -53,15 +53,21 @@ std::unique_ptr<labios::Session> g_session;
 std::unique_ptr<labios::FdTable> g_fd_table;
 std::unique_ptr<labios::POSIXAdapter> g_adapter;
 std::once_flag g_symbols_flag;
+std::once_flag g_config_flag;
 std::once_flag g_session_flag;
-bool g_initialized_symbols = false;
+bool g_symbols_loaded = false;
+bool g_initialized = false;
+
+// Prevents deadlock when config loading or session creation triggers
+// intercepted I/O calls (e.g., TOML parsing calls open() internally).
+thread_local bool g_in_init = false;
 
 template<typename T>
 T load_sym(const char* name) {
     return reinterpret_cast<T>(dlsym(RTLD_NEXT, name));
 }
 
-void init_symbols() {
+void init_real_symbols() {
     std::call_once(g_symbols_flag, []() {
         real_open      = load_sym<open_fn>("open");
         real_close     = load_sym<close_fn>("close");
@@ -77,26 +83,39 @@ void init_symbols() {
         real_ftruncate = load_sym<ftruncate_fn>("ftruncate");
         real_xstat     = load_sym<xstat_fn>("__xstat");
         real_fxstat    = load_sym<fxstat_fn>("__fxstat");
+        g_symbols_loaded = true;
+    });
+}
 
+void init_config() {
+    std::call_once(g_config_flag, []() {
+        g_in_init = true;
         const char* config_path = std::getenv("LABIOS_CONFIG_PATH");
         g_config = labios::load_config(
             config_path ? config_path : "/etc/labios/labios.toml");
-
         g_fd_table = std::make_unique<labios::FdTable>();
-        g_initialized_symbols = true;
+        g_in_init = false;
+        g_initialized = true;
     });
+}
+
+void init_symbols() {
+    init_real_symbols();
+    init_config();
 }
 
 void init_session() {
     std::call_once(g_session_flag, []() {
+        g_in_init = true;
         g_session = std::make_unique<labios::Session>(g_config);
         g_adapter = std::make_unique<labios::POSIXAdapter>(
             *g_session, *g_fd_table);
+        g_in_init = false;
     });
 }
 
 bool is_labios_path(const char* path) {
-    if (!path || !g_initialized_symbols) return false;
+    if (!path || !g_initialized || g_in_init) return false;
     std::string_view sv(path);
     for (auto& prefix : g_config.intercept_prefixes) {
         if (sv.starts_with(prefix)) return true;
@@ -105,7 +124,7 @@ bool is_labios_path(const char* path) {
 }
 
 bool is_labios_fd(int fd) {
-    if (!g_fd_table) return false;
+    if (!g_fd_table || g_in_init) return false;
     return g_fd_table->is_labios_fd(fd);
 }
 
@@ -113,7 +132,8 @@ bool is_labios_fd(int fd) {
 
 __attribute__((constructor))
 static void labios_intercept_init() {
-    init_symbols();
+    init_real_symbols();
+    init_config();
 }
 
 __attribute__((destructor))
@@ -123,118 +143,170 @@ static void labios_intercept_fini() {
     g_fd_table.reset();
 }
 
+// Each intercepted function loads real symbols first, then checks the
+// re-entrancy guard before touching any LABIOS state.  During init
+// (config parsing, session creation) all calls fall through to libc.
+
 extern "C" int open(const char* path, int flags, ...) {
-    init_symbols();
+    init_real_symbols();
     va_list ap;
     va_start(ap, flags);
     mode_t mode = (flags & O_CREAT) ? static_cast<mode_t>(va_arg(ap, int)) : 0;
     va_end(ap);
 
-    if (is_labios_path(path)) {
-        init_session();
-        return g_adapter->open(path, flags, mode);
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) {
+            init_session();
+            return g_adapter->open(path, flags, mode);
+        }
     }
     return real_open(path, flags, mode);
 }
 
 extern "C" int open64(const char* path, int flags, ...) {
-    init_symbols();
+    init_real_symbols();
     va_list ap;
     va_start(ap, flags);
     mode_t mode = (flags & O_CREAT) ? static_cast<mode_t>(va_arg(ap, int)) : 0;
     va_end(ap);
 
-    if (is_labios_path(path)) {
-        init_session();
-        return g_adapter->open(path, flags, mode);
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) {
+            init_session();
+            return g_adapter->open(path, flags, mode);
+        }
     }
     return real_open(path, flags | O_LARGEFILE, mode);
 }
 
 extern "C" int close(int fd) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->close(fd);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->close(fd);
+    }
     return real_close(fd);
 }
 
 extern "C" ssize_t write(int fd, const void* buf, size_t count) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->write(fd, buf, count);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->write(fd, buf, count);
+    }
     return real_write(fd, buf, count);
 }
 
 extern "C" ssize_t read(int fd, void* buf, size_t count) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->read(fd, buf, count);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->read(fd, buf, count);
+    }
     return real_read(fd, buf, count);
 }
 
 extern "C" ssize_t pwrite(int fd, const void* buf, size_t count, off_t offset) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->pwrite(fd, buf, count, offset);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->pwrite(fd, buf, count, offset);
+    }
     return real_pwrite(fd, buf, count, offset);
 }
 
 extern "C" ssize_t pread(int fd, void* buf, size_t count, off_t offset) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->pread(fd, buf, count, offset);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->pread(fd, buf, count, offset);
+    }
     return real_pread(fd, buf, count, offset);
 }
 
 extern "C" off_t lseek(int fd, off_t offset, int whence) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->lseek(fd, offset, whence);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->lseek(fd, offset, whence);
+    }
     return real_lseek(fd, offset, whence);
 }
 
 extern "C" int fsync(int fd) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->fsync(fd);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->fsync(fd);
+    }
     return real_fsync(fd);
 }
 
 extern "C" int fdatasync(int fd) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->fsync(fd);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->fsync(fd);
+    }
     return real_fsync(fd);
 }
 
 extern "C" int unlink(const char* path) {
-    init_symbols();
-    if (is_labios_path(path)) { init_session(); return g_adapter->unlink(path); }
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->unlink(path); }
+    }
     return real_unlink(path);
 }
 
 extern "C" int access(const char* path, int mode) {
-    init_symbols();
-    if (is_labios_path(path)) { init_session(); return g_adapter->access(path, mode); }
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->access(path, mode); }
+    }
     return real_access(path, mode);
 }
 
 extern "C" int mkdir(const char* path, mode_t mode) {
-    init_symbols();
-    if (is_labios_path(path)) { init_session(); return g_adapter->mkdir(path, mode); }
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->mkdir(path, mode); }
+    }
     return real_mkdir(path, mode);
 }
 
 extern "C" int ftruncate(int fd, off_t length) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->ftruncate(fd, length);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->ftruncate(fd, length);
+    }
     return real_ftruncate(fd, length);
 }
 
 // glibc stat wrappers
 extern "C" int __xstat(int ver, const char* path, struct stat* st) {
-    init_symbols();
-    if (is_labios_path(path)) { init_session(); return g_adapter->stat(path, st); }
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) { init_session(); return g_adapter->stat(path, st); }
+    }
     if (real_xstat) return real_xstat(ver, path, st);
     errno = ENOSYS;
     return -1;
 }
 
 extern "C" int __fxstat(int ver, int fd, struct stat* st) {
-    init_symbols();
-    if (is_labios_fd(fd)) return g_adapter->fstat(fd, st);
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_fd(fd)) return g_adapter->fstat(fd, st);
+    }
     if (real_fxstat) return real_fxstat(ver, fd, st);
     errno = ENOSYS;
     return -1;

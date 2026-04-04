@@ -77,9 +77,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /src/build/release/tests/labios-smoke-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-data-path-test /usr/local/bin/
+COPY --from=builder /src/build/release/tests/labios-intercept-test /usr/local/bin/
 COPY --from=builder /src/build/release/src/services/labios-demo /usr/local/bin/
+COPY --from=builder /src/build/release/lib/liblabios_intercept.so /usr/local/lib/
+COPY --from=builder /src/conf/ /etc/labios/
+
+RUN ldconfig
 
 ENV LABIOS_NATS_URL=nats://nats:4222
 ENV LABIOS_REDIS_HOST=redis
+ENV LABIOS_CONFIG_PATH=/etc/labios/labios.toml
 
 ENTRYPOINT ["labios-smoke-test"]
