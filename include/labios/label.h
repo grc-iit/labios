@@ -25,6 +25,7 @@ namespace LabelFlags {
     constexpr uint32_t Cached      = 1 << 3;
     constexpr uint32_t Invalidated = 1 << 4;
     constexpr uint32_t Async       = 1 << 5;
+    constexpr uint32_t HighPrio    = 1 << 6;
 } // namespace LabelFlags
 
 struct MemoryPtr {
@@ -81,6 +82,7 @@ struct LabelParams {
     std::string operation;
     uint32_t flags = 0;
     uint8_t priority = 0;
+    std::vector<LabelDependency> dependencies;
     Intent intent = Intent::None;
     uint32_t ttl_seconds = 0;
     Isolation isolation = Isolation::None;

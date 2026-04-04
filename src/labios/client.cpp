@@ -70,6 +70,7 @@ LabelData Client::create_label(const LabelParams& params) {
     label.operation = params.operation;
     label.flags = params.flags;
     label.priority = params.priority;
+    label.dependencies = params.dependencies;
     label.intent = params.intent;
     label.ttl_seconds = params.ttl_seconds;
     label.isolation = params.isolation;

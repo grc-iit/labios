@@ -15,6 +15,7 @@ TEST_CASE("LabelParams builds with designated initializers", "[client]") {
         .operation = "write",
         .flags = labios::LabelFlags::Async,
         .priority = 5,
+        .dependencies = {},
         .intent = labios::Intent::Checkpoint,
     };
     CHECK(params.type == labios::LabelType::Write);
