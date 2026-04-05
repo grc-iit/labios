@@ -9,12 +9,14 @@ double compute_score(const WorkerInfo& w, const WeightProfile& wp) {
     double load_inv = 1.0 - w.load;  // Low load = high score.
     double speed_norm = static_cast<double>(w.speed) / 5.0;
     double energy_norm = static_cast<double>(w.energy) / 5.0;
+    double tier_norm = static_cast<double>(static_cast<int>(w.tier)) / 2.0;
 
     return wp.availability * avail
          + wp.capacity * w.capacity
          + wp.load * load_inv
          + wp.speed * speed_norm
-         + wp.energy * energy_norm;
+         + wp.energy * energy_norm
+         + wp.tier * tier_norm;
 }
 
 int InMemoryWorkerManager::bucket_index(double score) {
@@ -55,7 +57,8 @@ std::vector<WorkerInfo> InMemoryWorkerManager::top_n_workers(
         wp.capacity != last_profile_.capacity ||
         wp.load != last_profile_.load ||
         wp.speed != last_profile_.speed ||
-        wp.energy != last_profile_.energy) {
+        wp.energy != last_profile_.energy ||
+        wp.tier != last_profile_.tier) {
 
         for (auto& bucket : buckets_) bucket.clear();
         scores_.clear();

@@ -71,17 +71,19 @@ int main() {
         std::string msg(reinterpret_cast<const char*>(data.data()), data.size());
 
         if (subject == "labios.worker.register") {
-            // Parse: "id,speed,energy,capacity"
+            // Parse: "id,speed,energy,capacity[,tier]"
             try {
                 std::istringstream iss(msg);
                 std::string token;
                 int id = 0, speed = 1, energy = 1;
                 std::string capacity_str;
+                int tier_int = 0;
 
                 if (std::getline(iss, token, ',')) id = std::stoi(token);
                 if (std::getline(iss, token, ',')) speed = std::stoi(token);
                 if (std::getline(iss, token, ',')) energy = std::stoi(token);
                 if (std::getline(iss, token, ',')) capacity_str = token;
+                if (std::getline(iss, token, ',')) tier_int = std::clamp(std::stoi(token), 0, 2);
 
                 double cap_ratio = 1.0;
                 if (!capacity_str.empty() && cfg.max_worker_capacity > 0) {
@@ -92,12 +94,15 @@ int main() {
                         1.0);
                 }
 
-                labios::WorkerInfo info{id, true, cap_ratio, 0.0, speed, energy};
+                labios::WorkerInfo info{id, true, cap_ratio, 0.0, speed, energy,
+                    static_cast<labios::WorkerTier>(tier_int)};
                 worker_mgr.register_worker(info);
 
+                static constexpr const char* tier_names[] = {"databot", "pipeline", "agentic"};
                 std::cout << "[" << timestamp() << "] manager: registered worker "
                           << id << " (speed=" << speed << ", energy=" << energy
-                          << ", capacity=" << capacity_str << ")\n" << std::flush;
+                          << ", capacity=" << capacity_str
+                          << ", tier=" << tier_names[tier_int] << ")\n" << std::flush;
             } catch (const std::exception& e) {
                 std::cerr << "[" << timestamp()
                           << "] manager: malformed register message: "
@@ -128,7 +133,8 @@ int main() {
                     + std::to_string(w.capacity) + ","
                     + std::to_string(w.load) + ","
                     + std::to_string(w.speed) + ","
-                    + std::to_string(w.energy) + "\n";
+                    + std::to_string(w.energy) + ","
+                    + std::to_string(static_cast<int>(w.tier)) + "\n";
             }
             if (!reply_to.empty()) {
                 nats.publish(reply_to, response);

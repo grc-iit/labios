@@ -47,6 +47,9 @@ struct Config {
     // Worker energy (paper Section 2.5)
     int worker_energy = 1;  // [1,5] power wattage class
 
+    // Worker tier (LABIOS-SPEC Section 3)
+    int worker_tier = 0;    // 0=Databot, 1=Pipeline, 2=Agentic
+
     // Manager: max worker capacity for normalization (default 1TB)
     uint64_t max_worker_capacity = 1024ULL * 1024 * 1024 * 1024;
 

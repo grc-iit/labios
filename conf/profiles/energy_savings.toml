@@ -4,3 +4,4 @@ capacity = 0.15
 load = 0.20
 speed = 0.15
 energy = 0.50
+tier = 0.0

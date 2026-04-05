@@ -197,6 +197,47 @@ TEST_CASE("Config reads elastic settings", "[config]") {
     std::filesystem::remove(tmp);
 }
 
+TEST_CASE("load_weight_profile reads tier weight", "[config]") {
+    auto tmp = std::filesystem::temp_directory_path() / "agentic_profile.toml";
+    {
+        std::ofstream f(tmp);
+        f << "[weights]\navailability = 0.3\ncapacity = 0.1\n"
+          << "load = 0.1\nspeed = 0.1\nenergy = 0.0\ntier = 0.4\n";
+    }
+    auto wp = labios::load_weight_profile(tmp);
+    CHECK(wp.name == "agentic_profile");
+    CHECK(wp.tier == Catch::Approx(0.4));
+    CHECK(wp.availability == Catch::Approx(0.3));
+    std::filesystem::remove(tmp);
+}
+
+TEST_CASE("load_weight_profile defaults tier to zero", "[config]") {
+    auto tmp = std::filesystem::temp_directory_path() / "no_tier_profile.toml";
+    {
+        std::ofstream f(tmp);
+        f << "[weights]\navailability = 0.5\nspeed = 0.5\n";
+    }
+    auto wp = labios::load_weight_profile(tmp);
+    CHECK(wp.tier == Catch::Approx(0.0));
+    std::filesystem::remove(tmp);
+}
+
+TEST_CASE("Config reads worker tier from TOML", "[config]") {
+    auto tmp = std::filesystem::temp_directory_path() / "tier_cfg_test.toml";
+    {
+        std::ofstream f(tmp);
+        f << "[worker]\ntier = 2\n";
+    }
+    auto cfg = labios::load_config(tmp);
+    CHECK(cfg.worker_tier == 2);
+    std::filesystem::remove(tmp);
+}
+
+TEST_CASE("Worker tier defaults to zero", "[config]") {
+    auto cfg = labios::load_config("/nonexistent/path.toml");
+    CHECK(cfg.worker_tier == 0);
+}
+
 TEST_CASE("Elastic config defaults when section missing", "[config]") {
     auto tmp = std::filesystem::temp_directory_path() / "no_elastic_test.toml";
     {

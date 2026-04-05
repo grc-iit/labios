@@ -380,7 +380,8 @@ int main() {
     std::string reg_msg = std::to_string(cfg.worker_id) + ","
         + std::to_string(cfg.worker_speed) + ","
         + std::to_string(cfg.worker_energy) + ","
-        + cfg.worker_capacity;
+        + cfg.worker_capacity + ","
+        + std::to_string(cfg.worker_tier);
     nats.publish("labios.worker.register", reg_msg);
     nats.flush();
 
@@ -444,10 +445,13 @@ int main() {
     // Signal healthcheck.
     { std::ofstream touch("/tmp/labios-ready"); }
 
+    static constexpr const char* tier_names[] = {"databot", "pipeline", "agentic"};
+    int tier_idx = std::clamp(cfg.worker_tier, 0, 2);
     std::cout << "[" << timestamp() << "] " << worker_name
               << " ready (speed=" << cfg.worker_speed
               << ", energy=" << cfg.worker_energy
-              << ", capacity=" << cfg.worker_capacity << ")\n"
+              << ", capacity=" << cfg.worker_capacity
+              << ", tier=" << tier_names[tier_idx] << ")\n"
               << std::flush;
 
     g_service_thread = std::jthread([](std::stop_token stoken) {

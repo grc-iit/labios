@@ -1,0 +1,7 @@
+[weights]
+availability = 0.3
+capacity = 0.1
+load = 0.1
+speed = 0.1
+energy = 0.0
+tier = 0.4

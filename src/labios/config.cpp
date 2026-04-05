@@ -73,6 +73,7 @@ Config load_config(const std::filesystem::path& path) {
         cfg.scheduler_profile_path = tbl["scheduler"]["profile_path"].value_or(cfg.scheduler_profile_path);
         cfg.scheduler_worker_refresh_ms = tbl["scheduler"]["worker_refresh_ms"].value_or(cfg.scheduler_worker_refresh_ms);
         cfg.worker_energy = tbl["worker"]["energy"].value_or(cfg.worker_energy);
+        cfg.worker_tier = tbl["worker"]["tier"].value_or(cfg.worker_tier);
         if (auto v = tbl["manager"]["max_worker_capacity"].value<std::string>())
             cfg.max_worker_capacity = parse_size(*v);
 
@@ -142,6 +143,7 @@ Config load_config(const std::filesystem::path& path) {
     cfg.scheduler_profile_path = env_or("LABIOS_SCHEDULER_PROFILE", cfg.scheduler_profile_path);
     cfg.scheduler_worker_refresh_ms = env_int_or("LABIOS_SCHEDULER_WORKER_REFRESH_MS", cfg.scheduler_worker_refresh_ms);
     cfg.worker_energy = env_int_or("LABIOS_WORKER_ENERGY", cfg.worker_energy);
+    cfg.worker_tier = env_int_or("LABIOS_WORKER_TIER", cfg.worker_tier);
     cfg.max_worker_capacity = env_size("LABIOS_MAX_WORKER_CAPACITY", cfg.max_worker_capacity);
 
     // Elastic env overrides.
@@ -188,6 +190,7 @@ WeightProfile load_weight_profile(const std::filesystem::path& path) {
     wp.load         = tbl["weights"]["load"].value_or(0.0);
     wp.speed        = tbl["weights"]["speed"].value_or(0.0);
     wp.energy       = tbl["weights"]["energy"].value_or(0.0);
+    wp.tier         = tbl["weights"]["tier"].value_or(0.0);
     return wp;
 }
 

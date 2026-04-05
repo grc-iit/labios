@@ -7,12 +7,12 @@
 using Catch::Matchers::WithinAbs;
 
 TEST_CASE("Worker score computed from weight profile", "[worker_manager]") {
-    labios::WeightProfile wp{"low_latency", 0.5, 0.0, 0.35, 0.15, 0.0};
+    labios::WeightProfile wp{"low_latency", 0.5, 0.0, 0.35, 0.15, 0.0, 0.0};
     labios::WorkerInfo w{1, true, 0.8, 0.3, 5, 2};
 
     double score = labios::compute_score(w, wp);
-    // 0.5*1.0 + 0.0*0.8 + 0.35*(1.0-0.3) + 0.15*(5.0/5.0) + 0.0*(2.0/5.0)
-    // = 0.5 + 0.0 + 0.245 + 0.15 + 0.0 = 0.895
+    // 0.5*1.0 + 0.0*0.8 + 0.35*(1.0-0.3) + 0.15*(5.0/5.0) + 0.0*(2.0/5.0) + 0.0*0
+    // = 0.5 + 0.0 + 0.245 + 0.15 + 0.0 + 0.0 = 0.895
     CHECK_THAT(score, WithinAbs(0.895, 0.001));
 }
 
@@ -178,4 +178,81 @@ TEST_CASE("Resuming worker clears suspension state", "[worker_manager]") {
     // Resume: worker reports available=true again.
     mgr.update_score(1, {1, true, 0.9, 0.5, 5, 1});
     CHECK(mgr.suspended_workers().empty());
+}
+
+TEST_CASE("Tier weight contributes to compute_score", "[worker_manager]") {
+    labios::WeightProfile wp{"agentic", 0.3, 0.1, 0.1, 0.1, 0.0, 0.4};
+
+    labios::WorkerInfo databot{1, true, 0.5, 0.2, 3, 2, labios::WorkerTier::Databot};
+    labios::WorkerInfo agentic{2, true, 0.5, 0.2, 3, 2, labios::WorkerTier::Agentic};
+
+    double score_d = labios::compute_score(databot, wp);
+    double score_a = labios::compute_score(agentic, wp);
+
+    // Identical stats except tier. Agentic (tier=2) should score higher.
+    // Tier contribution: databot = 0.4*(0/2) = 0.0, agentic = 0.4*(2/2) = 0.4
+    CHECK(score_a > score_d);
+    CHECK_THAT(score_a - score_d, WithinAbs(0.4, 0.001));
+}
+
+TEST_CASE("Zero tier weight preserves existing scoring behavior", "[worker_manager]") {
+    labios::WeightProfile wp{"high_bandwidth", 0.0, 0.15, 0.15, 0.70, 0.0, 0.0};
+
+    labios::WorkerInfo databot{1, true, 0.8, 0.1, 5, 1, labios::WorkerTier::Databot};
+    labios::WorkerInfo agentic{2, true, 0.8, 0.1, 5, 1, labios::WorkerTier::Agentic};
+
+    double score_d = labios::compute_score(databot, wp);
+    double score_a = labios::compute_score(agentic, wp);
+
+    // With tier weight = 0.0, tier difference has no effect.
+    CHECK_THAT(score_d, WithinAbs(score_a, 0.001));
+}
+
+TEST_CASE("Pipeline tier scores between Databot and Agentic", "[worker_manager]") {
+    labios::WeightProfile wp{"tier_only", 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+
+    labios::WorkerInfo d{1, true, 0.5, 0.5, 3, 3, labios::WorkerTier::Databot};
+    labios::WorkerInfo p{2, true, 0.5, 0.5, 3, 3, labios::WorkerTier::Pipeline};
+    labios::WorkerInfo a{3, true, 0.5, 0.5, 3, 3, labios::WorkerTier::Agentic};
+
+    double sd = labios::compute_score(d, wp);
+    double sp = labios::compute_score(p, wp);
+    double sa = labios::compute_score(a, wp);
+
+    CHECK_THAT(sd, WithinAbs(0.0, 0.001));
+    CHECK_THAT(sp, WithinAbs(0.5, 0.001));
+    CHECK_THAT(sa, WithinAbs(1.0, 0.001));
+    CHECK(sd < sp);
+    CHECK(sp < sa);
+}
+
+TEST_CASE("top_n_workers ranks Agentic workers first under agentic profile", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    mgr.register_worker({1, true, 0.8, 0.1, 3, 2, labios::WorkerTier::Databot});
+    mgr.register_worker({2, true, 0.8, 0.1, 3, 2, labios::WorkerTier::Agentic});
+    mgr.register_worker({3, true, 0.8, 0.1, 3, 2, labios::WorkerTier::Pipeline});
+
+    labios::WeightProfile wp{"agentic", 0.3, 0.1, 0.1, 0.1, 0.0, 0.4};
+    auto top = mgr.top_n_workers(1, wp);
+    REQUIRE(top.size() == 1);
+    CHECK(top[0].id == 2);
+}
+
+TEST_CASE("WorkerInfo tier defaults to Databot", "[worker_manager]") {
+    labios::WorkerInfo w{1, true, 0.5, 0.0, 3, 2};
+    CHECK(w.tier == labios::WorkerTier::Databot);
+}
+
+TEST_CASE("WorkerInfo tier round-trips through register/all_workers", "[worker_manager]") {
+    labios::InMemoryWorkerManager mgr;
+    mgr.register_worker({1, true, 0.9, 0.0, 5, 1, labios::WorkerTier::Pipeline});
+    mgr.register_worker({2, true, 0.8, 0.0, 3, 2, labios::WorkerTier::Agentic});
+
+    auto all = mgr.all_workers();
+    REQUIRE(all.size() == 2);
+
+    for (auto& w : all) {
+        if (w.id == 1) CHECK(w.tier == labios::WorkerTier::Pipeline);
+        if (w.id == 2) CHECK(w.tier == labios::WorkerTier::Agentic);
+    }
 }
