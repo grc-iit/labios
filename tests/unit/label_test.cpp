@@ -151,3 +151,230 @@ TEST_CASE("Completion serialization roundtrip", "[label]") {
     REQUIRE(result.error == "disk full");
     REQUIRE(result.data_key == "warehouse:777");
 }
+
+// ---------------------------------------------------------------------------
+// New spec field tests
+// ---------------------------------------------------------------------------
+
+TEST_CASE("Observe label type roundtrips", "[label]") {
+    labios::LabelData label;
+    label.id = 1;
+    label.type = labios::LabelType::Observe;
+    label.operation = "watch_dir";
+
+    auto buf = labios::serialize_label(label);
+    auto result = labios::deserialize_label(buf);
+
+    REQUIRE(result.type == labios::LabelType::Observe);
+    REQUIRE(result.operation == "watch_dir");
+}
+
+TEST_CASE("Extended intent values roundtrip", "[label]") {
+    auto check = [](labios::Intent intent) {
+        labios::LabelData label;
+        label.id = 1;
+        label.intent = intent;
+        auto buf = labios::serialize_label(label);
+        auto result = labios::deserialize_label(buf);
+        REQUIRE(result.intent == intent);
+    };
+
+    check(labios::Intent::Embedding);
+    check(labios::Intent::ModelWeight);
+    check(labios::Intent::KVCache);
+    check(labios::Intent::ReasoningTrace);
+}
+
+TEST_CASE("Workspace and Global isolation roundtrip", "[label]") {
+    auto check = [](labios::Isolation iso) {
+        labios::LabelData label;
+        label.id = 1;
+        label.isolation = iso;
+        auto buf = labios::serialize_label(label);
+        auto result = labios::deserialize_label(buf);
+        REQUIRE(result.isolation == iso);
+    };
+
+    check(labios::Isolation::Workspace);
+    check(labios::Isolation::Global);
+}
+
+TEST_CASE("Durability roundtrip", "[label]") {
+    labios::LabelData label;
+    label.id = 1;
+    label.durability = labios::Durability::Durable;
+
+    auto buf = labios::serialize_label(label);
+    auto result = labios::deserialize_label(buf);
+
+    REQUIRE(result.durability == labios::Durability::Durable);
+
+    // Default should be Ephemeral
+    labios::LabelData def;
+    auto buf2 = labios::serialize_label(def);
+    auto result2 = labios::deserialize_label(buf2);
+    REQUIRE(result2.durability == labios::Durability::Ephemeral);
+}
+
+TEST_CASE("Continuation roundtrip for all kinds", "[label]") {
+    SECTION("Notify") {
+        labios::LabelData label;
+        label.id = 1;
+        label.continuation.kind = labios::ContinuationKind::Notify;
+        label.continuation.target_channel = "completions.app42";
+
+        auto buf = labios::serialize_label(label);
+        auto result = labios::deserialize_label(buf);
+
+        REQUIRE(result.continuation.kind == labios::ContinuationKind::Notify);
+        REQUIRE(result.continuation.target_channel == "completions.app42");
+    }
+
+    SECTION("Chain") {
+        labios::LabelData label;
+        label.id = 2;
+        label.continuation.kind = labios::ContinuationKind::Chain;
+        label.continuation.chain_params = R"({"type":"Read","path":"/out"})";
+
+        auto buf = labios::serialize_label(label);
+        auto result = labios::deserialize_label(buf);
+
+        REQUIRE(result.continuation.kind == labios::ContinuationKind::Chain);
+        REQUIRE(result.continuation.chain_params == R"({"type":"Read","path":"/out"})");
+    }
+
+    SECTION("Conditional") {
+        labios::LabelData label;
+        label.id = 3;
+        label.continuation.kind = labios::ContinuationKind::Conditional;
+        label.continuation.condition = "size > 1048576";
+        label.continuation.chain_params = R"({"compress":true})";
+
+        auto buf = labios::serialize_label(label);
+        auto result = labios::deserialize_label(buf);
+
+        REQUIRE(result.continuation.kind == labios::ContinuationKind::Conditional);
+        REQUIRE(result.continuation.condition == "size > 1048576");
+        REQUIRE(result.continuation.chain_params == R"({"compress":true})");
+    }
+
+    SECTION("None leaves continuation empty") {
+        labios::LabelData label;
+        label.id = 4;
+        // continuation.kind defaults to None
+
+        auto buf = labios::serialize_label(label);
+        auto result = labios::deserialize_label(buf);
+
+        REQUIRE(result.continuation.kind == labios::ContinuationKind::None);
+        REQUIRE(result.continuation.target_channel.empty());
+    }
+}
+
+TEST_CASE("RoutingDecision and HopRecord roundtrip", "[label]") {
+    labios::LabelData label;
+    label.id = 500;
+    label.routing.worker_id = 7;
+    label.routing.policy = "constraint";
+    label.hops = {
+        {"shuffler", 1000},
+        {"scheduler", 2500},
+        {"worker-7", 3200},
+    };
+
+    auto buf = labios::serialize_label(label);
+    auto result = labios::deserialize_label(buf);
+
+    REQUIRE(result.routing.worker_id == 7);
+    REQUIRE(result.routing.policy == "constraint");
+    REQUIRE(result.hops.size() == 3);
+    REQUIRE(result.hops[0].component == "shuffler");
+    REQUIRE(result.hops[0].timestamp_us == 1000);
+    REQUIRE(result.hops[1].component == "scheduler");
+    REQUIRE(result.hops[1].timestamp_us == 2500);
+    REQUIRE(result.hops[2].component == "worker-7");
+    REQUIRE(result.hops[2].timestamp_us == 3200);
+}
+
+TEST_CASE("StatusCode and timestamps roundtrip", "[label]") {
+    labios::LabelData label;
+    label.id = 600;
+    label.status = labios::StatusCode::Executing;
+    label.created_us = 1700000000000000ULL;
+    label.completed_us = 0;
+
+    auto buf = labios::serialize_label(label);
+    auto result = labios::deserialize_label(buf);
+
+    REQUIRE(result.status == labios::StatusCode::Executing);
+    REQUIRE(result.created_us == 1700000000000000ULL);
+    REQUIRE(result.completed_us == 0);
+
+    // Complete status with both timestamps
+    label.status = labios::StatusCode::Complete;
+    label.completed_us = 1700000000050000ULL;
+
+    buf = labios::serialize_label(label);
+    result = labios::deserialize_label(buf);
+
+    REQUIRE(result.status == labios::StatusCode::Complete);
+    REQUIRE(result.completed_us == 1700000000050000ULL);
+}
+
+TEST_CASE("Version field roundtrip", "[label]") {
+    labios::LabelData label;
+    label.id = 700;
+    label.version = 42;
+
+    auto buf = labios::serialize_label(label);
+    auto result = labios::deserialize_label(buf);
+
+    REQUIRE(result.version == 42);
+
+    // Default is 0
+    labios::LabelData def;
+    auto buf2 = labios::serialize_label(def);
+    auto result2 = labios::deserialize_label(buf2);
+    REQUIRE(result2.version == 0);
+}
+
+TEST_CASE("source_uri and dest_uri roundtrip", "[label]") {
+    labios::LabelData label;
+    label.id = 800;
+    label.source_uri = "labios://node-3/scratch/input.h5";
+    label.dest_uri = "labios://warehouse/results/output.h5";
+
+    auto buf = labios::serialize_label(label);
+    auto result = labios::deserialize_label(buf);
+
+    REQUIRE(result.source_uri == "labios://node-3/scratch/input.h5");
+    REQUIRE(result.dest_uri == "labios://warehouse/results/output.h5");
+
+    // Empty by default
+    labios::LabelData def;
+    auto buf2 = labios::serialize_label(def);
+    auto result2 = labios::deserialize_label(buf2);
+    REQUIRE(result2.source_uri.empty());
+    REQUIRE(result2.dest_uri.empty());
+}
+
+TEST_CASE("All new fields default correctly on minimal label", "[label]") {
+    labios::LabelData label;
+    label.id = 999;
+    label.type = labios::LabelType::Write;
+
+    auto buf = labios::serialize_label(label);
+    auto result = labios::deserialize_label(buf);
+
+    REQUIRE(result.version == 0);
+    REQUIRE(result.durability == labios::Durability::Ephemeral);
+    REQUIRE(result.continuation.kind == labios::ContinuationKind::None);
+    REQUIRE(result.source_uri.empty());
+    REQUIRE(result.dest_uri.empty());
+    REQUIRE(result.routing.worker_id == 0);
+    REQUIRE(result.routing.policy.empty());
+    REQUIRE(result.hops.empty());
+    REQUIRE(result.status == labios::StatusCode::Created);
+    REQUIRE(result.created_us == 0);
+    REQUIRE(result.completed_us == 0);
+}
