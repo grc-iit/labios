@@ -114,3 +114,11 @@ catch_discover_tests(labios-kernel-montage-test TEST_PREFIX "kernel/" PROPERTIES
 add_executable(labios-kernel-kmeans-test integration/kernel_kmeans_test.cpp)
 target_link_libraries(labios-kernel-kmeans-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-kernel-kmeans-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
+
+add_executable(labios-uri-test unit/uri_test.cpp)
+target_link_libraries(labios-uri-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-uri-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-backend-test unit/backend_test.cpp)
+target_link_libraries(labios-backend-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-backend-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")

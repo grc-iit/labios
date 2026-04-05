@@ -1,3 +1,5 @@
+#include <labios/backend/posix_backend.h>
+#include <labios/backend/registry.h>
 #include <labios/catalog_manager.h>
 #include <labios/config.h>
 #include <labios/label.h>
@@ -5,6 +7,7 @@
 #include <labios/shuffler.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
+#include <labios/uri.h>
 
 #include <algorithm>
 #include <atomic>
@@ -26,12 +29,14 @@ struct CompletionResult {
 static CompletionResult execute_write(
     labios::ContentManager& cm, labios::CatalogManager& cat,
     const labios::LabelData& label,
-    const std::filesystem::path& storage_root, int worker_id);
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends);
 
 static CompletionResult execute_read(
     labios::ContentManager& cm, labios::CatalogManager& cat,
     const labios::LabelData& label,
-    const std::filesystem::path& storage_root, int worker_id);
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends);
 
 static std::jthread g_service_thread;
 static std::jthread g_score_thread;
@@ -60,10 +65,34 @@ static void signal_handler(int /*sig*/) {
 static CompletionResult execute_write(
     labios::ContentManager& cm, labios::CatalogManager& cat,
     const labios::LabelData& label,
-    const std::filesystem::path& storage_root, int worker_id) {
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends) {
 
     auto blob = cm.retrieve(label.id);
 
+    // URI path: resolve dest_uri through backend registry.
+    if (!label.dest_uri.empty()) {
+        auto uri = labios::parse_uri(label.dest_uri);
+        auto* backend = backends.resolve(uri.scheme);
+        if (!backend) {
+            throw std::runtime_error(
+                "no backend for scheme: " + uri.scheme);
+        }
+        auto result = backend->put(uri.path, 0,
+            std::span<const std::byte>(blob));
+        if (!result.success) {
+            throw std::runtime_error(result.error);
+        }
+        cm.remove(label.id);
+        cat.set_location(uri.path, 0, blob.size(), worker_id);
+
+        std::cout << "[" << timestamp() << "] worker " << worker_id
+                  << ": WRITE " << label.dest_uri << " ("
+                  << blob.size() << " bytes)\n" << std::flush;
+        return {labios::CompletionStatus::Complete, {}};
+    }
+
+    // Legacy path: use Pointer variant.
     auto* dst = std::get_if<labios::FilePath>(&label.destination);
     if (!dst) {
         throw std::runtime_error("WRITE label missing FilePath destination");
@@ -106,8 +135,32 @@ static CompletionResult execute_write(
 static CompletionResult execute_read(
     labios::ContentManager& cm, labios::CatalogManager& /*cat*/,
     const labios::LabelData& label,
-    const std::filesystem::path& storage_root, int worker_id) {
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends) {
 
+    // URI path: resolve source_uri through backend registry.
+    if (!label.source_uri.empty()) {
+        auto uri = labios::parse_uri(label.source_uri);
+        auto* backend = backends.resolve(uri.scheme);
+        if (!backend) {
+            throw std::runtime_error(
+                "no backend for scheme: " + uri.scheme);
+        }
+        uint64_t read_size = label.data_size;
+        auto result = backend->get(uri.path, 0, read_size);
+        if (!result.success) {
+            throw std::runtime_error(result.error);
+        }
+        cm.stage(label.id, std::span<const std::byte>(result.data));
+
+        std::cout << "[" << timestamp() << "] worker " << worker_id
+                  << ": READ " << label.source_uri << " ("
+                  << result.data.size() << " bytes)\n" << std::flush;
+        return {labios::CompletionStatus::Complete,
+                labios::ContentManager::data_key(label.id)};
+    }
+
+    // Legacy path: use Pointer variant.
     auto* src = std::get_if<labios::FilePath>(&label.source);
     if (!src) {
         throw std::runtime_error("READ label missing FilePath source");
@@ -161,12 +214,16 @@ int main() {
     std::string worker_subject = "labios.worker." + std::to_string(cfg.worker_id);
     std::string worker_name = "worker-" + std::to_string(cfg.worker_id);
 
+    // Backend registry for URI-based routing.
+    labios::BackendRegistry backends;
+    backends.register_backend(labios::PosixBackend(storage_root));
+
     // Mutex protects all Redis (warehouse + catalog) and file operations.
     std::mutex worker_mu;
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id](
+        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id, &backends](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -191,12 +248,12 @@ int main() {
 
                 if (label.type == labios::LabelType::Write) {
                     auto result = execute_write(
-                        content_manager, catalog, label, storage_root, worker_id);
+                        content_manager, catalog, label, storage_root, worker_id, backends);
                     completion.status = result.status;
 
                 } else if (label.type == labios::LabelType::Read) {
                     auto result = execute_read(
-                        content_manager, catalog, label, storage_root, worker_id);
+                        content_manager, catalog, label, storage_root, worker_id, backends);
                     completion.status = result.status;
                     completion.data_key = std::move(result.data_key);
 
@@ -226,12 +283,12 @@ int main() {
 
                         if (child.type == labios::LabelType::Write) {
                             auto result = execute_write(
-                                content_manager, catalog, child, storage_root, worker_id);
+                                content_manager, catalog, child, storage_root, worker_id, backends);
                             child_comp.status = result.status;
 
                         } else if (child.type == labios::LabelType::Read) {
                             auto result = execute_read(
-                                content_manager, catalog, child, storage_root, worker_id);
+                                content_manager, catalog, child, storage_root, worker_id, backends);
                             child_comp.status = result.status;
                             child_comp.data_key = std::move(result.data_key);
 

@@ -33,6 +33,9 @@ add_library(labios STATIC
     elastic/docker_client.cpp
     adapter/fd_table.cpp
     adapter/posix_adapter.cpp
+    uri.cpp
+    backend/posix_backend.cpp
+    backend/registry.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)
