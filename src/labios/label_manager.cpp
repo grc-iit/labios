@@ -40,6 +40,7 @@ std::vector<PendingLabel> LabelManager::publish_write(
         label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
+        mark_label_created(label);
         auto serialized = serialize_label(label);
 
         content_.stage(label.id, chunk);
@@ -76,6 +77,7 @@ std::vector<PendingLabel> LabelManager::publish_read(
         label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
+        mark_label_created(label);
         auto serialized = serialize_label(label);
 
         catalog_.create(label);

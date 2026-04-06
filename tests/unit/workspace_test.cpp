@@ -33,6 +33,25 @@ TEST_CASE("Workspace put/get roundtrip", "[workspace]") {
     ws.destroy();
 }
 
+TEST_CASE("Workspace preserves zero-length values", "[workspace]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::Workspace ws("test-zero-length", /*owner_app_id=*/1, redis);
+
+    std::vector<std::byte> empty;
+    uint64_t ver = ws.put("empty-value", empty, 1);
+    REQUIRE(ver == 1);
+
+    auto latest = ws.get("empty-value", 1);
+    REQUIRE(latest.has_value());
+    REQUIRE(latest->empty());
+
+    auto versioned = ws.get_version("empty-value", 1, 1);
+    REQUIRE(versioned.has_value());
+    REQUIRE(versioned->empty());
+
+    ws.destroy();
+}
+
 TEST_CASE("Workspace versioning returns correct data per version", "[workspace]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::Workspace ws("test-versioning", 1, redis);
@@ -267,6 +286,27 @@ TEST_CASE("Workspace get on nonexistent key returns nullopt", "[workspace]") {
 
     auto result = ws.get("no-such-key", 1);
     REQUIRE_FALSE(result.has_value());
+
+    ws.destroy();
+}
+
+TEST_CASE("Revoked workspace access blocks read write list and delete", "[workspace]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::Workspace ws("test-revoke", 1, redis);
+
+    std::vector<std::byte> data(8, std::byte{0x5A});
+    ws.grant_access(2);
+    REQUIRE(ws.put("shared", data, 2) == 1);
+    REQUIRE(ws.get("shared", 2).has_value());
+
+    ws.revoke_access(2);
+    REQUIRE_FALSE(ws.has_access(2));
+    REQUIRE_THROWS(ws.get("shared", 2));
+    REQUIRE_THROWS(ws.get_version("shared", 1, 2));
+    REQUIRE_THROWS(ws.put("shared", data, 2));
+    REQUIRE_THROWS(ws.del("shared", 2));
+    REQUIRE_THROWS(ws.list(2));
+    REQUIRE_THROWS(ws.list("sh", 2));
 
     ws.destroy();
 }

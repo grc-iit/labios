@@ -108,6 +108,100 @@ uint64_t generate_label_id(uint32_t app_id) {
          | (static_cast<uint64_t>(seq & 0xFFF));
 }
 
+uint64_t label_timestamp_now_us() {
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+}
+
+namespace {
+
+uint64_t normalize_timestamp(uint64_t timestamp_us) {
+    return timestamp_us != 0 ? timestamp_us : label_timestamp_now_us();
+}
+
+} // namespace
+
+void append_label_hop(LabelData& label, std::string_view component,
+                      uint64_t timestamp_us) {
+    if (component.empty()) return;
+    label.hops.push_back({std::string(component), normalize_timestamp(timestamp_us)});
+}
+
+void mark_label_created(LabelData& label, uint64_t timestamp_us) {
+    auto ts = normalize_timestamp(timestamp_us);
+    if (label.created_us == 0) {
+        label.created_us = ts;
+    }
+    label.status = StatusCode::Created;
+}
+
+void mark_label_queued(LabelData& label, uint64_t timestamp_us) {
+    auto ts = normalize_timestamp(timestamp_us);
+    if (label.created_us == 0) {
+        label.created_us = ts;
+    }
+    label.flags |= LabelFlags::Queued;
+    label.queued_us = ts;
+    label.status = StatusCode::Queued;
+}
+
+void mark_label_shuffled(LabelData& label, uint64_t timestamp_us) {
+    auto ts = normalize_timestamp(timestamp_us);
+    if (label.created_us == 0) {
+        label.created_us = ts;
+    }
+    label.status = StatusCode::Shuffled;
+    append_label_hop(label, "shuffler", ts);
+}
+
+void mark_label_scheduled(LabelData& label, uint32_t worker_id,
+                          std::string_view policy,
+                          const ScoreSnapshot& snapshot,
+                          uint64_t timestamp_us) {
+    auto ts = normalize_timestamp(timestamp_us);
+    if (label.created_us == 0) {
+        label.created_us = ts;
+    }
+    label.flags |= LabelFlags::Scheduled;
+    label.routing.worker_id = worker_id;
+    label.routing.policy.assign(policy);
+    label.score_snapshot = snapshot;
+    label.dispatched_us = ts;
+    label.status = StatusCode::Scheduled;
+    append_label_hop(label, "scheduler", ts);
+}
+
+void mark_label_executing(LabelData& label, std::string_view worker_component,
+                          uint64_t timestamp_us) {
+    auto ts = normalize_timestamp(timestamp_us);
+    if (label.created_us == 0) {
+        label.created_us = ts;
+    }
+    label.flags |= LabelFlags::Pending;
+    label.started_us = ts;
+    label.status = StatusCode::Executing;
+    append_label_hop(label, worker_component, ts);
+}
+
+void mark_label_finished(LabelData& label, CompletionStatus status,
+                         std::string_view data_location,
+                         uint64_t bytes_transferred,
+                         std::string_view error,
+                         uint64_t timestamp_us) {
+    auto ts = normalize_timestamp(timestamp_us);
+    if (label.created_us == 0) {
+        label.created_us = ts;
+    }
+    label.completed_us = ts;
+    label.result.data_location.assign(data_location.begin(), data_location.end());
+    label.result.bytes_transferred = bytes_transferred;
+    label.result.error.assign(error.begin(), error.end());
+    label.status = (status == CompletionStatus::Complete)
+        ? StatusCode::Complete
+        : StatusCode::Failed;
+}
+
 // ---------------------------------------------------------------------------
 // Pointer serialization helpers
 // ---------------------------------------------------------------------------

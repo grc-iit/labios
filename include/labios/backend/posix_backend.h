@@ -1,6 +1,7 @@
 #pragma once
 #include <labios/backend/backend.h>
 #include <filesystem>
+#include <optional>
 #include <string_view>
 #include <utility>
 
@@ -18,8 +19,10 @@ public:
 
 private:
     std::filesystem::path root_;
-    std::pair<std::filesystem::path, uint64_t> resolve_dest(const LabelData& label) const;
-    std::pair<std::filesystem::path, uint64_t> resolve_source(const LabelData& label) const;
+    std::optional<std::pair<std::filesystem::path, uint64_t>>
+    resolve_dest(const LabelData& label) const;
+    std::optional<std::pair<std::filesystem::path, uint64_t>>
+    resolve_source(const LabelData& label) const;
 };
 
 static_assert(BackendStore<PosixBackend>);

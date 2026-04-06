@@ -31,6 +31,8 @@
 struct CompletionResult {
     labios::CompletionStatus status = labios::CompletionStatus::Complete;
     std::string data_key;
+    std::string result_location;
+    uint64_t bytes_transferred = 0;
 };
 
 static CompletionResult execute_write(
@@ -62,6 +64,42 @@ static std::string timestamp() {
     char buf[32];
     std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm_buf);
     return buf;
+}
+
+static uint64_t now_us() {
+    return labios::label_timestamp_now_us();
+}
+
+static void publish_completion(labios::transport::NatsConnection& nats,
+                               std::string_view reply_to,
+                               const labios::CompletionData& completion) {
+    if (reply_to.empty()) return;
+    auto payload = labios::serialize_completion(completion);
+    nats.publish(reply_to, std::span<const std::byte>(payload));
+}
+
+static void publish_chained_label(labios::transport::NatsConnection& nats,
+                                  const labios::LabelData& label) {
+    auto payload = labios::serialize_label(label);
+    nats.publish("labios.labels", std::span<const std::byte>(payload));
+}
+
+static void maybe_process_continuation(
+    const labios::LabelData& label, const labios::CompletionData& completion,
+    labios::ChannelRegistry& channels, labios::transport::NatsConnection& nats,
+    labios::transport::RedisConnection& redis,
+    std::string_view worker_name, std::string_view context) {
+    if (label.continuation.kind == labios::ContinuationKind::None) return;
+    try {
+        auto chained = labios::process_continuation(
+            label, completion, channels, nats, redis);
+        if (chained) {
+            publish_chained_label(nats, *chained);
+        }
+    } catch (const std::exception& ex) {
+        std::cerr << "[" << timestamp() << "] " << worker_name << ": "
+                  << context << " error: " << ex.what() << "\n" << std::flush;
+    }
 }
 
 static void signal_handler(int /*sig*/) {
@@ -113,7 +151,12 @@ static CompletionResult execute_write(
         std::cout << "[" << timestamp() << "] worker " << worker_id
                   << ": WRITE " << label.dest_uri << " ("
                   << blob.size() << " bytes)\n" << std::flush;
-        return {labios::CompletionStatus::Complete, {}};
+        return {
+            labios::CompletionStatus::Complete,
+            {},
+            label.dest_uri,
+            static_cast<uint64_t>(blob.size())
+        };
     }
 
     // Legacy path: use Pointer variant.
@@ -153,7 +196,12 @@ static CompletionResult execute_write(
               << ": WRITE " << full_path.string() << " ("
               << blob.size() << " bytes)\n" << std::flush;
 
-    return {labios::CompletionStatus::Complete, {}};
+    return {
+        labios::CompletionStatus::Complete,
+        {},
+        dst->path,
+        static_cast<uint64_t>(blob.size())
+    };
 }
 
 static CompletionResult execute_read(
@@ -179,8 +227,13 @@ static CompletionResult execute_read(
         std::cout << "[" << timestamp() << "] worker " << worker_id
                   << ": READ " << label.source_uri << " ("
                   << result.data.size() << " bytes)\n" << std::flush;
-        return {labios::CompletionStatus::Complete,
-                labios::ContentManager::data_key(label.id)};
+        auto data_key = labios::ContentManager::data_key(label.id);
+        return {
+            labios::CompletionStatus::Complete,
+            data_key,
+            data_key,
+            static_cast<uint64_t>(result.data.size())
+        };
     }
 
     // Legacy path: use Pointer variant.
@@ -211,8 +264,13 @@ static CompletionResult execute_read(
               << ": READ " << src->path << " ("
               << file_data.size() << " bytes)\n" << std::flush;
 
-    return {labios::CompletionStatus::Complete,
-            labios::ContentManager::data_key(label.id)};
+    auto data_key = labios::ContentManager::data_key(label.id);
+    return {
+        labios::CompletionStatus::Complete,
+        data_key,
+        data_key,
+        static_cast<uint64_t>(file_data.size())
+    };
 }
 
 int main() {
@@ -267,7 +325,8 @@ int main() {
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id, &backends, worker_tier, &sds_repo, &channels](
+        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root,
+         worker_id, &backends, worker_tier, &sds_repo, &channels, &worker_name](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -285,167 +344,148 @@ int main() {
                 completion.label_id = label.id;
 
                 std::lock_guard lock(worker_mu);
-
+                labios::mark_label_executing(label, worker_name, now_us());
                 catalog.set_status(label.id, labios::LabelStatus::Executing);
-                label.flags |= labios::LabelFlags::Pending;
                 catalog.set_flags(label.id, label.flags);
 
                 if (label.type == labios::LabelType::Write) {
                     auto result = execute_write(
-                        content_manager, catalog, label, storage_root, worker_id, backends,
-                        worker_tier, sds_repo);
+                        content_manager, catalog, label, storage_root, worker_id,
+                        backends, worker_tier, sds_repo);
                     completion.status = result.status;
+                    labios::mark_label_finished(
+                        label, completion.status, result.result_location,
+                        result.bytes_transferred);
 
                 } else if (label.type == labios::LabelType::Read) {
                     auto result = execute_read(
-                        content_manager, catalog, label, storage_root, worker_id, backends);
+                        content_manager, catalog, label, storage_root, worker_id,
+                        backends);
                     completion.status = result.status;
                     completion.data_key = std::move(result.data_key);
+                    labios::mark_label_finished(
+                        label, completion.status, result.result_location,
+                        result.bytes_transferred);
 
                 } else if (label.type == labios::LabelType::Composite) {
-                    // Supertask: retrieve packed children from Redis and execute in order.
-                    std::string pack_key = "labios:supertask:" + std::to_string(label.id);
+                    std::string pack_key =
+                        "labios:supertask:" + std::to_string(label.id);
                     auto packed = redis.get_binary(pack_key);
                     if (packed.empty()) {
                         throw std::runtime_error(
-                            "supertask children not found for " + std::to_string(label.id));
+                            "supertask children not found for "
+                            + std::to_string(label.id));
                     }
 
                     auto child_payloads = labios::unpack_labels(packed);
+                    uint64_t composite_bytes = 0;
 
                     std::cout << "[" << timestamp() << "] worker " << worker_id
                               << ": SUPERTASK " << label.id << " ("
-                              << child_payloads.size() << " children)\n" << std::flush;
+                              << child_payloads.size() << " children)\n"
+                              << std::flush;
 
                     for (auto& payload : child_payloads) {
                         auto child = labios::deserialize_label(payload);
                         labios::CompletionData child_comp{};
                         child_comp.label_id = child.id;
 
-                        catalog.set_status(child.id, labios::LabelStatus::Executing);
-                        child.flags |= labios::LabelFlags::Pending;
-                        catalog.set_flags(child.id, child.flags);
+                        try {
+                            labios::mark_label_executing(
+                                child, worker_name, now_us());
+                            catalog.set_status(child.id,
+                                               labios::LabelStatus::Executing);
+                            catalog.set_flags(child.id, child.flags);
 
-                        if (child.type == labios::LabelType::Write) {
-                            auto result = execute_write(
-                                content_manager, catalog, child, storage_root, worker_id, backends,
-                                worker_tier, sds_repo);
-                            child_comp.status = result.status;
-
-                        } else if (child.type == labios::LabelType::Read) {
-                            auto result = execute_read(
-                                content_manager, catalog, child, storage_root, worker_id, backends);
-                            child_comp.status = result.status;
-                            child_comp.data_key = std::move(result.data_key);
-
-                        } else {
-                            throw std::runtime_error(
-                                "unsupported child label type: "
-                                + std::to_string(static_cast<int>(child.type)));
-                        }
-
-                        catalog.set_status(child.id, labios::LabelStatus::Complete);
-
-                        // Send completion for each child individually.
-                        if (!child.reply_to.empty()) {
-                            auto reply = labios::serialize_completion(child_comp);
-                            nats.publish(child.reply_to, std::span<const std::byte>(reply));
-                        }
-
-                        // Process continuation for each child.
-                        if (child.continuation.kind != labios::ContinuationKind::None) {
-                            try {
-                                auto chained = labios::process_continuation(
-                                    child, child_comp, channels, nats, redis);
-                                if (chained) {
-                                    auto buf = labios::serialize_label(*chained);
-                                    nats.publish("labios.labels",
-                                                 std::span<const std::byte>(buf));
-                                }
-                            } catch (const std::exception& ex) {
-                                std::cerr << "[" << timestamp() << "] worker "
-                                          << worker_id << ": child continuation error: "
-                                          << ex.what() << "\n" << std::flush;
+                            CompletionResult child_result;
+                            if (child.type == labios::LabelType::Write) {
+                                child_result = execute_write(
+                                    content_manager, catalog, child,
+                                    storage_root, worker_id, backends,
+                                    worker_tier, sds_repo);
+                            } else if (child.type == labios::LabelType::Read) {
+                                child_result = execute_read(
+                                    content_manager, catalog, child,
+                                    storage_root, worker_id, backends);
+                                child_comp.data_key =
+                                    std::move(child_result.data_key);
+                            } else {
+                                throw std::runtime_error(
+                                    "unsupported child label type: "
+                                    + std::to_string(
+                                        static_cast<int>(child.type)));
                             }
+
+                            child_comp.status = child_result.status;
+                            composite_bytes += child_result.bytes_transferred;
+                            labios::mark_label_finished(
+                                child, child_comp.status,
+                                child_result.result_location,
+                                child_result.bytes_transferred);
+                            catalog.set_status(child.id,
+                                               labios::LabelStatus::Complete);
+                        } catch (const std::exception& ex) {
+                            child_comp.status = labios::CompletionStatus::Error;
+                            child_comp.error = ex.what();
+                            labios::mark_label_finished(
+                                child, child_comp.status, {}, 0, ex.what());
+                            catalog.set_status(child.id,
+                                               labios::LabelStatus::Error);
+                            catalog.set_error(child.id, ex.what());
+                            publish_completion(nats, child.reply_to, child_comp);
+                            maybe_process_continuation(
+                                child, child_comp, channels, nats, redis,
+                                worker_name, "child continuation");
+                            throw;
                         }
+
+                        publish_completion(nats, child.reply_to, child_comp);
+                        maybe_process_continuation(
+                            child, child_comp, channels, nats, redis,
+                            worker_name, "child continuation");
                     }
 
-                    // Clean up packed data from Redis.
                     redis.del(pack_key);
-
-                    // Mark composite complete.
                     completion.status = labios::CompletionStatus::Complete;
+                    labios::mark_label_finished(
+                        label, completion.status, {}, composite_bytes);
                     catalog.set_status(label.id, labios::LabelStatus::Complete);
 
                     std::cout << "[" << timestamp() << "] worker " << worker_id
-                              << ": SUPERTASK " << label.id << " complete\n" << std::flush;
+                              << ": SUPERTASK " << label.id << " complete\n"
+                              << std::flush;
 
-                    // The composite's own reply_to is typically empty (no client waits on it).
-                    if (!label.reply_to.empty()) {
-                        auto reply_payload = labios::serialize_completion(completion);
-                        nats.publish(label.reply_to, std::span<const std::byte>(reply_payload));
-                    }
-
-                    // Process continuation for the composite label.
-                    if (label.continuation.kind != labios::ContinuationKind::None) {
-                        try {
-                            auto chained = labios::process_continuation(
-                                label, completion, channels, nats, redis);
-                            if (chained) {
-                                auto buf = labios::serialize_label(*chained);
-                                nats.publish("labios.labels",
-                                             std::span<const std::byte>(buf));
-                            }
-                        } catch (const std::exception& ex) {
-                            std::cerr << "[" << timestamp() << "] worker "
-                                      << worker_id << ": composite continuation error: "
-                                      << ex.what() << "\n" << std::flush;
-                        }
-                    }
-
+                    publish_completion(nats, label.reply_to, completion);
+                    maybe_process_continuation(
+                        label, completion, channels, nats, redis, worker_name,
+                        "composite continuation");
                     nats.flush();
                     g_active_labels.fetch_sub(1);
-                    return; // Early return; skip the normal completion path below.
+                    return;
 
                 } else {
                     throw std::runtime_error(
-                        "unsupported label type: " +
-                        std::to_string(static_cast<int>(label.type)));
+                        "unsupported label type: "
+                        + std::to_string(static_cast<int>(label.type)));
                 }
 
                 catalog.set_status(label.id, labios::LabelStatus::Complete);
-
-                if (!label.reply_to.empty()) {
-                    auto reply_payload = labios::serialize_completion(completion);
-                    nats.publish(label.reply_to,
-                                 std::span<const std::byte>(reply_payload));
-                    nats.flush();
-                }
-
-                // Process continuation if present.
-                if (label.continuation.kind != labios::ContinuationKind::None) {
-                    try {
-                        auto chained = labios::process_continuation(
-                            label, completion, channels, nats, redis);
-                        if (chained) {
-                            auto buf = labios::serialize_label(*chained);
-                            nats.publish("labios.labels",
-                                         std::span<const std::byte>(buf));
-                            nats.flush();
-                        }
-                    } catch (const std::exception& ex) {
-                        std::cerr << "[" << timestamp() << "] worker "
-                                  << worker_id << ": continuation error: "
-                                  << ex.what() << "\n" << std::flush;
-                    }
-                }
-
+                publish_completion(nats, label.reply_to, completion);
+                maybe_process_continuation(
+                    label, completion, channels, nats, redis, worker_name,
+                    "continuation");
+                nats.flush();
                 g_active_labels.fetch_sub(1);
 
             } catch (const std::exception& e) {
                 g_active_labels.fetch_sub(1);
                 completion.status = labios::CompletionStatus::Error;
                 completion.error = e.what();
+
+                if (have_label) {
+                    labios::mark_label_finished(
+                        label, completion.status, {}, 0, e.what());
+                }
 
                 std::cerr << "[" << timestamp() << "] worker " << worker_id
                           << ": ERROR " << e.what() << "\n" << std::flush;
@@ -460,11 +500,12 @@ int main() {
                     // Best effort catalog update on error path.
                 }
 
-                if (have_label && !label.reply_to.empty()) {
+                if (have_label) {
                     try {
-                        auto reply_payload = labios::serialize_completion(completion);
-                        nats.publish(label.reply_to,
-                                     std::span<const std::byte>(reply_payload));
+                        publish_completion(nats, label.reply_to, completion);
+                        maybe_process_continuation(
+                            label, completion, channels, nats, redis,
+                            worker_name, "continuation");
                         nats.flush();
                     } catch (...) {
                         // Best effort completion notification on error path.

@@ -12,7 +12,7 @@ public:
     explicit ConstraintSolver(WeightProfile profile);
 
     AssignmentMap assign(std::vector<std::vector<std::byte>> labels,
-                         std::vector<WorkerInfo> workers);
+                         const std::vector<WorkerInfo>& workers);
 
 private:
     WeightProfile profile_;

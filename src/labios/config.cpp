@@ -2,6 +2,9 @@
 
 #include <toml++/toml.hpp>
 
+#include <algorithm>
+#include <cctype>
+#include <cerrno>
 #include <cstdlib>
 #include <filesystem>
 #include <string>
@@ -25,16 +28,42 @@ int env_int_or(const char* name, int fallback) {
     return fallback;
 }
 
+std::string_view trim_ascii(std::string_view sv) {
+    auto is_space = [](unsigned char ch) { return std::isspace(ch) != 0; };
+    while (!sv.empty() && is_space(static_cast<unsigned char>(sv.front()))) {
+        sv.remove_prefix(1);
+    }
+    while (!sv.empty() && is_space(static_cast<unsigned char>(sv.back()))) {
+        sv.remove_suffix(1);
+    }
+    return sv;
+}
+
 } // namespace
 
 uint64_t parse_size(std::string_view s) {
+    s = trim_ascii(s);
     if (s.empty()) return 0;
+
+    std::string owned(s);
     char* end = nullptr;
-    double val = std::strtod(std::string(s).c_str(), &end);
-    std::string_view suffix(end);
-    if (suffix == "KB" || suffix == "kb") return static_cast<uint64_t>(val * 1024);
-    if (suffix == "MB" || suffix == "mb") return static_cast<uint64_t>(val * 1024 * 1024);
-    if (suffix == "GB" || suffix == "gb") return static_cast<uint64_t>(val * 1024 * 1024 * 1024);
+    errno = 0;
+    double val = std::strtod(owned.c_str(), &end);
+    if (end == owned.c_str() || errno == ERANGE || val < 0.0) {
+        return 0;
+    }
+
+    auto suffix = trim_ascii(std::string_view(end));
+    std::string suffix_upper(suffix);
+    std::transform(suffix_upper.begin(), suffix_upper.end(), suffix_upper.begin(),
+                   [](unsigned char ch) {
+                       return static_cast<char>(std::toupper(ch));
+                   });
+
+    if (suffix_upper.empty() || suffix_upper == "B") return static_cast<uint64_t>(val);
+    if (suffix_upper == "KB") return static_cast<uint64_t>(val * 1024);
+    if (suffix_upper == "MB") return static_cast<uint64_t>(val * 1024 * 1024);
+    if (suffix_upper == "GB") return static_cast<uint64_t>(val * 1024 * 1024 * 1024);
     return static_cast<uint64_t>(val);
 }
 

@@ -1,9 +1,41 @@
 #include <labios/channel.h>
 
+#include <charconv>
 #include <cstring>
 #include <stdexcept>
 
 namespace labios {
+
+namespace {
+
+bool parse_u64(std::string_view input, uint64_t& value) {
+    auto* begin = input.data();
+    auto* end = begin + input.size();
+    auto [ptr, ec] = std::from_chars(begin, end, value);
+    return ec == std::errc{} && ptr == end;
+}
+
+bool parse_notification(std::span<const std::byte> payload,
+                        uint64_t& sequence,
+                        uint64_t& label_id) {
+    auto raw = std::string_view(
+        reinterpret_cast<const char*>(payload.data()), payload.size());
+    auto first_colon = raw.find(':');
+    if (first_colon == std::string_view::npos) {
+        return false;
+    }
+
+    auto second_colon = raw.find(':', first_colon + 1);
+    if (second_colon == std::string_view::npos) {
+        return false;
+    }
+
+    return parse_u64(raw.substr(0, first_colon), sequence)
+        && parse_u64(raw.substr(first_colon + 1,
+                                second_colon - first_colon - 1), label_id);
+}
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 // Channel
@@ -85,18 +117,11 @@ int Channel::subscribe(ChannelCallback cb) {
                 if (destroyed_.load()) return;
 
                 // Parse notification: "seq:label_id:data_size"
-                std::string msg(reinterpret_cast<const char*>(payload.data()),
-                                payload.size());
-                auto first_colon = msg.find(':');
-                auto second_colon = msg.find(':', first_colon + 1);
-                if (first_colon == std::string::npos ||
-                    second_colon == std::string::npos) {
+                uint64_t seq = 0;
+                uint64_t label_id = 0;
+                if (!parse_notification(payload, seq, label_id)) {
                     return;
                 }
-
-                uint64_t seq = std::stoull(msg.substr(0, first_colon));
-                uint64_t label_id = std::stoull(
-                    msg.substr(first_colon + 1, second_colon - first_colon - 1));
 
                 // Retrieve data from warehouse
                 auto data = redis_.get_binary(warehouse_key(seq));
@@ -106,9 +131,17 @@ int Channel::subscribe(ChannelCallback cb) {
                 cm.label_id = label_id;
                 cm.data = std::move(data);
 
-                // Dispatch to all subscribers
-                std::lock_guard lock(mu_);
-                for (auto& [id, callback] : subscribers_) {
+                std::vector<ChannelCallback> callbacks;
+                {
+                    std::shared_lock lock(mu_);
+                    callbacks.reserve(subscribers_.size());
+                    for (const auto& [id, callback] : subscribers_) {
+                        (void)id;
+                        callbacks.push_back(callback);
+                    }
+                }
+
+                for (auto& callback : callbacks) {
                     callback(cm);
                 }
             });
@@ -132,7 +165,7 @@ void Channel::unsubscribe(int sub_id) {
 }
 
 int Channel::subscriber_count() const {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     return static_cast<int>(subscribers_.size());
 }
 
@@ -142,7 +175,7 @@ void Channel::drain() {
     // If no subscribers, destroy immediately
     bool empty;
     {
-        std::lock_guard lock(mu_);
+        std::shared_lock lock(mu_);
         empty = subscribers_.empty();
     }
     if (empty) {
@@ -181,7 +214,7 @@ ChannelRegistry::ChannelRegistry(transport::RedisConnection& redis,
 Channel* ChannelRegistry::create(std::string_view name, uint32_t ttl_seconds) {
     std::lock_guard lock(mu_);
     auto key = std::string(name);
-    if (channels_.count(key) != 0) {
+    if (channels_.find(key) != channels_.end()) {
         return nullptr;
     }
     auto ch = std::make_unique<Channel>(key, redis_, nats_, ttl_seconds);
@@ -191,8 +224,8 @@ Channel* ChannelRegistry::create(std::string_view name, uint32_t ttl_seconds) {
 }
 
 Channel* ChannelRegistry::get(std::string_view name) {
-    std::lock_guard lock(mu_);
-    auto it = channels_.find(std::string(name));
+    std::shared_lock lock(mu_);
+    auto it = channels_.find(name);
     if (it == channels_.end()) {
         return nullptr;
     }
@@ -201,11 +234,14 @@ Channel* ChannelRegistry::get(std::string_view name) {
 
 void ChannelRegistry::remove(std::string_view name) {
     std::lock_guard lock(mu_);
-    channels_.erase(std::string(name));
+    auto it = channels_.find(name);
+    if (it != channels_.end()) {
+        channels_.erase(it);
+    }
 }
 
 std::vector<std::string> ChannelRegistry::list() const {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     std::vector<std::string> names;
     names.reserve(channels_.size());
     for (const auto& [name, _] : channels_) {

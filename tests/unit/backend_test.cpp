@@ -1,8 +1,11 @@
 #include <catch2/catch_test_macros.hpp>
+#include <labios/backend/kv_backend.h>
 #include <labios/backend/posix_backend.h>
 #include <labios/backend/sqlite_backend.h>
 #include <labios/backend/registry.h>
+#include <labios/transport/redis.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 
@@ -10,6 +13,16 @@ static std::filesystem::path make_temp_dir() {
     auto dir = std::filesystem::temp_directory_path() / "labios_backend_test";
     std::filesystem::create_directories(dir);
     return dir;
+}
+
+static std::string redis_host() {
+    const char* h = std::getenv("LABIOS_REDIS_HOST");
+    return (h && h[0]) ? h : "localhost";
+}
+
+static int redis_port() {
+    const char* val = std::getenv("LABIOS_REDIS_PORT");
+    return (val && val[0]) ? std::stoi(val) : 6379;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,6 +156,53 @@ TEST_CASE("PosixBackend scheme", "[backend]") {
     REQUIRE(backend.scheme() == "file");
 }
 
+TEST_CASE("PosixBackend keeps FilePath writes inside storage root", "[backend]") {
+    auto tmp = make_temp_dir();
+    auto outside = std::filesystem::temp_directory_path() / "labios_escape_target.dat";
+    std::filesystem::remove(outside);
+
+    labios::PosixBackend backend(tmp);
+
+    labios::LabelData label;
+    label.id = 1;
+    label.type = labios::LabelType::Write;
+    label.destination = labios::file_path(outside.string());
+
+    const char* msg = "sandboxed";
+    auto data = std::as_bytes(std::span(msg, std::strlen(msg)));
+    auto put_result = backend.put(label, data);
+    REQUIRE(put_result.success);
+
+    REQUIRE_FALSE(std::filesystem::exists(outside));
+    auto expected = tmp / outside.relative_path();
+    REQUIRE(std::filesystem::exists(expected));
+
+    std::filesystem::remove_all(tmp);
+    std::filesystem::remove(outside);
+}
+
+TEST_CASE("PosixBackend rejects invalid relative escape paths", "[backend]") {
+    auto tmp = make_temp_dir();
+    labios::PosixBackend backend(tmp);
+
+    labios::LabelData put_label;
+    put_label.type = labios::LabelType::Write;
+    put_label.destination = labios::file_path("../escape.dat");
+
+    const char* msg = "nope";
+    auto data = std::as_bytes(std::span(msg, std::strlen(msg)));
+    auto put_result = backend.put(put_label, data);
+    REQUIRE_FALSE(put_result.success);
+
+    labios::LabelData get_label;
+    get_label.type = labios::LabelType::Read;
+    get_label.source = labios::file_path("../escape.dat");
+    auto get_result = backend.get(get_label);
+    REQUIRE_FALSE(get_result.success);
+
+    std::filesystem::remove_all(tmp);
+}
+
 // ---------------------------------------------------------------------------
 // SQLiteBackend tests
 // ---------------------------------------------------------------------------
@@ -224,6 +284,64 @@ TEST_CASE("SQLiteBackend scheme", "[backend][sqlite]") {
     labios::SQLiteBackend backend(db_path.string());
     REQUIRE(backend.scheme() == "sqlite");
     std::filesystem::remove(db_path);
+}
+
+TEST_CASE("SQLiteBackend preserves zero-length blobs", "[backend][sqlite]") {
+    auto db_path = std::filesystem::temp_directory_path() / "labios_empty_blob.db";
+    std::filesystem::remove(db_path);
+    labios::SQLiteBackend backend(db_path.string());
+
+    labios::LabelData put_label;
+    put_label.dest_uri = "sqlite:///memories/empty";
+
+    std::vector<std::byte> empty;
+    auto put_result = backend.put(put_label, empty);
+    REQUIRE(put_result.success);
+
+    labios::LabelData get_label;
+    get_label.source_uri = "sqlite:///memories/empty";
+    auto get_result = backend.get(get_label);
+    REQUIRE(get_result.success);
+    REQUIRE(get_result.data.empty());
+
+    std::filesystem::remove(db_path);
+}
+
+// ---------------------------------------------------------------------------
+// KVBackend tests
+// ---------------------------------------------------------------------------
+
+TEST_CASE("KVBackend preserves zero-length values", "[backend][kv]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::KVBackend backend(redis, "labios:kv:test:");
+
+    labios::LabelData put_label;
+    put_label.dest_uri = "kv://project/empty-value";
+
+    std::vector<std::byte> empty;
+    auto put_result = backend.put(put_label, empty);
+    REQUIRE(put_result.success);
+
+    labios::LabelData get_label;
+    get_label.source_uri = "kv://project/empty-value";
+    auto get_result = backend.get(get_label);
+    REQUIRE(get_result.success);
+    REQUIRE(get_result.data.empty());
+
+    auto del_result = backend.del(put_label);
+    REQUIRE(del_result.success);
+}
+
+TEST_CASE("KVBackend get missing key returns failure", "[backend][kv]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::KVBackend backend(redis, "labios:kv:test:missing:");
+
+    labios::LabelData get_label;
+    get_label.source_uri = "kv://project/no-such-key";
+
+    auto get_result = backend.get(get_label);
+    REQUIRE_FALSE(get_result.success);
+    REQUIRE(get_result.data.empty());
 }
 
 // ---------------------------------------------------------------------------

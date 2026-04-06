@@ -56,7 +56,7 @@ void Workspace::revoke_access(uint32_t app_id) {
 }
 
 bool Workspace::has_access(uint32_t app_id) const {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     return acl_.count(app_id) != 0;
 }
 
@@ -98,23 +98,27 @@ uint64_t Workspace::put(std::string_view key, std::span<const std::byte> data,
 
 std::optional<std::vector<std::byte>> Workspace::get(std::string_view key,
                                                       uint32_t app_id) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     check_access(app_id);
 
-    auto result = redis_.get_binary(data_key(key));
-    if (result.empty()) return std::nullopt;
-    return result;
+    auto dk = data_key(key);
+    if (!redis_.get(dk).has_value()) {
+        return std::nullopt;
+    }
+    return redis_.get_binary(dk);
 }
 
 std::optional<std::vector<std::byte>> Workspace::get_version(std::string_view key,
                                                               uint64_t version,
                                                               uint32_t app_id) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     check_access(app_id);
 
-    auto result = redis_.get_binary(version_key(key, version));
-    if (result.empty()) return std::nullopt;
-    return result;
+    auto vk = version_key(key, version);
+    if (!redis_.get(vk).has_value()) {
+        return std::nullopt;
+    }
+    return redis_.get_binary(vk);
 }
 
 bool Workspace::del(std::string_view key, uint32_t app_id) {
@@ -145,7 +149,7 @@ bool Workspace::del(std::string_view key, uint32_t app_id) {
 }
 
 std::vector<WorkspaceEntry> Workspace::list(uint32_t app_id) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     check_access(app_id);
 
     auto keys = redis_.smembers(index_key());
@@ -186,14 +190,14 @@ std::vector<WorkspaceEntry> Workspace::list(std::string_view prefix,
 
 void Workspace::destroy() {
     std::lock_guard lock(mu_);
-    if (destroyed_) return;
+    if (destroyed_.load(std::memory_order_acquire)) return;
 
     auto keys = redis_.scan_keys("labios:ws:" + name_ + ":*");
     for (const auto& k : keys) {
         redis_.del(k);
     }
 
-    destroyed_ = true;
+    destroyed_.store(true, std::memory_order_release);
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +212,7 @@ Workspace* WorkspaceRegistry::create(std::string_view name,
                                       uint32_t ttl_seconds) {
     std::lock_guard lock(mu_);
     auto key = std::string(name);
-    if (workspaces_.count(key) != 0) {
+    if (workspaces_.find(key) != workspaces_.end()) {
         return nullptr;
     }
     auto ws = std::make_unique<Workspace>(key, owner_app_id, redis_, ttl_seconds);
@@ -218,8 +222,8 @@ Workspace* WorkspaceRegistry::create(std::string_view name,
 }
 
 Workspace* WorkspaceRegistry::get(std::string_view name) {
-    std::lock_guard lock(mu_);
-    auto it = workspaces_.find(std::string(name));
+    std::shared_lock lock(mu_);
+    auto it = workspaces_.find(name);
     if (it == workspaces_.end()) {
         return nullptr;
     }
@@ -228,11 +232,14 @@ Workspace* WorkspaceRegistry::get(std::string_view name) {
 
 void WorkspaceRegistry::remove(std::string_view name) {
     std::lock_guard lock(mu_);
-    workspaces_.erase(std::string(name));
+    auto it = workspaces_.find(name);
+    if (it != workspaces_.end()) {
+        workspaces_.erase(it);
+    }
 }
 
 std::vector<std::string> WorkspaceRegistry::list() const {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     std::vector<std::string> names;
     names.reserve(workspaces_.size());
     for (const auto& [name, _] : workspaces_) {

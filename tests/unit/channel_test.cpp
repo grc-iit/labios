@@ -139,6 +139,37 @@ TEST_CASE("Unsubscribe removes callback", "[channel]") {
     ch.destroy();
 }
 
+TEST_CASE("Subscriber can unsubscribe itself from callback", "[channel]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::Channel ch("test-self-unsub", redis, nats);
+
+    std::atomic<int> received{0};
+    int sub_id = -1;
+    sub_id = ch.subscribe([&](const labios::ChannelMessage&) {
+        ch.unsubscribe(sub_id);
+        received.fetch_add(1);
+    });
+
+    std::vector<std::byte> data(16, static_cast<std::byte>(0x44));
+    REQUIRE(ch.publish(data) > 0);
+
+    for (int i = 0; i < 50 && received.load() == 0; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    REQUIRE(received.load() == 1);
+    REQUIRE(ch.subscriber_count() == 0);
+    REQUIRE(ch.publish(data) > 0);
+
+    for (int i = 0; i < 10; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    REQUIRE(received.load() == 1);
+
+    ch.destroy();
+}
+
 TEST_CASE("Channel auto-destroys after last unsubscribe during drain", "[channel]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
@@ -291,4 +322,18 @@ TEST_CASE("Destroy cleans up warehouse keys", "[channel]") {
     // Keys cleaned up after destroy
     REQUIRE(redis.get_binary(key1).empty());
     REQUIRE(redis.get_binary(key2).empty());
+}
+
+TEST_CASE("Subscribe to destroyed channel fails and unsubscribe is a no-op", "[channel]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::Channel ch("test-destroyed-subscribe", redis, nats);
+
+    ch.destroy();
+    REQUIRE(ch.is_destroyed());
+    REQUIRE(ch.subscribe([](const labios::ChannelMessage&) {}) == -1);
+
+    // Unknown unsubscription after destroy should not throw.
+    ch.unsubscribe(999);
+    REQUIRE(ch.subscriber_count() == 0);
 }

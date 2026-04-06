@@ -88,6 +88,7 @@ LabelData Client::create_label(const LabelParams& params) {
     label.source_uri = params.source_uri;
     label.dest_uri = params.dest_uri;
     label.pipeline = params.pipeline;
+    mark_label_created(label);
     return label;
 }
 
@@ -101,6 +102,9 @@ PendingIO Client::publish(const LabelData& label,
     }
 
     LabelData mutable_label = label;
+    if (mutable_label.created_us == 0) {
+        mark_label_created(mutable_label);
+    }
     auto serialized = serialize_label(mutable_label);
     auto async = nats.publish_request_async("labios.labels", serialized);
     nats.flush();

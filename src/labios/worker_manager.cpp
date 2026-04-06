@@ -43,11 +43,11 @@ void InMemoryWorkerManager::remove_from_buckets(int worker_id) {
 }
 
 std::vector<WorkerInfo> InMemoryWorkerManager::all_workers() {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     std::vector<WorkerInfo> result;
     result.reserve(workers_.size());
     std::ranges::transform(workers_, std::back_inserter(result),
-                           [](auto& pair) { return pair.second; });
+                           [](const auto& pair) { return pair.second; });
     return result;
 }
 
@@ -132,7 +132,7 @@ void InMemoryWorkerManager::deregister_worker(int worker_id) {
 }
 
 size_t InMemoryWorkerManager::worker_count() {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     return workers_.size();
 }
 
@@ -142,7 +142,7 @@ int InMemoryWorkerManager::next_worker_id() {
 }
 
 std::vector<int> InMemoryWorkerManager::suspended_workers() {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     std::vector<int> result;
     for (auto& [id, w] : workers_) {
         if (!w.available) result.push_back(id);
@@ -152,22 +152,24 @@ std::vector<int> InMemoryWorkerManager::suspended_workers() {
 
 std::vector<int> InMemoryWorkerManager::decommissionable_workers(
     std::chrono::milliseconds threshold) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     auto now = std::chrono::steady_clock::now();
     std::vector<int> result;
     for (auto& [id, tp] : suspended_since_) {
-        if (workers_.count(id) && !workers_[id].available) {
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - tp);
-            if (elapsed > threshold) {
-                result.push_back(id);
-            }
+        auto worker_it = workers_.find(id);
+        if (worker_it == workers_.end() || worker_it->second.available) {
+            continue;
+        }
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - tp);
+        if (elapsed > threshold) {
+            result.push_back(id);
         }
     }
     return result;
 }
 
 std::vector<WorkerInfo> InMemoryWorkerManager::workers_by_tier(WorkerTier tier) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     std::vector<WorkerInfo> result;
     for (auto& [id, w] : workers_) {
         if (w.tier == tier) result.push_back(w);
@@ -176,7 +178,7 @@ std::vector<WorkerInfo> InMemoryWorkerManager::workers_by_tier(WorkerTier tier) 
 }
 
 int InMemoryWorkerManager::count_by_tier(WorkerTier tier) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     int count = 0;
     for (auto& [id, w] : workers_) {
         if (w.tier == tier) ++count;
@@ -185,7 +187,7 @@ int InMemoryWorkerManager::count_by_tier(WorkerTier tier) {
 }
 
 std::vector<int> InMemoryWorkerManager::suspended_workers_by_tier(WorkerTier tier) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     std::vector<int> result;
     for (auto& [id, w] : workers_) {
         if (!w.available && w.tier == tier) result.push_back(id);
@@ -195,7 +197,7 @@ std::vector<int> InMemoryWorkerManager::suspended_workers_by_tier(WorkerTier tie
 
 std::vector<int> InMemoryWorkerManager::decommissionable_workers_by_tier(
     WorkerTier tier, std::chrono::milliseconds threshold) {
-    std::lock_guard lock(mu_);
+    std::shared_lock lock(mu_);
     auto now = std::chrono::steady_clock::now();
     std::vector<int> result;
     for (auto& [id, tp] : suspended_since_) {

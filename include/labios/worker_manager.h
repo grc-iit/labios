@@ -4,6 +4,7 @@
 #include <array>
 #include <chrono>
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -56,7 +57,7 @@ private:
     void place_in_bucket(int worker_id, double score);
     void remove_from_buckets(int worker_id);
 
-    std::mutex mu_;
+    mutable std::shared_mutex mu_;
     std::unordered_map<int, WorkerInfo> workers_;
     // Cached score per worker for the last-used weight profile.
     std::unordered_map<int, double> scores_;

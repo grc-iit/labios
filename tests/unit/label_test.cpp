@@ -421,3 +421,65 @@ TEST_CASE("All new fields default correctly on minimal label", "[label]") {
     REQUIRE(result.result.data_location.empty());
     REQUIRE(result.result.bytes_transferred == 0);
 }
+
+TEST_CASE("Lifecycle helpers stamp scheduler state onto labels", "[label]") {
+    labios::LabelData label;
+    label.id = 1001;
+
+    labios::mark_label_created(label, 100);
+    labios::mark_label_queued(label, 200);
+    labios::mark_label_shuffled(label, 300);
+
+    labios::ScoreSnapshot snapshot;
+    snapshot.availability = 1.0;
+    snapshot.capacity = 0.75;
+    snapshot.load = 0.25;
+    snapshot.speed = 4.0;
+    snapshot.energy = 2.0;
+    snapshot.tier = 1.0;
+
+    labios::mark_label_scheduled(label, 7, "constraint", snapshot, 400);
+
+    REQUIRE(label.created_us == 100);
+    REQUIRE(label.queued_us == 200);
+    REQUIRE(label.dispatched_us == 400);
+    REQUIRE(label.status == labios::StatusCode::Scheduled);
+    REQUIRE(label.flags & labios::LabelFlags::Queued);
+    REQUIRE(label.flags & labios::LabelFlags::Scheduled);
+    REQUIRE(label.routing.worker_id == 7);
+    REQUIRE(label.routing.policy == "constraint");
+    REQUIRE(label.score_snapshot.capacity == Catch::Approx(0.75));
+    REQUIRE(label.hops.size() == 2);
+    REQUIRE(label.hops[0].component == "shuffler");
+    REQUIRE(label.hops[0].timestamp_us == 300);
+    REQUIRE(label.hops[1].component == "scheduler");
+    REQUIRE(label.hops[1].timestamp_us == 400);
+}
+
+TEST_CASE("Lifecycle helpers stamp worker completion state onto labels", "[label]") {
+    labios::LabelData label;
+    label.id = 1002;
+
+    labios::mark_label_created(label, 10);
+    labios::mark_label_executing(label, "worker-3", 20);
+    labios::mark_label_finished(
+        label, labios::CompletionStatus::Complete, "labios:content:1002",
+        4096, {}, 30);
+
+    REQUIRE(label.started_us == 20);
+    REQUIRE(label.completed_us == 30);
+    REQUIRE(label.status == labios::StatusCode::Complete);
+    REQUIRE(label.flags & labios::LabelFlags::Pending);
+    REQUIRE(label.result.data_location == "labios:content:1002");
+    REQUIRE(label.result.bytes_transferred == 4096);
+    REQUIRE(label.result.error.empty());
+    REQUIRE(label.hops.size() == 1);
+    REQUIRE(label.hops[0].component == "worker-3");
+    REQUIRE(label.hops[0].timestamp_us == 20);
+
+    labios::mark_label_finished(
+        label, labios::CompletionStatus::Error, {}, 0, "backend failed", 40);
+    REQUIRE(label.completed_us == 40);
+    REQUIRE(label.status == labios::StatusCode::Failed);
+    REQUIRE(label.result.error == "backend failed");
+}

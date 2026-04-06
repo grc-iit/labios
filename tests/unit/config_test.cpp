@@ -74,6 +74,9 @@ TEST_CASE("parse_size handles units", "[config]") {
     REQUIRE(labios::parse_size("1MB") == 1048576);
     REQUIRE(labios::parse_size("2GB") == 2147483648ULL);
     REQUIRE(labios::parse_size("4096") == 4096);
+    REQUIRE(labios::parse_size(" 1 mb ") == 1048576);
+    REQUIRE(labios::parse_size("12B") == 12);
+    REQUIRE(labios::parse_size("not-a-size") == 0);
     REQUIRE(labios::parse_size("") == 0);
 }
 

@@ -20,16 +20,17 @@ ContentManager::ContentManager(transport::RedisConnection& redis,
       default_read_policy_(default_read_policy) {}
 
 ContentManager::~ContentManager() {
+    if (flush_thread_.joinable()) {
+        flush_thread_.request_stop();
+        flush_thread_.join();
+    }
+
     // Drain any buffered small-I/O writes before shutting down.
     auto regions = flush_all();
     if (flush_callback_) {
         for (auto& [fd, fd_regions] : regions) {
             flush_callback_(fd, std::move(fd_regions));
         }
-    }
-
-    if (flush_thread_.joinable()) {
-        flush_thread_.request_stop();
     }
 }
 
@@ -178,6 +179,11 @@ void ContentManager::set_flush_callback(FlushCallback cb) {
 
 void ContentManager::start_flush_timer() {
     if (flush_interval_ms_ <= 0) return;
+
+    if (flush_thread_.joinable()) {
+        flush_thread_.request_stop();
+        flush_thread_.join();
+    }
 
     flush_thread_ = std::jthread([this](std::stop_token stoken) {
         while (!stoken.stop_requested()) {

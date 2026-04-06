@@ -3,6 +3,7 @@
 
 #include <sqlite3.h>
 
+#include <cstring>
 #include <stdexcept>
 
 namespace labios {
@@ -111,9 +112,16 @@ BackendDataResult SQLiteBackend::get(const LabelData& label) {
 
     rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW) {
-        auto* blob = static_cast<const std::byte*>(sqlite3_column_blob(stmt, 0));
         int size = sqlite3_column_bytes(stmt, 0);
-        std::vector<std::byte> result(blob, blob + size);
+        std::vector<std::byte> result(static_cast<size_t>(size));
+        if (size > 0) {
+            auto* blob = static_cast<const std::byte*>(sqlite3_column_blob(stmt, 0));
+            if (blob == nullptr) {
+                sqlite3_finalize(stmt);
+                return {false, "sqlite returned null blob pointer", {}};
+            }
+            std::memcpy(result.data(), blob, static_cast<size_t>(size));
+        }
         sqlite3_finalize(stmt);
         return {true, {}, std::move(result)};
     }

@@ -71,3 +71,17 @@ TEST_CASE("Constraint solver empty workers returns empty", "[solver]") {
     auto result = solver.assign(std::move(labels), {});
     CHECK(result.empty());
 }
+
+TEST_CASE("Constraint solver all unavailable workers returns empty", "[solver]") {
+    labios::WeightProfile wp{"low_latency", 0.5, 0.0, 0.35, 0.15, 0.0};
+    labios::ConstraintSolver solver(wp);
+
+    std::vector<labios::WorkerInfo> workers = {
+        {1, false, 0.9, 0.1, 5, 1},
+        {2, false, 0.5, 0.2, 4, 2},
+    };
+
+    std::vector<std::vector<std::byte>> labels(3);
+    auto result = solver.assign(std::move(labels), workers);
+    CHECK(result.empty());
+}
