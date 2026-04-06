@@ -281,9 +281,9 @@ maybe_string(flatbuffers::FlatBufferBuilder& fbb, const std::string& s) {
 
 } // namespace
 
-std::vector<std::byte> serialize_label(const LabelData& label) {
-    // Reuse a thread-local builder to avoid heap allocation per call.
-    thread_local flatbuffers::FlatBufferBuilder fbb(1024);
+// Core serialization into thread-local FBB. Returns pointer and size.
+static std::pair<const std::byte*, size_t> serialize_label_core(
+    const LabelData& label, flatbuffers::FlatBufferBuilder& fbb) {
     fbb.Clear();
     fbb.ForceDefaults(false);
 
@@ -428,8 +428,19 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
 
     auto* ptr = fbb.GetBufferPointer();
     auto  sz  = fbb.GetSize();
-    return {reinterpret_cast<const std::byte*>(ptr),
-            reinterpret_cast<const std::byte*>(ptr) + sz};
+    return {reinterpret_cast<const std::byte*>(ptr), sz};
+}
+
+std::vector<std::byte> serialize_label(const LabelData& label) {
+    thread_local flatbuffers::FlatBufferBuilder fbb(1024);
+    auto [ptr, sz] = serialize_label_core(label, fbb);
+    return {ptr, ptr + sz};
+}
+
+std::span<const std::byte> serialize_label_view(const LabelData& label) {
+    thread_local flatbuffers::FlatBufferBuilder fbb(1024);
+    auto [ptr, sz] = serialize_label_core(label, fbb);
+    return {ptr, sz};
 }
 
 namespace {

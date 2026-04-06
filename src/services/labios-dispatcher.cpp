@@ -381,9 +381,9 @@ int main() {
                         snapshot_worker(worker_id, workers), dispatch_time);
                     sched.push_back({label.id, worker_id, label.flags});
 
-                    auto serialized = labios::serialize_label(label);
+                    auto serialized = labios::serialize_label_view(label);
                     std::string subject = "labios.worker." + std::to_string(worker_id);
-                    nats.publish(subject, std::span<const std::byte>(serialized));
+                    nats.publish(subject, serialized);
                     telemetry.record_label_dispatched();
 
                     std::cout << "[" << timestamp() << "] dispatcher: label "
@@ -436,9 +436,9 @@ int main() {
                 sched.push_back({st.composite.id, wid, st.composite.flags});
                 catalog.schedule_batch(sched);
 
-                auto serialized = labios::serialize_label(st.composite);
+                auto serialized = labios::serialize_label_view(st.composite);
                 std::string subject = "labios.worker." + std::to_string(wid);
-                nats.publish(subject, std::span<const std::byte>(serialized));
+                nats.publish(subject, serialized);
                 telemetry.record_label_dispatched();
 
                 std::cout << "[" << timestamp() << "] dispatcher: supertask "
@@ -518,9 +518,9 @@ int main() {
                             snapshot_worker(target_worker, workers), dispatch_time);
                         sched.push_back({label.id, target_worker, label.flags});
 
-                        auto serialized = labios::serialize_label(label);
+                        auto serialized = labios::serialize_label_view(label);
                         std::string subject = "labios.worker." + std::to_string(target_worker);
-                        nats.publish(subject, std::span<const std::byte>(serialized));
+                        nats.publish(subject, serialized);
                         telemetry.record_label_dispatched();
 
                         std::cout << "[" << timestamp() << "] dispatcher: label "
@@ -547,9 +547,9 @@ int main() {
                             if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
                         }
 
-                        auto routed = labios::serialize_label(label);
+                        auto routed = labios::serialize_label_view(label);
                         std::string subject = "labios.worker." + std::to_string(wid);
-                        nats.publish(subject, std::span<const std::byte>(routed));
+                        nats.publish(subject, routed);
                         telemetry.record_label_dispatched();
 
                         std::cout << "[" << timestamp() << "] dispatcher: label "

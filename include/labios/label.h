@@ -193,6 +193,11 @@ void mark_label_finished(LabelData& label, CompletionStatus status,
                          uint64_t timestamp_us = 0);
 
 std::vector<std::byte> serialize_label(const LabelData& label);
+
+/// Zero-copy variant: returns a span into a thread-local buffer.
+/// Valid only until the next serialize call on the same thread.
+std::span<const std::byte> serialize_label_view(const LabelData& label);
+
 LabelData deserialize_label(std::span<const std::byte> buf);
 
 std::vector<std::byte> serialize_completion(const CompletionData& completion);

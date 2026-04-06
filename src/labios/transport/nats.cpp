@@ -3,6 +3,8 @@
 #include <nats.h>
 
 #include <atomic>
+#include <cstdio>
+#include <cstring>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -177,11 +179,25 @@ NatsConnection::~NatsConnection() = default;
 NatsConnection::NatsConnection(NatsConnection&&) noexcept = default;
 NatsConnection& NatsConnection::operator=(NatsConnection&&) noexcept = default;
 
+// Stack-buffer null-terminator for short subjects (avoids heap allocation).
+static const char* to_cstr(std::string_view sv, char* buf, size_t bufsz) {
+    if (sv.size() < bufsz) {
+        std::memcpy(buf, sv.data(), sv.size());
+        buf[sv.size()] = '\0';
+        return buf;
+    }
+    // Fallback for unexpectedly long subjects.
+    static thread_local std::string overflow;
+    overflow.assign(sv);
+    return overflow.c_str();
+}
+
 void NatsConnection::publish(std::string_view subject,
                              std::span<const std::byte> data) {
+    char subj_buf[64];
     natsStatus s = natsConnection_Publish(
         impl_->conn,
-        std::string(subject).c_str(),
+        to_cstr(subject, subj_buf, sizeof(subj_buf)),
         reinterpret_cast<const void*>(data.data()),
         static_cast<int>(data.size()));
     if (s != NATS_OK) {
@@ -261,9 +277,10 @@ std::shared_ptr<AsyncReply> NatsConnection::publish_request_async(
         impl_->pending_replies[reply_to] = reply;
     }
 
+    char subj_buf[64];
     natsStatus s = natsConnection_PublishRequest(
         impl_->conn,
-        std::string(subject).c_str(),
+        to_cstr(subject, subj_buf, sizeof(subj_buf)),
         reply_to.c_str(),
         reinterpret_cast<const void*>(data.data()),
         static_cast<int>(data.size()));
