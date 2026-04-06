@@ -18,6 +18,7 @@ TEST_CASE("File metadata tracks writes", "[catalog_manager]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::CatalogManager catalog(redis);
 
+    redis.del("labios:filemeta:/test/meta.bin");
     catalog.track_open("/test/meta.bin", O_CREAT | O_WRONLY);
     auto info = catalog.get_file_info("/test/meta.bin");
     REQUIRE(info.has_value());
