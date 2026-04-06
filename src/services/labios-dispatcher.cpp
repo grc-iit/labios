@@ -35,6 +35,29 @@ static std::mutex g_fanout_mu;
 static std::mutex g_workers_mu;
 static std::vector<labios::WorkerInfo> g_cached_workers;
 
+static uint64_t now_us() {
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count());
+}
+
+static labios::ScoreSnapshot snapshot_worker(int worker_id,
+    const std::vector<labios::WorkerInfo>& workers) {
+    for (auto& w : workers) {
+        if (w.id == worker_id) {
+            return {
+                w.available ? 1.0 : 0.0,
+                w.capacity,
+                w.load,
+                static_cast<double>(w.speed),
+                static_cast<double>(w.energy),
+                static_cast<double>(static_cast<int>(w.tier))
+            };
+        }
+    }
+    return {};
+}
+
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
@@ -167,6 +190,7 @@ int main() {
             std::string_view reply_to) {
             auto label = labios::deserialize_label(data);
             label.reply_to = std::string(reply_to);
+            label.queued_us = now_us();
             {
                 std::lock_guard lock(batch_mu);
                 batch_buffer.push_back(std::move(label));
@@ -301,6 +325,10 @@ int main() {
 
                 for (auto& [label, worker_id] : result.direct_route) {
                     label.flags |= labios::LabelFlags::Scheduled;
+                    label.routing.worker_id = worker_id;
+                    label.routing.policy = "read-locality";
+                    label.dispatched_us = now_us();
+                    label.score_snapshot = snapshot_worker(worker_id, workers);
                     sched.push_back({label.id, worker_id, label.flags});
 
                     auto serialized = labios::serialize_label(label);
@@ -327,10 +355,17 @@ int main() {
                     std::vector<labios::ScheduleEntry> sched;
                     sched.reserve(st.children.size() + 1);
 
+                    auto snap = snapshot_worker(wid, workers);
+                    auto dispatch_time = now_us();
+
                     std::vector<std::vector<std::byte>> child_payloads;
                     child_payloads.reserve(st.children.size());
                     for (auto& child : st.children) {
                         child.flags |= labios::LabelFlags::Scheduled;
+                        child.routing.worker_id = wid;
+                        child.routing.policy = cfg.scheduler_policy;
+                        child.dispatched_us = dispatch_time;
+                        child.score_snapshot = snap;
                         sched.push_back({child.id, wid, child.flags});
                         child_payloads.push_back(labios::serialize_label(child));
                     }
@@ -347,6 +382,10 @@ int main() {
                     }
 
                     st.composite.flags |= labios::LabelFlags::Scheduled;
+                    st.composite.routing.worker_id = wid;
+                    st.composite.routing.policy = cfg.scheduler_policy;
+                    st.composite.dispatched_us = dispatch_time;
+                    st.composite.score_snapshot = snap;
                     sched.push_back({st.composite.id, wid, st.composite.flags});
                     catalog.schedule_batch(sched);
 
@@ -430,6 +469,10 @@ int main() {
                     }
 
                     if (target_worker > 0) {
+                        label.routing.worker_id = target_worker;
+                        label.routing.policy = "write-locality";
+                        label.dispatched_us = now_us();
+                        label.score_snapshot = snapshot_worker(target_worker, workers);
                         sched.push_back({label.id, target_worker, label.flags});
 
                         auto serialized = labios::serialize_label(label);
@@ -447,6 +490,10 @@ int main() {
                         auto assignments = solve(std::move(solver_batch));
 
                         for (auto& [wid, payloads] : assignments) {
+                            label.routing.worker_id = wid;
+                            label.routing.policy = cfg.scheduler_policy;
+                            label.dispatched_us = now_us();
+                            label.score_snapshot = snapshot_worker(wid, workers);
                             sched.push_back({label.id, wid, label.flags});
 
                             if (label.type == labios::LabelType::Write) {
@@ -454,11 +501,11 @@ int main() {
                                 if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
                             }
 
-                            for (auto& payload : payloads) {
-                                std::string subject = "labios.worker." + std::to_string(wid);
-                                nats.publish(subject, std::span<const std::byte>(payload));
-                                telemetry.record_label_dispatched();
-                            }
+                            // Re-serialize with routing fields populated.
+                            auto routed = labios::serialize_label(label);
+                            std::string subject = "labios.worker." + std::to_string(wid);
+                            nats.publish(subject, std::span<const std::byte>(routed));
+                            telemetry.record_label_dispatched();
 
                             std::cout << "[" << timestamp() << "] dispatcher: label "
                                       << label.id << " -> worker " << wid << "\n"

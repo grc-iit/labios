@@ -207,6 +207,10 @@ std::vector<LabelData> Shuffler::aggregate(
                     reply_fanout[merged.id] = std::move(replies);
                 }
 
+                merged.aggregation.original_ids = merged.children;
+                merged.aggregation.merged_offset = first_range.offset;
+                merged.aggregation.merged_length = total_size;
+
                 merged.file_key = first.file_key;
                 merged.app_id = first.app_id;
                 merged.flags = first.flags;
@@ -343,6 +347,7 @@ std::vector<Supertask> Shuffler::build_supertasks(
 
         for (auto& child : group) {
             st.composite.children.push_back(child.id);
+            child.supertask_id = st.composite.id;
         }
 
         st.children = std::move(group);
