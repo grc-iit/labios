@@ -15,6 +15,7 @@ add_custom_target(labios_fbs_generated DEPENDS ${LABIOS_FBS_GEN_HEADER})
 
 add_library(labios STATIC
     catalog_manager.cpp
+    channel.cpp
     client.cpp
     config.cpp
     label.cpp

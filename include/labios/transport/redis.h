@@ -46,6 +46,13 @@ public:
     [[nodiscard]] std::vector<ZRangeEntry> zrangebyscore(
         std::string_view key, double min, double max);
 
+    /// Set a TTL on a key (Redis EXPIRE command).
+    void expire(std::string_view key, uint32_t seconds);
+
+    /// Scan keys matching a pattern. Returns all matching keys.
+    /// Uses SCAN internally to avoid blocking on large keyspaces.
+    [[nodiscard]] std::vector<std::string> scan_keys(std::string_view pattern);
+
     [[nodiscard]] bool connected() const;
 
     /// RAII guard that holds the connection mutex for the duration of a
@@ -75,6 +82,8 @@ private:
     void del_locked(std::string_view key);
     void hset_locked(std::string_view key, std::string_view field, std::string_view value);
     std::optional<std::string> hget_locked(std::string_view key, std::string_view field);
+    void expire_locked(std::string_view key, uint32_t seconds);
+    std::vector<std::string> scan_keys_locked(std::string_view pattern);
     void pipeline_begin_locked();
     void pipeline_exec_locked();
 };

@@ -122,6 +122,41 @@ std::optional<std::string> RedisConnection::hget_locked(std::string_view key, st
     return result;
 }
 
+void RedisConnection::expire_locked(std::string_view key, uint32_t seconds) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "EXPIRE %b %u",
+                     key.data(), key.size(), seconds));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis EXPIRE failed: " + std::string(impl_->ctx->errstr));
+    }
+    freeReplyObject(reply);
+}
+
+std::vector<std::string> RedisConnection::scan_keys_locked(std::string_view pattern) {
+    std::vector<std::string> keys;
+    unsigned long long cursor = 0;
+    do {
+        auto* reply = static_cast<redisReply*>(
+            redisCommand(impl_->ctx, "SCAN %llu MATCH %b COUNT 100",
+                         cursor, pattern.data(), pattern.size()));
+        if (reply == nullptr) {
+            throw std::runtime_error("redis SCAN failed: " + std::string(impl_->ctx->errstr));
+        }
+        if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 2) {
+            cursor = std::stoull(reply->element[0]->str);
+            auto* arr = reply->element[1];
+            for (size_t i = 0; i < arr->elements; ++i) {
+                keys.emplace_back(arr->element[i]->str, arr->element[i]->len);
+            }
+        } else {
+            freeReplyObject(reply);
+            break;
+        }
+        freeReplyObject(reply);
+    } while (cursor != 0);
+    return keys;
+}
+
 void RedisConnection::pipeline_begin_locked() {
     impl_->pipeline_count = 0;
 }
@@ -180,6 +215,16 @@ void RedisConnection::hset(std::string_view key, std::string_view field, std::st
 std::optional<std::string> RedisConnection::hget(std::string_view key, std::string_view field) {
     std::lock_guard lock(mu_);
     return hget_locked(key, field);
+}
+
+void RedisConnection::expire(std::string_view key, uint32_t seconds) {
+    std::lock_guard lock(mu_);
+    expire_locked(key, seconds);
+}
+
+std::vector<std::string> RedisConnection::scan_keys(std::string_view pattern) {
+    std::lock_guard lock(mu_);
+    return scan_keys_locked(pattern);
 }
 
 bool RedisConnection::connected() const {

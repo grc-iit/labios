@@ -1,11 +1,13 @@
 #pragma once
 
+#include <labios/channel.h>
 #include <labios/config.h>
 #include <labios/label.h>
 #include <labios/label_manager.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <span>
 #include <string>
@@ -68,12 +70,32 @@ public:
     PendingIO publish(const LabelData& label,
                         std::span<const std::byte> data = {});
 
+    // --- Channel API (streaming coordination) ---
+
+    /// Create a named channel for streaming between agents.
+    Channel* create_channel(std::string_view name, uint32_t ttl_seconds = 0);
+
+    /// Get an existing channel by name.
+    Channel* get_channel(std::string_view name);
+
+    /// Publish data to a named channel. Returns the sequence number (0 on error).
+    uint64_t publish_to_channel(std::string_view channel_name,
+                                std::span<const std::byte> data,
+                                uint64_t label_id = 0);
+
+    /// Subscribe to a named channel. Returns subscription ID (-1 on error).
+    int subscribe_to_channel(std::string_view channel_name, ChannelCallback cb);
+
+    /// Unsubscribe from a channel.
+    void unsubscribe_from_channel(std::string_view channel_name, int sub_id);
+
     Session& session();
     const Config& config() const;
     uint32_t app_id() const;
 
 private:
     std::unique_ptr<Session> session_;
+    std::unique_ptr<ChannelRegistry> channels_;
 };
 
 Client connect(const Config& cfg);

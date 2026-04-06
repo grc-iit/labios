@@ -1,11 +1,14 @@
 #include <labios/client.h>
+#include <labios/channel.h>
 #include <labios/session.h>
 
 #include <stdexcept>
 
 namespace labios {
 
-Client::Client(const Config& cfg) : session_(std::make_unique<Session>(cfg)) {}
+Client::Client(const Config& cfg)
+    : session_(std::make_unique<Session>(cfg))
+    , channels_(std::make_unique<ChannelRegistry>(session_->redis(), session_->nats())) {}
 Client::~Client() = default;
 Client::Client(Client&&) noexcept = default;
 Client& Client::operator=(Client&&) noexcept = default;
@@ -98,6 +101,41 @@ PendingIO Client::publish(const LabelData& label,
     std::vector<PendingLabel> vec;
     vec.push_back(std::move(pl));
     return PendingIO{std::move(vec)};
+}
+
+// ---------------------------------------------------------------------------
+// Channel API (streaming coordination)
+// ---------------------------------------------------------------------------
+
+Channel* Client::create_channel(std::string_view name, uint32_t ttl_seconds) {
+    return channels_->create(name, ttl_seconds);
+}
+
+Channel* Client::get_channel(std::string_view name) {
+    return channels_->get(name);
+}
+
+uint64_t Client::publish_to_channel(std::string_view channel_name,
+                                    std::span<const std::byte> data,
+                                    uint64_t label_id) {
+    auto* ch = channels_->get(channel_name);
+    if (ch == nullptr) return 0;
+    return ch->publish(data, label_id);
+}
+
+int Client::subscribe_to_channel(std::string_view channel_name,
+                                 ChannelCallback cb) {
+    auto* ch = channels_->get(channel_name);
+    if (ch == nullptr) return -1;
+    return ch->subscribe(std::move(cb));
+}
+
+void Client::unsubscribe_from_channel(std::string_view channel_name,
+                                      int sub_id) {
+    auto* ch = channels_->get(channel_name);
+    if (ch != nullptr) {
+        ch->unsubscribe(sub_id);
+    }
 }
 
 // ---------------------------------------------------------------------------
