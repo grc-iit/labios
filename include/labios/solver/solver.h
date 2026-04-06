@@ -60,7 +60,7 @@ template<typename T>
 concept Solver = requires(T s,
     std::vector<std::vector<std::byte>> labels,
     std::vector<WorkerInfo> workers) {
-    { s.assign(std::move(labels), std::move(workers)) } -> std::same_as<AssignmentMap>;
+    { s.assign(std::move(labels), workers) } -> std::same_as<AssignmentMap>;
 };
 
 /// WorkerManager concept: maintains worker registry and scores.

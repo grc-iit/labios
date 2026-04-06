@@ -9,7 +9,7 @@ namespace labios {
 
 AssignmentMap MinMaxSolver::assign(
     std::vector<std::vector<std::byte>> labels,
-    std::vector<WorkerInfo> workers) {
+    const std::vector<WorkerInfo>& workers) {
     if (workers.empty() || labels.empty()) return {};
 
     // Compute a profit value for each worker: maximize speed, minimize energy,
@@ -45,6 +45,7 @@ AssignmentMap MinMaxSolver::assign(
     for (auto& sw : scored) total_profit += sw.profit;
 
     AssignmentMap result;
+    result.reserve(std::min(labels.size(), scored.size()));
     size_t assigned = 0;
     for (size_t i = 0; i < scored.size() && assigned < labels.size(); ++i) {
         double fraction = (total_profit > 0.0)

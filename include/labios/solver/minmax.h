@@ -12,7 +12,7 @@ namespace labios {
 class MinMaxSolver {
 public:
     AssignmentMap assign(std::vector<std::vector<std::byte>> labels,
-                         std::vector<WorkerInfo> workers);
+                         const std::vector<WorkerInfo>& workers);
 };
 
 static_assert(Solver<MinMaxSolver>);

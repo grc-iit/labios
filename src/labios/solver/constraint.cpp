@@ -11,21 +11,28 @@ ConstraintSolver::ConstraintSolver(WeightProfile profile)
 
 AssignmentMap ConstraintSolver::assign(
     std::vector<std::vector<std::byte>> labels,
-    std::vector<WorkerInfo> workers) {
+    const std::vector<WorkerInfo>& workers) {
     if (workers.empty() || labels.empty()) return {};
 
     // Filter out unavailable workers, then score and sort by the weight profile.
-    std::vector<std::pair<double, WorkerInfo>> scored;
+    struct ScoredWorker {
+        double score;
+        int id;
+    };
+
+    std::vector<ScoredWorker> scored;
     scored.reserve(workers.size());
-    for (auto& w : workers) {
+    for (const auto& w : workers) {
         if (!w.available) continue;
-        scored.emplace_back(compute_score(w, profile_), w);
+        scored.push_back({compute_score(w, profile_), w.id});
     }
     if (scored.empty()) {
         return {};
     }
     std::sort(scored.begin(), scored.end(),
-              [](auto& a, auto& b) { return a.first > b.first; });
+              [](const ScoredWorker& a, const ScoredWorker& b) {
+                  return a.score > b.score;
+              });
 
     // Determine how many workers to use. Paper: "The number of workers
     // needed per a set of labels is automatically determined by LABIOS."
@@ -39,9 +46,10 @@ AssignmentMap ConstraintSolver::assign(
 
     // Distribute labels evenly among top-N scored workers.
     AssignmentMap result;
+    result.reserve(n_workers);
     for (size_t i = 0; i < labels.size(); ++i) {
         size_t idx = i % n_workers;
-        result[scored[idx].second.id].push_back(std::move(labels[i]));
+        result[scored[idx].id].push_back(std::move(labels[i]));
     }
     return result;
 }

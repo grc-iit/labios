@@ -133,7 +133,6 @@ int main() {
     // Solver instances (one of these is used per batch based on config).
     labios::RoundRobinSolver rr_solver;
     labios::RandomSolver random_solver;
-    labios::ConstraintSolver constraint_solver(profile);
     labios::MinMaxSolver minmax_solver;
 
     labios::ShufflerConfig shuf_cfg{
@@ -331,6 +330,16 @@ int main() {
                 return rr_solver.assign(std::move(solver_batch), workers);
             };
 
+            auto select_worker = [&](labios::Intent intent)
+                -> std::optional<int> {
+                std::vector<std::vector<std::byte>> solver_batch(1);
+                auto assignments = solve(std::move(solver_batch), intent);
+                if (assignments.empty()) {
+                    return std::nullopt;
+                }
+                return assignments.begin()->first;
+            };
+
             std::cout << "[" << timestamp() << "] dispatcher: policy="
                       << cfg.scheduler_policy << ", workers="
                       << workers.size() << "\n" << std::flush;
@@ -362,53 +371,54 @@ int main() {
 
             // (B) Supertasks
             for (auto& st : result.supertasks) {
-                auto dummy = labios::serialize_label(st.composite);
-                std::vector<std::vector<std::byte>> solver_batch;
-                solver_batch.push_back(std::move(dummy));
-                auto assignments = solve(std::move(solver_batch), st.composite.intent);
-
-                for (auto& [wid, _] : assignments) {
-                    std::vector<labios::ScheduleEntry> sched;
-                    sched.reserve(st.children.size() + 1);
-
-                    auto snap = snapshot_worker(wid, workers);
-                    auto dispatch_time = now_us();
-
-                    std::vector<std::vector<std::byte>> child_payloads;
-                    child_payloads.reserve(st.children.size());
-                    for (auto& child : st.children) {
-                        labios::mark_label_scheduled(
-                            child, wid, cfg.scheduler_policy, snap, dispatch_time);
-                        sched.push_back({child.id, wid, child.flags});
-                        child_payloads.push_back(labios::serialize_label(child));
-                    }
-
-                    auto packed = labios::pack_labels(child_payloads);
-                    std::string pack_key = "labios:supertask:" + std::to_string(st.composite.id);
-                    redis.set_binary(pack_key, std::span<const std::byte>(packed));
-
-                    for (auto& child : st.children) {
-                        if (child.type == labios::LabelType::Write) {
-                            auto* dst = std::get_if<labios::FilePath>(&child.destination);
-                            if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
-                        }
-                    }
-
-                    labios::mark_label_scheduled(
-                        st.composite, wid, cfg.scheduler_policy, snap, dispatch_time);
-                    sched.push_back({st.composite.id, wid, st.composite.flags});
-                    catalog.schedule_batch(sched);
-
-                    auto serialized = labios::serialize_label(st.composite);
-                    std::string subject = "labios.worker." + std::to_string(wid);
-                    nats.publish(subject, std::span<const std::byte>(serialized));
-                    telemetry.record_label_dispatched();
-
-                    std::cout << "[" << timestamp() << "] dispatcher: supertask "
-                              << st.composite.id << " (" << st.children.size()
-                              << " children) -> worker " << wid << "\n" << std::flush;
-                    break;
+                auto assigned_worker = select_worker(st.composite.intent);
+                if (!assigned_worker.has_value()) {
+                    std::cerr << "[" << timestamp()
+                              << "] dispatcher: no worker available for supertask "
+                              << st.composite.id << "\n" << std::flush;
+                    continue;
                 }
+
+                int wid = *assigned_worker;
+                std::vector<labios::ScheduleEntry> sched;
+                sched.reserve(st.children.size() + 1);
+
+                auto snap = snapshot_worker(wid, workers);
+                auto dispatch_time = now_us();
+
+                std::vector<std::vector<std::byte>> child_payloads;
+                child_payloads.reserve(st.children.size());
+                for (auto& child : st.children) {
+                    labios::mark_label_scheduled(
+                        child, wid, cfg.scheduler_policy, snap, dispatch_time);
+                    sched.push_back({child.id, wid, child.flags});
+                    child_payloads.push_back(labios::serialize_label(child));
+                }
+
+                auto packed = labios::pack_labels(child_payloads);
+                std::string pack_key = "labios:supertask:" + std::to_string(st.composite.id);
+                redis.set_binary(pack_key, std::span<const std::byte>(packed));
+
+                for (auto& child : st.children) {
+                    if (child.type == labios::LabelType::Write) {
+                        auto* dst = std::get_if<labios::FilePath>(&child.destination);
+                        if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
+                    }
+                }
+
+                labios::mark_label_scheduled(
+                    st.composite, wid, cfg.scheduler_policy, snap, dispatch_time);
+                sched.push_back({st.composite.id, wid, st.composite.flags});
+                catalog.schedule_batch(sched);
+
+                auto serialized = labios::serialize_label(st.composite);
+                std::string subject = "labios.worker." + std::to_string(wid);
+                nats.publish(subject, std::span<const std::byte>(serialized));
+                telemetry.record_label_dispatched();
+
+                std::cout << "[" << timestamp() << "] dispatcher: supertask "
+                          << st.composite.id << " (" << st.children.size()
+                          << " children) -> worker " << wid << "\n" << std::flush;
             }
 
             // (C) Independent labels
@@ -436,13 +446,13 @@ int main() {
                                   << label.file_key << "\n" << std::flush;
 
                         // Fan out completion to all original clients.
-                        if (result.reply_fanout.count(label.id)) {
-                            auto& original_replies = result.reply_fanout[label.id];
+                        auto fanout_it = result.reply_fanout.find(label.id);
+                        if (fanout_it != result.reply_fanout.end()) {
                             auto [inbox, reply_handle] = nats.create_reply_inbox();
                             label.reply_to = inbox;
 
                             auto fanout = std::jthread([reply_handle,
-                                         replies = original_replies,
+                                         replies = fanout_it->second,
                                          &nats](std::stop_token stoken) {
                                 try {
                                     auto data = reply_handle->wait(
@@ -492,33 +502,34 @@ int main() {
                                   << label.id << " -> worker " << target_worker
                                   << " (write locality)\n" << std::flush;
                     } else {
-                        auto serialized = labios::serialize_label(label);
-                        std::vector<std::vector<std::byte>> solver_batch;
-                        solver_batch.push_back(std::move(serialized));
-                        auto assignments = solve(std::move(solver_batch), label.intent);
-
-                        for (auto& [wid, payloads] : assignments) {
-                            auto dispatch_time = now_us();
-                            labios::mark_label_scheduled(
-                                label, wid, cfg.scheduler_policy,
-                                snapshot_worker(wid, workers), dispatch_time);
-                            sched.push_back({label.id, wid, label.flags});
-
-                            if (label.type == labios::LabelType::Write) {
-                                auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                                if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
-                            }
-
-                            // Re-serialize with routing fields populated.
-                            auto routed = labios::serialize_label(label);
-                            std::string subject = "labios.worker." + std::to_string(wid);
-                            nats.publish(subject, std::span<const std::byte>(routed));
-                            telemetry.record_label_dispatched();
-
-                            std::cout << "[" << timestamp() << "] dispatcher: label "
-                                      << label.id << " -> worker " << wid << "\n"
-                                      << std::flush;
+                        auto assigned_worker = select_worker(label.intent);
+                        if (!assigned_worker.has_value()) {
+                            std::cerr << "[" << timestamp()
+                                      << "] dispatcher: no worker available for label "
+                                      << label.id << "\n" << std::flush;
+                            continue;
                         }
+
+                        int wid = *assigned_worker;
+                        auto dispatch_time = now_us();
+                        labios::mark_label_scheduled(
+                            label, wid, cfg.scheduler_policy,
+                            snapshot_worker(wid, workers), dispatch_time);
+                        sched.push_back({label.id, wid, label.flags});
+
+                        if (label.type == labios::LabelType::Write) {
+                            auto* dst = std::get_if<labios::FilePath>(&label.destination);
+                            if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
+                        }
+
+                        auto routed = labios::serialize_label(label);
+                        std::string subject = "labios.worker." + std::to_string(wid);
+                        nats.publish(subject, std::span<const std::byte>(routed));
+                        telemetry.record_label_dispatched();
+
+                        std::cout << "[" << timestamp() << "] dispatcher: label "
+                                  << label.id << " -> worker " << wid << "\n"
+                                  << std::flush;
                     }
                 }
 
