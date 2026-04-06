@@ -262,6 +262,36 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
         hops_off = fbb.CreateVector(hop_offsets);
     }
 
+    // AggregationInfo sub-table.
+    flatbuffers::Offset<schema::AggregationInfo> aggregation_off = 0;
+    if (!label.aggregation.original_ids.empty()) {
+        auto ids_off = fbb.CreateVector(label.aggregation.original_ids);
+        aggregation_off = schema::CreateAggregationInfo(
+            fbb, ids_off, label.aggregation.merged_offset, label.aggregation.merged_length);
+    }
+
+    // ScoreSnapshot sub-table.
+    flatbuffers::Offset<schema::ScoreSnapshot> score_off = 0;
+    if (label.score_snapshot.availability != 0.0 || label.score_snapshot.capacity != 0.0 ||
+        label.score_snapshot.load != 0.0 || label.score_snapshot.speed != 0.0 ||
+        label.score_snapshot.energy != 0.0 || label.score_snapshot.tier != 0.0) {
+        score_off = schema::CreateScoreSnapshot(
+            fbb,
+            label.score_snapshot.availability, label.score_snapshot.capacity,
+            label.score_snapshot.load, label.score_snapshot.speed,
+            label.score_snapshot.energy, label.score_snapshot.tier);
+    }
+
+    // LabelResult sub-table.
+    flatbuffers::Offset<schema::LabelResult> result_off = 0;
+    if (!label.result.data_location.empty() || !label.result.error.empty() ||
+        label.result.bytes_transferred != 0) {
+        auto dl_off = maybe_string(fbb, label.result.data_location);
+        auto err_off = maybe_string(fbb, label.result.error);
+        result_off = schema::CreateLabelResult(
+            fbb, dl_off, err_off, label.result.bytes_transferred);
+    }
+
     // Build the Label table.
     schema::LabelBuilder builder(fbb);
     builder.add_id(label.id);
@@ -287,10 +317,17 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
     if (deps_off.o != 0) builder.add_dependencies(deps_off);
     if (children_off.o != 0) builder.add_children(children_off);
     if (routing_off.o != 0) builder.add_routing(routing_off);
+    builder.add_supertask_id(label.supertask_id);
+    if (aggregation_off.o != 0) builder.add_aggregation(aggregation_off);
+    if (score_off.o != 0) builder.add_score_snapshot(score_off);
     if (hops_off.o != 0) builder.add_hops(hops_off);
     builder.add_status(static_cast<schema::StatusCode>(label.status));
     builder.add_created_us(label.created_us);
+    builder.add_queued_us(label.queued_us);
+    builder.add_dispatched_us(label.dispatched_us);
+    builder.add_started_us(label.started_us);
     builder.add_completed_us(label.completed_us);
+    if (result_off.o != 0) builder.add_result(result_off);
 
     auto label_off = builder.Finish();
     schema::FinishLabelBuffer(fbb, label_off);
@@ -380,10 +417,40 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
         }
     }
 
+    // Accumulation: supertask, aggregation, score snapshot
+    out.supertask_id = fb->supertask_id();
+
+    if (auto* agg = fb->aggregation()) {
+        if (agg->original_ids()) {
+            auto* ids = agg->original_ids();
+            out.aggregation.original_ids.assign(ids->begin(), ids->end());
+        }
+        out.aggregation.merged_offset = agg->merged_offset();
+        out.aggregation.merged_length = agg->merged_length();
+    }
+
+    if (auto* ss = fb->score_snapshot()) {
+        out.score_snapshot.availability = ss->availability();
+        out.score_snapshot.capacity     = ss->capacity();
+        out.score_snapshot.load         = ss->load();
+        out.score_snapshot.speed        = ss->speed();
+        out.score_snapshot.energy       = ss->energy();
+        out.score_snapshot.tier         = ss->tier();
+    }
+
     // State
-    out.status       = static_cast<StatusCode>(fb->status());
-    out.created_us   = fb->created_us();
-    out.completed_us = fb->completed_us();
+    out.status        = static_cast<StatusCode>(fb->status());
+    out.created_us    = fb->created_us();
+    out.queued_us     = fb->queued_us();
+    out.dispatched_us = fb->dispatched_us();
+    out.started_us    = fb->started_us();
+    out.completed_us  = fb->completed_us();
+
+    if (auto* res = fb->result()) {
+        fb_read_string(out.result.data_location, res->data_location());
+        fb_read_string(out.result.error, res->error());
+        out.result.bytes_transferred = res->bytes_transferred();
+    }
 
     return out;
 }

@@ -80,6 +80,27 @@ struct HopRecord {
     uint64_t timestamp_us = 0;
 };
 
+struct AggregationInfo {
+    std::vector<uint64_t> original_ids;   // IDs of merged labels
+    uint64_t merged_offset = 0;
+    uint64_t merged_length = 0;
+};
+
+struct ScoreSnapshot {
+    double availability = 0.0;
+    double capacity = 0.0;
+    double load = 0.0;
+    double speed = 0.0;
+    double energy = 0.0;
+    double tier = 0.0;
+};
+
+struct LabelResult {
+    std::string data_location;
+    std::string error;
+    uint64_t bytes_transferred = 0;
+};
+
 struct LabelData {
     uint64_t id = 0;
     LabelType type = LabelType::Write;
@@ -108,12 +129,19 @@ struct LabelData {
 
     // Accumulation (written by runtime)
     RoutingDecision routing;
+    uint64_t supertask_id = 0;           // Set by shuffler if label joins supertask
+    AggregationInfo aggregation;          // Set by shuffler on merged labels
+    ScoreSnapshot score_snapshot;         // Set by scheduler at decision time
     std::vector<HopRecord> hops;
 
     // State
     StatusCode status = StatusCode::Created;
     uint64_t created_us = 0;
+    uint64_t queued_us = 0;              // When label entered dispatch queue
+    uint64_t dispatched_us = 0;          // When scheduler assigned to worker
+    uint64_t started_us = 0;             // When worker began execution
     uint64_t completed_us = 0;
+    LabelResult result;                   // Execution outcome
 };
 
 struct LabelParams {

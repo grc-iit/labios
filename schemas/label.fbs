@@ -57,6 +57,27 @@ table HopRecord {
   timestamp_us: uint64;
 }
 
+table AggregationInfo {
+  original_ids:    [uint64];
+  merged_offset:   uint64;
+  merged_length:   uint64;
+}
+
+table ScoreSnapshot {
+  availability: double;
+  capacity:     double;
+  load:         double;
+  speed:        double;
+  energy:       double;
+  tier:         double;
+}
+
+table LabelResult {
+  data_location:    string;
+  error:            string;
+  bytes_transferred: uint64;
+}
+
 table Label {
   // === Origin fields ===
   id:           uint64;
@@ -81,15 +102,22 @@ table Label {
   pipeline_data:  string;
 
   // === Accumulation fields (written by runtime components) ===
-  dependencies: [LabelDependency];
-  children:     [uint64];
-  routing:      RoutingDecision;
-  hops:         [HopRecord];
+  dependencies:   [LabelDependency];
+  children:       [uint64];
+  routing:        RoutingDecision;
+  supertask_id:   uint64;
+  aggregation:    AggregationInfo;
+  score_snapshot: ScoreSnapshot;
+  hops:           [HopRecord];
 
   // === State fields ===
-  status:       StatusCode;
-  created_us:   uint64;
-  completed_us: uint64;
+  status:         StatusCode;
+  created_us:     uint64;
+  queued_us:      uint64;
+  dispatched_us:  uint64;
+  started_us:     uint64;
+  completed_us:   uint64;
+  result:         LabelResult;
 }
 
 table Completion {

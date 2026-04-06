@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <labios/label.h>
 
 #include <unordered_set>
@@ -358,6 +359,40 @@ TEST_CASE("source_uri and dest_uri roundtrip", "[label]") {
     REQUIRE(result2.dest_uri.empty());
 }
 
+TEST_CASE("Label accumulation fields roundtrip", "[label]") {
+    labios::LabelData label;
+    label.id = 42;
+    label.supertask_id = 100;
+    label.aggregation.original_ids = {1, 2, 3};
+    label.aggregation.merged_offset = 0;
+    label.aggregation.merged_length = 4096;
+    label.score_snapshot.availability = 1.0;
+    label.score_snapshot.capacity = 0.8;
+    label.score_snapshot.load = 0.3;
+    label.score_snapshot.speed = 4.0;
+    label.score_snapshot.energy = 2.0;
+    label.score_snapshot.tier = 1.0;
+    label.queued_us = 1000;
+    label.dispatched_us = 2000;
+    label.started_us = 3000;
+    label.result.data_location = "/data/output.dat";
+    label.result.bytes_transferred = 1024;
+
+    auto buf = labios::serialize_label(label);
+    auto out = labios::deserialize_label(std::span<const std::byte>(buf));
+
+    REQUIRE(out.supertask_id == 100);
+    REQUIRE(out.aggregation.original_ids.size() == 3);
+    REQUIRE(out.aggregation.merged_length == 4096);
+    REQUIRE(out.score_snapshot.capacity == Catch::Approx(0.8));
+    REQUIRE(out.score_snapshot.speed == Catch::Approx(4.0));
+    REQUIRE(out.queued_us == 1000);
+    REQUIRE(out.dispatched_us == 2000);
+    REQUIRE(out.started_us == 3000);
+    REQUIRE(out.result.data_location == "/data/output.dat");
+    REQUIRE(out.result.bytes_transferred == 1024);
+}
+
 TEST_CASE("All new fields default correctly on minimal label", "[label]") {
     labios::LabelData label;
     label.id = 999;
@@ -374,7 +409,15 @@ TEST_CASE("All new fields default correctly on minimal label", "[label]") {
     REQUIRE(result.routing.worker_id == 0);
     REQUIRE(result.routing.policy.empty());
     REQUIRE(result.hops.empty());
+    REQUIRE(result.supertask_id == 0);
+    REQUIRE(result.aggregation.original_ids.empty());
+    REQUIRE(result.score_snapshot.availability == 0.0);
     REQUIRE(result.status == labios::StatusCode::Created);
     REQUIRE(result.created_us == 0);
+    REQUIRE(result.queued_us == 0);
+    REQUIRE(result.dispatched_us == 0);
+    REQUIRE(result.started_us == 0);
     REQUIRE(result.completed_us == 0);
+    REQUIRE(result.result.data_location.empty());
+    REQUIRE(result.result.bytes_transferred == 0);
 }
