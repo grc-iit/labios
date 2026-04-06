@@ -80,6 +80,14 @@ LabelData Client::create_label(const LabelParams& params) {
     label.ttl_seconds = params.ttl_seconds;
     label.isolation = params.isolation;
     label.app_id = session_->app_id();
+
+    // Spec fields (Wave 10)
+    label.version = params.version;
+    label.durability = params.durability;
+    label.continuation = params.continuation;
+    label.source_uri = params.source_uri;
+    label.dest_uri = params.dest_uri;
+    label.pipeline = params.pipeline;
     return label;
 }
 
@@ -177,6 +185,99 @@ void Client::workspace_grant(std::string_view workspace, uint32_t app_id) {
     if (ws != nullptr) {
         ws->grant_access(app_id);
     }
+}
+
+// ---------------------------------------------------------------------------
+// Observability API
+// ---------------------------------------------------------------------------
+
+std::string Client::observe(std::string_view query) {
+    LabelParams params{};
+    params.type = LabelType::Observe;
+    params.source_uri = std::string("observe://") + std::string(query);
+    auto label = create_label(params);
+
+    auto pending = publish(label);
+    wait(pending);
+
+    // Retrieve result from warehouse using the label ID as key.
+    auto& content = session_->content_manager();
+    auto result = content.retrieve(label.id);
+    return {reinterpret_cast<const char*>(result.data()), result.size()};
+}
+
+// ---------------------------------------------------------------------------
+// URI-based I/O
+// ---------------------------------------------------------------------------
+
+void Client::write_to(std::string_view dest_uri,
+                      std::span<const std::byte> data) {
+    auto pending = async_write_to(dest_uri, data);
+    wait(pending);
+}
+
+PendingIO Client::async_write_to(std::string_view dest_uri,
+                                  std::span<const std::byte> data) {
+    LabelParams params{};
+    params.type = LabelType::Write;
+    params.dest_uri = std::string(dest_uri);
+    auto label = create_label(params);
+    label.data_size = data.size();
+    return publish(label, data);
+}
+
+std::vector<std::byte> Client::read_from(std::string_view source_uri,
+                                          uint64_t size) {
+    auto pending = async_read_from(source_uri, size);
+    return wait_read(pending);
+}
+
+PendingIO Client::async_read_from(std::string_view source_uri, uint64_t size) {
+    LabelParams params{};
+    params.type = LabelType::Read;
+    params.source_uri = std::string(source_uri);
+    auto label = create_label(params);
+    label.data_size = size;
+    return publish(label);
+}
+
+// ---------------------------------------------------------------------------
+// Intent-driven convenience API
+// ---------------------------------------------------------------------------
+
+PendingIO Client::write_with_intent(std::string_view filepath,
+                                     std::span<const std::byte> data,
+                                     Intent intent, uint8_t priority) {
+    LabelParams params{};
+    params.type = LabelType::Write;
+    params.destination = file_path(filepath);
+    params.intent = intent;
+    params.priority = priority;
+    auto label = create_label(params);
+    label.data_size = data.size();
+    return publish(label, data);
+}
+
+PendingIO Client::execute_pipeline(std::string_view source_uri,
+                                    std::string_view dest_uri,
+                                    const sds::Pipeline& pipeline,
+                                    Intent intent) {
+    LabelParams params{};
+    params.type = LabelType::Write;
+    params.source_uri = std::string(source_uri);
+    params.dest_uri = std::string(dest_uri);
+    params.pipeline = pipeline;
+    params.intent = intent;
+    auto label = create_label(params);
+    return publish(label);
+}
+
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+
+std::string Client::get_config() {
+    return observe("config/current");
 }
 
 // ---------------------------------------------------------------------------

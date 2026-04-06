@@ -8,16 +8,14 @@ TEST_CASE("PendingIO is default constructible", "[client]") {
 }
 
 TEST_CASE("LabelParams builds with designated initializers", "[client]") {
-    labios::LabelParams params{
-        .type = labios::LabelType::Write,
-        .source = labios::memory_ptr(nullptr, 0),
-        .destination = labios::file_path("/test/output.dat"),
-        .operation = "write",
-        .flags = labios::LabelFlags::Async,
-        .priority = 5,
-        .dependencies = {},
-        .intent = labios::Intent::Checkpoint,
-    };
+    labios::LabelParams params{};
+    params.type = labios::LabelType::Write;
+    params.source = labios::memory_ptr(nullptr, 0);
+    params.destination = labios::file_path("/test/output.dat");
+    params.operation = "write";
+    params.flags = labios::LabelFlags::Async;
+    params.priority = 5;
+    params.intent = labios::Intent::Checkpoint;
     CHECK(params.type == labios::LabelType::Write);
     CHECK(params.flags == labios::LabelFlags::Async);
     CHECK(params.priority == 5);

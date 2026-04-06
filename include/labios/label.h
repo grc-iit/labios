@@ -127,6 +127,14 @@ struct LabelParams {
     Intent intent = Intent::None;
     uint32_t ttl_seconds = 0;
     Isolation isolation = Isolation::None;
+
+    // Spec additions (Wave 10)
+    uint64_t version = 0;
+    Durability durability = Durability::Ephemeral;
+    Continuation continuation;
+    std::string source_uri;
+    std::string dest_uri;
+    sds::Pipeline pipeline;
 };
 
 struct CompletionData {

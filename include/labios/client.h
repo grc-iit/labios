@@ -4,6 +4,7 @@
 #include <labios/config.h>
 #include <labios/label.h>
 #include <labios/label_manager.h>
+#include <labios/sds/types.h>
 #include <labios/workspace.h>
 
 #include <cstddef>
@@ -111,6 +112,44 @@ public:
 
     /// Grant another agent access to a workspace.
     void workspace_grant(std::string_view workspace, uint32_t app_id);
+
+    // --- Observability API ---
+
+    /// Query system state via an OBSERVE label. Returns JSON string.
+    std::string observe(std::string_view query);
+
+    // --- URI-based I/O ---
+
+    /// Write data to a URI destination (file://, s3://, etc).
+    void write_to(std::string_view dest_uri, std::span<const std::byte> data);
+
+    /// Async write to a URI destination.
+    PendingIO async_write_to(std::string_view dest_uri,
+                              std::span<const std::byte> data);
+
+    /// Read from a URI source.
+    std::vector<std::byte> read_from(std::string_view source_uri, uint64_t size);
+
+    /// Async read from a URI source.
+    PendingIO async_read_from(std::string_view source_uri, uint64_t size);
+
+    // --- Intent-driven convenience API ---
+
+    /// Write with explicit intent (Checkpoint, Cache, etc).
+    PendingIO write_with_intent(std::string_view filepath,
+                                 std::span<const std::byte> data,
+                                 Intent intent, uint8_t priority = 0);
+
+    /// Publish a pipeline label: read from source, execute pipeline, write to dest.
+    PendingIO execute_pipeline(std::string_view source_uri,
+                                std::string_view dest_uri,
+                                const sds::Pipeline& pipeline,
+                                Intent intent = Intent::None);
+
+    // --- Configuration ---
+
+    /// Query current LABIOS configuration as JSON string.
+    std::string get_config();
 
     Session& session();
     const Config& config() const;
