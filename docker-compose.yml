@@ -150,6 +150,23 @@ services:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
 
+  mcp:
+    build: { context: ./mcp }
+    depends_on:
+      redis: { condition: service_healthy }
+      dispatcher: { condition: service_healthy }
+    environment:
+      LABIOS_REDIS_HOST: "redis"
+      LABIOS_REDIS_PORT: "6379"
+    ports:
+      - "8400:8400"
+    stdin_open: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; redis.Redis(host='redis').ping()"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+
 volumes:
   worker-1-data:
   worker-2-data:

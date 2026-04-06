@@ -1,0 +1,8 @@
+{
+  "_comment": "Add this to your Claude Code MCP settings (~/.claude/settings.json or project .mcp.json)",
+  "mcpServers": {
+    "labios": {
+      "command": "/absolute/path/to/labios/mcp/connect.sh"
+    }
+  }
+}
