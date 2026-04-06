@@ -1,12 +1,15 @@
 #pragma once
 
+#include <labios/transparent_string_hash.h>
 #include <labios/transport/redis.h>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <shared_mutex>
 #include <set>
 #include <span>
 #include <string>
@@ -70,16 +73,16 @@ public:
     /// Destroy the workspace and all its data.
     void destroy();
 
-    bool is_destroyed() const { return destroyed_; }
+    bool is_destroyed() const { return destroyed_.load(std::memory_order_acquire); }
 
 private:
     std::string name_;
     uint32_t owner_app_id_;
     transport::RedisConnection& redis_;
     uint32_t ttl_seconds_;
-    bool destroyed_ = false;
+    std::atomic<bool> destroyed_{false};
 
-    mutable std::mutex mu_;
+    mutable std::shared_mutex mu_;
     std::set<uint32_t> acl_;
 
     std::string data_key(std::string_view key) const;       // "labios:ws:<name>:<key>"
@@ -103,8 +106,9 @@ public:
 
 private:
     transport::RedisConnection& redis_;
-    mutable std::mutex mu_;
-    std::unordered_map<std::string, std::unique_ptr<Workspace>> workspaces_;
+    mutable std::shared_mutex mu_;
+    std::unordered_map<std::string, std::unique_ptr<Workspace>,
+                       TransparentStringHash, std::equal_to<>> workspaces_;
 };
 
 } // namespace labios

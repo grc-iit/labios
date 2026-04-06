@@ -1,5 +1,6 @@
 #pragma once
 
+#include <labios/transparent_string_hash.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 
@@ -9,6 +10,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <span>
 #include <string>
 #include <string_view>
@@ -69,7 +71,7 @@ private:
     uint32_t ttl_seconds_;
     uint64_t max_pending_;
 
-    mutable std::mutex mu_;
+    mutable std::shared_mutex mu_;
     std::atomic<uint64_t> next_seq_{1};
     std::unordered_map<int, ChannelCallback> subscribers_;
     int next_sub_id_ = 1;
@@ -103,8 +105,9 @@ public:
 private:
     transport::RedisConnection& redis_;
     transport::NatsConnection& nats_;
-    mutable std::mutex mu_;
-    std::unordered_map<std::string, std::unique_ptr<Channel>> channels_;
+    mutable std::shared_mutex mu_;
+    std::unordered_map<std::string, std::unique_ptr<Channel>,
+                       TransparentStringHash, std::equal_to<>> channels_;
 };
 
 } // namespace labios
