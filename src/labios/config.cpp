@@ -92,6 +92,14 @@ Config load_config(const std::filesystem::path& path) {
         cfg.elastic.elastic_worker_speed = tbl["elastic"]["elastic_worker_speed"].value_or(cfg.elastic.elastic_worker_speed);
         cfg.elastic.elastic_worker_energy = tbl["elastic"]["elastic_worker_energy"].value_or(cfg.elastic.elastic_worker_energy);
         cfg.elastic.elastic_worker_capacity = tbl["elastic"]["elastic_worker_capacity"].value_or(cfg.elastic.elastic_worker_capacity);
+
+        // Per-tier scaling limits
+        cfg.elastic.min_databot_workers = tbl["elastic"]["min_databot_workers"].value_or(cfg.elastic.min_databot_workers);
+        cfg.elastic.max_databot_workers = tbl["elastic"]["max_databot_workers"].value_or(cfg.elastic.max_databot_workers);
+        cfg.elastic.min_pipeline_workers = tbl["elastic"]["min_pipeline_workers"].value_or(cfg.elastic.min_pipeline_workers);
+        cfg.elastic.max_pipeline_workers = tbl["elastic"]["max_pipeline_workers"].value_or(cfg.elastic.max_pipeline_workers);
+        cfg.elastic.min_agentic_workers = tbl["elastic"]["min_agentic_workers"].value_or(cfg.elastic.min_agentic_workers);
+        cfg.elastic.max_agentic_workers = tbl["elastic"]["max_agentic_workers"].value_or(cfg.elastic.max_agentic_workers);
     }
 
     cfg.nats_url        = env_or("LABIOS_NATS_URL", cfg.nats_url);

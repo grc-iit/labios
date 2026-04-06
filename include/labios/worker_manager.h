@@ -40,6 +40,13 @@ public:
     std::vector<int> suspended_workers();
     std::vector<int> decommissionable_workers(std::chrono::milliseconds threshold);
 
+    // Wave 8: Per-tier queries.
+    std::vector<WorkerInfo> workers_by_tier(WorkerTier tier);
+    int count_by_tier(WorkerTier tier);
+    std::vector<int> suspended_workers_by_tier(WorkerTier tier);
+    std::vector<int> decommissionable_workers_by_tier(
+        WorkerTier tier, std::chrono::milliseconds threshold);
+
     // Test helper: set the suspension start time for a worker.
     void set_suspended_since_for_test(int worker_id,
         std::chrono::steady_clock::time_point tp);

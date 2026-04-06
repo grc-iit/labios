@@ -69,6 +69,14 @@ struct Config {
         int elastic_worker_speed = 3;          // Default speed class [1,5]
         int elastic_worker_energy = 3;         // Default energy class [1,5]
         std::string elastic_worker_capacity = "50GB";
+
+        // Per-tier scaling limits (Wave 8)
+        int min_databot_workers = 1;
+        int max_databot_workers = 10;
+        int min_pipeline_workers = 0;
+        int max_pipeline_workers = 5;
+        int min_agentic_workers = 0;
+        int max_agentic_workers = 2;
     };
 
     ElasticConfig elastic;

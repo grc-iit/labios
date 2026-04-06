@@ -191,8 +191,18 @@ int main() {
                 batch_buffer.clear();
             }
             // Report queue depth to manager for elastic scaling and observability.
+            // Format: "total,with_pipeline,observe_count" for tier-aware decisions.
             try {
-                auto depth_str = std::to_string(batch.size());
+                int total = static_cast<int>(batch.size());
+                int with_pipeline = 0;
+                int observe_count = 0;
+                for (const auto& label : batch) {
+                    if (!label.pipeline.empty()) ++with_pipeline;
+                    if (label.type == labios::LabelType::Observe) ++observe_count;
+                }
+                auto depth_str = std::to_string(total) + ","
+                               + std::to_string(with_pipeline) + ","
+                               + std::to_string(observe_count);
                 nats.publish("labios.queue.depth", depth_str);
                 redis.set("labios:queue:depth", depth_str);
             } catch (...) {}

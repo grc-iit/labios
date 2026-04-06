@@ -30,6 +30,14 @@ public:
         }
     }
 
+    /// Update from the dispatcher's enriched queue depth message.
+    void update_queue_breakdown(const QueueBreakdown& qb) {
+        queue_breakdown_.store_total(qb.total);
+        queue_breakdown_.store_pipeline(qb.with_pipeline);
+        queue_breakdown_.store_observe(qb.observe_count);
+        update_queue_depth(qb.total);
+    }
+
     void evaluate_once() {
         auto idle = mgr_.decommissionable_workers(
             std::chrono::milliseconds(cfg_.elastic.decommission_timeout_ms));
@@ -74,6 +82,69 @@ public:
         }
     }
 
+    /// Tier-aware evaluation using queue breakdown and per-tier state.
+    void evaluate_tiered_once() {
+        auto timeout = std::chrono::milliseconds(cfg_.elastic.decommission_timeout_ms);
+
+        auto build_tier = [&](WorkerTier tier, int min_w, int max_w) -> TierState {
+            TierState ts;
+            ts.active = mgr_.count_by_tier(tier);
+            ts.min = min_w;
+            ts.max = max_w;
+
+            auto idle_all = mgr_.decommissionable_workers_by_tier(tier, timeout);
+            {
+                std::lock_guard lock(commissioned_mu_);
+                for (int wid : idle_all) {
+                    if (commissioned_.count(wid)) ts.idle_ids.push_back(wid);
+                }
+            }
+            ts.suspended_ids = mgr_.suspended_workers_by_tier(tier);
+            return ts;
+        };
+
+        std::chrono::steady_clock::time_point last_comm;
+        {
+            std::lock_guard lock(commissioned_mu_);
+            last_comm = last_commission_time_;
+        }
+
+        TieredSnapshot snap{
+            .queue = {queue_breakdown_.load_total(),
+                      queue_breakdown_.load_pipeline(),
+                      queue_breakdown_.load_observe()},
+            .pressure_count = pressure_count_.load(),
+            .pressure_threshold = cfg_.elastic.pressure_threshold,
+            .databot = build_tier(WorkerTier::Databot,
+                                  cfg_.elastic.min_databot_workers,
+                                  cfg_.elastic.max_databot_workers),
+            .pipeline = build_tier(WorkerTier::Pipeline,
+                                   cfg_.elastic.min_pipeline_workers,
+                                   cfg_.elastic.max_pipeline_workers),
+            .agentic = build_tier(WorkerTier::Agentic,
+                                  cfg_.elastic.min_agentic_workers,
+                                  cfg_.elastic.max_agentic_workers),
+            .last_commission = last_comm,
+            .cooldown = std::chrono::milliseconds(cfg_.elastic.commission_cooldown_ms),
+        };
+
+        auto sd = evaluate_tiered(snap);
+
+        switch (sd.action) {
+            case Action::Commission:
+                commission_worker(sd.target_tier);
+                break;
+            case Action::Decommission:
+                decommission_worker(sd.target_worker_id);
+                break;
+            case Action::Resume:
+                pending_resume_id_.store(sd.target_worker_id);
+                break;
+            case Action::None:
+                break;
+        }
+    }
+
     void run(std::stop_token stoken) {
         auto interval = std::chrono::milliseconds(cfg_.elastic.eval_interval_ms);
         while (!stoken.stop_requested()) {
@@ -93,8 +164,9 @@ public:
     }
 
 private:
-    void commission_worker() {
+    void commission_worker(WorkerTier tier = WorkerTier::Databot) {
         int wid = mgr_.next_worker_id();
+        int tier_int = static_cast<int>(tier);
 
         ContainerSpec spec{
             .image = cfg_.elastic.docker_image,
@@ -109,6 +181,7 @@ private:
                 "LABIOS_CONFIG_PATH=/etc/labios/labios.toml",
                 "LABIOS_WORKER_IDLE_TIMEOUT_MS=" +
                     std::to_string(cfg_.elastic.worker_idle_timeout_ms),
+                "LABIOS_WORKER_TIER=" + std::to_string(tier_int),
             },
             .network = cfg_.elastic.docker_network,
         };
@@ -122,7 +195,9 @@ private:
             }
             pressure_count_.store(0);
 
-            std::cout << "[elastic] commissioned worker " << wid
+            static constexpr const char* tier_names[] = {"databot", "pipeline", "agentic"};
+            std::cout << "[elastic] commissioned " << tier_names[tier_int]
+                      << " worker " << wid
                       << " (container " << container_id.substr(0, 12) << ")\n"
                       << std::flush;
         } catch (const std::exception& e) {
@@ -153,11 +228,26 @@ private:
         }
     }
 
+    /// Atomic wrapper for queue breakdown fields.
+    struct AtomicQueueBreakdown {
+        void store_total(int v) { total.store(v); }
+        void store_pipeline(int v) { with_pipeline.store(v); }
+        void store_observe(int v) { observe_count.store(v); }
+        int load_total() const { return total.load(); }
+        int load_pipeline() const { return with_pipeline.load(); }
+        int load_observe() const { return observe_count.load(); }
+    private:
+        std::atomic<int> total{0};
+        std::atomic<int> with_pipeline{0};
+        std::atomic<int> observe_count{0};
+    };
+
     InMemoryWorkerManager& mgr_;
     Runtime& runtime_;
     Config cfg_;
 
     std::atomic<int> pressure_count_{0};
+    AtomicQueueBreakdown queue_breakdown_;
     std::chrono::steady_clock::time_point last_commission_time_{};
     std::mutex commissioned_mu_;
     std::unordered_map<int, std::string> commissioned_;

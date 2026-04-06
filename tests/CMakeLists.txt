@@ -92,6 +92,10 @@ add_executable(labios-elastic-orchestrator-test unit/elastic_orchestrator_test.c
 target_link_libraries(labios-elastic-orchestrator-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-elastic-orchestrator-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-elastic-tiered-test unit/elastic_tiered_test.cpp)
+target_link_libraries(labios-elastic-tiered-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-elastic-tiered-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
 add_executable(labios-client-async-test unit/client_async_test.cpp)
 target_link_libraries(labios-client-async-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-client-async-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")

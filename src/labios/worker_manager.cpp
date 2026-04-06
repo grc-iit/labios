@@ -159,6 +159,51 @@ std::vector<int> InMemoryWorkerManager::decommissionable_workers(
     return result;
 }
 
+std::vector<WorkerInfo> InMemoryWorkerManager::workers_by_tier(WorkerTier tier) {
+    std::lock_guard lock(mu_);
+    std::vector<WorkerInfo> result;
+    for (auto& [id, w] : workers_) {
+        if (w.tier == tier) result.push_back(w);
+    }
+    return result;
+}
+
+int InMemoryWorkerManager::count_by_tier(WorkerTier tier) {
+    std::lock_guard lock(mu_);
+    int count = 0;
+    for (auto& [id, w] : workers_) {
+        if (w.tier == tier) ++count;
+    }
+    return count;
+}
+
+std::vector<int> InMemoryWorkerManager::suspended_workers_by_tier(WorkerTier tier) {
+    std::lock_guard lock(mu_);
+    std::vector<int> result;
+    for (auto& [id, w] : workers_) {
+        if (!w.available && w.tier == tier) result.push_back(id);
+    }
+    return result;
+}
+
+std::vector<int> InMemoryWorkerManager::decommissionable_workers_by_tier(
+    WorkerTier tier, std::chrono::milliseconds threshold) {
+    std::lock_guard lock(mu_);
+    auto now = std::chrono::steady_clock::now();
+    std::vector<int> result;
+    for (auto& [id, tp] : suspended_since_) {
+        auto it = workers_.find(id);
+        if (it == workers_.end()) continue;
+        if (it->second.available) continue;
+        if (it->second.tier != tier) continue;
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - tp);
+        if (elapsed > threshold) {
+            result.push_back(id);
+        }
+    }
+    return result;
+}
+
 void InMemoryWorkerManager::set_suspended_since_for_test(
     int worker_id, std::chrono::steady_clock::time_point tp) {
     std::lock_guard lock(mu_);
