@@ -176,17 +176,36 @@ Pointer deserialize_pointer(const schema::Pointer* ptr) {
 // Label serialization
 // ---------------------------------------------------------------------------
 
-std::vector<std::byte> serialize_label(const LabelData& label) {
-    flatbuffers::FlatBufferBuilder fbb(1024);
+namespace {
 
-    // Create all strings and nested objects before building the Label table.
-    auto operation_off  = fbb.CreateString(label.operation);
-    auto reply_to_off   = fbb.CreateString(label.reply_to);
-    auto file_key_off   = fbb.CreateString(label.file_key);
-    auto source_uri_off    = fbb.CreateString(label.source_uri);
-    auto dest_uri_off      = fbb.CreateString(label.dest_uri);
-    auto pipeline_data_off = fbb.CreateString(
-        sds::serialize_pipeline(label.pipeline));
+// Helper: create a FlatBuffer string only for non-empty strings.
+inline flatbuffers::Offset<flatbuffers::String>
+maybe_string(flatbuffers::FlatBufferBuilder& fbb, const std::string& s) {
+    if (s.empty()) return 0;
+    return fbb.CreateString(s);
+}
+
+} // namespace
+
+std::vector<std::byte> serialize_label(const LabelData& label) {
+    // Reuse a thread-local builder to avoid heap allocation per call.
+    thread_local flatbuffers::FlatBufferBuilder fbb(1024);
+    fbb.Clear();
+    fbb.ForceDefaults(false);
+
+    // Only serialize non-empty strings.
+    auto operation_off  = maybe_string(fbb, label.operation);
+    auto reply_to_off   = maybe_string(fbb, label.reply_to);
+    auto file_key_off   = maybe_string(fbb, label.file_key);
+    auto source_uri_off = maybe_string(fbb, label.source_uri);
+    auto dest_uri_off   = maybe_string(fbb, label.dest_uri);
+
+    // Only serialize pipeline when non-empty.
+    flatbuffers::Offset<flatbuffers::String> pipeline_data_off = 0;
+    if (!label.pipeline.empty()) {
+        pipeline_data_off = fbb.CreateString(
+            sds::serialize_pipeline(label.pipeline));
+    }
 
     // Dependencies vector.
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::LabelDependency>>> deps_off = 0;
@@ -215,9 +234,9 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
     // Continuation sub-table.
     flatbuffers::Offset<schema::Continuation> cont_off = 0;
     if (label.continuation.kind != ContinuationKind::None) {
-        auto tc_off = fbb.CreateString(label.continuation.target_channel);
-        auto cp_off = fbb.CreateString(label.continuation.chain_params);
-        auto cd_off = fbb.CreateString(label.continuation.condition);
+        auto tc_off = maybe_string(fbb, label.continuation.target_channel);
+        auto cp_off = maybe_string(fbb, label.continuation.chain_params);
+        auto cd_off = maybe_string(fbb, label.continuation.condition);
         cont_off = schema::CreateContinuation(
             fbb,
             static_cast<schema::ContinuationKind>(label.continuation.kind),
@@ -227,7 +246,7 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
     // RoutingDecision sub-table.
     flatbuffers::Offset<schema::RoutingDecision> routing_off = 0;
     if (label.routing.worker_id != 0 || !label.routing.policy.empty()) {
-        auto policy_off = fbb.CreateString(label.routing.policy);
+        auto policy_off = maybe_string(fbb, label.routing.policy);
         routing_off = schema::CreateRoutingDecision(fbb, label.routing.worker_id, policy_off);
     }
 
@@ -243,13 +262,13 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
         hops_off = fbb.CreateVector(hop_offsets);
     }
 
-    // Build the Label table using the builder pattern.
+    // Build the Label table.
     schema::LabelBuilder builder(fbb);
     builder.add_id(label.id);
     builder.add_type(static_cast<schema::LabelType>(label.type));
     builder.add_source(src_off);
     builder.add_destination(dst_off);
-    builder.add_operation(operation_off);
+    if (operation_off.o != 0) builder.add_operation(operation_off);
     builder.add_flags(label.flags);
     builder.add_priority(label.priority);
     builder.add_app_id(label.app_id);
@@ -257,14 +276,14 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
     builder.add_intent(static_cast<schema::Intent>(label.intent));
     builder.add_ttl_seconds(label.ttl_seconds);
     builder.add_isolation(static_cast<schema::Isolation>(label.isolation));
-    builder.add_reply_to(reply_to_off);
-    builder.add_file_key(file_key_off);
+    if (reply_to_off.o != 0)  builder.add_reply_to(reply_to_off);
+    if (file_key_off.o != 0)  builder.add_file_key(file_key_off);
     builder.add_version(label.version);
     builder.add_durability(static_cast<schema::Durability>(label.durability));
     if (cont_off.o != 0) builder.add_continuation(cont_off);
-    builder.add_source_uri(source_uri_off);
-    builder.add_dest_uri(dest_uri_off);
-    builder.add_pipeline_data(pipeline_data_off);
+    if (source_uri_off.o != 0)    builder.add_source_uri(source_uri_off);
+    if (dest_uri_off.o != 0)      builder.add_dest_uri(dest_uri_off);
+    if (pipeline_data_off.o != 0) builder.add_pipeline_data(pipeline_data_off);
     if (deps_off.o != 0) builder.add_dependencies(deps_off);
     if (children_off.o != 0) builder.add_children(children_off);
     if (routing_off.o != 0) builder.add_routing(routing_off);
@@ -282,6 +301,17 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
             reinterpret_cast<const std::byte*>(ptr) + sz};
 }
 
+namespace {
+
+// Helper: extract string from FlatBuffer field only when non-null and non-empty.
+inline void fb_read_string(std::string& dst, const flatbuffers::String* src) {
+    if (src && src->size() > 0) {
+        dst.assign(src->data(), src->size());
+    }
+}
+
+} // namespace
+
 LabelData deserialize_label(std::span<const std::byte> buf) {
     auto fb = schema::GetLabel(buf.data());
 
@@ -290,7 +320,7 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     out.type        = static_cast<LabelType>(fb->type());
     out.source      = deserialize_pointer(fb->source());
     out.destination = deserialize_pointer(fb->destination());
-    out.operation   = fb->operation() ? fb->operation()->str() : std::string{};
+    fb_read_string(out.operation, fb->operation());
     out.flags       = fb->flags();
     out.priority    = fb->priority();
     out.app_id      = fb->app_id();
@@ -298,30 +328,28 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     out.intent      = static_cast<Intent>(fb->intent());
     out.ttl_seconds = fb->ttl_seconds();
     out.isolation   = static_cast<Isolation>(fb->isolation());
-    out.reply_to    = fb->reply_to() ? fb->reply_to()->str() : std::string{};
-    out.file_key    = fb->file_key() ? fb->file_key()->str() : std::string{};
+    fb_read_string(out.reply_to, fb->reply_to());
+    fb_read_string(out.file_key, fb->file_key());
 
     out.version     = fb->version();
     out.durability  = static_cast<Durability>(fb->durability());
-    out.source_uri  = fb->source_uri() ? fb->source_uri()->str() : std::string{};
-    out.dest_uri    = fb->dest_uri() ? fb->dest_uri()->str() : std::string{};
+    fb_read_string(out.source_uri, fb->source_uri());
+    fb_read_string(out.dest_uri, fb->dest_uri());
     if (fb->pipeline_data() && fb->pipeline_data()->size() > 0)
         out.pipeline = sds::deserialize_pipeline(fb->pipeline_data()->string_view());
 
     // Continuation
     if (auto* cont = fb->continuation()) {
         out.continuation.kind = static_cast<ContinuationKind>(cont->kind());
-        out.continuation.target_channel =
-            cont->target_channel() ? cont->target_channel()->str() : std::string{};
-        out.continuation.chain_params =
-            cont->chain_params() ? cont->chain_params()->str() : std::string{};
-        out.continuation.condition =
-            cont->condition() ? cont->condition()->str() : std::string{};
+        fb_read_string(out.continuation.target_channel, cont->target_channel());
+        fb_read_string(out.continuation.chain_params, cont->chain_params());
+        fb_read_string(out.continuation.condition, cont->condition());
     }
 
     // Dependencies
-    if (fb->dependencies()) {
-        for (auto* dep : *fb->dependencies()) {
+    if (auto* deps = fb->dependencies()) {
+        out.dependencies.reserve(deps->size());
+        for (auto* dep : *deps) {
             out.dependencies.push_back({
                 dep->label_id(),
                 static_cast<HazardType>(dep->hazard_type())
@@ -338,16 +366,17 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     // RoutingDecision
     if (auto* rt = fb->routing()) {
         out.routing.worker_id = rt->worker_id();
-        out.routing.policy = rt->policy() ? rt->policy()->str() : std::string{};
+        fb_read_string(out.routing.policy, rt->policy());
     }
 
     // Hops
-    if (fb->hops()) {
-        for (auto* hop : *fb->hops()) {
-            out.hops.push_back({
-                hop->component() ? hop->component()->str() : std::string{},
-                hop->timestamp_us()
-            });
+    if (auto* hops_vec = fb->hops()) {
+        out.hops.reserve(hops_vec->size());
+        for (auto* hop : *hops_vec) {
+            HopRecord rec;
+            fb_read_string(rec.component, hop->component());
+            rec.timestamp_us = hop->timestamp_us();
+            out.hops.push_back(std::move(rec));
         }
     }
 
@@ -364,11 +393,12 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
 // ---------------------------------------------------------------------------
 
 std::vector<std::byte> serialize_completion(const CompletionData& comp) {
-    flatbuffers::FlatBufferBuilder fbb(256);
+    thread_local flatbuffers::FlatBufferBuilder fbb(256);
+    fbb.Clear();
+    fbb.ForceDefaults(false);
 
-    // Create strings before building the table.
-    auto error_off    = fbb.CreateString(comp.error);
-    auto data_key_off = fbb.CreateString(comp.data_key);
+    auto error_off    = maybe_string(fbb, comp.error);
+    auto data_key_off = maybe_string(fbb, comp.data_key);
 
     auto comp_off = schema::CreateCompletion(
         fbb,
@@ -391,8 +421,8 @@ CompletionData deserialize_completion(std::span<const std::byte> buf) {
     CompletionData out;
     out.label_id = fb->label_id();
     out.status   = static_cast<CompletionStatus>(fb->status());
-    out.error    = fb->error() ? fb->error()->str() : std::string{};
-    out.data_key = fb->data_key() ? fb->data_key()->str() : std::string{};
+    fb_read_string(out.error, fb->error());
+    fb_read_string(out.data_key, fb->data_key());
     return out;
 }
 
