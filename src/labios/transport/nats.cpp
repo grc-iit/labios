@@ -63,7 +63,10 @@ struct NatsConnection::Impl {
         if (inbox_sub != nullptr) return;
 
         natsInbox* inbox = nullptr;
-        natsInbox_Create(&inbox);
+        natsStatus is = natsInbox_Create(&inbox);
+        if (is != NATS_OK || inbox == nullptr) {
+            throw std::runtime_error("nats: inbox creation failed");
+        }
         inbox_prefix = std::string(inbox);
         natsInbox_Destroy(inbox);
         // Remove trailing dot if present, then add ".*" for wildcard
@@ -211,7 +214,12 @@ void NatsConnection::subscribe(std::string_view subject,
 
 void NatsConnection::flush() {
     if (impl_->conn != nullptr) {
-        natsConnection_FlushTimeout(impl_->conn, 2000);
+        natsStatus s = natsConnection_FlushTimeout(impl_->conn, 2000);
+        if (s != NATS_OK && s != NATS_CONNECTION_CLOSED) {
+            // Flush is called in catch blocks and shutdown paths where
+            // throwing would be destructive. Log the error instead.
+            fprintf(stderr, "nats: flush failed (status=%d)\n", static_cast<int>(s));
+        }
     }
 }
 
