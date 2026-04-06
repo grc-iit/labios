@@ -150,3 +150,21 @@ catch_discover_tests(labios-workspace-test TEST_PREFIX "smoke/" PROPERTIES LABEL
 add_executable(labios-observability-test unit/observability_test.cpp)
 target_link_libraries(labios-observability-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-observability-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
+# Agent I/O Benchmarks (LABIOS-SPEC.md Section 13)
+set(BENCHMARKS
+    bench_coding_agent_io
+    bench_rag_pipeline
+    bench_science_pipeline
+    bench_checkpoint_storm
+    bench_multi_agent_collab
+    bench_cross_backend_etl
+    bench_agentic_worker
+    bench_scale_adaptation
+)
+
+foreach(bench ${BENCHMARKS})
+    add_executable(labios-${bench} benchmark/${bench}.cpp)
+    target_link_libraries(labios-${bench} PRIVATE labios Catch2::Catch2WithMain)
+    catch_discover_tests(labios-${bench} TEST_PREFIX "bench/" PROPERTIES LABELS "bench")
+endforeach()
