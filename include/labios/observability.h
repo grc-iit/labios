@@ -1,4 +1,5 @@
 #pragma once
+#include <labios/catalog_manager.h>
 #include <labios/config.h>
 #include <labios/solver/solver.h>
 #include <labios/transport/nats.h>
@@ -26,10 +27,12 @@ struct ObserveResult {
 ///   observe://channels/list     -> active channel names
 ///   observe://workspaces/list   -> active workspace names
 ///   observe://config/current    -> current configuration values
+///   observe://data/location     -> which worker holds a given file
 ObserveResult handle_observe(const URI& query,
                               const std::vector<WorkerInfo>& workers,
                               transport::RedisConnection& redis,
                               transport::NatsConnection& nats,
-                              const Config& cfg);
+                              const Config& cfg,
+                              CatalogManager& catalog);
 
 } // namespace labios

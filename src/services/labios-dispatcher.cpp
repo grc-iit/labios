@@ -245,7 +245,7 @@ int main() {
                 std::erase_if(batch, [&](labios::LabelData& label) {
                     if (label.type != labios::LabelType::Observe) return false;
                     auto uri = labios::parse_uri(label.source_uri);
-                    auto obs = labios::handle_observe(uri, obs_workers, redis, nats, cfg);
+                    auto obs = labios::handle_observe(uri, obs_workers, redis, nats, cfg, catalog);
                     std::string data_key = "labios:observe:" + std::to_string(label.id);
                     redis.set(data_key, obs.json_data);
                     labios::CompletionData comp;

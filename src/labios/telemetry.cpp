@@ -1,5 +1,6 @@
 #include <labios/telemetry.h>
 
+#include <algorithm>
 #include <chrono>
 #include <sstream>
 
@@ -33,7 +34,19 @@ void TelemetryPublisher::record_label_completed(std::chrono::microseconds latenc
     labels_completed_.fetch_add(1, std::memory_order_relaxed);
     total_latency_us_.fetch_add(
         static_cast<uint64_t>(latency.count()), std::memory_order_relaxed);
+    {
+        std::lock_guard lock(latency_mu_);
+        latency_samples_.push_back(static_cast<uint64_t>(latency.count()));
+    }
 }
+
+namespace {
+uint64_t percentile(std::vector<uint64_t>& sorted, double p) {
+    if (sorted.empty()) return 0;
+    size_t idx = static_cast<size_t>(p * static_cast<double>(sorted.size() - 1));
+    return sorted[idx];
+}
+} // namespace
 
 void TelemetryPublisher::publish_loop(std::stop_token stoken) {
     while (!stoken.stop_requested()) {
@@ -51,6 +64,16 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
         uint64_t latency_us = total_latency_us_.exchange(0, std::memory_order_relaxed);
         uint64_t avg_latency = (completed > 0) ? (latency_us / completed) : 0;
 
+        std::vector<uint64_t> samples;
+        {
+            std::lock_guard lock(latency_mu_);
+            samples.swap(latency_samples_);
+        }
+        std::sort(samples.begin(), samples.end());
+        uint64_t p50 = percentile(samples, 0.50);
+        uint64_t p95 = percentile(samples, 0.95);
+        uint64_t p99 = percentile(samples, 0.99);
+
         auto workers = worker_fn_();
 
         auto tp = std::chrono::system_clock::now();
@@ -62,6 +85,9 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
             << ",\"labels_dispatched\":" << dispatched
             << ",\"labels_completed\":" << completed
             << ",\"avg_latency_us\":" << avg_latency
+            << ",\"latency_p50_us\":" << p50
+            << ",\"latency_p95_us\":" << p95
+            << ",\"latency_p99_us\":" << p99
             << ",\"worker_count\":" << workers.size()
             << ",\"worker_utilization\":[";
 

@@ -5,7 +5,9 @@
 #include <atomic>
 #include <chrono>
 #include <functional>
+#include <mutex>
 #include <thread>
+#include <vector>
 
 namespace labios {
 
@@ -44,6 +46,9 @@ private:
     std::atomic<uint64_t> labels_dispatched_{0};
     std::atomic<uint64_t> labels_completed_{0};
     std::atomic<uint64_t> total_latency_us_{0};
+
+    std::mutex latency_mu_;
+    std::vector<uint64_t> latency_samples_;
 
     void publish_loop(std::stop_token stoken);
 };

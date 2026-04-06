@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <labios/catalog_manager.h>
 #include <labios/observability.h>
 #include <labios/telemetry.h>
 #include <labios/transport/nats.h>
@@ -45,11 +46,12 @@ static std::vector<labios::WorkerInfo> test_workers() {
 TEST_CASE("handle_observe workers/scores returns valid JSON with worker data", "[observability]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
     auto cfg = test_config();
     auto workers = test_workers();
 
     auto uri = labios::parse_uri("observe://workers/scores");
-    auto result = labios::handle_observe(uri, workers, redis, nats, cfg);
+    auto result = labios::handle_observe(uri, workers, redis, nats, cfg, catalog);
 
     REQUIRE(result.success);
     REQUIRE(result.error.empty());
@@ -64,11 +66,12 @@ TEST_CASE("handle_observe workers/scores returns valid JSON with worker data", "
 TEST_CASE("handle_observe workers/count returns correct tier counts", "[observability]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
     auto cfg = test_config();
     auto workers = test_workers();
 
     auto uri = labios::parse_uri("observe://workers/count");
-    auto result = labios::handle_observe(uri, workers, redis, nats, cfg);
+    auto result = labios::handle_observe(uri, workers, redis, nats, cfg, catalog);
 
     REQUIRE(result.success);
     REQUIRE(result.json_data.find("\"databot\":1") != std::string::npos);
@@ -80,10 +83,11 @@ TEST_CASE("handle_observe workers/count returns correct tier counts", "[observab
 TEST_CASE("handle_observe system/health returns connected status", "[observability]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
     auto cfg = test_config();
 
     auto uri = labios::parse_uri("observe://system/health");
-    auto result = labios::handle_observe(uri, {}, redis, nats, cfg);
+    auto result = labios::handle_observe(uri, {}, redis, nats, cfg, catalog);
 
     REQUIRE(result.success);
     REQUIRE(result.json_data.find("\"nats\":\"connected\"") != std::string::npos);
@@ -94,10 +98,11 @@ TEST_CASE("handle_observe system/health returns connected status", "[observabili
 TEST_CASE("handle_observe with unknown path returns error JSON", "[observability]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
     auto cfg = test_config();
 
     auto uri = labios::parse_uri("observe://foo/bar");
-    auto result = labios::handle_observe(uri, {}, redis, nats, cfg);
+    auto result = labios::handle_observe(uri, {}, redis, nats, cfg, catalog);
 
     REQUIRE_FALSE(result.success);
     REQUIRE_FALSE(result.error.empty());
@@ -108,10 +113,11 @@ TEST_CASE("handle_observe with unknown path returns error JSON", "[observability
 TEST_CASE("handle_observe config/current returns configuration values", "[observability]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
     auto cfg = test_config();
 
     auto uri = labios::parse_uri("observe://config/current");
-    auto result = labios::handle_observe(uri, {}, redis, nats, cfg);
+    auto result = labios::handle_observe(uri, {}, redis, nats, cfg, catalog);
 
     REQUIRE(result.success);
     REQUIRE(result.json_data.find("\"batch_size\":100") != std::string::npos);
@@ -123,12 +129,13 @@ TEST_CASE("handle_observe config/current returns configuration values", "[observ
 TEST_CASE("handle_observe queue/depth reads from Redis", "[observability]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
     auto cfg = test_config();
 
     redis.set("labios:queue:depth", "42");
 
     auto uri = labios::parse_uri("observe://queue/depth");
-    auto result = labios::handle_observe(uri, {}, redis, nats, cfg);
+    auto result = labios::handle_observe(uri, {}, redis, nats, cfg, catalog);
 
     REQUIRE(result.success);
     REQUIRE(result.json_data.find("\"queue_depth\":42") != std::string::npos);
@@ -140,6 +147,7 @@ TEST_CASE("handle_observe queue/depth reads from Redis", "[observability]") {
 TEST_CASE("handle_observe workspaces/list finds workspace index keys", "[observability]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
     auto cfg = test_config();
 
     // Create fake workspace index keys.
@@ -147,7 +155,7 @@ TEST_CASE("handle_observe workspaces/list finds workspace index keys", "[observa
     redis.sadd("labios:ws:shared-data:_index", "placeholder");
 
     auto uri = labios::parse_uri("observe://workspaces/list");
-    auto result = labios::handle_observe(uri, {}, redis, nats, cfg);
+    auto result = labios::handle_observe(uri, {}, redis, nats, cfg, catalog);
 
     REQUIRE(result.success);
     REQUIRE(result.json_data.find("\"workspaces\"") != std::string::npos);
@@ -197,6 +205,40 @@ TEST_CASE("TelemetryPublisher start/stop lifecycle", "[telemetry]") {
     pub.stop();
     // Verifies clean start/stop without deadlock or crash.
     REQUIRE(true);
+}
+
+TEST_CASE("Observe data/location returns worker mapping", "[observability]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
+    auto cfg = test_config();
+
+    // Register a file location in the catalog.
+    catalog.set_location("/test/file.dat", 7);
+
+    auto uri = labios::parse_uri("observe://data/location?file=/test/file.dat");
+    auto result = labios::handle_observe(uri, {}, redis, nats, cfg, catalog);
+
+    REQUIRE(result.success);
+    REQUIRE(result.error.empty());
+    REQUIRE(result.json_data.find("\"file\":\"/test/file.dat\"") != std::string::npos);
+    REQUIRE(result.json_data.find("\"worker_id\":7") != std::string::npos);
+
+    // Clean up.
+    redis.del("labios:location:/test/file.dat");
+}
+
+TEST_CASE("Observe data/location without file param returns error", "[observability]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::CatalogManager catalog(redis);
+    auto cfg = test_config();
+
+    auto uri = labios::parse_uri("observe://data/location");
+    auto result = labios::handle_observe(uri, {}, redis, nats, cfg, catalog);
+
+    REQUIRE_FALSE(result.success);
+    REQUIRE(result.error.find("missing") != std::string::npos);
 }
 
 TEST_CASE("ObserveResult default construction", "[observability]") {

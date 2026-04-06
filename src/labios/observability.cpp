@@ -1,5 +1,7 @@
 #include <labios/observability.h>
 
+#include <labios/catalog_manager.h>
+
 #include <chrono>
 #include <sstream>
 #include <unordered_set>
@@ -169,13 +171,53 @@ ObserveResult config_current(const Config& cfg) {
     return {true, {}, oss.str()};
 }
 
+ObserveResult data_location(const URI& query, CatalogManager& catalog) {
+    // Parse "file" parameter from query string (e.g. "file=/data/checkpoint.pt").
+    std::string file_path;
+    std::string_view qs = query.query;
+    while (!qs.empty()) {
+        auto amp = qs.find('&');
+        auto pair = qs.substr(0, amp);
+        auto eq = pair.find('=');
+        if (eq != std::string_view::npos && pair.substr(0, eq) == "file") {
+            file_path = pair.substr(eq + 1);
+            break;
+        }
+        if (amp == std::string_view::npos) break;
+        qs = qs.substr(amp + 1);
+    }
+    if (file_path.empty()) {
+        return {false, "missing 'file' query parameter",
+                "{\"error\":\"missing 'file' query parameter\"}"};
+    }
+
+    auto worker = catalog.get_location(file_path);
+    auto file_info = catalog.get_file_info(file_path);
+
+    std::ostringstream oss;
+    oss << "{\"file\":\"" << file_path << "\"";
+    if (worker.has_value()) {
+        oss << ",\"worker_id\":" << *worker;
+    } else {
+        oss << ",\"worker_id\":null";
+    }
+    if (file_info.has_value()) {
+        oss << ",\"exists\":" << (file_info->exists ? "true" : "false")
+            << ",\"size\":" << file_info->size
+            << ",\"mtime_ms\":" << file_info->mtime_ms;
+    }
+    oss << "}";
+    return {true, {}, oss.str()};
+}
+
 } // anonymous namespace
 
 ObserveResult handle_observe(const URI& query,
                               const std::vector<WorkerInfo>& workers,
                               transport::RedisConnection& redis,
                               transport::NatsConnection& nats,
-                              const Config& cfg) {
+                              const Config& cfg,
+                              CatalogManager& catalog) {
     // Combine authority + path to form the routing key.
     // observe://queue/depth → authority="queue", path="/depth" → "queue/depth"
     std::string route = query.authority;
@@ -194,6 +236,7 @@ ObserveResult handle_observe(const URI& query,
     if (route == "channels/list")     return channels_list(redis);
     if (route == "workspaces/list")   return workspaces_list(redis);
     if (route == "config/current")    return config_current(cfg);
+    if (route == "data/location")     return data_location(query, catalog);
 
     return {false, "unknown observe query: " + route,
             "{\"error\":\"unknown observe query: " + route + "\"}"};
