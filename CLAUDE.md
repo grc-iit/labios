@@ -157,8 +157,9 @@ Clients never talk to workers. The dispatcher is the only bridge. This invariant
 
 ## Current Status (as of 2026-04-06)
 
-208 unit tests pass. Docker Compose stack runs with NATS 2.10 (JetStream),
-DragonflyDB, 1 dispatcher, 3 workers, and 1 Worker Manager.
+353 tests (224 unit, 68 smoke, 15 kernel, 41 bench, 5 integration). Docker
+Compose stack runs with NATS 2.10 (JetStream), DragonflyDB, Redis-KV, 1
+dispatcher, 3 workers, 1 Worker Manager, and 1 MCP server.
 
 **Implemented capabilities (mapped to LABIOS-SPEC.md sections):**
 
@@ -170,8 +171,10 @@ DragonflyDB, 1 dispatcher, 3 workers, and 1 Worker Manager.
 | Extensible worker scoring (5 baseline + tier + skills/compute/reasoning) | S7.3 | Done |
 | Intent-aware scheduling (profile adjustment per label intent) | S7.4 | Done |
 | Three worker tiers (Databot/Pipeline/Agentic) | S7.1 | Done |
-| URI-based routing with BackendStore concept | S4 | Done |
+| URI-based routing with BackendStore concept (label-based, per spec S4.4) | S4 | Done |
 | POSIX backend for file:// scheme | S4 | Done |
+| KV backend for kv:// scheme (connects to user's Redis) | S4 | Done |
+| SQLite backend for sqlite:// scheme | S4 | Done |
 | SDS programmable pipelines (program repository, 11 builtins, DAG-aware executor) | S5 | Done |
 | Channels (streaming pub/sub, backpressure, TTL, auto-destroy) | S8.2 | Done |
 | Workspaces (persistent shared state with ACL and versioning) | S8.3 | Done |
@@ -190,19 +193,29 @@ DragonflyDB, 1 dispatcher, 3 workers, and 1 Worker Manager.
 | Small-I/O cache with timer-based flush | S6.1 | Done |
 | DragonflyDB warehouse (~20x throughput over Redis) | Internal | Done |
 | Routing, timestamps, score_snapshot populated on every label | S2.2 | Done |
+| MCP server for coding agent integration (5 tools: observe, store, retrieve, process, knowledge) | S12.3 | Done |
+| Vanilla-vs-LABIOS comparison benchmarks (5 scenarios) | S13 | Done |
+| Codex deep review hardening (5 iterations: safety, spec compliance, coverage, perf, coherence) | QA | Done |
 
 **Not yet implemented:**
-- BackendStore concept alignment with spec S4.4 (backends should receive full Label)
-- Additional backend adapters (KV, SQLite, vector, graph) connecting to user infrastructure
-- LABIOS MCP Server for agent integration (see `docs/superpowers/specs/2026-04-06-agent-integration-design.md`)
-- Agent-specific benchmark suite (8 benchmarks from spec S13)
+- Additional backend adapters (vector, graph, S3, parallel FS)
+- Agent-specific benchmark suite (remaining 3 benchmarks from spec S13)
 - FUSE filesystem mount
+
+## Documentation
+
+- `docs/getting-started.md` — 5-minute quickstart
+- `docs/sdk-guide.md` — full API reference (C++, Python, C, 8 layers)
+- `docs/deployment.md` — Docker Compose topology, scaling, multi-node
+- `docs/configuration.md` — every TOML field, weight profiles, env vars
+- `docs/backends.md` — BackendStore concept, writing new backends, URI schemes
+- `docs/mcp-integration.md` — MCP server setup and tool reference
+- `docs/architecture.md` — complete implementation reference
 
 ## Reference
 
 - `LABIOS-SPEC.md` — definitive specification for LABIOS 2.0 (primary design authority)
 - `LABIOS-2.0.md` — constitutional document (established the rewrite)
-- `docs/superpowers/specs/2026-04-06-agent-integration-design.md` — agent integration design (MCP server, memory hierarchy, multi-backend routing)
+- `docs/superpowers/specs/2026-04-06-agent-integration-design.md` — agent integration design
 - `.planning/reference/original-paper/labios.md` — HPDC'19 paper
-- `docs/superpowers/specs/architecture-current.md` — M0-M4 implementation snapshot
 - Tag `v1.0-archive` — old 2018 prototype (reference only)

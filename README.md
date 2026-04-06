@@ -1,161 +1,157 @@
-# LABIOS: Label-Based I/O System
+# LABIOS: The First Agent I/O Runtime
 
-A distributed I/O system that converts I/O requests into self-describing labels for intelligent routing and processing across HPC, Big Data, and AI/Agent workloads.
+LABIOS converts all I/O into self-describing labels that flow through a distributed
+runtime of shufflers, schedulers, and workers. Each component enriches the label
+as it passes. Labels are the information highway of the system.
 
 **US Patent 11,630,834 B2 | NSF Award #2331480 | HPDC'19 Best Paper Nominee**
 
-## Status
+## What Is It
 
-LABIOS 2.0 is a ground-up rewrite of the original research prototype. The old codebase is archived at tag `v1.0-archive`. See `LABIOS-2.0.md` for the full design document, milestones, and engineering principles.
+LABIOS is not a filesystem, not middleware, not an object store. It is the
+execution environment for I/O operations expressed as labels. Agents, HPC
+applications, and AI frameworks produce labels. LABIOS routes, shuffles,
+schedules, transforms, and delivers them to workers that execute against any
+storage backend.
 
-**Milestone progress:**
+```
+Agent / HPC App
+    │
+    │ SDK, C API, Python, or LD_PRELOAD intercept
+    ▼
+LABIOS Client (Label Manager + Content Manager + Catalog Manager)
+    │
+    │ NATS JetStream (labels) + DragonflyDB (data staging)
+    ▼
+Dispatcher (Shuffler → Scheduler → Continuation Processor)
+    │
+    ▼
+Workers (Tier 0: Databot | Tier 1: Pipeline | Tier 2: Agentic)
+    │
+    ▼
+Backends (file:// | kv:// | sqlite:// | s3:// | vector:// | graph://)
+```
 
-| Milestone | Scope | Status |
-|---|---|---|
-| M0 | Skeleton, Docker Compose, CI, stub services | Done |
-| M1 | Labels flow end-to-end, client architecture, POSIX intercept | Done |
-| M2 | Shuffler, batching, dependency detection, supertasks, aggregation | Done |
-| M3 | Smart scheduling (constraint-based, MinMax, worker scoring, weight profiles) | Done |
-| M4 | Elastic workers (commission/decommission, auto-suspend) | Planned |
-| M5 | Software-Defined Storage (function pointers on labels, dlopen) | Planned |
-| M6 | Warehouse intelligence (ephemeral rooms, pub/sub, placement) | Planned |
-| M7 | Python SDK, agent API, intent enforcement, priority lanes | Planned |
-| M8 | Four deployment models (Accelerator, Forwarder, Buffering, Remote) | Planned |
-| M9 | Benchmarks (CM1 16x, HACC 6x, Montage 17x, agent pipeline) | Planned |
-
-**Current performance (Docker Compose on WSL2):**
-
-| Benchmark | Write | Read |
-|---|---|---|
-| 100MB sequential (1MB chunks) | 62 MB/s | 82 MB/s |
-| 10MB single file (10 labels) | 168 MB/s | 197 MB/s |
-| 1000 small files (1KB each) | 122 IOPS | 152 IOPS |
-
-Note: DragonflyDB performance in WSL2 Docker is limited by io_uring emulation. On native Linux, DragonflyDB delivers ~20x higher throughput than Redis 7 for concurrent workloads. Single-connection sequential performance may be similar to Redis.
-
-50+ unit tests, 4 integration suites, and the demo client all pass with data verification.
+Clients never talk to workers. The dispatcher is the only bridge.
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/grc-iit/labios && cd labios
-docker compose up -d              # NATS, Redis, dispatcher, 3 workers, manager
-docker compose run --rm --entrypoint labios-demo test   # Write 100MB, read back, verify
-docker compose down -v
+git clone https://github.com/akougkas/labios.git && cd labios
+docker compose up -d
 ```
 
-Build natively (requires C++20 compiler, CMake 3.25+):
+Write and read your first label (Python):
+
+```python
+import labios
+client = labios.connect_to("nats://localhost:4222", "localhost", 6379)
+client.write("/data/hello.dat", b"Hello from LABIOS!", 0)
+print(client.read("/data/hello.dat", 0, 18))
+```
+
+See [docs/getting-started.md](docs/getting-started.md) for the full 5-minute walkthrough
+with C++, C, and MCP examples.
+
+## Capabilities
+
+| Feature | Description |
+|---------|-------------|
+| Label routing | URI-based routing to any backend (file, KV, SQLite, and more) |
+| Shuffler | Write aggregation, RAW/WAW/WAR dependency detection, supertask creation |
+| 4 schedulers | Round Robin, Random, Constraint-based, MinMax DP with weight profiles |
+| 3 worker tiers | Databot (stateless I/O), Pipeline (DAG execution), Agentic (reasoning) |
+| SDS pipelines | 11 built-in operations, programmable DAGs, pipeline-at-storage execution |
+| Channels | Streaming pub/sub with backpressure, TTL, and ordered delivery |
+| Workspaces | Persistent shared state with per-key versioning and ACLs |
+| Elastic scaling | Per-tier auto-scaling via Docker Engine API with energy budgets |
+| POSIX intercept | LD_PRELOAD transparent interception of 30 POSIX and stdio calls |
+| MCP server | 5 tools for coding agent integration (observe, store, retrieve, process, knowledge) |
+| Observability | 8 query endpoints, continuous telemetry with p50/p95/p99 latencies |
+| Continuations | Reactive I/O chaining (Notify, Chain, Conditional) on label completion |
+
+## Client APIs
+
+Eight layers of abstraction across three languages:
+
+| Layer | C++ | Python | C |
+|-------|-----|--------|---|
+| Sync I/O | `write()` / `read()` | `write()` / `read()` | `labios_write()` / `labios_read()` |
+| Async I/O | `async_write()` / `wait()` | `async_write()` / `wait()` | `labios_async_write()` / `labios_wait()` |
+| Label-level | `create_label()` / `publish()` | `create_label()` / `publish()` | |
+| URI-based | `write_to("kv://...")` | `write_to("kv://...")` | |
+| Intent-driven | `write_with_intent()` | `write_with_intent()` | |
+| Channels | `publish_to_channel()` | `publish_to_channel()` | |
+| Workspaces | `workspace_put()` / `workspace_get()` | `workspace_put()` / `workspace_get()` | |
+| Observability | `observe()` | `observe()` | |
+
+## Agent Integration (MCP)
+
+Connect Claude Code, Codex CLI, or any MCP-compatible agent:
+
+```json
+{
+  "mcpServers": {
+    "labios": {
+      "command": "/path/to/labios/mcp/connect.sh"
+    }
+  }
+}
+```
+
+The agent gains five MCP tools: `labios_observe`, `labios_store`,
+`labios_retrieve`, `labios_process`, and `labios_knowledge`. See
+[docs/mcp-integration.md](docs/mcp-integration.md) for the full reference.
+
+## Build
 
 ```bash
+# Docker (recommended)
+docker compose up -d              # Full stack
+docker compose exec test bash     # Shell into test container
+
+# Native
 cmake --preset dev
 cmake --build build/dev -j$(nproc)
-ctest --test-dir build/dev -L unit
+ctest --test-dir build/dev        # 353 tests
 ```
 
-## Architecture
+## Test Suite
 
-```
-App/Agent
-  │ POSIX calls (LD_PRELOAD) or native Client API
-  ▼
-LABIOS Client
-  ├─ LabelManager    (split/aggregate, async publish to NATS)
-  ├─ ContentManager   (warehouse staging in Redis, small-I/O cache)
-  └─ CatalogManager   (label lifecycle, file metadata in Redis)
-  │
-  ▼                          ▼                    ▼
-Label Queue              Warehouse             Inventory
-(NATS JetStream)         (DragonflyDB)         (DragonflyDB)
-  │
-  ▼
-Label Dispatcher
-  ├─ Shuffler (aggregation, dependency detection, supertask creation)
-  ├─ Read/Write locality routing
-  └─ Solver (round-robin / random / constraint / minmax)
-  │
-  ▼
-Workers (1..N)
-  ├─ Execute WRITE: warehouse → local storage
-  ├─ Execute READ:  local storage → warehouse
-  └─ Completion reply via NATS
-```
+353 tests across five categories:
 
-Labels are immutable, self-describing units of I/O work. Each carries: operation type, source/destination pointers, flags, priority, dependency chain (with RAW/WAW/WAR hazard types), file key for shuffler grouping, and child label IDs for supertask composition. The dispatcher preprocesses labels before scheduling them to workers.
-
-**Key invariant:** Clients never talk to workers. The dispatcher is the only bridge. This enables all four deployment models from the paper (Accelerator, Forwarder, Buffering, Remote Distributed Storage).
-
-## Scheduling Policies
-
-LABIOS supports four scheduling policies from the HPDC'19 paper:
-
-| Policy | Description |
-|---|---|
-| `round-robin` | Cyclic distribution across available workers (default) |
-| `random` | Uniform random to all workers including suspended |
-| `constraint` | Score workers by weight profile, distribute to top-N |
-| `minmax` | Maximize performance, minimize energy, subject to capacity/load |
-
-Switch policies via environment variable or TOML config:
+| Category | Count | Infrastructure |
+|----------|-------|----------------|
+| Unit | 224 | None |
+| Smoke | 68 | NATS + DragonflyDB |
+| Kernel | 15 | NATS + DragonflyDB |
+| Benchmark | 41 | None (unit-level comparison) |
+| Integration | 5 | Full stack |
 
 ```bash
-# Via environment (Docker Compose)
-LABIOS_SCHEDULER_POLICY=constraint \
-LABIOS_SCHEDULER_PROFILE=/etc/labios/profiles/high_bandwidth.toml \
-docker compose up -d
-
-# Via TOML
-[scheduler]
-policy = "constraint"
-profile_path = "conf/profiles/high_bandwidth.toml"
-```
-
-Three weight profiles from Table 2 of the paper are included in `conf/profiles/`:
-`low_latency.toml`, `energy_savings.toml`, `high_bandwidth.toml`.
-
-## POSIX Intercept
-
-Transparent I/O interception via `LD_PRELOAD`:
-
-```bash
-LD_PRELOAD=liblabios_intercept.so ./your_app
-```
-
-Intercepted calls: `open`, `close`, `read`, `write`, `pread`, `pwrite`, `lseek`, `fsync`, `fdatasync`, `stat`, `fstat`, `lstat`, `unlink`, `access`, `mkdir`, `rmdir`, `rename`, `ftruncate`, `dup`, `dup2`, plus `open64`, `lseek64`, `ftruncate64` and legacy `__xstat`/`__fxstat`/`__lxstat` variants. Non-LABIOS paths (outside configured prefixes) pass through to the real filesystem.
-
-If NATS/Redis are unavailable, the intercept retries 3 times then falls through to the real filesystem instead of crashing the application.
-
-## Source Layout
-
-```
-src/labios/           Core library (label, client, managers, solver, transport)
-src/services/         Service entry points (dispatcher, worker, manager, demo)
-src/drivers/          POSIX intercept (LD_PRELOAD)
-include/labios/       Public headers
-schemas/              FlatBuffers schema for Label serialization
-tests/unit/           Catch2 unit tests (label, config, solver, fd_table, catalog, content)
-tests/integration/    Integration tests (data path, intercept, benchmark)
-conf/                 TOML configuration
+ctest --test-dir build/dev -L unit      # Fast, no infrastructure
+ctest --test-dir build/dev -L smoke     # Needs live cluster
+ctest --test-dir build/dev -L bench     # Vanilla-vs-LABIOS comparisons
 ```
 
 ## Tech Stack
 
-C++20 | FlatBuffers | NATS JetStream | DragonflyDB (Redis-compatible) | io_uring (M4+) | Docker Compose | Catch2 | pybind11 (M7)
+C++20 (coroutines, jthread, concepts) | FlatBuffers | NATS 2.10 JetStream |
+DragonflyDB | io_uring with POSIX fallback | xxHash3 | pybind11 | Catch2 |
+Docker Compose | CMake 3.25+ | GitHub Actions (ASan, TSan, UBSan)
 
-## Testing
+## Documentation
 
-```bash
-# Unit tests (no infrastructure needed)
-ctest --test-dir build/dev -L unit
-
-# Full integration tests (requires Docker Compose stack)
-docker compose up -d
-docker compose run --rm --entrypoint labios-data-path-test test
-docker compose run --rm --entrypoint labios-benchmark-test test
-docker compose run --rm --entrypoint labios-scheduling-test test
-docker compose run --rm --entrypoint sh test \
-  -c "LD_PRELOAD=/usr/local/lib/liblabios_intercept.so labios-intercept-test"
-docker compose down -v
-```
+| Document | Purpose |
+|----------|---------|
+| [Getting Started](docs/getting-started.md) | 5-minute quickstart |
+| [SDK Guide](docs/sdk-guide.md) | Full API reference (C++, Python, C) |
+| [Deployment](docs/deployment.md) | Docker Compose, scaling, multi-node |
+| [Configuration](docs/configuration.md) | TOML fields, weight profiles, env vars |
+| [Backends](docs/backends.md) | BackendStore concept, writing new backends |
+| [MCP Integration](docs/mcp-integration.md) | Connecting coding agents via MCP |
+| [Architecture](docs/architecture.md) | Complete implementation reference |
+| [LABIOS-SPEC.md](LABIOS-SPEC.md) | Definitive specification (design authority) |
 
 ## Publications
 
