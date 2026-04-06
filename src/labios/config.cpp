@@ -191,27 +191,12 @@ Config load_config(const std::filesystem::path& path) {
     cfg.elastic.docker_socket = env_or("LABIOS_DOCKER_SOCKET", cfg.elastic.docker_socket);
     cfg.elastic.docker_image = env_or("LABIOS_DOCKER_IMAGE", cfg.elastic.docker_image);
     cfg.elastic.docker_network = env_or("LABIOS_DOCKER_NETWORK", cfg.elastic.docker_network);
-    {
-        auto e = std::getenv("LABIOS_ELASTIC_MIN_WORKERS");
-        if (e) { try { cfg.elastic.min_workers = std::stoi(e); } catch (...) {} }
-    }
-    {
-        auto e = std::getenv("LABIOS_ELASTIC_MAX_WORKERS");
-        if (e) { try { cfg.elastic.max_workers = std::stoi(e); } catch (...) {} }
-    }
-    {
-        auto e = std::getenv("LABIOS_ELASTIC_WORKER_SPEED");
-        if (e) { try { cfg.elastic.elastic_worker_speed = std::stoi(e); } catch (...) {} }
-    }
-    {
-        auto e = std::getenv("LABIOS_ELASTIC_WORKER_ENERGY");
-        if (e) { try { cfg.elastic.elastic_worker_energy = std::stoi(e); } catch (...) {} }
-    }
+    cfg.elastic.min_workers = env_int_or("LABIOS_ELASTIC_MIN_WORKERS", cfg.elastic.min_workers);
+    cfg.elastic.max_workers = env_int_or("LABIOS_ELASTIC_MAX_WORKERS", cfg.elastic.max_workers);
+    cfg.elastic.elastic_worker_speed = env_int_or("LABIOS_ELASTIC_WORKER_SPEED", cfg.elastic.elastic_worker_speed);
+    cfg.elastic.elastic_worker_energy = env_int_or("LABIOS_ELASTIC_WORKER_ENERGY", cfg.elastic.elastic_worker_energy);
     cfg.elastic.elastic_worker_capacity = env_or("LABIOS_ELASTIC_WORKER_CAPACITY", cfg.elastic.elastic_worker_capacity);
-    {
-        auto e = std::getenv("LABIOS_WORKER_IDLE_TIMEOUT_MS");
-        if (e) { try { cfg.elastic.worker_idle_timeout_ms = std::stoi(e); } catch (...) {} }
-    }
+    cfg.elastic.worker_idle_timeout_ms = env_int_or("LABIOS_WORKER_IDLE_TIMEOUT_MS", cfg.elastic.worker_idle_timeout_ms);
 
     return cfg;
 }

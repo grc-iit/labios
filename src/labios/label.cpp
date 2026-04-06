@@ -58,6 +58,15 @@ struct SnowflakeState {
 
 } // namespace
 
+// Snowflake ID layout: [41-bit timestamp | 10-bit node | 12-bit sequence]
+static constexpr int      kTimestampBits = 41;
+static constexpr int      kNodeBits      = 10;
+static constexpr int      kSequenceBits  = 12;
+static constexpr uint32_t kMaxSequence   = (1u << kSequenceBits);  // 4096
+static constexpr uint64_t kTimestampMask = (1ULL << kTimestampBits) - 1;
+static constexpr uint32_t kNodeMask      = (1u << kNodeBits) - 1;
+static constexpr uint32_t kSequenceMask  = kMaxSequence - 1;
+
 uint64_t generate_label_id(uint32_t app_id) {
     // Use a process-global state for consistency across threads.
     static SnowflakeState state(app_id);
@@ -89,7 +98,7 @@ uint64_t generate_label_id(uint32_t app_id) {
 
         // Same millisecond: increment sequence.
         seq = state.sequence.fetch_add(1, std::memory_order_relaxed);
-        if (seq < 4096) {
+        if (seq < kMaxSequence) {
             now_ms = prev_ms; // Use the timestamp from last_ms for consistency.
             break;
         }
@@ -103,9 +112,9 @@ uint64_t generate_label_id(uint32_t app_id) {
         prev_ms = state.last_ms.load(std::memory_order_acquire);
     }
 
-    return ((now_ms & 0x1FFFFFFFFFFULL) << 22)
-         | (static_cast<uint64_t>(state.node_id & 0x3FF) << 12)
-         | (static_cast<uint64_t>(seq & 0xFFF));
+    return ((now_ms & kTimestampMask) << (kNodeBits + kSequenceBits))
+         | (static_cast<uint64_t>(state.node_id & kNodeMask) << kSequenceBits)
+         | (static_cast<uint64_t>(seq & kSequenceMask));
 }
 
 uint64_t label_timestamp_now_us() {

@@ -26,16 +26,20 @@ void TelemetryPublisher::stop() {
     }
 }
 
+// Map priority [0,255] to 3 telemetry lanes: low/medium/high.
+static constexpr int kNumLanes = 3;
+static constexpr int kLaneDivisor = 256 / kNumLanes;  // ~85
+
 void TelemetryPublisher::record_label_dispatched(uint8_t priority) {
     labels_dispatched_.fetch_add(1, std::memory_order_relaxed);
-    int lane = std::min(static_cast<int>(priority / 85), 2);
+    int lane = std::min(static_cast<int>(priority / kLaneDivisor), kNumLanes - 1);
     lane_dispatched_[lane].fetch_add(1, std::memory_order_relaxed);
 }
 
 void TelemetryPublisher::record_label_completed(std::chrono::microseconds latency,
                                                  uint8_t priority) {
     labels_completed_.fetch_add(1, std::memory_order_relaxed);
-    int lane = std::min(static_cast<int>(priority / 85), 2);
+    int lane = std::min(static_cast<int>(priority / kLaneDivisor), kNumLanes - 1);
     lane_completed_[lane].fetch_add(1, std::memory_order_relaxed);
     total_latency_us_.fetch_add(
         static_cast<uint64_t>(latency.count()), std::memory_order_relaxed);
