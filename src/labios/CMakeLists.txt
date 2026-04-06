@@ -42,6 +42,8 @@ add_library(labios STATIC
     sds/builtins.cpp
     sds/executor.cpp
     sds/program_repo.cpp
+    observability.cpp
+    telemetry.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)

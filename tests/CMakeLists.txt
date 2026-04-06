@@ -134,3 +134,7 @@ catch_discover_tests(labios-channel-test TEST_PREFIX "smoke/" PROPERTIES LABELS 
 add_executable(labios-workspace-test unit/workspace_test.cpp)
 target_link_libraries(labios-workspace-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-workspace-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
+add_executable(labios-observability-test unit/observability_test.cpp)
+target_link_libraries(labios-observability-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-observability-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")

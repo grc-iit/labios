@@ -2,13 +2,16 @@
 #include <labios/config.h>
 #include <labios/content_manager.h>
 #include <labios/label.h>
+#include <labios/observability.h>
 #include <labios/shuffler.h>
 #include <labios/solver/constraint.h>
 #include <labios/solver/minmax.h>
 #include <labios/solver/random.h>
 #include <labios/solver/round_robin.h>
+#include <labios/telemetry.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
+#include <labios/uri.h>
 
 #include <chrono>
 #include <condition_variable>
@@ -114,6 +117,22 @@ int main() {
     };
     labios::Shuffler shuffler(shuf_cfg);
 
+    // Record dispatcher start time for uptime queries.
+    {
+        auto now = std::chrono::system_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()).count();
+        redis.set("labios:dispatcher:start_ms", std::to_string(ms));
+    }
+
+    // Telemetry publisher streams metrics to labios.telemetry.
+    labios::TelemetryPublisher telemetry(nats,
+        [&]() -> std::vector<labios::WorkerInfo> {
+            std::lock_guard lock(g_workers_mu);
+            return g_cached_workers;
+        });
+    telemetry.start();
+
     std::vector<labios::LabelData> batch_buffer;
     std::mutex batch_mu;
     std::condition_variable batch_cv;
@@ -171,12 +190,47 @@ int main() {
                 batch = std::move(batch_buffer);
                 batch_buffer.clear();
             }
-            // Report queue depth to manager for elastic scaling.
+            // Report queue depth to manager for elastic scaling and observability.
             try {
-                nats.publish("labios.queue.depth",
-                             std::to_string(batch.size()));
+                auto depth_str = std::to_string(batch.size());
+                nats.publish("labios.queue.depth", depth_str);
+                redis.set("labios:queue:depth", depth_str);
             } catch (...) {}
             if (batch.empty()) continue;
+
+            // Handle OBSERVE labels inline (no shuffling/scheduling).
+            {
+                std::vector<labios::WorkerInfo> obs_workers;
+                {
+                    std::lock_guard lock(g_workers_mu);
+                    obs_workers = g_cached_workers;
+                }
+                std::erase_if(batch, [&](labios::LabelData& label) {
+                    if (label.type != labios::LabelType::Observe) return false;
+                    auto uri = labios::parse_uri(label.source_uri);
+                    auto obs = labios::handle_observe(uri, obs_workers, redis, nats, cfg);
+                    std::string data_key = "labios:observe:" + std::to_string(label.id);
+                    redis.set(data_key, obs.json_data);
+                    labios::CompletionData comp;
+                    comp.label_id = label.id;
+                    comp.status = obs.success ? labios::CompletionStatus::Complete
+                                              : labios::CompletionStatus::Error;
+                    comp.error = obs.error;
+                    comp.data_key = data_key;
+                    auto buf = labios::serialize_completion(comp);
+                    if (!label.reply_to.empty()) {
+                        nats.publish(label.reply_to, std::span<const std::byte>(buf));
+                    }
+                    std::cout << "[" << timestamp() << "] dispatcher: observe "
+                              << label.id << " -> " << label.source_uri << "\n"
+                              << std::flush;
+                    return true;
+                });
+                if (batch.empty()) {
+                    nats.flush();
+                    continue;
+                }
+            }
 
             std::cout << "[" << timestamp() << "] dispatcher: processing batch of "
                       << batch.size() << " labels\n" << std::flush;
@@ -225,6 +279,7 @@ int main() {
                     auto serialized = labios::serialize_label(label);
                     std::string subject = "labios.worker." + std::to_string(worker_id);
                     nats.publish(subject, std::span<const std::byte>(serialized));
+                    telemetry.record_label_dispatched();
 
                     std::cout << "[" << timestamp() << "] dispatcher: label "
                               << label.id << " -> worker " << worker_id
@@ -271,6 +326,7 @@ int main() {
                     auto serialized = labios::serialize_label(st.composite);
                     std::string subject = "labios.worker." + std::to_string(wid);
                     nats.publish(subject, std::span<const std::byte>(serialized));
+                    telemetry.record_label_dispatched();
 
                     std::cout << "[" << timestamp() << "] dispatcher: supertask "
                               << st.composite.id << " (" << st.children.size()
@@ -352,6 +408,7 @@ int main() {
                         auto serialized = labios::serialize_label(label);
                         std::string subject = "labios.worker." + std::to_string(target_worker);
                         nats.publish(subject, std::span<const std::byte>(serialized));
+                        telemetry.record_label_dispatched();
 
                         std::cout << "[" << timestamp() << "] dispatcher: label "
                                   << label.id << " -> worker " << target_worker
@@ -373,6 +430,7 @@ int main() {
                             for (auto& payload : payloads) {
                                 std::string subject = "labios.worker." + std::to_string(wid);
                                 nats.publish(subject, std::span<const std::byte>(payload));
+                                telemetry.record_label_dispatched();
                             }
 
                             std::cout << "[" << timestamp() << "] dispatcher: label "
@@ -399,6 +457,7 @@ int main() {
               << ")\n" << std::flush;
 
     g_batch_thread.join();
+    telemetry.stop();
 
     // Stop the worker refresh thread.
     if (g_worker_refresh_thread.joinable()) {
