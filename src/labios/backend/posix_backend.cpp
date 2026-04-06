@@ -2,6 +2,7 @@
 #include <labios/uri.h>
 
 #include <fstream>
+#include <optional>
 
 namespace labios {
 
@@ -13,31 +14,79 @@ static std::string_view strip_leading_slash(std::string_view p) {
     return p;
 }
 
-std::pair<std::filesystem::path, uint64_t>
+std::optional<std::filesystem::path> sanitize_relative_path(
+    std::filesystem::path raw_path) {
+    if (raw_path.empty()) {
+        return std::nullopt;
+    }
+
+    if (raw_path.is_absolute()) {
+        raw_path = raw_path.relative_path();
+    }
+
+    auto normalized = raw_path.lexically_normal();
+    for (const auto& part : normalized) {
+        if (part == "..") {
+            return std::nullopt;
+        }
+    }
+
+    return normalized;
+}
+
+std::optional<std::pair<std::filesystem::path, uint64_t>>
 PosixBackend::resolve_dest(const LabelData& label) const {
     if (!label.dest_uri.empty()) {
         auto uri = parse_uri(label.dest_uri);
-        return {root_ / std::string(strip_leading_slash(uri.path)), 0};
+        auto relative = sanitize_relative_path(
+            std::filesystem::path(std::string(strip_leading_slash(uri.path))));
+        if (!relative.has_value()) {
+            return std::nullopt;
+        }
+        return std::make_pair((root_ / *relative).lexically_normal(), uint64_t{0});
     }
     auto* fp = std::get_if<FilePath>(&label.destination);
-    if (fp) return {root_ / fp->path, fp->offset};
-    return {root_ / "unknown", 0};
+    if (!fp) {
+        return std::nullopt;
+    }
+
+    auto relative = sanitize_relative_path(std::filesystem::path(fp->path));
+    if (!relative.has_value()) {
+        return std::nullopt;
+    }
+    return std::make_pair((root_ / *relative).lexically_normal(), fp->offset);
 }
 
-std::pair<std::filesystem::path, uint64_t>
+std::optional<std::pair<std::filesystem::path, uint64_t>>
 PosixBackend::resolve_source(const LabelData& label) const {
     if (!label.source_uri.empty()) {
         auto uri = parse_uri(label.source_uri);
-        return {root_ / std::string(strip_leading_slash(uri.path)), 0};
+        auto relative = sanitize_relative_path(
+            std::filesystem::path(std::string(strip_leading_slash(uri.path))));
+        if (!relative.has_value()) {
+            return std::nullopt;
+        }
+        return std::make_pair((root_ / *relative).lexically_normal(), uint64_t{0});
     }
     auto* fp = std::get_if<FilePath>(&label.source);
-    if (fp) return {root_ / fp->path, fp->offset};
-    return {root_ / "unknown", 0};
+    if (!fp) {
+        return std::nullopt;
+    }
+
+    auto relative = sanitize_relative_path(std::filesystem::path(fp->path));
+    if (!relative.has_value()) {
+        return std::nullopt;
+    }
+    return std::make_pair((root_ / *relative).lexically_normal(), fp->offset);
 }
 
 BackendResult PosixBackend::put(const LabelData& label,
                                 std::span<const std::byte> data) {
-    auto [full_path, offset] = resolve_dest(label);
+    auto resolved = resolve_dest(label);
+    if (!resolved.has_value()) {
+        return {false, "invalid destination path"};
+    }
+    auto [full_path, offset] = *resolved;
     std::filesystem::create_directories(full_path.parent_path());
 
     if (offset > 0 && std::filesystem::exists(full_path)) {
@@ -49,6 +98,9 @@ BackendResult PosixBackend::put(const LabelData& label,
         ofs.seekp(static_cast<std::streamoff>(offset));
         ofs.write(reinterpret_cast<const char*>(data.data()),
                   static_cast<std::streamsize>(data.size()));
+        if (!ofs) {
+            return {false, "failed to write " + full_path.string()};
+        }
     } else {
         std::ofstream ofs(full_path, std::ios::binary | std::ios::out);
         if (!ofs) {
@@ -59,18 +111,28 @@ BackendResult PosixBackend::put(const LabelData& label,
         }
         ofs.write(reinterpret_cast<const char*>(data.data()),
                   static_cast<std::streamsize>(data.size()));
+        if (!ofs) {
+            return {false, "failed to write " + full_path.string()};
+        }
     }
     return {};
 }
 
 BackendDataResult PosixBackend::get(const LabelData& label) {
-    auto [full_path, offset] = resolve_source(label);
+    auto resolved = resolve_source(label);
+    if (!resolved.has_value()) {
+        return {false, "invalid source path", {}};
+    }
+    auto [full_path, offset] = *resolved;
     std::ifstream ifs(full_path, std::ios::binary);
     if (!ifs) {
         return {false, "data not found: " + full_path.string(), {}};
     }
     if (offset > 0) {
         ifs.seekg(static_cast<std::streamoff>(offset));
+        if (!ifs) {
+            return {false, "failed to seek " + full_path.string(), {}};
+        }
     }
 
     uint64_t length = label.data_size;
@@ -78,6 +140,9 @@ BackendDataResult PosixBackend::get(const LabelData& label) {
         // Read entire file if no size specified.
         ifs.seekg(0, std::ios::end);
         auto end = ifs.tellg();
+        if (end < 0) {
+            return {false, "failed to read size for " + full_path.string(), {}};
+        }
         ifs.seekg(static_cast<std::streamoff>(offset));
         length = static_cast<uint64_t>(end) - offset;
     }
@@ -90,7 +155,11 @@ BackendDataResult PosixBackend::get(const LabelData& label) {
 }
 
 BackendResult PosixBackend::del(const LabelData& label) {
-    auto [full_path, offset] = resolve_dest(label);
+    auto resolved = resolve_dest(label);
+    if (!resolved.has_value()) {
+        return {false, "invalid destination path"};
+    }
+    auto [full_path, offset] = *resolved;
     std::error_code ec;
     std::filesystem::remove(full_path, ec);
     if (ec) {

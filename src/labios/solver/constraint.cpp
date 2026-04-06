@@ -21,6 +21,9 @@ AssignmentMap ConstraintSolver::assign(
         if (!w.available) continue;
         scored.emplace_back(compute_score(w, profile_), w);
     }
+    if (scored.empty()) {
+        return {};
+    }
     std::sort(scored.begin(), scored.end(),
               [](auto& a, auto& b) { return a.first > b.first; });
 

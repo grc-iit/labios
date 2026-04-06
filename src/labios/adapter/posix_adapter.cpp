@@ -101,6 +101,9 @@ ssize_t POSIXAdapter::pread(int fd, void* buf, size_t count, off_t offset) {
 
 ssize_t POSIXAdapter::do_read(FileState* state, int fd, void* buf,
                                size_t count, off_t off, bool update_offset) {
+    if (!buf && count > 0) { errno = EFAULT; return -1; }
+    if (count == 0) return 0;
+
     auto& label_mgr = session_.label_manager();
     auto& content_mgr = session_.content_manager();
 

@@ -37,10 +37,10 @@ BackendResult KVBackend::put(const LabelData& label,
 
 BackendDataResult KVBackend::get(const LabelData& label) {
     auto key = make_key(label);
-    auto data = redis_.get_binary(key);
-    if (data.empty()) {
+    if (!redis_.get(key).has_value()) {
         return {false, "key not found: " + key, {}};
     }
+    auto data = redis_.get_binary(key);
     return {true, {}, std::move(data)};
 }
 

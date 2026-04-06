@@ -101,9 +101,11 @@ std::optional<std::vector<std::byte>> Workspace::get(std::string_view key,
     std::lock_guard lock(mu_);
     check_access(app_id);
 
-    auto result = redis_.get_binary(data_key(key));
-    if (result.empty()) return std::nullopt;
-    return result;
+    auto dk = data_key(key);
+    if (!redis_.get(dk).has_value()) {
+        return std::nullopt;
+    }
+    return redis_.get_binary(dk);
 }
 
 std::optional<std::vector<std::byte>> Workspace::get_version(std::string_view key,
@@ -112,9 +114,11 @@ std::optional<std::vector<std::byte>> Workspace::get_version(std::string_view ke
     std::lock_guard lock(mu_);
     check_access(app_id);
 
-    auto result = redis_.get_binary(version_key(key, version));
-    if (result.empty()) return std::nullopt;
-    return result;
+    auto vk = version_key(key, version);
+    if (!redis_.get(vk).has_value()) {
+        return std::nullopt;
+    }
+    return redis_.get_binary(vk);
 }
 
 bool Workspace::del(std::string_view key, uint32_t app_id) {

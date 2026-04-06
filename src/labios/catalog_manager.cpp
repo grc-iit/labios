@@ -270,6 +270,7 @@ void CatalogManager::track_unlink(std::string_view filepath) {
     redis_.hset(key, "size", "0");
     redis_.hset(key, "mtime", now_ms());
     redis_.del(location_key(filepath));
+    redis_.del(offset_location_key(filepath));
 }
 
 void CatalogManager::track_truncate(std::string_view filepath,
@@ -278,6 +279,7 @@ void CatalogManager::track_truncate(std::string_view filepath,
     redis_.hset(key, "exists", "1");
     redis_.hset(key, "size", std::to_string(new_size));
     redis_.hset(key, "mtime", now_ms());
+    redis_.del(offset_location_key(filepath));
 }
 
 std::optional<FileInfo> CatalogManager::get_file_info(std::string_view filepath) {

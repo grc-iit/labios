@@ -33,6 +33,25 @@ TEST_CASE("Workspace put/get roundtrip", "[workspace]") {
     ws.destroy();
 }
 
+TEST_CASE("Workspace preserves zero-length values", "[workspace]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::Workspace ws("test-zero-length", /*owner_app_id=*/1, redis);
+
+    std::vector<std::byte> empty;
+    uint64_t ver = ws.put("empty-value", empty, 1);
+    REQUIRE(ver == 1);
+
+    auto latest = ws.get("empty-value", 1);
+    REQUIRE(latest.has_value());
+    REQUIRE(latest->empty());
+
+    auto versioned = ws.get_version("empty-value", 1, 1);
+    REQUIRE(versioned.has_value());
+    REQUIRE(versioned->empty());
+
+    ws.destroy();
+}
+
 TEST_CASE("Workspace versioning returns correct data per version", "[workspace]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::Workspace ws("test-versioning", 1, redis);

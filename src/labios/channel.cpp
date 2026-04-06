@@ -106,9 +106,17 @@ int Channel::subscribe(ChannelCallback cb) {
                 cm.label_id = label_id;
                 cm.data = std::move(data);
 
-                // Dispatch to all subscribers
-                std::lock_guard lock(mu_);
-                for (auto& [id, callback] : subscribers_) {
+                std::vector<ChannelCallback> callbacks;
+                {
+                    std::lock_guard lock(mu_);
+                    callbacks.reserve(subscribers_.size());
+                    for (const auto& [id, callback] : subscribers_) {
+                        (void)id;
+                        callbacks.push_back(callback);
+                    }
+                }
+
+                for (auto& callback : callbacks) {
                     callback(cm);
                 }
             });
