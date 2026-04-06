@@ -289,3 +289,24 @@ TEST_CASE("Workspace get on nonexistent key returns nullopt", "[workspace]") {
 
     ws.destroy();
 }
+
+TEST_CASE("Revoked workspace access blocks read write list and delete", "[workspace]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::Workspace ws("test-revoke", 1, redis);
+
+    std::vector<std::byte> data(8, std::byte{0x5A});
+    ws.grant_access(2);
+    REQUIRE(ws.put("shared", data, 2) == 1);
+    REQUIRE(ws.get("shared", 2).has_value());
+
+    ws.revoke_access(2);
+    REQUIRE_FALSE(ws.has_access(2));
+    REQUIRE_THROWS(ws.get("shared", 2));
+    REQUIRE_THROWS(ws.get_version("shared", 1, 2));
+    REQUIRE_THROWS(ws.put("shared", data, 2));
+    REQUIRE_THROWS(ws.del("shared", 2));
+    REQUIRE_THROWS(ws.list(2));
+    REQUIRE_THROWS(ws.list("sh", 2));
+
+    ws.destroy();
+}

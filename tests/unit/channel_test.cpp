@@ -323,3 +323,17 @@ TEST_CASE("Destroy cleans up warehouse keys", "[channel]") {
     REQUIRE(redis.get_binary(key1).empty());
     REQUIRE(redis.get_binary(key2).empty());
 }
+
+TEST_CASE("Subscribe to destroyed channel fails and unsubscribe is a no-op", "[channel]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::Channel ch("test-destroyed-subscribe", redis, nats);
+
+    ch.destroy();
+    REQUIRE(ch.is_destroyed());
+    REQUIRE(ch.subscribe([](const labios::ChannelMessage&) {}) == -1);
+
+    // Unknown unsubscription after destroy should not throw.
+    ch.unsubscribe(999);
+    REQUIRE(ch.subscriber_count() == 0);
+}
