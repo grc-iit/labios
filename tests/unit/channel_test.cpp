@@ -249,6 +249,27 @@ TEST_CASE("Channel with zero subscribers stages data in warehouse", "[channel]")
     ch.destroy();
 }
 
+TEST_CASE("Publish returns zero when backpressure limit exceeded", "[channel]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::Channel ch("test-backpressure", redis, nats, 0, 3);
+
+    std::vector<std::byte> data(16, static_cast<std::byte>(0x55));
+
+    uint64_t s1 = ch.publish(data);
+    uint64_t s2 = ch.publish(data);
+    uint64_t s3 = ch.publish(data);
+    REQUIRE(s1 > 0);
+    REQUIRE(s2 > 0);
+    REQUIRE(s3 > 0);
+
+    // Fourth publish should be rejected (backpressure)
+    uint64_t s4 = ch.publish(data);
+    REQUIRE(s4 == 0);
+
+    ch.destroy();
+}
+
 TEST_CASE("Destroy cleans up warehouse keys", "[channel]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());

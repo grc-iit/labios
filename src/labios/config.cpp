@@ -187,6 +187,17 @@ Config load_config(const std::filesystem::path& path) {
     return cfg;
 }
 
+bool Config::set(const std::string& key, const std::string& value) {
+    if (key == "batch_size") { dispatcher_batch_size = std::stoi(value); return true; }
+    if (key == "batch_timeout_ms") { dispatcher_batch_timeout_ms = std::stoi(value); return true; }
+    if (key == "scheduler_policy") { scheduler_policy = value; return true; }
+    if (key == "aggregation_enabled") { dispatcher_aggregation_enabled = (value == "true"); return true; }
+    if (key == "reply_timeout_ms") { reply_timeout_ms = std::stoi(value); return true; }
+    if (key == "cache_flush_interval_ms") { cache_flush_interval_ms = std::stoi(value); return true; }
+    if (key == "cache_read_policy") { cache_read_policy = value; return true; }
+    return false;
+}
+
 WeightProfile load_weight_profile(const std::filesystem::path& path) {
     WeightProfile wp;
     wp.name = path.stem().string();

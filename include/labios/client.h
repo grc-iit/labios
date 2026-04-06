@@ -151,6 +151,9 @@ public:
     /// Query current LABIOS configuration as JSON string.
     std::string get_config();
 
+    /// Set a runtime configuration parameter. Returns false for unknown keys.
+    bool set_config(std::string_view key, std::string_view value);
+
     Session& session();
     const Config& config() const;
     uint32_t app_id() const;

@@ -3,6 +3,7 @@
 #include <labios/config.h>
 #include <labios/session.h>
 
+#include <cstdio>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -45,6 +46,12 @@ using xstat_fn     = int(*)(int, const char*, struct stat*);
 using fxstat_fn    = int(*)(int, int, struct stat*);
 using lxstat_fn    = int(*)(int, const char*, struct stat*);
 
+// stdio FILE* family
+using fopen_fn_t   = FILE*(*)(const char*, const char*);
+using fclose_fn_t2 = int(*)(FILE*);
+using fread_fn_t   = size_t(*)(void*, size_t, size_t, FILE*);
+using fwrite_fn_t  = size_t(*)(const void*, size_t, size_t, FILE*);
+
 open_fn      real_open = nullptr;
 close_fn     real_close = nullptr;
 write_fn     real_write = nullptr;
@@ -67,6 +74,10 @@ lstat_fn     real_lstat = nullptr;
 xstat_fn     real_xstat = nullptr;
 fxstat_fn    real_fxstat = nullptr;
 lxstat_fn    real_lxstat = nullptr;
+fopen_fn_t   real_fopen = nullptr;
+fclose_fn_t2 real_fclose = nullptr;
+fread_fn_t   real_fread = nullptr;
+fwrite_fn_t  real_fwrite = nullptr;
 
 labios::Config g_config;
 std::unique_ptr<labios::Session> g_session;
@@ -118,6 +129,10 @@ void init_real_symbols() {
         real_xstat     = load_sym<xstat_fn>("__xstat");
         real_fxstat    = load_sym<fxstat_fn>("__fxstat");
         real_lxstat    = load_sym<lxstat_fn>("__lxstat");
+        real_fopen     = load_sym<fopen_fn_t>("fopen");
+        real_fclose    = load_sym<fclose_fn_t2>("fclose");
+        real_fread     = load_sym<fread_fn_t>("fread");
+        real_fwrite    = load_sym<fwrite_fn_t>("fwrite");
         g_symbols_loaded = true;
     });
 }
@@ -493,4 +508,79 @@ extern "C" int ftruncate64(int fd, off_t length) {
         if (is_labios_fd(fd)) return g_adapter->ftruncate(fd, length);
     }
     return real_ftruncate(fd, length);
+}
+
+// ---------------------------------------------------------------------------
+// stdio FILE* family (spec S12.1)
+// Delegates to the existing POSIX intercept layer via fileno().
+// ---------------------------------------------------------------------------
+
+extern "C" FILE* fopen(const char* path, const char* mode) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        if (is_labios_path(path)) {
+            init_session();
+            // Translate mode string to open flags
+            int flags = 0;
+            std::string_view m(mode);
+            if (m.find('w') != std::string_view::npos) flags = O_WRONLY | O_CREAT | O_TRUNC;
+            else if (m.find('a') != std::string_view::npos) flags = O_WRONLY | O_CREAT | O_APPEND;
+            else flags = O_RDONLY;
+            if (m.find('+') != std::string_view::npos) flags = (flags & ~(O_RDONLY | O_WRONLY)) | O_RDWR;
+
+            int fd = g_adapter->open(path, flags, 0644);
+            if (fd < 0) return nullptr;
+
+            // Get a real FILE* and associate it with our fd via fdopen
+            FILE* f = fdopen(fd, mode);
+            return f;
+        }
+    }
+    return real_fopen(path, mode);
+}
+
+extern "C" FILE* fopen64(const char* path, const char* mode) {
+    return fopen(path, mode);
+}
+
+extern "C" size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        int fd = fileno(stream);
+        if (is_labios_fd(fd)) {
+            ssize_t ret = g_adapter->read(fd, ptr, size * nmemb);
+            if (ret <= 0) return 0;
+            return static_cast<size_t>(ret) / size;
+        }
+    }
+    return real_fread(ptr, size, nmemb, stream);
+}
+
+extern "C" size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        int fd = fileno(stream);
+        if (is_labios_fd(fd)) {
+            ssize_t ret = g_adapter->write(fd, ptr, size * nmemb);
+            if (ret <= 0) return 0;
+            return static_cast<size_t>(ret) / size;
+        }
+    }
+    return real_fwrite(ptr, size, nmemb, stream);
+}
+
+extern "C" int fclose(FILE* stream) {
+    init_real_symbols();
+    if (!g_in_init) {
+        init_config();
+        int fd = fileno(stream);
+        if (is_labios_fd(fd)) {
+            g_adapter->close(fd);
+            return real_fclose(stream);
+        }
+    }
+    return real_fclose(stream);
 }

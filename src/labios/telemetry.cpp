@@ -26,18 +26,27 @@ void TelemetryPublisher::stop() {
     }
 }
 
-void TelemetryPublisher::record_label_dispatched() {
+void TelemetryPublisher::record_label_dispatched(uint8_t priority) {
     labels_dispatched_.fetch_add(1, std::memory_order_relaxed);
+    int lane = std::min(static_cast<int>(priority / 85), 2);
+    lane_dispatched_[lane].fetch_add(1, std::memory_order_relaxed);
 }
 
-void TelemetryPublisher::record_label_completed(std::chrono::microseconds latency) {
+void TelemetryPublisher::record_label_completed(std::chrono::microseconds latency,
+                                                 uint8_t priority) {
     labels_completed_.fetch_add(1, std::memory_order_relaxed);
+    int lane = std::min(static_cast<int>(priority / 85), 2);
+    lane_completed_[lane].fetch_add(1, std::memory_order_relaxed);
     total_latency_us_.fetch_add(
         static_cast<uint64_t>(latency.count()), std::memory_order_relaxed);
     {
         std::lock_guard lock(latency_mu_);
         latency_samples_.push_back(static_cast<uint64_t>(latency.count()));
     }
+}
+
+void TelemetryPublisher::record_scaling_event() {
+    scaling_events_.fetch_add(1, std::memory_order_relaxed);
 }
 
 namespace {
@@ -63,6 +72,12 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
         uint64_t completed = labels_completed_.exchange(0, std::memory_order_relaxed);
         uint64_t latency_us = total_latency_us_.exchange(0, std::memory_order_relaxed);
         uint64_t avg_latency = (completed > 0) ? (latency_us / completed) : 0;
+        uint64_t scaling = scaling_events_.exchange(0, std::memory_order_relaxed);
+        std::array<uint64_t, 3> ld, lc;
+        for (int i = 0; i < 3; ++i) {
+            ld[i] = lane_dispatched_[i].exchange(0, std::memory_order_relaxed);
+            lc[i] = lane_completed_[i].exchange(0, std::memory_order_relaxed);
+        }
 
         std::vector<uint64_t> samples;
         {
@@ -88,6 +103,9 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
             << ",\"latency_p50_us\":" << p50
             << ",\"latency_p95_us\":" << p95
             << ",\"latency_p99_us\":" << p99
+            << ",\"lane_dispatched\":[" << ld[0] << "," << ld[1] << "," << ld[2] << "]"
+            << ",\"lane_completed\":[" << lc[0] << "," << lc[1] << "," << lc[2] << "]"
+            << ",\"scaling_events\":" << scaling
             << ",\"worker_count\":" << workers.size()
             << ",\"worker_utilization\":[";
 

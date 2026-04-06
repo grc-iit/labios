@@ -25,6 +25,8 @@ struct ElasticSnapshot {
     std::vector<int> suspended_worker_ids;
     std::chrono::steady_clock::time_point last_commission;
     std::chrono::milliseconds cooldown;
+    double energy_budget = 0.0;     // Max total energy (0 = unlimited)
+    double current_energy = 0.0;    // Sum of active workers' energy ratings
 };
 
 /// Pure function: given the current elastic state, return the next action.
@@ -60,6 +62,8 @@ struct TieredSnapshot {
     TierState agentic;
     std::chrono::steady_clock::time_point last_commission;
     std::chrono::milliseconds cooldown;
+    double energy_budget = 0.0;     // Max total energy (0 = unlimited)
+    double current_energy = 0.0;    // Sum of active workers' energy ratings
 };
 
 struct ScaleDecision {

@@ -26,6 +26,7 @@ public:
     transport::RedisConnection& redis();
     transport::NatsConnection& nats();
     const Config& config() const;
+    Config& mutable_config();
     uint32_t app_id() const;
 
 private:

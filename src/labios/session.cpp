@@ -41,6 +41,7 @@ CatalogManager& Session::catalog_manager() { return impl_->catalog; }
 transport::RedisConnection& Session::redis() { return impl_->redis; }
 transport::NatsConnection& Session::nats() { return impl_->nats; }
 const Config& Session::config() const { return impl_->cfg; }
+Config& Session::mutable_config() { return impl_->cfg; }
 uint32_t Session::app_id() const { return impl_->app_id; }
 
 } // namespace labios

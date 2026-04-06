@@ -80,6 +80,9 @@ struct Config {
     };
 
     ElasticConfig elastic;
+
+    /// Set a configuration value at runtime. Returns false for unknown keys.
+    bool set(const std::string& key, const std::string& value);
 };
 
 /// Load config from TOML file. Environment variables override file values.

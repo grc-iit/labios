@@ -280,6 +280,10 @@ std::string Client::get_config() {
     return observe("config/current");
 }
 
+bool Client::set_config(std::string_view key, std::string_view value) {
+    return session_->mutable_config().set(std::string(key), std::string(value));
+}
+
 // ---------------------------------------------------------------------------
 // Accessors
 // ---------------------------------------------------------------------------

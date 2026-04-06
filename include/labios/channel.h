@@ -33,7 +33,8 @@ public:
     Channel(std::string name,
             transport::RedisConnection& redis,
             transport::NatsConnection& nats,
-            uint32_t ttl_seconds = 0);
+            uint32_t ttl_seconds = 0,
+            uint64_t max_pending = 10000);
 
     const std::string& name() const { return name_; }
 
@@ -66,6 +67,7 @@ private:
     transport::RedisConnection& redis_;
     transport::NatsConnection& nats_;
     uint32_t ttl_seconds_;
+    uint64_t max_pending_;
 
     mutable std::mutex mu_;
     std::atomic<uint64_t> next_seq_{1};

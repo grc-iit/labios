@@ -5,6 +5,14 @@
 namespace labios::elastic {
 
 Decision evaluate(const ElasticSnapshot& state) {
+    // Energy budget: decommission idle workers when over budget.
+    if (state.energy_budget > 0.0 && state.current_energy >= state.energy_budget) {
+        if (!state.idle_worker_ids.empty()) {
+            return {Action::Decommission, state.idle_worker_ids.front()};
+        }
+        return {Action::None, 0};
+    }
+
     // Commission / resume: sustained queue pressure with capacity available.
     if (state.pressure_count >= state.pressure_threshold &&
         state.current_workers < state.max_workers) {
@@ -86,6 +94,17 @@ ScaleDecision try_decommission(const TierState& ts, WorkerTier tier,
 } // namespace
 
 ScaleDecision evaluate_tiered(const TieredSnapshot& state) {
+    // Energy budget: decommission idle workers when over budget.
+    if (state.energy_budget > 0.0 && state.current_energy >= state.energy_budget) {
+        auto d = try_decommission(state.databot, WorkerTier::Databot, "energy budget exceeded");
+        if (d.action != Action::None) return d;
+        d = try_decommission(state.pipeline, WorkerTier::Pipeline, "energy budget exceeded");
+        if (d.action != Action::None) return d;
+        d = try_decommission(state.agentic, WorkerTier::Agentic, "energy budget exceeded");
+        if (d.action != Action::None) return d;
+        return {Action::None, WorkerTier::Databot, -1, "energy budget exceeded, no idle workers"};
+    }
+
     bool under_pressure = state.pressure_count >= state.pressure_threshold;
     bool has_pipeline_demand = state.queue.with_pipeline > 0;
 

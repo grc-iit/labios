@@ -87,6 +87,34 @@ TEST_CASE("No decommission while queue has pressure", "[elastic]") {
     CHECK(d.action == Action::None);
 }
 
+TEST_CASE("Energy budget triggers decommission of idle worker", "[elastic]") {
+    auto snap = base_snapshot();
+    snap.energy_budget = 10.0;
+    snap.current_energy = 12.0;
+    snap.idle_worker_ids = {103};
+    auto d = evaluate(snap);
+    CHECK(d.action == Action::Decommission);
+    CHECK(d.target_worker_id == 103);
+}
+
+TEST_CASE("Energy budget returns None when no idle workers", "[elastic]") {
+    auto snap = base_snapshot();
+    snap.energy_budget = 10.0;
+    snap.current_energy = 12.0;
+    snap.idle_worker_ids = {};
+    auto d = evaluate(snap);
+    CHECK(d.action == Action::None);
+}
+
+TEST_CASE("Zero energy budget disables energy check", "[elastic]") {
+    auto snap = base_snapshot();
+    snap.energy_budget = 0.0;
+    snap.current_energy = 999.0;
+    snap.pressure_count = 5;
+    auto d = evaluate(snap);
+    CHECK(d.action == Action::Commission);
+}
+
 TEST_CASE("Evaluate handles zero workers gracefully", "[elastic]") {
     ElasticSnapshot snap{
         .pressure_count = 10,

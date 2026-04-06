@@ -12,11 +12,13 @@ namespace labios {
 Channel::Channel(std::string name,
                  transport::RedisConnection& redis,
                  transport::NatsConnection& nats,
-                 uint32_t ttl_seconds)
+                 uint32_t ttl_seconds,
+                 uint64_t max_pending)
     : name_(std::move(name))
     , redis_(redis)
     , nats_(nats)
-    , ttl_seconds_(ttl_seconds) {}
+    , ttl_seconds_(ttl_seconds)
+    , max_pending_(max_pending) {}
 
 std::string Channel::nats_subject() const {
     return "labios.channel." + name_;
@@ -32,6 +34,11 @@ std::string Channel::warehouse_pattern() const {
 
 uint64_t Channel::publish(std::span<const std::byte> data, uint64_t label_id) {
     if (draining_.load() || destroyed_.load()) {
+        return 0;
+    }
+
+    // Backpressure: reject if pending messages exceed configurable limit
+    if (max_pending_ > 0 && (next_seq_.load() - 1) >= max_pending_) {
         return 0;
     }
 

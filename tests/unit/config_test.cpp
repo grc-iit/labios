@@ -233,6 +233,25 @@ TEST_CASE("Config reads worker tier from TOML", "[config]") {
     std::filesystem::remove(tmp);
 }
 
+TEST_CASE("Config::set modifies runtime parameters", "[config]") {
+    labios::Config cfg;
+    CHECK(cfg.dispatcher_batch_size == 100);
+
+    CHECK(cfg.set("batch_size", "250") == true);
+    CHECK(cfg.dispatcher_batch_size == 250);
+
+    CHECK(cfg.set("batch_timeout_ms", "200") == true);
+    CHECK(cfg.dispatcher_batch_timeout_ms == 200);
+
+    CHECK(cfg.set("scheduler_policy", "constraint") == true);
+    CHECK(cfg.scheduler_policy == "constraint");
+
+    CHECK(cfg.set("aggregation_enabled", "false") == true);
+    CHECK(cfg.dispatcher_aggregation_enabled == false);
+
+    CHECK(cfg.set("nonexistent_key", "val") == false);
+}
+
 TEST_CASE("Worker tier defaults to zero", "[config]") {
     auto cfg = labios::load_config("/nonexistent/path.toml");
     CHECK(cfg.worker_tier == 0);
