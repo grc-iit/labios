@@ -123,6 +123,10 @@ add_executable(labios-backend-test unit/backend_test.cpp)
 target_link_libraries(labios-backend-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-backend-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-sds-test unit/sds_test.cpp)
+target_link_libraries(labios-sds-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-sds-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
 add_executable(labios-channel-test unit/channel_test.cpp)
 target_link_libraries(labios-channel-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-channel-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")

@@ -4,7 +4,10 @@
 #include <labios/config.h>
 #include <labios/label.h>
 #include <labios/content_manager.h>
+#include <labios/sds/executor.h>
+#include <labios/sds/program_repo.h>
 #include <labios/shuffler.h>
+#include <labios/solver/solver.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 #include <labios/uri.h>
@@ -30,7 +33,8 @@ static CompletionResult execute_write(
     labios::ContentManager& cm, labios::CatalogManager& cat,
     const labios::LabelData& label,
     const std::filesystem::path& storage_root, int worker_id,
-    const labios::BackendRegistry& backends);
+    const labios::BackendRegistry& backends,
+    labios::WorkerTier tier, const labios::sds::ProgramRepository& sds_repo);
 
 static CompletionResult execute_read(
     labios::ContentManager& cm, labios::CatalogManager& cat,
@@ -66,9 +70,26 @@ static CompletionResult execute_write(
     labios::ContentManager& cm, labios::CatalogManager& cat,
     const labios::LabelData& label,
     const std::filesystem::path& storage_root, int worker_id,
-    const labios::BackendRegistry& backends) {
+    const labios::BackendRegistry& backends,
+    labios::WorkerTier tier, const labios::sds::ProgramRepository& sds_repo) {
+
+    // Tier gating: Databot workers cannot execute pipelines.
+    if (!label.pipeline.empty() && tier == labios::WorkerTier::Databot) {
+        throw std::runtime_error(
+            "Tier 0 (Databot) worker cannot execute labels with SDS pipelines");
+    }
 
     auto blob = cm.retrieve(label.id);
+
+    // Execute SDS pipeline if present.
+    if (!label.pipeline.empty()) {
+        auto result = labios::sds::execute_pipeline(
+            label.pipeline, std::span<const std::byte>(blob), sds_repo);
+        if (!result.success) {
+            throw std::runtime_error("SDS pipeline failed: " + result.error);
+        }
+        blob = std::move(result.data);
+    }
 
     // URI path: resolve dest_uri through backend registry.
     if (!label.dest_uri.empty()) {
@@ -218,12 +239,17 @@ int main() {
     labios::BackendRegistry backends;
     backends.register_backend(labios::PosixBackend(storage_root));
 
+    // SDS program repository (shared across all label executions).
+    labios::sds::ProgramRepository sds_repo;
+    auto worker_tier = static_cast<labios::WorkerTier>(
+        std::clamp(cfg.worker_tier, 0, 2));
+
     // Mutex protects all Redis (warehouse + catalog) and file operations.
     std::mutex worker_mu;
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id, &backends](
+        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id, &backends, worker_tier, &sds_repo](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -248,7 +274,8 @@ int main() {
 
                 if (label.type == labios::LabelType::Write) {
                     auto result = execute_write(
-                        content_manager, catalog, label, storage_root, worker_id, backends);
+                        content_manager, catalog, label, storage_root, worker_id, backends,
+                        worker_tier, sds_repo);
                     completion.status = result.status;
 
                 } else if (label.type == labios::LabelType::Read) {
@@ -283,7 +310,8 @@ int main() {
 
                         if (child.type == labios::LabelType::Write) {
                             auto result = execute_write(
-                                content_manager, catalog, child, storage_root, worker_id, backends);
+                                content_manager, catalog, child, storage_root, worker_id, backends,
+                                worker_tier, sds_repo);
                             child_comp.status = result.status;
 
                         } else if (child.type == labios::LabelType::Read) {

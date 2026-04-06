@@ -38,6 +38,10 @@ add_library(labios STATIC
     uri.cpp
     backend/posix_backend.cpp
     backend/registry.cpp
+    sds/types.cpp
+    sds/builtins.cpp
+    sds/executor.cpp
+    sds/program_repo.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)

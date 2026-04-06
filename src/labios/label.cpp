@@ -183,8 +183,10 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
     auto operation_off  = fbb.CreateString(label.operation);
     auto reply_to_off   = fbb.CreateString(label.reply_to);
     auto file_key_off   = fbb.CreateString(label.file_key);
-    auto source_uri_off = fbb.CreateString(label.source_uri);
-    auto dest_uri_off   = fbb.CreateString(label.dest_uri);
+    auto source_uri_off    = fbb.CreateString(label.source_uri);
+    auto dest_uri_off      = fbb.CreateString(label.dest_uri);
+    auto pipeline_data_off = fbb.CreateString(
+        sds::serialize_pipeline(label.pipeline));
 
     // Dependencies vector.
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::LabelDependency>>> deps_off = 0;
@@ -262,6 +264,7 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
     if (cont_off.o != 0) builder.add_continuation(cont_off);
     builder.add_source_uri(source_uri_off);
     builder.add_dest_uri(dest_uri_off);
+    builder.add_pipeline_data(pipeline_data_off);
     if (deps_off.o != 0) builder.add_dependencies(deps_off);
     if (children_off.o != 0) builder.add_children(children_off);
     if (routing_off.o != 0) builder.add_routing(routing_off);
@@ -302,6 +305,8 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     out.durability  = static_cast<Durability>(fb->durability());
     out.source_uri  = fb->source_uri() ? fb->source_uri()->str() : std::string{};
     out.dest_uri    = fb->dest_uri() ? fb->dest_uri()->str() : std::string{};
+    if (fb->pipeline_data() && fb->pipeline_data()->size() > 0)
+        out.pipeline = sds::deserialize_pipeline(fb->pipeline_data()->string_view());
 
     // Continuation
     if (auto* cont = fb->continuation()) {

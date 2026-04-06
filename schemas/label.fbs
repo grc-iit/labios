@@ -76,8 +76,9 @@ table Label {
   version:      uint64;
   durability:   Durability;
   continuation: Continuation;
-  source_uri:   string;
-  dest_uri:     string;
+  source_uri:     string;
+  dest_uri:       string;
+  pipeline_data:  string;
 
   // === Accumulation fields (written by runtime components) ===
   dependencies: [LabelDependency];

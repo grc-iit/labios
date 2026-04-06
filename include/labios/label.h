@@ -1,5 +1,7 @@
 #pragma once
 
+#include <labios/sds/types.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <span>
@@ -102,6 +104,7 @@ struct LabelData {
     Continuation continuation;
     std::string source_uri;
     std::string dest_uri;
+    sds::Pipeline pipeline;
 
     // Accumulation (written by runtime)
     RoutingDecision routing;
