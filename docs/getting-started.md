@@ -159,7 +159,7 @@ and MCP server are stateless processes that rely on NATS and DragonflyDB.
 ```bash
 cmake --preset dev
 cmake --build build/dev -j$(nproc)
-ctest --test-dir build/dev          # run all 353 tests
+ctest --test-dir build/dev          # run all 367 tests
 ```
 
 You need NATS and DragonflyDB running locally. Set `LABIOS_NATS_URL` and
@@ -173,7 +173,7 @@ docker compose exec test bash
 ./run_tests.sh
 
 # Native
-ctest --test-dir build/dev              # all 353 tests
+ctest --test-dir build/dev              # all 367 tests
 ctest --test-dir build/dev -L unit      # 224 unit tests
 ctest --test-dir build/dev -L smoke     # 68 smoke tests (needs live cluster)
 ctest --test-dir build/dev -L kernel    # 15 science application replays

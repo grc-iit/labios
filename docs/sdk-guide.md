@@ -134,7 +134,7 @@ result = client.wait_read(rpending)
 ## Label-level API
 
 For maximum control, build labels directly. This exposes the full label
-structure from LABIOS-SPEC.md Section 2.
+structure (see `include/labios/label.h`).
 
 ```cpp
 auto label = client.create_label(labios::LabelType::Write,

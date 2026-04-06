@@ -118,15 +118,16 @@ ctest --test-dir build/dev        # 353 tests
 
 ## Test Suite
 
-353 tests across five categories:
+367 tests across five categories:
 
 | Category | Count | Infrastructure |
 |----------|-------|----------------|
 | Unit | 224 | None |
-| Smoke | 68 | NATS + DragonflyDB |
+| Smoke | 72 | NATS + DragonflyDB |
 | Kernel | 15 | NATS + DragonflyDB |
-| Benchmark | 41 | None (unit-level comparison) |
-| Integration | 5 | Full stack |
+| Benchmark | 40 | None (unit-level comparison) |
+| Integration | 2 | Full stack |
+| MCP | 14 | Docker stack |
 
 ```bash
 ctest --test-dir build/dev -L unit      # Fast, no infrastructure
@@ -151,7 +152,11 @@ Docker Compose | CMake 3.25+ | GitHub Actions (ASan, TSan, UBSan)
 | [Backends](docs/backends.md) | BackendStore concept, writing new backends |
 | [MCP Integration](docs/mcp-integration.md) | Connecting coding agents via MCP |
 | [Architecture](docs/architecture.md) | Complete implementation reference |
-| [LABIOS-SPEC.md](LABIOS-SPEC.md) | Definitive specification (design authority) |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, coding conventions,
+and how to submit pull requests.
 
 ## Publications
 

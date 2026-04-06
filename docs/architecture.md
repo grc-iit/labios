@@ -6,8 +6,7 @@ workers. Each component enriches the label as it passes through. The label is th
 information highway, the state machine, and the audit trail. US Patent
 11,630,834 B2. NSF Award #2331480. HPDC'19 Best Paper Nominee.
 
-This document describes the system as built. Authoritative source:
-[LABIOS-SPEC.md](../LABIOS-SPEC.md).
+This document describes the system as built.
 
 ---
 
