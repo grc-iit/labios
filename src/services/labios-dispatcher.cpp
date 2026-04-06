@@ -1,6 +1,8 @@
 #include <labios/catalog_manager.h>
+#include <labios/channel.h>
 #include <labios/config.h>
 #include <labios/content_manager.h>
+#include <labios/continuation.h>
 #include <labios/label.h>
 #include <labios/observability.h>
 #include <labios/shuffler.h>
@@ -99,6 +101,7 @@ int main() {
     labios::transport::NatsConnection nats(cfg.nats_url);
 
     labios::CatalogManager catalog(redis);
+    labios::ChannelRegistry channels(redis, nats);
 
     // Load weight profile for constraint-based solver.
     auto profile = cfg.scheduler_profile_path.empty()
@@ -234,6 +237,20 @@ int main() {
                     std::cout << "[" << timestamp() << "] dispatcher: observe "
                               << label.id << " -> " << label.source_uri << "\n"
                               << std::flush;
+
+                    // Process continuation for OBSERVE labels.
+                    if (label.continuation.kind != labios::ContinuationKind::None) {
+                        try {
+                            auto chained = labios::process_continuation(
+                                label, comp, channels, nats, redis);
+                            if (chained) {
+                                auto buf = labios::serialize_label(*chained);
+                                nats.publish("labios.labels",
+                                             std::span<const std::byte>(buf));
+                            }
+                        } catch (...) {}
+                    }
+
                     return true;
                 });
                 if (batch.empty()) {

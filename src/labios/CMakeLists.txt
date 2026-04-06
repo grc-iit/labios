@@ -17,6 +17,7 @@ add_library(labios STATIC
     catalog_manager.cpp
     channel.cpp
     client.cpp
+    continuation.cpp
     config.cpp
     label.cpp
     label_manager.cpp

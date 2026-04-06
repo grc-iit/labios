@@ -1,7 +1,9 @@
 #include <labios/backend/posix_backend.h>
 #include <labios/backend/registry.h>
 #include <labios/catalog_manager.h>
+#include <labios/channel.h>
 #include <labios/config.h>
+#include <labios/continuation.h>
 #include <labios/label.h>
 #include <labios/content_manager.h>
 #include <labios/sds/executor.h>
@@ -244,12 +246,14 @@ int main() {
     auto worker_tier = static_cast<labios::WorkerTier>(
         std::clamp(cfg.worker_tier, 0, 2));
 
+    labios::ChannelRegistry channels(redis, nats);
+
     // Mutex protects all Redis (warehouse + catalog) and file operations.
     std::mutex worker_mu;
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id, &backends, worker_tier, &sds_repo](
+        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id, &backends, worker_tier, &sds_repo, &channels](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -333,6 +337,23 @@ int main() {
                             auto reply = labios::serialize_completion(child_comp);
                             nats.publish(child.reply_to, std::span<const std::byte>(reply));
                         }
+
+                        // Process continuation for each child.
+                        if (child.continuation.kind != labios::ContinuationKind::None) {
+                            try {
+                                auto chained = labios::process_continuation(
+                                    child, child_comp, channels, nats, redis);
+                                if (chained) {
+                                    auto buf = labios::serialize_label(*chained);
+                                    nats.publish("labios.labels",
+                                                 std::span<const std::byte>(buf));
+                                }
+                            } catch (const std::exception& ex) {
+                                std::cerr << "[" << timestamp() << "] worker "
+                                          << worker_id << ": child continuation error: "
+                                          << ex.what() << "\n" << std::flush;
+                            }
+                        }
                     }
 
                     // Clean up packed data from Redis.
@@ -350,6 +371,24 @@ int main() {
                         auto reply_payload = labios::serialize_completion(completion);
                         nats.publish(label.reply_to, std::span<const std::byte>(reply_payload));
                     }
+
+                    // Process continuation for the composite label.
+                    if (label.continuation.kind != labios::ContinuationKind::None) {
+                        try {
+                            auto chained = labios::process_continuation(
+                                label, completion, channels, nats, redis);
+                            if (chained) {
+                                auto buf = labios::serialize_label(*chained);
+                                nats.publish("labios.labels",
+                                             std::span<const std::byte>(buf));
+                            }
+                        } catch (const std::exception& ex) {
+                            std::cerr << "[" << timestamp() << "] worker "
+                                      << worker_id << ": composite continuation error: "
+                                      << ex.what() << "\n" << std::flush;
+                        }
+                    }
+
                     nats.flush();
                     g_active_labels.fetch_sub(1);
                     return; // Early return; skip the normal completion path below.
@@ -367,6 +406,24 @@ int main() {
                     nats.publish(label.reply_to,
                                  std::span<const std::byte>(reply_payload));
                     nats.flush();
+                }
+
+                // Process continuation if present.
+                if (label.continuation.kind != labios::ContinuationKind::None) {
+                    try {
+                        auto chained = labios::process_continuation(
+                            label, completion, channels, nats, redis);
+                        if (chained) {
+                            auto buf = labios::serialize_label(*chained);
+                            nats.publish("labios.labels",
+                                         std::span<const std::byte>(buf));
+                            nats.flush();
+                        }
+                    } catch (const std::exception& ex) {
+                        std::cerr << "[" << timestamp() << "] worker "
+                                  << worker_id << ": continuation error: "
+                                  << ex.what() << "\n" << std::flush;
+                    }
                 }
 
                 g_active_labels.fetch_sub(1);
