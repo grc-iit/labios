@@ -37,9 +37,7 @@ static std::mutex g_workers_mu;
 static std::vector<labios::WorkerInfo> g_cached_workers;
 
 static uint64_t now_us() {
-    return static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now().time_since_epoch()).count());
+    return labios::label_timestamp_now_us();
 }
 
 static labios::ScoreSnapshot snapshot_worker(int worker_id,
@@ -191,7 +189,7 @@ int main() {
             std::string_view reply_to) {
             auto label = labios::deserialize_label(data);
             label.reply_to = std::string(reply_to);
-            label.queued_us = now_us();
+            labios::mark_label_queued(label, now_us());
             {
                 std::lock_guard lock(batch_mu);
                 batch_buffer.push_back(std::move(label));
@@ -288,6 +286,19 @@ int main() {
                       << batch.size() << " labels\n" << std::flush;
 
             auto result = shuffler.shuffle(std::move(batch), location_lookup);
+            auto shuffle_time = now_us();
+            for (auto& [label, /*worker_id*/ _] : result.direct_route) {
+                labios::mark_label_shuffled(label, shuffle_time);
+            }
+            for (auto& label : result.independent) {
+                labios::mark_label_shuffled(label, shuffle_time);
+            }
+            for (auto& st : result.supertasks) {
+                labios::mark_label_shuffled(st.composite, shuffle_time);
+                for (auto& child : st.children) {
+                    labios::mark_label_shuffled(child, shuffle_time);
+                }
+            }
 
             // Read cached worker list (refreshed by background thread).
             std::vector<labios::WorkerInfo> workers;
@@ -330,11 +341,10 @@ int main() {
                 sched.reserve(result.direct_route.size());
 
                 for (auto& [label, worker_id] : result.direct_route) {
-                    label.flags |= labios::LabelFlags::Scheduled;
-                    label.routing.worker_id = worker_id;
-                    label.routing.policy = "read-locality";
-                    label.dispatched_us = now_us();
-                    label.score_snapshot = snapshot_worker(worker_id, workers);
+                    auto dispatch_time = now_us();
+                    labios::mark_label_scheduled(
+                        label, worker_id, "read-locality",
+                        snapshot_worker(worker_id, workers), dispatch_time);
                     sched.push_back({label.id, worker_id, label.flags});
 
                     auto serialized = labios::serialize_label(label);
@@ -367,11 +377,8 @@ int main() {
                     std::vector<std::vector<std::byte>> child_payloads;
                     child_payloads.reserve(st.children.size());
                     for (auto& child : st.children) {
-                        child.flags |= labios::LabelFlags::Scheduled;
-                        child.routing.worker_id = wid;
-                        child.routing.policy = cfg.scheduler_policy;
-                        child.dispatched_us = dispatch_time;
-                        child.score_snapshot = snap;
+                        labios::mark_label_scheduled(
+                            child, wid, cfg.scheduler_policy, snap, dispatch_time);
                         sched.push_back({child.id, wid, child.flags});
                         child_payloads.push_back(labios::serialize_label(child));
                     }
@@ -387,11 +394,8 @@ int main() {
                         }
                     }
 
-                    st.composite.flags |= labios::LabelFlags::Scheduled;
-                    st.composite.routing.worker_id = wid;
-                    st.composite.routing.policy = cfg.scheduler_policy;
-                    st.composite.dispatched_us = dispatch_time;
-                    st.composite.score_snapshot = snap;
+                    labios::mark_label_scheduled(
+                        st.composite, wid, cfg.scheduler_policy, snap, dispatch_time);
                     sched.push_back({st.composite.id, wid, st.composite.flags});
                     catalog.schedule_batch(sched);
 
@@ -463,8 +467,6 @@ int main() {
                         }
                     }
 
-                    label.flags |= labios::LabelFlags::Scheduled;
-
                     int target_worker = -1;
                     if (label.type == labios::LabelType::Write) {
                         auto* dst = std::get_if<labios::FilePath>(&label.destination);
@@ -475,10 +477,10 @@ int main() {
                     }
 
                     if (target_worker > 0) {
-                        label.routing.worker_id = target_worker;
-                        label.routing.policy = "write-locality";
-                        label.dispatched_us = now_us();
-                        label.score_snapshot = snapshot_worker(target_worker, workers);
+                        auto dispatch_time = now_us();
+                        labios::mark_label_scheduled(
+                            label, target_worker, "write-locality",
+                            snapshot_worker(target_worker, workers), dispatch_time);
                         sched.push_back({label.id, target_worker, label.flags});
 
                         auto serialized = labios::serialize_label(label);
@@ -496,10 +498,10 @@ int main() {
                         auto assignments = solve(std::move(solver_batch), label.intent);
 
                         for (auto& [wid, payloads] : assignments) {
-                            label.routing.worker_id = wid;
-                            label.routing.policy = cfg.scheduler_policy;
-                            label.dispatched_us = now_us();
-                            label.score_snapshot = snapshot_worker(wid, workers);
+                            auto dispatch_time = now_us();
+                            labios::mark_label_scheduled(
+                                label, wid, cfg.scheduler_policy,
+                                snapshot_worker(wid, workers), dispatch_time);
                             sched.push_back({label.id, wid, label.flags});
 
                             if (label.type == labios::LabelType::Write) {

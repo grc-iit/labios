@@ -173,6 +173,24 @@ struct CompletionData {
 };
 
 uint64_t generate_label_id(uint32_t app_id);
+uint64_t label_timestamp_now_us();
+
+void append_label_hop(LabelData& label, std::string_view component,
+                      uint64_t timestamp_us = 0);
+void mark_label_created(LabelData& label, uint64_t timestamp_us = 0);
+void mark_label_queued(LabelData& label, uint64_t timestamp_us = 0);
+void mark_label_shuffled(LabelData& label, uint64_t timestamp_us = 0);
+void mark_label_scheduled(LabelData& label, uint32_t worker_id,
+                          std::string_view policy,
+                          const ScoreSnapshot& snapshot,
+                          uint64_t timestamp_us = 0);
+void mark_label_executing(LabelData& label, std::string_view worker_component,
+                          uint64_t timestamp_us = 0);
+void mark_label_finished(LabelData& label, CompletionStatus status,
+                         std::string_view data_location = {},
+                         uint64_t bytes_transferred = 0,
+                         std::string_view error = {},
+                         uint64_t timestamp_us = 0);
 
 std::vector<std::byte> serialize_label(const LabelData& label);
 LabelData deserialize_label(std::span<const std::byte> buf);
