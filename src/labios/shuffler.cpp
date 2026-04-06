@@ -70,11 +70,18 @@ ShuffleResult Shuffler::shuffle(std::vector<LabelData> batch,
                                 LocationLookup lookup) {
     ShuffleResult result;
 
-    // Phase 1: extract read-locality labels.
-    std::vector<LabelData> remaining;
-    remaining.reserve(batch.size());
+    // Phase 1: aggregate consecutive writes.
+    auto remaining = aggregate(batch, result.reply_fanout);
 
-    for (auto& label : batch) {
+    // Phase 2: detect RAW/WAW/WAR dependencies.
+    detect_dependencies(remaining);
+
+    // Phase 3: build supertasks, leaving independent labels in remaining.
+    result.supertasks = build_supertasks(remaining);
+
+    // Phase 4: route only dependency-free reads directly to the holding worker.
+    result.independent.reserve(remaining.size());
+    for (auto& label : remaining) {
         if (label.type == LabelType::Read && lookup) {
             auto range = label_range(label);
             auto loc = lookup(label.file_key, range.offset, range.length);
@@ -83,18 +90,8 @@ ShuffleResult Shuffler::shuffle(std::vector<LabelData> batch,
                 continue;
             }
         }
-        remaining.push_back(std::move(label));
+        result.independent.push_back(std::move(label));
     }
-
-    // Phase 2: aggregate consecutive writes.
-    remaining = aggregate(remaining, result.reply_fanout);
-
-    // Phase 3: detect RAW/WAW/WAR dependencies.
-    detect_dependencies(remaining);
-
-    // Phase 4: build supertasks, leaving independent labels in remaining.
-    result.supertasks = build_supertasks(remaining);
-    result.independent = std::move(remaining);
 
     return result;
 }

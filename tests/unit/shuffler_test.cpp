@@ -52,6 +52,12 @@ TEST_CASE("Aggregation merges consecutive offsets", "[shuffler]") {
     CHECK(merged.children[0] == 1);
     CHECK(merged.children[1] == 2);
     CHECK(merged.children[2] == 3);
+    REQUIRE(merged.aggregation.original_ids.size() == 3);
+    CHECK(merged.aggregation.original_ids[0] == 1);
+    CHECK(merged.aggregation.original_ids[1] == 2);
+    CHECK(merged.aggregation.original_ids[2] == 3);
+    CHECK(merged.aggregation.merged_offset == 0);
+    CHECK(merged.aggregation.merged_length == 3072);
 
     auto* fp = std::get_if<labios::FilePath>(&merged.destination);
     REQUIRE(fp != nullptr);
@@ -112,6 +118,8 @@ TEST_CASE("RAW dependency detected (write then read same offset)",
     REQUIRE(result.supertasks.size() == 1);
     auto& st = result.supertasks[0];
     REQUIRE(st.children.size() == 2);
+    CHECK(st.children[0].supertask_id == st.composite.id);
+    CHECK(st.children[1].supertask_id == st.composite.id);
 
     // The read (id=2) should have a RAW dependency on the write (id=1).
     auto& read_label = st.children[1];
@@ -209,7 +217,7 @@ TEST_CASE("Read-locality extraction routes reads to holding worker",
     std::vector<labios::LabelData> batch;
     batch.push_back(make_read(1, "cached.dat", 0, 1024));
     batch.push_back(make_read(2, "unknown.dat", 0, 1024));
-    batch.push_back(make_write(3, "cached.dat", 0, 1024));
+    batch.push_back(make_write(3, "other.dat", 0, 1024));
 
     auto result = s.shuffle(std::move(batch), lookup);
 
@@ -217,6 +225,34 @@ TEST_CASE("Read-locality extraction routes reads to holding worker",
     CHECK(result.direct_route[0].first.id == 1);
     CHECK(result.direct_route[0].second == 2);
     CHECK(result.independent.size() == 2);
+}
+
+TEST_CASE("Read-locality does not bypass dependency-ordered supertasks",
+          "[shuffler]") {
+    labios::ShufflerConfig cfg;
+    cfg.aggregation_enabled = false;
+    labios::Shuffler s(cfg);
+
+    auto lookup = [](const std::string& key, uint64_t, uint64_t) -> std::optional<int> {
+        if (key == "/data/a.dat") return 3;
+        return std::nullopt;
+    };
+
+    std::vector<labios::LabelData> batch;
+    batch.push_back(make_write(1, "/data/a.dat", 0, 1024));
+    batch.push_back(make_read(2, "/data/a.dat", 0, 1024));
+
+    auto result = s.shuffle(std::move(batch), lookup);
+
+    CHECK(result.direct_route.empty());
+    REQUIRE(result.supertasks.size() == 1);
+    auto& st = result.supertasks[0];
+    REQUIRE(st.children.size() == 2);
+    CHECK(st.children[0].supertask_id == st.composite.id);
+    CHECK(st.children[1].supertask_id == st.composite.id);
+    REQUIRE(st.children[1].dependencies.size() == 1);
+    CHECK(st.children[1].dependencies[0].label_id == 1);
+    CHECK(st.children[1].dependencies[0].hazard_type == labios::HazardType::RAW);
 }
 
 TEST_CASE("Configurable granularity per-application groups across files",
