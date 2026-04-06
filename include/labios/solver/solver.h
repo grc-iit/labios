@@ -28,6 +28,11 @@ struct WorkerInfo {
     int energy = 1;              // [1,5] power wattage class
     WorkerTier tier = WorkerTier::Databot;
 
+    // 2026 extension variables (LABIOS-SPEC S7.3)
+    double skills = 0.0;          // [0,1] fraction of requested capabilities
+    double compute = 1.0;         // [0,1] available CPU/memory resources
+    int reasoning = 0;            // [0,5] model capability class (0=none)
+
     // Composite score computed by the worker manager
     double score = 1.0;          // [0,1] weighted combination
 };
@@ -41,6 +46,11 @@ struct WeightProfile {
     double speed = 0.0;
     double energy = 0.0;
     double tier = 0.0;
+
+    // 2026 extension variables
+    double skills = 0.0;
+    double compute = 0.0;
+    double reasoning = 0.0;
 };
 
 using AssignmentMap = std::unordered_map<int, std::vector<std::vector<std::byte>>>;

@@ -199,6 +199,9 @@ WeightProfile load_weight_profile(const std::filesystem::path& path) {
     wp.speed        = tbl["weights"]["speed"].value_or(0.0);
     wp.energy       = tbl["weights"]["energy"].value_or(0.0);
     wp.tier         = tbl["weights"]["tier"].value_or(0.0);
+    wp.skills       = tbl["weights"]["skills"].value_or(0.0);
+    wp.compute      = tbl["weights"]["compute"].value_or(0.0);
+    wp.reasoning    = tbl["weights"]["reasoning"].value_or(0.0);
     return wp;
 }
 

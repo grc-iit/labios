@@ -10,6 +10,7 @@
 #include <labios/solver/minmax.h>
 #include <labios/solver/random.h>
 #include <labios/solver/round_robin.h>
+#include <labios/solver/intent_profiles.h>
 #include <labios/telemetry.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
@@ -302,12 +303,17 @@ int main() {
             }
 
             // Solver dispatch based on configured policy.
-            auto solve = [&](std::vector<std::vector<std::byte>> solver_batch)
+            // Intent-aware scheduling (S7.4): the constraint solver receives
+            // a weight profile adjusted for each label's intent.
+            auto solve = [&](std::vector<std::vector<std::byte>> solver_batch,
+                             labios::Intent intent = labios::Intent::None)
                 -> labios::AssignmentMap {
                 if (cfg.scheduler_policy == "random") {
                     return random_solver.assign(std::move(solver_batch), workers);
                 } else if (cfg.scheduler_policy == "constraint") {
-                    return constraint_solver.assign(std::move(solver_batch), workers);
+                    auto adjusted = labios::profile_for_intent(profile, intent);
+                    labios::ConstraintSolver intent_solver(adjusted);
+                    return intent_solver.assign(std::move(solver_batch), workers);
                 } else if (cfg.scheduler_policy == "minmax") {
                     return minmax_solver.assign(std::move(solver_batch), workers);
                 }
@@ -349,7 +355,7 @@ int main() {
                 auto dummy = labios::serialize_label(st.composite);
                 std::vector<std::vector<std::byte>> solver_batch;
                 solver_batch.push_back(std::move(dummy));
-                auto assignments = solve(std::move(solver_batch));
+                auto assignments = solve(std::move(solver_batch), st.composite.intent);
 
                 for (auto& [wid, _] : assignments) {
                     std::vector<labios::ScheduleEntry> sched;
@@ -487,7 +493,7 @@ int main() {
                         auto serialized = labios::serialize_label(label);
                         std::vector<std::vector<std::byte>> solver_batch;
                         solver_batch.push_back(std::move(serialized));
-                        auto assignments = solve(std::move(solver_batch));
+                        auto assignments = solve(std::move(solver_batch), label.intent);
 
                         for (auto& [wid, payloads] : assignments) {
                             label.routing.worker_id = wid;
