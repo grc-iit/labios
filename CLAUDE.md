@@ -60,6 +60,25 @@ cmake --build build/dev -j$(nproc)
 ctest --test-dir build/dev
 ```
 
+## Architectural Boundaries (Do Not Violate)
+
+**LABIOS is a runtime, not a storage system.** It orchestrates I/O operations. It does not own or manage the storage systems that data ultimately lands on.
+
+**Internal plumbing vs external backends.** These are completely separate concerns:
+
+| Layer | What | Purpose | Examples |
+|-------|------|---------|---------|
+| **Internal plumbing** | DragonflyDB (warehouse), NATS (label queue) | Stage data in transit, route labels between components, store catalog metadata | `labios:data:{id}`, `labios.labels` subject |
+| **External backends** | Storage systems the user already has | Final execution target for label I/O operations | User's filesystem, user's Redis, user's PostgreSQL, user's ChromaDB |
+
+Never confuse these. The warehouse is not a backend. A backend is not plumbing. When adding a KV backend (`kv://`), it connects to the USER's Redis instance, not to LABIOS's internal DragonflyDB. When adding a vector backend (`vector://`), it connects to the USER's vector DB, not to anything LABIOS owns.
+
+**All intelligence lives in the runtime.** Shuffling, scheduling, pipelines, coordination, caching, and elastic scaling happen BEFORE the label reaches the backend. Backends are thin adapters that translate the label's operation into the external system's native API. The backend's job is narrow: last-mile execution.
+
+**BackendStore receives the full label** (spec S4.4) so it CAN use metadata (intent, isolation, priority) if the external system supports it. But the backend is not where optimization happens. The runtime already optimized everything upstream.
+
+**For testing**, we add containers (Redis, ChromaDB, PostgreSQL) to docker-compose.yml to simulate user infrastructure. In production, backends connect to whatever the user already runs.
+
 ## Code Conventions
 
 - C++20. Modules are a stretch goal, not required.
@@ -136,49 +155,54 @@ Agent Frameworks (LangChain, CrewAI, custom)  |  HPC Apps (MPI/POSIX)
 
 Clients never talk to workers. The dispatcher is the only bridge. This invariant holds across all deployment configurations.
 
-## Current Status (as of 2026-04-05)
+## Current Status (as of 2026-04-06)
 
-180 unit tests pass. Docker Compose stack runs with NATS 2.10 (JetStream),
+208 unit tests pass. Docker Compose stack runs with NATS 2.10 (JetStream),
 DragonflyDB, 1 dispatcher, 3 workers, and 1 Worker Manager.
 
 **Implemented capabilities (mapped to LABIOS-SPEC.md sections):**
 
 | Capability | Spec Section | Status |
 |-----------|-------------|--------|
-| Label as mutable information carrier (accumulation fields, state, URIs, continuations) | S2 | Done |
-| Shuffler (aggregation, RAW/WAW/WAR, supertasks, read-locality) | S6 | Done |
+| Label as mutable information carrier (all accumulation fields, timestamps, score_snapshot, result) | S2 | Done |
+| Shuffler (aggregation, RAW/WAW/WAR, supertasks, read-locality, aggregation metadata) | S6 | Done |
 | Four scheduling policies (RR, Random, Constraint, MinMax DP) | S7.5 | Done |
-| Extensible worker scoring (5 baseline + tier variable) | S7.3 | Done |
+| Extensible worker scoring (5 baseline + tier + skills/compute/reasoning) | S7.3 | Done |
+| Intent-aware scheduling (profile adjustment per label intent) | S7.4 | Done |
 | Three worker tiers (Databot/Pipeline/Agentic) | S7.1 | Done |
 | URI-based routing with BackendStore concept | S4 | Done |
 | POSIX backend for file:// scheme | S4 | Done |
-| SDS programmable pipelines (program repository, 8 builtins, executor) | S5 | Done |
-| Channels (streaming pub/sub coordination) | S8.2 | Done |
+| SDS programmable pipelines (program repository, 11 builtins, DAG-aware executor) | S5 | Done |
+| Channels (streaming pub/sub, backpressure, TTL, auto-destroy) | S8.2 | Done |
 | Workspaces (persistent shared state with ACL and versioning) | S8.3 | Done |
-| Observability labels (OBSERVE type, 7 query endpoints) | S10.2 | Done |
-| Telemetry stream (continuous metrics via NATS) | S10.3 | Done |
-| Per-tier elastic scaling (tier-aware commission/decommission) | S9 | Done |
+| Observability labels (OBSERVE type, 8 query endpoints including data/location) | S10.2 | Done |
+| Telemetry stream (continuous metrics, p50/p95/p99 latency, per-lane throughput) | S10.3 | Done |
+| Per-tier elastic scaling (tier-aware, energy budget trigger) | S9 | Done |
 | Continuation execution (Notify/Chain/Conditional on completion) | S2.7 | Done |
 | Elastic workers via Docker Engine API | S9.3 | Done |
-| POSIX intercept (LD_PRELOAD) | S12.1 | Done |
+| POSIX intercept (LD_PRELOAD, 26 POSIX + 4 stdio entry points) | S12.1 | Done |
 | Async client API (async_write, async_read, wait) | S12.2 | Done |
 | Label-level API (create_label, publish) | S12.2 | Done |
 | C API header (labios.h) for FFI consumers | S12.2 | Done |
+| Python SDK (pybind11 bindings, all 8 API layers) | S12.2 | Done |
+| Runtime config.set() for dynamic parameter adjustment | S12.2 | Done |
 | Snowflake ID generation | S2.2 | Done |
 | Small-I/O cache with timer-based flush | S6.1 | Done |
-| DragonflyDB warehouse (~20x throughput over Redis) | S4 | Done |
+| DragonflyDB warehouse (~20x throughput over Redis) | Internal | Done |
+| Routing, timestamps, score_snapshot populated on every label | S2.2 | Done |
 
 **Not yet implemented:**
-- Python SDK (pybind11 bindings)
+- BackendStore concept alignment with spec S4.4 (backends should receive full Label)
+- Additional backend adapters (KV, SQLite, vector, graph) connecting to user infrastructure
+- LABIOS MCP Server for agent integration (see `docs/superpowers/specs/2026-04-06-agent-integration-design.md`)
 - Agent-specific benchmark suite (8 benchmarks from spec S13)
-- Additional backend implementations (S3, vector, graph)
 - FUSE filesystem mount
-- Configuration hot-reload
 
 ## Reference
 
 - `LABIOS-SPEC.md` — definitive specification for LABIOS 2.0 (primary design authority)
 - `LABIOS-2.0.md` — constitutional document (established the rewrite)
+- `docs/superpowers/specs/2026-04-06-agent-integration-design.md` — agent integration design (MCP server, memory hierarchy, multi-backend routing)
 - `.planning/reference/original-paper/labios.md` — HPDC'19 paper
 - `docs/superpowers/specs/architecture-current.md` — M0-M4 implementation snapshot
 - Tag `v1.0-archive` — old 2018 prototype (reference only)
