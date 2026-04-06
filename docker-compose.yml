@@ -24,6 +24,17 @@ services:
       retries: 5
       start_period: 2s
 
+  redis-kv:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+      start_period: 2s
+
   dispatcher:
     build: { context: ., target: dispatcher }
     depends_on:
@@ -46,10 +57,13 @@ services:
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
+      redis-kv: { condition: service_healthy }
       manager: { condition: service_healthy }
     environment:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
+      LABIOS_KV_HOST: "redis-kv"
+      LABIOS_KV_PORT: "6379"
       LABIOS_WORKER_ID: "1"
       LABIOS_WORKER_SPEED: "5"
       LABIOS_WORKER_ENERGY: "1"
@@ -67,10 +81,13 @@ services:
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
+      redis-kv: { condition: service_healthy }
       manager: { condition: service_healthy }
     environment:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
+      LABIOS_KV_HOST: "redis-kv"
+      LABIOS_KV_PORT: "6379"
       LABIOS_WORKER_ID: "2"
       LABIOS_WORKER_SPEED: "3"
       LABIOS_WORKER_ENERGY: "3"
@@ -88,10 +105,13 @@ services:
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
+      redis-kv: { condition: service_healthy }
       manager: { condition: service_healthy }
     environment:
       LABIOS_NATS_URL: "nats://nats:4222"
       LABIOS_REDIS_HOST: "redis"
+      LABIOS_KV_HOST: "redis-kv"
+      LABIOS_KV_PORT: "6379"
       LABIOS_WORKER_ID: "3"
       LABIOS_WORKER_SPEED: "1"
       LABIOS_WORKER_ENERGY: "5"

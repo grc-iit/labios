@@ -1,6 +1,6 @@
 #pragma once
+#include <labios/label.h>
 #include <cstddef>
-#include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>
@@ -19,15 +19,24 @@ struct BackendDataResult {
     std::vector<std::byte> data;
 };
 
-/// Concept for storage backends. Each backend handles one or more URI schemes.
+struct BackendQueryResult {
+    bool success = true;
+    std::string error;
+    std::string json_data;
+};
+
+/// Concept for storage backends (LABIOS-SPEC Section 4.4).
+/// Every backend receives the full label. The label carries intent, isolation,
+/// priority, URIs, and pipeline context. Backends use this metadata to make
+/// intelligent storage decisions.
 template<typename B>
-concept BackendStore = requires(B b,
-    std::string_view path, uint64_t offset, uint64_t length,
+concept BackendStore = requires(B b, const LabelData& label,
     std::span<const std::byte> data) {
-    { b.put(path, offset, data) } -> std::same_as<BackendResult>;
-    { b.get(path, offset, length) } -> std::same_as<BackendDataResult>;
-    { b.del(path) } -> std::same_as<BackendResult>;
-    { b.scheme() } -> std::same_as<std::string_view>;
+    { b.put(label, data) } -> std::same_as<BackendResult>;
+    { b.get(label) }       -> std::same_as<BackendDataResult>;
+    { b.del(label) }       -> std::same_as<BackendResult>;
+    { b.query(label) }     -> std::same_as<BackendQueryResult>;
+    { b.scheme() }         -> std::same_as<std::string_view>;
 };
 
 } // namespace labios

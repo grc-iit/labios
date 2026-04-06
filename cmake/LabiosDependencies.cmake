@@ -1,5 +1,18 @@
 include(FetchContent)
 
+# SQLite3: prefer system install, fall back to source build.
+find_package(SQLite3 QUIET)
+if(NOT SQLite3_FOUND)
+    FetchContent_Declare(
+        sqlite3
+        URL https://www.sqlite.org/2024/sqlite-amalgamation-3450300.zip
+    )
+    FetchContent_MakeAvailable(sqlite3)
+    add_library(sqlite3_lib STATIC ${sqlite3_SOURCE_DIR}/sqlite3.c)
+    target_include_directories(sqlite3_lib PUBLIC ${sqlite3_SOURCE_DIR})
+    add_library(SQLite::SQLite3 ALIAS sqlite3_lib)
+endif()
+
 # Use source archives instead of git clones for Docker compatibility.
 # Git clones require .git in the source tree for FetchContent update steps.
 FetchContent_Declare(

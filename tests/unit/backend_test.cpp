@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <labios/backend/posix_backend.h>
+#include <labios/backend/sqlite_backend.h>
 #include <labios/backend/registry.h>
 
 #include <cstring>
@@ -11,17 +12,31 @@ static std::filesystem::path make_temp_dir() {
     return dir;
 }
 
-TEST_CASE("PosixBackend put/get roundtrip", "[backend]") {
+// ---------------------------------------------------------------------------
+// PosixBackend tests (label-based interface)
+// ---------------------------------------------------------------------------
+
+TEST_CASE("PosixBackend put/get roundtrip with label", "[backend]") {
     auto tmp = make_temp_dir();
     labios::PosixBackend backend(tmp);
 
+    labios::LabelData label;
+    label.id = 1;
+    label.type = labios::LabelType::Write;
+    label.dest_uri = "file:///test/roundtrip.dat";
+
     const char* msg = "hello backend";
     auto data = std::as_bytes(std::span(msg, std::strlen(msg)));
-
-    auto put_result = backend.put("test/roundtrip.dat", 0, data);
+    auto put_result = backend.put(label, data);
     REQUIRE(put_result.success);
 
-    auto get_result = backend.get("test/roundtrip.dat", 0, std::strlen(msg));
+    labios::LabelData read_label;
+    read_label.id = 2;
+    read_label.type = labios::LabelType::Read;
+    read_label.source_uri = "file:///test/roundtrip.dat";
+    read_label.data_size = std::strlen(msg);
+
+    auto get_result = backend.get(read_label);
     REQUIRE(get_result.success);
     REQUIRE(get_result.data.size() == std::strlen(msg));
     REQUIRE(std::memcmp(get_result.data.data(), msg, std::strlen(msg)) == 0);
@@ -29,22 +44,37 @@ TEST_CASE("PosixBackend put/get roundtrip", "[backend]") {
     std::filesystem::remove_all(tmp);
 }
 
-TEST_CASE("PosixBackend put with offset", "[backend]") {
+TEST_CASE("PosixBackend put with offset via FilePath pointer", "[backend]") {
     auto tmp = make_temp_dir();
     labios::PosixBackend backend(tmp);
 
+    labios::LabelData label1;
+    label1.id = 1;
+    label1.type = labios::LabelType::Write;
+    label1.destination = labios::file_path("offset_test.dat");
+
     const char* first = "AAAA";
     auto d1 = std::as_bytes(std::span(first, 4));
-    backend.put("offset_test.dat", 0, d1);
+    backend.put(label1, d1);
+
+    labios::LabelData label2;
+    label2.id = 2;
+    label2.type = labios::LabelType::Write;
+    label2.destination = labios::file_path("offset_test.dat", 2, 2);
 
     const char* second = "BB";
     auto d2 = std::as_bytes(std::span(second, 2));
-    backend.put("offset_test.dat", 2, d2);
+    backend.put(label2, d2);
 
-    auto result = backend.get("offset_test.dat", 0, 4);
+    labios::LabelData read_label;
+    read_label.id = 3;
+    read_label.type = labios::LabelType::Read;
+    read_label.source = labios::file_path("offset_test.dat");
+    read_label.data_size = 4;
+
+    auto result = backend.get(read_label);
     REQUIRE(result.success);
     REQUIRE(result.data.size() == 4);
-    // First two bytes are 'A', next two overwritten by 'B'.
     REQUIRE(static_cast<char>(result.data[0]) == 'A');
     REQUIRE(static_cast<char>(result.data[1]) == 'A');
     REQUIRE(static_cast<char>(result.data[2]) == 'B');
@@ -57,14 +87,30 @@ TEST_CASE("PosixBackend del", "[backend]") {
     auto tmp = make_temp_dir();
     labios::PosixBackend backend(tmp);
 
+    labios::LabelData write_label;
+    write_label.id = 1;
+    write_label.type = labios::LabelType::Write;
+    write_label.dest_uri = "file:///to_delete.dat";
+
     const char* msg = "delete me";
     auto data = std::as_bytes(std::span(msg, std::strlen(msg)));
-    backend.put("to_delete.dat", 0, data);
+    backend.put(write_label, data);
 
-    auto del_result = backend.del("to_delete.dat");
+    labios::LabelData del_label;
+    del_label.id = 2;
+    del_label.type = labios::LabelType::Delete;
+    del_label.dest_uri = "file:///to_delete.dat";
+
+    auto del_result = backend.del(del_label);
     REQUIRE(del_result.success);
 
-    auto get_result = backend.get("to_delete.dat", 0, 9);
+    labios::LabelData read_label;
+    read_label.id = 3;
+    read_label.type = labios::LabelType::Read;
+    read_label.source_uri = "file:///to_delete.dat";
+    read_label.data_size = 9;
+
+    auto get_result = backend.get(read_label);
     REQUIRE_FALSE(get_result.success);
 
     std::filesystem::remove_all(tmp);
@@ -74,16 +120,115 @@ TEST_CASE("PosixBackend get nonexistent file", "[backend]") {
     auto tmp = make_temp_dir();
     labios::PosixBackend backend(tmp);
 
-    auto result = backend.get("no_such_file.dat", 0, 10);
+    labios::LabelData label;
+    label.id = 1;
+    label.source_uri = "file:///no_such_file.dat";
+    label.data_size = 10;
+
+    auto result = backend.get(label);
     REQUIRE_FALSE(result.success);
 
     std::filesystem::remove_all(tmp);
+}
+
+TEST_CASE("PosixBackend query returns unsupported", "[backend]") {
+    labios::PosixBackend backend("/tmp");
+    labios::LabelData label;
+    auto result = backend.query(label);
+    REQUIRE_FALSE(result.success);
 }
 
 TEST_CASE("PosixBackend scheme", "[backend]") {
     labios::PosixBackend backend("/tmp");
     REQUIRE(backend.scheme() == "file");
 }
+
+// ---------------------------------------------------------------------------
+// SQLiteBackend tests
+// ---------------------------------------------------------------------------
+
+TEST_CASE("SQLiteBackend put/get/del roundtrip", "[backend][sqlite]") {
+    auto db_path = std::filesystem::temp_directory_path() / "labios_test.db";
+    std::filesystem::remove(db_path);
+    labios::SQLiteBackend backend(db_path.string());
+
+    labios::LabelData label;
+    label.id = 1;
+    label.dest_uri = "sqlite:///memories/test-key";
+    label.intent = labios::Intent::ReasoningTrace;
+    label.isolation = labios::Isolation::Agent;
+    label.priority = 5;
+
+    std::string value = "test data for SQLite backend";
+    auto data = std::as_bytes(std::span(value));
+    auto put_result = backend.put(label, data);
+    REQUIRE(put_result.success);
+
+    labios::LabelData get_label;
+    get_label.source_uri = "sqlite:///memories/test-key";
+    auto get_result = backend.get(get_label);
+    REQUIRE(get_result.success);
+    REQUIRE(get_result.data.size() == value.size());
+
+    labios::LabelData del_label;
+    del_label.dest_uri = "sqlite:///memories/test-key";
+    auto del_result = backend.del(del_label);
+    REQUIRE(del_result.success);
+
+    auto get_after_del = backend.get(get_label);
+    REQUIRE_FALSE(get_after_del.success);
+
+    std::filesystem::remove(db_path);
+}
+
+TEST_CASE("SQLiteBackend query by intent", "[backend][sqlite]") {
+    auto db_path = std::filesystem::temp_directory_path() / "labios_query_test.db";
+    std::filesystem::remove(db_path);
+    labios::SQLiteBackend backend(db_path.string());
+
+    // Insert two entries with different intents.
+    labios::LabelData label1;
+    label1.id = 1;
+    label1.dest_uri = "sqlite:///memories/trace-1";
+    label1.intent = labios::Intent::ReasoningTrace;
+    label1.isolation = labios::Isolation::Agent;
+    label1.priority = 5;
+
+    std::string val1 = "reasoning trace data";
+    backend.put(label1, std::as_bytes(std::span(val1)));
+
+    labios::LabelData label2;
+    label2.id = 2;
+    label2.dest_uri = "sqlite:///memories/checkpoint-1";
+    label2.intent = labios::Intent::Checkpoint;
+    label2.isolation = labios::Isolation::Agent;
+    label2.priority = 3;
+
+    std::string val2 = "checkpoint data";
+    backend.put(label2, std::as_bytes(std::span(val2)));
+
+    // Query for ReasoningTrace intent (enum value 10).
+    labios::LabelData query_label;
+    query_label.source_uri = "sqlite:///memories?intent=10";
+    auto query_result = backend.query(query_label);
+    REQUIRE(query_result.success);
+    REQUIRE(query_result.json_data.find("trace-1") != std::string::npos);
+    REQUIRE(query_result.json_data.find("checkpoint-1") == std::string::npos);
+
+    std::filesystem::remove(db_path);
+}
+
+TEST_CASE("SQLiteBackend scheme", "[backend][sqlite]") {
+    auto db_path = std::filesystem::temp_directory_path() / "labios_scheme_test.db";
+    std::filesystem::remove(db_path);
+    labios::SQLiteBackend backend(db_path.string());
+    REQUIRE(backend.scheme() == "sqlite");
+    std::filesystem::remove(db_path);
+}
+
+// ---------------------------------------------------------------------------
+// BackendRegistry tests (updated for label-based interface)
+// ---------------------------------------------------------------------------
 
 TEST_CASE("BackendRegistry register and resolve", "[backend][registry]") {
     labios::BackendRegistry registry;
@@ -107,14 +252,42 @@ TEST_CASE("BackendRegistry roundtrip through type-erased interface", "[backend][
     auto* backend = registry.resolve("file");
     REQUIRE(backend != nullptr);
 
+    labios::LabelData write_label;
+    write_label.id = 1;
+    write_label.type = labios::LabelType::Write;
+    write_label.dest_uri = "file:///registry_test.dat";
+
     const char* msg = "registry roundtrip";
     auto data = std::as_bytes(std::span(msg, std::strlen(msg)));
-    auto put_result = backend->put("registry_test.dat", 0, data);
+    auto put_result = backend->put(write_label, data);
     REQUIRE(put_result.success);
 
-    auto get_result = backend->get("registry_test.dat", 0, std::strlen(msg));
+    labios::LabelData read_label;
+    read_label.id = 2;
+    read_label.type = labios::LabelType::Read;
+    read_label.source_uri = "file:///registry_test.dat";
+    read_label.data_size = std::strlen(msg);
+
+    auto get_result = backend->get(read_label);
     REQUIRE(get_result.success);
     REQUIRE(get_result.data.size() == std::strlen(msg));
 
     std::filesystem::remove_all(tmp);
+}
+
+TEST_CASE("BackendRegistry multi-scheme resolution", "[backend][registry]") {
+    auto tmp = make_temp_dir();
+    auto db_path = std::filesystem::temp_directory_path() / "labios_registry_multi.db";
+    std::filesystem::remove(db_path);
+
+    labios::BackendRegistry registry;
+    registry.register_backend(labios::PosixBackend(tmp));
+    registry.register_backend(labios::SQLiteBackend(db_path.string()));
+
+    REQUIRE(registry.has_scheme("file"));
+    REQUIRE(registry.has_scheme("sqlite"));
+    REQUIRE_FALSE(registry.has_scheme("kv"));
+
+    std::filesystem::remove_all(tmp);
+    std::filesystem::remove(db_path);
 }

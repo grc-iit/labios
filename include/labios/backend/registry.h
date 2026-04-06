@@ -13,26 +13,29 @@ namespace labios {
 class AnyBackend {
 public:
     virtual ~AnyBackend() = default;
-    virtual BackendResult put(std::string_view path, uint64_t offset,
+    virtual BackendResult put(const LabelData& label,
                               std::span<const std::byte> data) = 0;
-    virtual BackendDataResult get(std::string_view path, uint64_t offset,
-                                  uint64_t length) = 0;
-    virtual BackendResult del(std::string_view path) = 0;
+    virtual BackendDataResult get(const LabelData& label) = 0;
+    virtual BackendResult del(const LabelData& label) = 0;
+    virtual BackendQueryResult query(const LabelData& label) = 0;
 };
 
 template<BackendStore B>
 class BackendWrapper : public AnyBackend {
 public:
     explicit BackendWrapper(B backend) : backend_(std::move(backend)) {}
-    BackendResult put(std::string_view p, uint64_t o,
-                      std::span<const std::byte> d) override {
-        return backend_.put(p, o, d);
+    BackendResult put(const LabelData& label,
+                      std::span<const std::byte> data) override {
+        return backend_.put(label, data);
     }
-    BackendDataResult get(std::string_view p, uint64_t o, uint64_t l) override {
-        return backend_.get(p, o, l);
+    BackendDataResult get(const LabelData& label) override {
+        return backend_.get(label);
     }
-    BackendResult del(std::string_view p) override {
-        return backend_.del(p);
+    BackendResult del(const LabelData& label) override {
+        return backend_.del(label);
+    }
+    BackendQueryResult query(const LabelData& label) override {
+        return backend_.query(label);
     }
 private:
     B backend_;

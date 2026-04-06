@@ -38,6 +38,8 @@ add_library(labios STATIC
     adapter/posix_adapter.cpp
     uri.cpp
     backend/posix_backend.cpp
+    backend/kv_backend.cpp
+    backend/sqlite_backend.cpp
     backend/registry.cpp
     sds/types.cpp
     sds/builtins.cpp
@@ -62,6 +64,7 @@ target_link_libraries(labios
         hiredis
         tomlplusplus::tomlplusplus
         flatbuffers
+        SQLite::SQLite3
         ${CMAKE_DL_LIBS}
 )
 

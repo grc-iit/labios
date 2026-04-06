@@ -1,4 +1,6 @@
 #include <labios/backend/posix_backend.h>
+#include <labios/backend/kv_backend.h>
+#include <labios/backend/sqlite_backend.h>
 #include <labios/backend/registry.h>
 #include <labios/catalog_manager.h>
 #include <labios/channel.h>
@@ -101,8 +103,7 @@ static CompletionResult execute_write(
             throw std::runtime_error(
                 "no backend for scheme: " + uri.scheme);
         }
-        auto result = backend->put(uri.path, 0,
-            std::span<const std::byte>(blob));
+        auto result = backend->put(label, std::span<const std::byte>(blob));
         if (!result.success) {
             throw std::runtime_error(result.error);
         }
@@ -169,8 +170,7 @@ static CompletionResult execute_read(
             throw std::runtime_error(
                 "no backend for scheme: " + uri.scheme);
         }
-        uint64_t read_size = label.data_size;
-        auto result = backend->get(uri.path, 0, read_size);
+        auto result = backend->get(label);
         if (!result.success) {
             throw std::runtime_error(result.error);
         }
@@ -240,6 +240,20 @@ int main() {
     // Backend registry for URI-based routing.
     labios::BackendRegistry backends;
     backends.register_backend(labios::PosixBackend(storage_root));
+
+    // KV backend uses a SEPARATE Redis instance (not the warehouse).
+    const char* kv_host = std::getenv("LABIOS_KV_HOST");
+    const char* kv_port_str = std::getenv("LABIOS_KV_PORT");
+    std::unique_ptr<labios::transport::RedisConnection> kv_redis;
+    if (kv_host && kv_port_str) {
+        kv_redis = std::make_unique<labios::transport::RedisConnection>(
+            kv_host, std::stoi(kv_port_str));
+        backends.register_backend(labios::KVBackend(*kv_redis));
+    }
+
+    // SQLite backend for structured agent memory.
+    auto sqlite_path = (storage_root / "labios.db").string();
+    backends.register_backend(labios::SQLiteBackend(sqlite_path));
 
     // SDS program repository (shared across all label executions).
     labios::sds::ProgramRepository sds_repo;
