@@ -36,10 +36,11 @@ static labios::Config test_config() {
 }
 
 static std::vector<labios::WorkerInfo> test_workers() {
+    //                id  avail cap   load  spd eng tier                         skl  comp rsn  score
     return {
-        {1, true, 0.9, 0.1, 3, 2, labios::WorkerTier::Databot, 0.85},
-        {2, true, 0.7, 0.3, 4, 1, labios::WorkerTier::Pipeline, 0.72},
-        {3, false, 0.5, 0.8, 2, 3, labios::WorkerTier::Agentic, 0.40},
+        {1, true,  0.9, 0.1, 3, 2, labios::WorkerTier::Databot,  0.0, 1.0, 0, 0.85},
+        {2, true,  0.7, 0.3, 4, 1, labios::WorkerTier::Pipeline, 0.0, 1.0, 0, 0.72},
+        {3, false, 0.5, 0.8, 2, 3, labios::WorkerTier::Agentic,  0.0, 1.0, 0, 0.40},
     };
 }
 

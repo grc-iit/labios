@@ -26,9 +26,10 @@ std::vector<std::byte> make_uint64_data(size_t total_bytes) {
 labios::sds::Pipeline rag_pipeline() {
     labios::sds::Pipeline p;
     // Simulate: read (identity) -> chunk (truncate to half) -> embed (sort as proxy)
-    p.stages.push_back({"builtin://identity", "", -1, -1});
-    p.stages.push_back({"builtin://truncate", "", -1, -1}); // args set per-call
-    p.stages.push_back({"builtin://sort_uint64", "", -1, -1});
+    // Stages chain sequentially: each reads from the previous stage's output.
+    p.stages.push_back({"builtin://identity",    "", -1, -1}); // stage 0: source
+    p.stages.push_back({"builtin://truncate",    "",  0, -1}); // stage 1: reads stage 0
+    p.stages.push_back({"builtin://sort_uint64", "",  1, -1}); // stage 2: reads stage 1
     return p;
 }
 

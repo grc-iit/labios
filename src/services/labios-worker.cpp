@@ -527,11 +527,17 @@ int main() {
 
     // Subscribe to resume commands from the elastic orchestrator.
     nats.subscribe("labios.worker.resume." + std::to_string(cfg.worker_id),
-        [worker_id, &worker_name](std::string_view /*subject*/,
+        [worker_id, &worker_name, &nats](std::string_view /*subject*/,
             std::span<const std::byte> /*data*/,
             std::string_view /*reply_to*/) {
             g_suspended.store(false);
             g_last_label_time = std::chrono::steady_clock::now();
+            // Immediately publish availability so the dispatcher sees us.
+            std::string msg = std::to_string(worker_id) + ",1.0,0.0,1";
+            try {
+                nats.publish("labios.worker.score_update", msg);
+                nats.flush();
+            } catch (...) {}
             std::cout << "[" << timestamp() << "] " << worker_name
                       << ": resumed by manager\n" << std::flush;
         });

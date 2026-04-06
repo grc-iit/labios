@@ -307,9 +307,34 @@ int main() {
             }
             if (workers.empty()) {
                 std::cerr << "[" << timestamp()
-                          << "] dispatcher: no workers available, skipping batch\n"
+                          << "] dispatcher: no workers registered, skipping batch\n"
                           << std::flush;
                 continue;
+            }
+
+            // If all workers are suspended, send resume commands and re-query.
+            {
+                bool any_available = false;
+                for (const auto& w : workers) {
+                    if (w.available) { any_available = true; break; }
+                }
+                if (!any_available) {
+                    std::cout << "[" << timestamp()
+                              << "] dispatcher: all workers suspended, sending resume\n"
+                              << std::flush;
+                    for (const auto& w : workers) {
+                        nats.publish("labios.worker.resume." + std::to_string(w.id), "1");
+                    }
+                    nats.flush();
+                    // Wait for workers to publish their score updates through
+                    // the manager. The manager processes score_update messages
+                    // asynchronously, so 1s gives enough round-trip time.
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    auto refreshed = query_workers(nats);
+                    std::lock_guard lock(g_workers_mu);
+                    g_cached_workers = refreshed;
+                    workers = std::move(refreshed);
+                }
             }
 
             // Solver dispatch based on configured policy.
