@@ -4,19 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-LABIOS (Label-Based I/O System) is a distributed I/O system that converts I/O requests into self-describing labels carrying metadata for intelligent routing and processing. It targets converged HPC, Big Data, and AI/Agent workloads. US Patent 11,630,834 B2, NSF Award #2331480.
+LABIOS is the first agent I/O runtime. Not a filesystem, not middleware, not an object store. It is the execution environment for I/O operations expressed as labels. US Patent 11,630,834 B2, NSF Award #2331480, HPDC'19 Best Paper Nominee.
 
-This is a ground-up rewrite. The old 2018 prototype has been archived at tag `v1.0-archive`. All design authority comes from `LABIOS-2.0.md` and the original HPDC'19 paper in `.planning/reference/original-paper/`.
+The system converts all I/O into self-describing labels that flow through a distributed runtime where each component (shuffler, scheduler, worker) enriches the label as it passes. Labels are the information highway of the system. Agents produce labels (via SDK or transparent intercept). LABIOS routes, shuffles, schedules, transforms, and delivers them to workers that execute against any storage backend.
 
-## Constitutional Document
+## Specification
 
-**Read `LABIOS-2.0.md` before writing any code.** It contains:
-- Section 2: The full IP from the HPDC'19 paper (label structure, shuffler, solvers, worker scoring, SDS, warehouse, malleability)
-- Section 3: Agent-native extensions (intent tags, isolation, priority lanes)
-- Section 4: Tech stack (C++20, FlatBuffers, NATS JetStream, Redis 7, io_uring, Catch2, pybind11)
-- Section 5: Architecture and development environment (Docker Compose)
-- Section 6: Ten milestones (M0-M9), each with a demo
-- Section 7: Non-negotiable engineering principles
+**Read `LABIOS-SPEC.md` before writing any code.** It is the definitive specification for LABIOS 2.0 and the primary design authority. It defines:
+- The label as a mutable information carrier (residual stream model)
+- Triple decoupling (instruction/data, production/execution, scheduling/storage)
+- Universal label routing via URI schemes (file://, s3://, vector://, graph://)
+- Programmable data pipelines (SDS): labels carry DAGs of operations
+- Three worker tiers: Databot (Tier 0), Pipeline (Tier 1), Agentic (Tier 2)
+- Channels (streaming coordination) and Workspaces (persistent shared state)
+- Observability labels and telemetry stream
+- Per-tier elastic scaling
+- Continuation execution (reactive I/O chaining)
+- Scale-adaptive deployment model
+
+`LABIOS-2.0.md` is the constitutional document that established the rewrite. The spec supersedes it for all forward design decisions.
 
 ## Tech Stack
 
@@ -66,74 +72,113 @@ ctest --test-dir build/dev
 
 ## Source Layout
 
-See `LABIOS-2.0.md` Section 4.2 for the full tree. Key directories:
-- `src/labios/` — core library (label, client, dispatcher, warehouse, catalog, worker, solvers, backends, transport, SDS)
-- `src/services/` — executable entry points (labios-dispatcher, labios-worker, labios-manager)
-- `src/drivers/` — POSIX intercept (LD_PRELOAD), MPI wrapper
-- `schemas/` — FlatBuffers schema for Label
-- `tests/` — unit (Catch2), integration, benchmark, pytest
-- `bindings/python/` — pybind11 SDK, pip-installable
-- `conf/` — TOML config + scheduler weight profiles
+- `src/labios/` — core library
+  - `label.h/cpp` — label struct, serialization, snowflake IDs
+  - `client.h/cpp` — client with sync/async/label-level/channel/workspace APIs
+  - `dispatcher.h/cpp` — shuffler + scheduler
+  - `channel.h/cpp` — streaming pub/sub channels
+  - `workspace.h/cpp` — persistent shared state with ACL
+  - `continuation.h/cpp` — reactive I/O chaining on label completion
+  - `observability.h/cpp` — OBSERVE label handler (7 query types)
+  - `telemetry.h/cpp` — continuous metrics publisher
+  - `uri.h/cpp` — URI parser for label routing
+  - `worker_manager.h/cpp` — bucket-sorted registry, tier tracking
+  - `content_manager.h/cpp` — warehouse staging, small-I/O cache
+  - `catalog_manager.h/cpp` — metadata, label status, file locations
+  - `solver/` — Round Robin, Random, Constraint-based, MinMax DP
+  - `backend/` — BackendStore concept, PosixBackend, BackendRegistry
+  - `sds/` — program repository, 8 builtins, pipeline executor
+  - `elastic/` — decision engine, Docker client, orchestrator (per-tier)
+  - `transport/` — NATS JetStream, Redis/DragonflyDB connections
+- `src/services/` — labios-dispatcher, labios-worker, labios-manager
+- `src/drivers/` — POSIX intercept (LD_PRELOAD)
+- `schemas/label.fbs` — FlatBuffers schema
+- `tests/unit/` — 180 Catch2 tests
+- `conf/profiles/` — weight profiles (low_latency, energy_savings, high_bandwidth, agentic)
 
 ## Architecture
 
 ```
-App/Agent → Client (Label Manager + Content Manager + Catalog Manager)
-  → NATS JetStream (label queue) + Redis (warehouse + inventory)
-  → Dispatcher (Shuffler → Scheduler)
-  → Worker Manager → Workers (io_uring + SDS execution)
-  → Storage (POSIX / io_uring)
+Agent Frameworks (LangChain, CrewAI, custom)  |  HPC Apps (MPI/POSIX)
+         |                                              |
+         | SDK / LD_PRELOAD intercept                   |
+         v                                              v
+┌─────────────────────────────────────────────────────────────┐
+│                    LABIOS Client                             │
+│  Label Manager + Content Manager + Catalog Manager          │
+│  Channels + Workspaces + Observability                      │
+└──────────────────────────┬──────────────────────────────────┘
+                           |
+         NATS JetStream (label queue) + DragonflyDB (warehouse)
+                           |
+┌──────────────────────────v──────────────────────────────────┐
+│              Label Dispatcher                                │
+│  OBSERVE handler | Shuffler → Scheduler | Telemetry          │
+│  Continuation processor                                      │
+└──────────────────────────┬──────────────────────────────────┘
+                           |
+┌──────────────────────────v──────────────────────────────────┐
+│              Worker Manager (leader-elected)                  │
+│  Bucket-sorted registry | Per-tier elastic scaling           │
+│  Commission/decommission via Docker/K8s/IPMI                 │
+└──────────────────────────┬──────────────────────────────────┘
+                           |
+┌──────────────────────────v──────────────────────────────────┐
+│              Workers (elastic pool)                           │
+│  Tier 0: Databot (single I/O ops, stateless)                 │
+│  Tier 1: Pipeline (SDS DAG execution, program repository)    │
+│  Tier 2: Agentic (reasoning, tools, skills)                  │
+│           ↓                                                  │
+│  BackendRegistry → URI scheme resolution                     │
+│  file:// | s3:// | vector:// | graph:// | kv:// | pfs://    │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-Clients never talk to workers. The dispatcher is the only bridge. This invariant enables all four deployment models.
+Clients never talk to workers. The dispatcher is the only bridge. This invariant holds across all deployment configurations.
 
-## Current Status (as of 2026-04-04)
+## Current Status (as of 2026-04-05)
 
-M0, M1, M2, M3, and M4 are complete. 79+ unit tests pass. Docker Compose stack
-runs with NATS 2.10 (JetStream), DragonflyDB (Redis-compatible), 1 dispatcher,
-3 workers, and 1 real Worker Manager. All benchmarks verified (100MB write/read,
-1000 small files, 10MB split). Scheduling demo shows different routing under
-different weight profiles.
+180 unit tests pass. Docker Compose stack runs with NATS 2.10 (JetStream),
+DragonflyDB, 1 dispatcher, 3 workers, and 1 Worker Manager.
 
-**What M2 delivered:**
-- Shuffler with aggregation, RAW/WAW/WAR dependency detection, supertask creation
-- Read-locality and write-locality routing in the dispatcher
-- Batched catalog scheduling with Redis pipelining
-- Small-I/O cache with timer-based flush in the Content Manager
-- Aggregation completion fanout via NATS reply inboxes
-- Snowflake-style label ID generation (41-bit ms + 10-bit node + 12-bit seq)
-- DragonflyDB replaces Redis 7 for ~20x warehouse throughput
-- Thread-safe RedisConnection with internal mutex
+**Implemented capabilities (mapped to LABIOS-SPEC.md sections):**
 
-**What M3 delivered:**
-- All four scheduling policies from the paper: Round Robin, Random, Constraint-based, MinMax DP
-- Constraint-based solver scores workers by weight profile and distributes to top-N
-- MinMax DP solver with real per-worker speed/energy profit function
-- Worker score computation: all 5 variables (availability, capacity, load, speed, energy)
-- Three weight profiles from Table 2: low_latency.toml, energy_savings.toml, high_bandwidth.toml
-- Real Worker Manager service with NATS-based registration/deregistration
-- Workers self-register on startup, deregister on shutdown
-- Dispatcher dynamically queries manager for live workers per batch
-- Solver selection via LABIOS_SCHEDULER_POLICY env var or TOML config
+| Capability | Spec Section | Status |
+|-----------|-------------|--------|
+| Label as mutable information carrier (accumulation fields, state, URIs, continuations) | S2 | Done |
+| Shuffler (aggregation, RAW/WAW/WAR, supertasks, read-locality) | S6 | Done |
+| Four scheduling policies (RR, Random, Constraint, MinMax DP) | S7.5 | Done |
+| Extensible worker scoring (5 baseline + tier variable) | S7.3 | Done |
+| Three worker tiers (Databot/Pipeline/Agentic) | S7.1 | Done |
+| URI-based routing with BackendStore concept | S4 | Done |
+| POSIX backend for file:// scheme | S4 | Done |
+| SDS programmable pipelines (program repository, 8 builtins, executor) | S5 | Done |
+| Channels (streaming pub/sub coordination) | S8.2 | Done |
+| Workspaces (persistent shared state with ACL and versioning) | S8.3 | Done |
+| Observability labels (OBSERVE type, 7 query endpoints) | S10.2 | Done |
+| Telemetry stream (continuous metrics via NATS) | S10.3 | Done |
+| Per-tier elastic scaling (tier-aware commission/decommission) | S9 | Done |
+| Continuation execution (Notify/Chain/Conditional on completion) | S2.7 | Done |
+| Elastic workers via Docker Engine API | S9.3 | Done |
+| POSIX intercept (LD_PRELOAD) | S12.1 | Done |
+| Async client API (async_write, async_read, wait) | S12.2 | Done |
+| Label-level API (create_label, publish) | S12.2 | Done |
+| C API header (labios.h) for FFI consumers | S12.2 | Done |
+| Snowflake ID generation | S2.2 | Done |
+| Small-I/O cache with timer-based flush | S6.1 | Done |
+| DragonflyDB warehouse (~20x throughput over Redis) | S4 | Done |
 
-**What M4 delivered:**
-- Dynamic commission/decommission via Docker Engine API over Unix socket
-- Elastic decision engine with pressure-based commission and idle-based decommission
-- Queue pressure tracking from dispatcher to manager via NATS
-- Worker self-suspend on configurable idle timeout
-- Worker resume via manager NATS command
-- ContainerRuntime concept for testable orchestration
-- docker-compose.elastic.yml for single-worker elastic mode
-- Demo script showing scale-up to 3 workers and scale-down to 1
-
-**What M5 will deliver:**
-- SDS: labels carry function references from a shared program repository
-- Workers load user functions via dlopen
-- Builtin transforms: compress_lz4, filter, deduplicate, sum, median, sort
+**Not yet implemented:**
+- Python SDK (pybind11 bindings)
+- Agent-specific benchmark suite (8 benchmarks from spec S13)
+- Additional backend implementations (S3, vector, graph)
+- FUSE filesystem mount
+- Configuration hot-reload
 
 ## Reference
 
-- `LABIOS-2.0.md` — constitutional document (milestones, architecture, principles)
-- `.planning/reference/original-paper/labios.md` — HPDC'19 paper (the specification)
-- `.planning/audits/deep-audit-2026-04-04.md` — comprehensive M0-M2 audit
-- Tag `v1.0-archive` — old 2018 prototype (reference only, do not build on it)
+- `LABIOS-SPEC.md` — definitive specification for LABIOS 2.0 (primary design authority)
+- `LABIOS-2.0.md` — constitutional document (established the rewrite)
+- `.planning/reference/original-paper/labios.md` — HPDC'19 paper
+- `docs/superpowers/specs/architecture-current.md` — M0-M4 implementation snapshot
+- Tag `v1.0-archive` — old 2018 prototype (reference only)
