@@ -82,3 +82,45 @@ TEST_CASE("Split write then split read returns original data", "[label_manager]"
     REQUIRE(result.size() == data.size());
     REQUIRE(std::equal(result.begin(), result.end(), data.begin()));
 }
+
+TEST_CASE("publish_write with zero-length data returns no labels", "[label_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::ContentManager cm(redis, 4096, 0, labios::ReadPolicy::ReadThrough);
+    labios::CatalogManager catalog(redis);
+    labios::LabelManager lm(cm, catalog, nats, 1048576, 1);
+
+    std::vector<std::byte> empty;
+    auto pending = lm.publish_write("/test/empty.bin", 0, empty);
+    REQUIRE(pending.empty());
+    lm.wait(pending);
+}
+
+TEST_CASE("publish_read with zero size returns no labels and empty result", "[label_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::ContentManager cm(redis, 4096, 0, labios::ReadPolicy::ReadThrough);
+    labios::CatalogManager catalog(redis);
+    labios::LabelManager lm(cm, catalog, nats, 1048576, 1);
+
+    auto pending = lm.publish_read("/test/empty.bin", 0, 0);
+    REQUIRE(pending.empty());
+    auto result = lm.wait_read(pending);
+    REQUIRE(result.empty());
+}
+
+TEST_CASE("wait propagates async reply timeout", "[label_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::ContentManager cm(redis, 4096, 0, labios::ReadPolicy::ReadThrough);
+    labios::CatalogManager catalog(redis);
+    labios::LabelManager lm(cm, catalog, nats, 1048576, 1, /*reply_timeout_ms=*/1);
+
+    labios::PendingLabel pending;
+    pending.label_id = 123;
+    pending.async_reply = std::make_shared<labios::transport::AsyncReply>();
+
+    std::array<labios::PendingLabel, 1> entries{pending};
+    REQUIRE_THROWS(lm.wait(entries));
+    REQUIRE_THROWS(lm.wait_read(entries));
+}

@@ -181,6 +181,28 @@ TEST_CASE("PosixBackend keeps FilePath writes inside storage root", "[backend]")
     std::filesystem::remove(outside);
 }
 
+TEST_CASE("PosixBackend rejects invalid relative escape paths", "[backend]") {
+    auto tmp = make_temp_dir();
+    labios::PosixBackend backend(tmp);
+
+    labios::LabelData put_label;
+    put_label.type = labios::LabelType::Write;
+    put_label.destination = labios::file_path("../escape.dat");
+
+    const char* msg = "nope";
+    auto data = std::as_bytes(std::span(msg, std::strlen(msg)));
+    auto put_result = backend.put(put_label, data);
+    REQUIRE_FALSE(put_result.success);
+
+    labios::LabelData get_label;
+    get_label.type = labios::LabelType::Read;
+    get_label.source = labios::file_path("../escape.dat");
+    auto get_result = backend.get(get_label);
+    REQUIRE_FALSE(get_result.success);
+
+    std::filesystem::remove_all(tmp);
+}
+
 // ---------------------------------------------------------------------------
 // SQLiteBackend tests
 // ---------------------------------------------------------------------------
@@ -308,6 +330,18 @@ TEST_CASE("KVBackend preserves zero-length values", "[backend][kv]") {
 
     auto del_result = backend.del(put_label);
     REQUIRE(del_result.success);
+}
+
+TEST_CASE("KVBackend get missing key returns failure", "[backend][kv]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::KVBackend backend(redis, "labios:kv:test:missing:");
+
+    labios::LabelData get_label;
+    get_label.source_uri = "kv://project/no-such-key";
+
+    auto get_result = backend.get(get_label);
+    REQUIRE_FALSE(get_result.success);
+    REQUIRE(get_result.data.empty());
 }
 
 // ---------------------------------------------------------------------------
