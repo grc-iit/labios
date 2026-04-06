@@ -1,6 +1,7 @@
 #include <labios/client.h>
 #include <labios/channel.h>
 #include <labios/session.h>
+#include <labios/workspace.h>
 
 #include <stdexcept>
 
@@ -8,7 +9,8 @@ namespace labios {
 
 Client::Client(const Config& cfg)
     : session_(std::make_unique<Session>(cfg))
-    , channels_(std::make_unique<ChannelRegistry>(session_->redis(), session_->nats())) {}
+    , channels_(std::make_unique<ChannelRegistry>(session_->redis(), session_->nats()))
+    , workspaces_(std::make_unique<WorkspaceRegistry>(session_->redis())) {}
 Client::~Client() = default;
 Client::Client(Client&&) noexcept = default;
 Client& Client::operator=(Client&&) noexcept = default;
@@ -135,6 +137,45 @@ void Client::unsubscribe_from_channel(std::string_view channel_name,
     auto* ch = channels_->get(channel_name);
     if (ch != nullptr) {
         ch->unsubscribe(sub_id);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Workspace API (persistent shared state)
+// ---------------------------------------------------------------------------
+
+Workspace* Client::create_workspace(std::string_view name, uint32_t ttl_seconds) {
+    return workspaces_->create(name, session_->app_id(), ttl_seconds);
+}
+
+Workspace* Client::get_workspace(std::string_view name) {
+    return workspaces_->get(name);
+}
+
+uint64_t Client::workspace_put(std::string_view workspace, std::string_view key,
+                                std::span<const std::byte> data) {
+    auto* ws = workspaces_->get(workspace);
+    if (ws == nullptr) return 0;
+    return ws->put(key, data, session_->app_id());
+}
+
+std::optional<std::vector<std::byte>> Client::workspace_get(
+    std::string_view workspace, std::string_view key) {
+    auto* ws = workspaces_->get(workspace);
+    if (ws == nullptr) return std::nullopt;
+    return ws->get(key, session_->app_id());
+}
+
+bool Client::workspace_del(std::string_view workspace, std::string_view key) {
+    auto* ws = workspaces_->get(workspace);
+    if (ws == nullptr) return false;
+    return ws->del(key, session_->app_id());
+}
+
+void Client::workspace_grant(std::string_view workspace, uint32_t app_id) {
+    auto* ws = workspaces_->get(workspace);
+    if (ws != nullptr) {
+        ws->grant_access(app_id);
     }
 }
 

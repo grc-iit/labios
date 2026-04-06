@@ -29,6 +29,7 @@ add_library(labios STATIC
     solver/round_robin.cpp
     transport/nats.cpp
     transport/redis.cpp
+    workspace.cpp
     worker_manager.cpp
     elastic/decision_engine.cpp
     elastic/docker_client.cpp

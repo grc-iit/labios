@@ -122,6 +122,59 @@ std::optional<std::string> RedisConnection::hget_locked(std::string_view key, st
     return result;
 }
 
+void RedisConnection::sadd_locked(std::string_view key, std::string_view member) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "SADD %b %b",
+                     key.data(), key.size(),
+                     member.data(), member.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis SADD failed: " + std::string(impl_->ctx->errstr));
+    }
+    freeReplyObject(reply);
+}
+
+void RedisConnection::srem_locked(std::string_view key, std::string_view member) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "SREM %b %b",
+                     key.data(), key.size(),
+                     member.data(), member.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis SREM failed: " + std::string(impl_->ctx->errstr));
+    }
+    freeReplyObject(reply);
+}
+
+std::vector<std::string> RedisConnection::smembers_locked(std::string_view key) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "SMEMBERS %b", key.data(), key.size()));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis SMEMBERS failed: " + std::string(impl_->ctx->errstr));
+    }
+    std::vector<std::string> result;
+    if (reply->type == REDIS_REPLY_ARRAY) {
+        for (size_t i = 0; i < reply->elements; ++i) {
+            result.emplace_back(reply->element[i]->str, reply->element[i]->len);
+        }
+    }
+    freeReplyObject(reply);
+    return result;
+}
+
+int64_t RedisConnection::hincrby_locked(std::string_view key, std::string_view field,
+                                         int64_t increment) {
+    auto* reply = static_cast<redisReply*>(
+        redisCommand(impl_->ctx, "HINCRBY %b %b %lld",
+                     key.data(), key.size(),
+                     field.data(), field.size(),
+                     static_cast<long long>(increment)));
+    if (reply == nullptr) {
+        throw std::runtime_error("redis HINCRBY failed: " + std::string(impl_->ctx->errstr));
+    }
+    int64_t result = reply->integer;
+    freeReplyObject(reply);
+    return result;
+}
+
 void RedisConnection::expire_locked(std::string_view key, uint32_t seconds) {
     auto* reply = static_cast<redisReply*>(
         redisCommand(impl_->ctx, "EXPIRE %b %u",
@@ -215,6 +268,27 @@ void RedisConnection::hset(std::string_view key, std::string_view field, std::st
 std::optional<std::string> RedisConnection::hget(std::string_view key, std::string_view field) {
     std::lock_guard lock(mu_);
     return hget_locked(key, field);
+}
+
+void RedisConnection::sadd(std::string_view key, std::string_view member) {
+    std::lock_guard lock(mu_);
+    sadd_locked(key, member);
+}
+
+void RedisConnection::srem(std::string_view key, std::string_view member) {
+    std::lock_guard lock(mu_);
+    srem_locked(key, member);
+}
+
+std::vector<std::string> RedisConnection::smembers(std::string_view key) {
+    std::lock_guard lock(mu_);
+    return smembers_locked(key);
+}
+
+int64_t RedisConnection::hincrby(std::string_view key, std::string_view field,
+                                  int64_t increment) {
+    std::lock_guard lock(mu_);
+    return hincrby_locked(key, field, increment);
 }
 
 void RedisConnection::expire(std::string_view key, uint32_t seconds) {

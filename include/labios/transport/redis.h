@@ -46,6 +46,14 @@ public:
     [[nodiscard]] std::vector<ZRangeEntry> zrangebyscore(
         std::string_view key, double min, double max);
 
+    // --- Set operations ---
+    void sadd(std::string_view key, std::string_view member);
+    void srem(std::string_view key, std::string_view member);
+    [[nodiscard]] std::vector<std::string> smembers(std::string_view key);
+
+    // --- Hash increment ---
+    [[nodiscard]] int64_t hincrby(std::string_view key, std::string_view field, int64_t increment);
+
     /// Set a TTL on a key (Redis EXPIRE command).
     void expire(std::string_view key, uint32_t seconds);
 
@@ -82,6 +90,10 @@ private:
     void del_locked(std::string_view key);
     void hset_locked(std::string_view key, std::string_view field, std::string_view value);
     std::optional<std::string> hget_locked(std::string_view key, std::string_view field);
+    void sadd_locked(std::string_view key, std::string_view member);
+    void srem_locked(std::string_view key, std::string_view member);
+    std::vector<std::string> smembers_locked(std::string_view key);
+    int64_t hincrby_locked(std::string_view key, std::string_view field, int64_t increment);
     void expire_locked(std::string_view key, uint32_t seconds);
     std::vector<std::string> scan_keys_locked(std::string_view pattern);
     void pipeline_begin_locked();

@@ -4,6 +4,7 @@
 #include <labios/config.h>
 #include <labios/label.h>
 #include <labios/label_manager.h>
+#include <labios/workspace.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -89,6 +90,28 @@ public:
     /// Unsubscribe from a channel.
     void unsubscribe_from_channel(std::string_view channel_name, int sub_id);
 
+    // --- Workspace API (persistent shared state) ---
+
+    /// Create a named workspace for multi-agent shared state.
+    Workspace* create_workspace(std::string_view name, uint32_t ttl_seconds = 0);
+
+    /// Get an existing workspace by name.
+    Workspace* get_workspace(std::string_view name);
+
+    /// Write data to a key in a workspace. Returns the new version number (0 on error).
+    uint64_t workspace_put(std::string_view workspace, std::string_view key,
+                           std::span<const std::byte> data);
+
+    /// Read data from a key in a workspace.
+    std::optional<std::vector<std::byte>> workspace_get(
+        std::string_view workspace, std::string_view key);
+
+    /// Delete a key from a workspace.
+    bool workspace_del(std::string_view workspace, std::string_view key);
+
+    /// Grant another agent access to a workspace.
+    void workspace_grant(std::string_view workspace, uint32_t app_id);
+
     Session& session();
     const Config& config() const;
     uint32_t app_id() const;
@@ -96,6 +119,7 @@ public:
 private:
     std::unique_ptr<Session> session_;
     std::unique_ptr<ChannelRegistry> channels_;
+    std::unique_ptr<WorkspaceRegistry> workspaces_;
 };
 
 Client connect(const Config& cfg);
