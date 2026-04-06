@@ -36,7 +36,8 @@ class Shuffler {
 public:
     explicit Shuffler(ShufflerConfig config);
 
-    using LocationLookup = std::function<std::optional<int>(const std::string&)>;
+    using LocationLookup = std::function<std::optional<int>(
+        const std::string& file_key, uint64_t offset, uint64_t length)>;
 
     ShuffleResult shuffle(std::vector<LabelData> batch, LocationLookup lookup);
 

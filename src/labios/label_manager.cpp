@@ -7,9 +7,11 @@ namespace labios {
 
 LabelManager::LabelManager(ContentManager& content, CatalogManager& catalog,
                            transport::NatsConnection& nats,
-                           uint64_t max_label_size, uint32_t app_id)
+                           uint64_t max_label_size, uint32_t app_id,
+                           int reply_timeout_ms)
     : content_(content), catalog_(catalog), nats_(nats),
-      max_label_size_(max_label_size), app_id_(app_id) {}
+      max_label_size_(max_label_size), app_id_(app_id),
+      reply_timeout_ms_(reply_timeout_ms) {}
 
 uint64_t LabelManager::label_count(uint64_t data_size) const {
     if (data_size == 0) return 0;
@@ -89,16 +91,16 @@ std::vector<PendingLabel> LabelManager::publish_read(
     return pending;
 }
 
-static void resolve_reply(PendingLabel& p) {
+static void resolve_reply(PendingLabel& p, int timeout_ms) {
     if (p.async_reply && p.reply_data.empty()) {
-        p.reply_data = p.async_reply->wait(std::chrono::milliseconds(30000));
+        p.reply_data = p.async_reply->wait(std::chrono::milliseconds(timeout_ms));
         p.async_reply.reset();
     }
 }
 
 void LabelManager::wait(std::span<PendingLabel> pending) {
     for (auto& p : pending) {
-        resolve_reply(p);
+        resolve_reply(p, reply_timeout_ms_);
         if (p.reply_data.empty()) continue;
         auto comp = deserialize_completion(p.reply_data);
         if (comp.status == CompletionStatus::Error) {
@@ -113,7 +115,7 @@ std::vector<std::byte> LabelManager::wait_read(
 
     std::vector<std::byte> result;
     for (auto& p : pending) {
-        resolve_reply(p);
+        resolve_reply(p, reply_timeout_ms_);
         if (p.reply_data.empty()) continue;
         auto comp = deserialize_completion(p.reply_data);
         if (comp.status == CompletionStatus::Error) {

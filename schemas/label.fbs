@@ -1,10 +1,17 @@
 namespace labios.schema;
 
-enum LabelType : byte { Read, Write, Delete, Flush, Composite }
+enum LabelType : byte { Read, Write, Delete, Flush, Composite, Observe }
 enum CompletionStatus : byte { Complete, Error }
 enum HazardType : byte { RAW, WAW, WAR }
-enum Intent : byte { None, Checkpoint, Cache, ToolOutput, FinalResult, Intermediate, SharedState }
-enum Isolation : byte { None, Application, Agent }
+enum Intent : byte {
+    None, Checkpoint, Cache, ToolOutput, FinalResult,
+    Intermediate, SharedState,
+    Embedding, ModelWeight, KVCache, ReasoningTrace
+}
+enum Isolation : byte { None, Agent, Workspace, Global }
+enum Durability : byte { Ephemeral, Durable }
+enum StatusCode : byte { Created, Queued, Shuffled, Scheduled, Executing, Complete, Failed }
+enum ContinuationKind : byte { None, Notify, Chain, Conditional }
 
 union PointerVariant { MemoryPtr, FilePath, NetworkEndpoint }
 
@@ -33,7 +40,25 @@ table LabelDependency {
   hazard_type: HazardType;
 }
 
+table Continuation {
+  kind:           ContinuationKind;
+  target_channel: string;
+  chain_params:   string;
+  condition:      string;
+}
+
+table RoutingDecision {
+  worker_id:  uint32;
+  policy:     string;
+}
+
+table HopRecord {
+  component:    string;
+  timestamp_us: uint64;
+}
+
 table Label {
+  // === Origin fields ===
   id:           uint64;
   type:         LabelType;
   source:       Pointer;
@@ -42,14 +67,29 @@ table Label {
   flags:        uint32;
   priority:     uint8;
   app_id:       uint32;
-  dependencies: [LabelDependency];
   data_size:    uint64;
   intent:       Intent;
   ttl_seconds:  uint32;
   isolation:    Isolation;
   reply_to:     string;
   file_key:     string;
+  version:      uint64;
+  durability:   Durability;
+  continuation: Continuation;
+  source_uri:     string;
+  dest_uri:       string;
+  pipeline_data:  string;
+
+  // === Accumulation fields (written by runtime components) ===
+  dependencies: [LabelDependency];
   children:     [uint64];
+  routing:      RoutingDecision;
+  hops:         [HopRecord];
+
+  // === State fields ===
+  status:       StatusCode;
+  created_us:   uint64;
+  completed_us: uint64;
 }
 
 table Completion {

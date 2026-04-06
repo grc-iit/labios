@@ -11,6 +11,16 @@
 
 namespace labios::transport {
 
+namespace {
+
+struct StringHash {
+    using is_transparent = void;
+    size_t operator()(std::string_view sv) const { return std::hash<std::string_view>{}(sv); }
+    size_t operator()(const std::string& s) const { return std::hash<std::string_view>{}(s); }
+};
+
+} // namespace
+
 std::vector<std::byte> AsyncReply::wait(std::chrono::milliseconds timeout) {
     std::unique_lock lock(mu);
     cv.wait_for(lock, timeout, [this] { return completed; });
@@ -23,7 +33,8 @@ std::vector<std::byte> AsyncReply::wait(std::chrono::milliseconds timeout) {
 struct NatsConnection::Impl {
     natsConnection* conn = nullptr;
     std::vector<natsSubscription*> subs;
-    MessageCallback cb;
+    std::mutex cb_mu;
+    std::unordered_map<std::string, MessageCallback, StringHash, std::equal_to<>> callbacks;
 
     // Async reply infrastructure: a wildcard inbox subscription that
     // routes incoming replies to the correct AsyncReply handle.
@@ -77,25 +88,31 @@ struct NatsConnection::Impl {
         const char* raw = natsMsg_GetData(msg);
         int len = natsMsg_GetDataLength(msg);
 
-        if (subj) {
-            std::shared_ptr<AsyncReply> reply;
-            {
-                std::lock_guard lock(self->reply_mu);
-                auto it = self->pending_replies.find(subj);
-                if (it != self->pending_replies.end()) {
-                    reply = it->second;
-                    self->pending_replies.erase(it);
+        try {
+            if (subj) {
+                std::shared_ptr<AsyncReply> reply;
+                {
+                    std::lock_guard lock(self->reply_mu);
+                    auto it = self->pending_replies.find(subj);
+                    if (it != self->pending_replies.end()) {
+                        reply = it->second;
+                        self->pending_replies.erase(it);
+                    }
+                }
+                if (reply) {
+                    std::lock_guard lock(reply->mu);
+                    if (raw && len > 0) {
+                        auto* begin = reinterpret_cast<const std::byte*>(raw);
+                        reply->data.assign(begin, begin + len);
+                    }
+                    reply->completed = true;
+                    reply->cv.notify_one();
                 }
             }
-            if (reply) {
-                std::lock_guard lock(reply->mu);
-                if (raw && len > 0) {
-                    auto* begin = reinterpret_cast<const std::byte*>(raw);
-                    reply->data.assign(begin, begin + len);
-                }
-                reply->completed = true;
-                reply->cv.notify_one();
-            }
+        } catch (const std::exception& e) {
+            fprintf(stderr, "[nats] inbox callback exception: %s\n", e.what());
+        } catch (...) {
+            fprintf(stderr, "[nats] inbox callback unknown exception\n");
         }
         natsMsg_Destroy(msg);
     }
@@ -103,16 +120,32 @@ struct NatsConnection::Impl {
     static void on_message(natsConnection* /*nc*/, natsSubscription* /*sub*/,
                            natsMsg* msg, void* closure) {
         auto* self = static_cast<Impl*>(closure);
-        if (self->cb) {
-            const char* subj = natsMsg_GetSubject(msg);
+        const char* subj = natsMsg_GetSubject(msg);
+        std::string_view subject_sv(subj != nullptr ? subj : "");
+
+        MessageCallback cb;
+        {
+            std::lock_guard lock(self->cb_mu);
+            auto it = self->callbacks.find(subject_sv);
+            if (it != self->callbacks.end()) {
+                cb = it->second;
+            }
+        }
+
+        if (cb) {
             const char* raw = natsMsg_GetData(msg);
             int len = natsMsg_GetDataLength(msg);
             auto span = std::span<const std::byte>(
                 reinterpret_cast<const std::byte*>(raw),
                 static_cast<size_t>(len));
             const char* reply = natsMsg_GetReply(msg);
-            self->cb(subj != nullptr ? subj : "", span,
-                     reply != nullptr ? reply : "");
+            try {
+                cb(subject_sv, span, reply != nullptr ? reply : "");
+            } catch (const std::exception& e) {
+                fprintf(stderr, "[nats] callback exception: %s\n", e.what());
+            } catch (...) {
+                fprintf(stderr, "[nats] callback unknown exception\n");
+            }
         }
         natsMsg_Destroy(msg);
     }
@@ -161,7 +194,10 @@ void NatsConnection::publish(std::string_view subject, std::string_view data) {
 
 void NatsConnection::subscribe(std::string_view subject,
                                MessageCallback callback) {
-    impl_->cb = std::move(callback);
+    {
+        std::lock_guard lock(impl_->cb_mu);
+        impl_->callbacks[std::string(subject)] = std::move(callback);
+    }
     natsSubscription* sub = nullptr;
     natsStatus s = natsConnection_Subscribe(
         &sub, impl_->conn,

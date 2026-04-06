@@ -5,6 +5,8 @@
 
 #include <atomic>
 #include <chrono>
+#include <random>
+#include <thread>
 
 namespace labios {
 
@@ -32,17 +34,78 @@ Pointer network_endpoint(std::string_view host, uint16_t port) {
 // ID generation
 // ---------------------------------------------------------------------------
 
+// Snowflake-style 64-bit ID generator.
+//   Bits 63-22: millisecond timestamp (41 bits, ~69 years from epoch)
+//   Bits 21-12: node/process ID (10 bits, 1024 unique sources)
+//   Bits 11-0:  sequence counter (12 bits, 4096 per ms per node)
+//
+// The node ID combines app_id with a process-lifetime random component
+// to disambiguate across machines sharing the same PID.
+
+namespace {
+
+struct SnowflakeState {
+    std::atomic<uint64_t> last_ms{0};
+    std::atomic<uint32_t> sequence{0};
+    uint16_t node_id = 0;
+
+    explicit SnowflakeState(uint32_t app_id) {
+        std::random_device rd;
+        uint32_t rand_bits = rd();
+        node_id = static_cast<uint16_t>((app_id ^ rand_bits) & 0x3FF);
+    }
+};
+
+} // namespace
+
 uint64_t generate_label_id(uint32_t app_id) {
-    static std::atomic<uint32_t> counter{0};
-    auto now = std::chrono::high_resolution_clock::now();
-    auto nanos = static_cast<uint64_t>(
-        now.time_since_epoch().count());
-    uint32_t seq = counter.fetch_add(1, std::memory_order_relaxed);
-    // Pack: upper 32 bits from nanosecond timestamp, lower 32 bits combine
-    // app_id (upper 16 bits) and atomic counter (lower 16 bits).
-    return (nanos & 0xFFFFFFFF00000000ULL)
-         | (static_cast<uint64_t>(app_id & 0xFFFF) << 16)
-         | (seq & 0xFFFF);
+    // Use a process-global state for consistency across threads.
+    static SnowflakeState state(app_id);
+
+    auto now_ms = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+
+    uint64_t prev_ms = state.last_ms.load(std::memory_order_acquire);
+    uint32_t seq;
+
+    for (;;) {
+        if (now_ms > prev_ms) {
+            // New millisecond: reset counter and claim this timestamp.
+            if (state.last_ms.compare_exchange_strong(
+                    prev_ms, now_ms, std::memory_order_acq_rel)) {
+                state.sequence.store(1, std::memory_order_relaxed);
+                seq = 0;
+                break;
+            }
+            // CAS failed; prev_ms reloaded, retry.
+            now_ms = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count());
+            continue;
+        }
+
+        // Same millisecond: increment sequence.
+        seq = state.sequence.fetch_add(1, std::memory_order_relaxed);
+        if (seq < 4096) {
+            now_ms = prev_ms; // Use the timestamp from last_ms for consistency.
+            break;
+        }
+
+        // Sequence overflow: spin-wait for the next millisecond.
+        std::this_thread::yield();
+        now_ms = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch())
+                .count());
+        prev_ms = state.last_ms.load(std::memory_order_acquire);
+    }
+
+    return ((now_ms & 0x1FFFFFFFFFFULL) << 22)
+         | (static_cast<uint64_t>(state.node_id & 0x3FF) << 12)
+         | (static_cast<uint64_t>(seq & 0xFFF));
 }
 
 // ---------------------------------------------------------------------------
@@ -114,13 +177,18 @@ Pointer deserialize_pointer(const schema::Pointer* ptr) {
 // ---------------------------------------------------------------------------
 
 std::vector<std::byte> serialize_label(const LabelData& label) {
-    flatbuffers::FlatBufferBuilder fbb(512);
+    flatbuffers::FlatBufferBuilder fbb(1024);
 
-    // Create all strings and vectors before building tables.
-    auto operation_off = fbb.CreateString(label.operation);
-    auto reply_to_off  = fbb.CreateString(label.reply_to);
-    auto file_key_off  = fbb.CreateString(label.file_key);
+    // Create all strings and nested objects before building the Label table.
+    auto operation_off  = fbb.CreateString(label.operation);
+    auto reply_to_off   = fbb.CreateString(label.reply_to);
+    auto file_key_off   = fbb.CreateString(label.file_key);
+    auto source_uri_off    = fbb.CreateString(label.source_uri);
+    auto dest_uri_off      = fbb.CreateString(label.dest_uri);
+    auto pipeline_data_off = fbb.CreateString(
+        sds::serialize_pipeline(label.pipeline));
 
+    // Dependencies vector.
     flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::LabelDependency>>> deps_off = 0;
     if (!label.dependencies.empty()) {
         std::vector<flatbuffers::Offset<schema::LabelDependency>> dep_offsets;
@@ -133,36 +201,79 @@ std::vector<std::byte> serialize_label(const LabelData& label) {
         deps_off = fbb.CreateVector(dep_offsets);
     }
 
+    // Children vector.
     flatbuffers::Offset<flatbuffers::Vector<uint64_t>> children_off = 0;
     if (!label.children.empty()) {
         children_off = fbb.CreateVector(label.children);
     }
 
-    // Build pointer sub-tables.
+    // Pointer sub-tables.
     PointerSerializer ser{fbb};
     auto src_off = std::visit(ser, label.source);
     auto dst_off = std::visit(ser, label.destination);
 
-    // Build the label table.
-    auto label_off = schema::CreateLabel(
-        fbb,
-        label.id,
-        static_cast<schema::LabelType>(label.type),
-        src_off,
-        dst_off,
-        operation_off,
-        label.flags,
-        label.priority,
-        label.app_id,
-        deps_off,
-        label.data_size,
-        static_cast<schema::Intent>(label.intent),
-        label.ttl_seconds,
-        static_cast<schema::Isolation>(label.isolation),
-        reply_to_off,
-        file_key_off,
-        children_off);
+    // Continuation sub-table.
+    flatbuffers::Offset<schema::Continuation> cont_off = 0;
+    if (label.continuation.kind != ContinuationKind::None) {
+        auto tc_off = fbb.CreateString(label.continuation.target_channel);
+        auto cp_off = fbb.CreateString(label.continuation.chain_params);
+        auto cd_off = fbb.CreateString(label.continuation.condition);
+        cont_off = schema::CreateContinuation(
+            fbb,
+            static_cast<schema::ContinuationKind>(label.continuation.kind),
+            tc_off, cp_off, cd_off);
+    }
 
+    // RoutingDecision sub-table.
+    flatbuffers::Offset<schema::RoutingDecision> routing_off = 0;
+    if (label.routing.worker_id != 0 || !label.routing.policy.empty()) {
+        auto policy_off = fbb.CreateString(label.routing.policy);
+        routing_off = schema::CreateRoutingDecision(fbb, label.routing.worker_id, policy_off);
+    }
+
+    // Hops vector.
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::HopRecord>>> hops_off = 0;
+    if (!label.hops.empty()) {
+        std::vector<flatbuffers::Offset<schema::HopRecord>> hop_offsets;
+        hop_offsets.reserve(label.hops.size());
+        for (auto& hop : label.hops) {
+            auto comp_off = fbb.CreateString(hop.component);
+            hop_offsets.push_back(schema::CreateHopRecord(fbb, comp_off, hop.timestamp_us));
+        }
+        hops_off = fbb.CreateVector(hop_offsets);
+    }
+
+    // Build the Label table using the builder pattern.
+    schema::LabelBuilder builder(fbb);
+    builder.add_id(label.id);
+    builder.add_type(static_cast<schema::LabelType>(label.type));
+    builder.add_source(src_off);
+    builder.add_destination(dst_off);
+    builder.add_operation(operation_off);
+    builder.add_flags(label.flags);
+    builder.add_priority(label.priority);
+    builder.add_app_id(label.app_id);
+    builder.add_data_size(label.data_size);
+    builder.add_intent(static_cast<schema::Intent>(label.intent));
+    builder.add_ttl_seconds(label.ttl_seconds);
+    builder.add_isolation(static_cast<schema::Isolation>(label.isolation));
+    builder.add_reply_to(reply_to_off);
+    builder.add_file_key(file_key_off);
+    builder.add_version(label.version);
+    builder.add_durability(static_cast<schema::Durability>(label.durability));
+    if (cont_off.o != 0) builder.add_continuation(cont_off);
+    builder.add_source_uri(source_uri_off);
+    builder.add_dest_uri(dest_uri_off);
+    builder.add_pipeline_data(pipeline_data_off);
+    if (deps_off.o != 0) builder.add_dependencies(deps_off);
+    if (children_off.o != 0) builder.add_children(children_off);
+    if (routing_off.o != 0) builder.add_routing(routing_off);
+    if (hops_off.o != 0) builder.add_hops(hops_off);
+    builder.add_status(static_cast<schema::StatusCode>(label.status));
+    builder.add_created_us(label.created_us);
+    builder.add_completed_us(label.completed_us);
+
+    auto label_off = builder.Finish();
     schema::FinishLabelBuffer(fbb, label_off);
 
     auto* ptr = fbb.GetBufferPointer();
@@ -188,9 +299,27 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     out.ttl_seconds = fb->ttl_seconds();
     out.isolation   = static_cast<Isolation>(fb->isolation());
     out.reply_to    = fb->reply_to() ? fb->reply_to()->str() : std::string{};
-
     out.file_key    = fb->file_key() ? fb->file_key()->str() : std::string{};
 
+    out.version     = fb->version();
+    out.durability  = static_cast<Durability>(fb->durability());
+    out.source_uri  = fb->source_uri() ? fb->source_uri()->str() : std::string{};
+    out.dest_uri    = fb->dest_uri() ? fb->dest_uri()->str() : std::string{};
+    if (fb->pipeline_data() && fb->pipeline_data()->size() > 0)
+        out.pipeline = sds::deserialize_pipeline(fb->pipeline_data()->string_view());
+
+    // Continuation
+    if (auto* cont = fb->continuation()) {
+        out.continuation.kind = static_cast<ContinuationKind>(cont->kind());
+        out.continuation.target_channel =
+            cont->target_channel() ? cont->target_channel()->str() : std::string{};
+        out.continuation.chain_params =
+            cont->chain_params() ? cont->chain_params()->str() : std::string{};
+        out.continuation.condition =
+            cont->condition() ? cont->condition()->str() : std::string{};
+    }
+
+    // Dependencies
     if (fb->dependencies()) {
         for (auto* dep : *fb->dependencies()) {
             out.dependencies.push_back({
@@ -200,10 +329,32 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
         }
     }
 
+    // Children
     if (fb->children()) {
         auto* ch = fb->children();
         out.children.assign(ch->begin(), ch->end());
     }
+
+    // RoutingDecision
+    if (auto* rt = fb->routing()) {
+        out.routing.worker_id = rt->worker_id();
+        out.routing.policy = rt->policy() ? rt->policy()->str() : std::string{};
+    }
+
+    // Hops
+    if (fb->hops()) {
+        for (auto* hop : *fb->hops()) {
+            out.hops.push_back({
+                hop->component() ? hop->component()->str() : std::string{},
+                hop->timestamp_us()
+            });
+        }
+    }
+
+    // State
+    out.status       = static_cast<StatusCode>(fb->status());
+    out.created_us   = fb->created_us();
+    out.completed_us = fb->completed_us();
 
     return out;
 }

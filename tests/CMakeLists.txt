@@ -59,3 +59,112 @@ catch_discover_tests(labios-benchmark-test TEST_PREFIX "bench/" PROPERTIES LABEL
 add_executable(labios-shuffler-test unit/shuffler_test.cpp)
 target_link_libraries(labios-shuffler-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-shuffler-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-solver-random-test unit/solver_random_test.cpp)
+target_link_libraries(labios-solver-random-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-solver-random-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-worker-manager-test unit/worker_manager_test.cpp)
+target_link_libraries(labios-worker-manager-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-worker-manager-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-solver-constraint-test unit/solver_constraint_test.cpp)
+target_link_libraries(labios-solver-constraint-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-solver-constraint-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-solver-minmax-test unit/solver_minmax_test.cpp)
+target_link_libraries(labios-solver-minmax-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-solver-minmax-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-scheduling-test integration/scheduling_test.cpp)
+target_link_libraries(labios-scheduling-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-scheduling-test TEST_PREFIX "integration/" PROPERTIES LABELS "integration")
+
+add_executable(labios-elastic-decision-test unit/elastic_decision_test.cpp)
+target_link_libraries(labios-elastic-decision-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-elastic-decision-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-docker-client-test unit/docker_client_test.cpp)
+target_link_libraries(labios-docker-client-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-docker-client-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-elastic-orchestrator-test unit/elastic_orchestrator_test.cpp)
+target_link_libraries(labios-elastic-orchestrator-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-elastic-orchestrator-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-elastic-tiered-test unit/elastic_tiered_test.cpp)
+target_link_libraries(labios-elastic-tiered-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-elastic-tiered-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-client-async-test unit/client_async_test.cpp)
+target_link_libraries(labios-client-async-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-client-async-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-client-api-test unit/client_api_test.cpp)
+target_link_libraries(labios-client-api-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-client-api-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-elastic-flood-test integration/elastic_flood_test.cpp)
+target_link_libraries(labios-elastic-flood-test PRIVATE labios)
+
+add_executable(labios-kernel-cm1-test integration/kernel_cm1_test.cpp)
+target_link_libraries(labios-kernel-cm1-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-kernel-cm1-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
+
+add_executable(labios-kernel-hacc-test integration/kernel_hacc_test.cpp)
+target_link_libraries(labios-kernel-hacc-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-kernel-hacc-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
+
+add_executable(labios-kernel-montage-test integration/kernel_montage_test.cpp)
+target_link_libraries(labios-kernel-montage-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-kernel-montage-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
+
+add_executable(labios-kernel-kmeans-test integration/kernel_kmeans_test.cpp)
+target_link_libraries(labios-kernel-kmeans-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-kernel-kmeans-test TEST_PREFIX "kernel/" PROPERTIES LABELS "kernel")
+
+add_executable(labios-uri-test unit/uri_test.cpp)
+target_link_libraries(labios-uri-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-uri-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-backend-test unit/backend_test.cpp)
+target_link_libraries(labios-backend-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-backend-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-sds-test unit/sds_test.cpp)
+target_link_libraries(labios-sds-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-sds-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-channel-test unit/channel_test.cpp)
+target_link_libraries(labios-channel-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-channel-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
+add_executable(labios-continuation-test unit/continuation_test.cpp)
+target_link_libraries(labios-continuation-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-continuation-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-workspace-test unit/workspace_test.cpp)
+target_link_libraries(labios-workspace-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-workspace-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
+add_executable(labios-observability-test unit/observability_test.cpp)
+target_link_libraries(labios-observability-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-observability-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
+# Agent I/O Benchmarks (LABIOS-SPEC.md Section 13)
+set(BENCHMARKS
+    bench_coding_agent_io
+    bench_rag_pipeline
+    bench_science_pipeline
+    bench_checkpoint_storm
+    bench_multi_agent_collab
+    bench_cross_backend_etl
+    bench_agentic_worker
+    bench_scale_adaptation
+)
+
+foreach(bench ${BENCHMARKS})
+    add_executable(labios-${bench} benchmark/${bench}.cpp)
+    target_link_libraries(labios-${bench} PRIVATE labios Catch2::Catch2WithMain)
+    catch_discover_tests(labios-${bench} TEST_PREFIX "bench/" PROPERTIES LABELS "bench")
+endforeach()

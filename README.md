@@ -8,20 +8,32 @@ A distributed I/O system that converts I/O requests into self-describing labels 
 
 LABIOS 2.0 is a ground-up rewrite of the original research prototype. The old codebase is archived at tag `v1.0-archive`. See `LABIOS-2.0.md` for the full design document, milestones, and engineering principles.
 
-**Completed milestones:**
+**Milestone progress:**
 
 | Milestone | Scope | Status |
 |---|---|---|
 | M0 | Skeleton, Docker Compose, CI, stub services | Done |
 | M1 | Labels flow end-to-end, client architecture, POSIX intercept | Done |
+| M2 | Shuffler, batching, dependency detection, supertasks, aggregation | Done |
+| M3 | Smart scheduling (constraint-based, MinMax, worker scoring, weight profiles) | Done |
+| M4 | Elastic workers (commission/decommission, auto-suspend) | Planned |
+| M5 | Software-Defined Storage (function pointers on labels, dlopen) | Planned |
+| M6 | Warehouse intelligence (ephemeral rooms, pub/sub, placement) | Planned |
+| M7 | Python SDK, agent API, intent enforcement, priority lanes | Planned |
+| M8 | Four deployment models (Accelerator, Forwarder, Buffering, Remote) | Planned |
+| M9 | Benchmarks (CM1 16x, HACC 6x, Montage 17x, agent pipeline) | Planned |
 
-**Current performance (Docker Compose, localhost):**
+**Current performance (Docker Compose on WSL2):**
 
 | Benchmark | Write | Read |
 |---|---|---|
-| 100MB sequential (1MB chunks) | 70 MB/s | 93 MB/s |
-| 10MB split (10 labels, async) | 256 MB/s | 282 MB/s |
-| 1000 small files (1KB each) | 111 IOPS | 128 IOPS |
+| 100MB sequential (1MB chunks) | 62 MB/s | 82 MB/s |
+| 10MB single file (10 labels) | 168 MB/s | 197 MB/s |
+| 1000 small files (1KB each) | 122 IOPS | 152 IOPS |
+
+Note: DragonflyDB performance in WSL2 Docker is limited by io_uring emulation. On native Linux, DragonflyDB delivers ~20x higher throughput than Redis 7 for concurrent workloads. Single-connection sequential performance may be similar to Redis.
+
+50+ unit tests, 4 integration suites, and the demo client all pass with data verification.
 
 ## Quick Start
 
@@ -53,12 +65,13 @@ LABIOS Client
   │
   ▼                          ▼                    ▼
 Label Queue              Warehouse             Inventory
-(NATS JetStream)         (Redis 7)             (Redis 7)
+(NATS JetStream)         (DragonflyDB)         (DragonflyDB)
   │
   ▼
 Label Dispatcher
+  ├─ Shuffler (aggregation, dependency detection, supertask creation)
   ├─ Read/Write locality routing
-  └─ RoundRobinSolver (constraint-based + MinMax solvers in M3)
+  └─ Solver (round-robin / random / constraint / minmax)
   │
   ▼
 Workers (1..N)
@@ -70,6 +83,34 @@ Workers (1..N)
 Labels are immutable, self-describing units of I/O work. Each carries: operation type, source/destination pointers, flags, priority, dependency chain (with RAW/WAW/WAR hazard types), file key for shuffler grouping, and child label IDs for supertask composition. The dispatcher preprocesses labels before scheduling them to workers.
 
 **Key invariant:** Clients never talk to workers. The dispatcher is the only bridge. This enables all four deployment models from the paper (Accelerator, Forwarder, Buffering, Remote Distributed Storage).
+
+## Scheduling Policies
+
+LABIOS supports four scheduling policies from the HPDC'19 paper:
+
+| Policy | Description |
+|---|---|
+| `round-robin` | Cyclic distribution across available workers (default) |
+| `random` | Uniform random to all workers including suspended |
+| `constraint` | Score workers by weight profile, distribute to top-N |
+| `minmax` | Maximize performance, minimize energy, subject to capacity/load |
+
+Switch policies via environment variable or TOML config:
+
+```bash
+# Via environment (Docker Compose)
+LABIOS_SCHEDULER_POLICY=constraint \
+LABIOS_SCHEDULER_PROFILE=/etc/labios/profiles/high_bandwidth.toml \
+docker compose up -d
+
+# Via TOML
+[scheduler]
+policy = "constraint"
+profile_path = "conf/profiles/high_bandwidth.toml"
+```
+
+Three weight profiles from Table 2 of the paper are included in `conf/profiles/`:
+`low_latency.toml`, `energy_savings.toml`, `high_bandwidth.toml`.
 
 ## POSIX Intercept
 
@@ -98,7 +139,7 @@ conf/                 TOML configuration
 
 ## Tech Stack
 
-C++20 | FlatBuffers | NATS JetStream | Redis 7 | io_uring (future) | Docker Compose | Catch2 | pybind11 (M7)
+C++20 | FlatBuffers | NATS JetStream | DragonflyDB (Redis-compatible) | io_uring (M4+) | Docker Compose | Catch2 | pybind11 (M7)
 
 ## Testing
 
@@ -110,6 +151,7 @@ ctest --test-dir build/dev -L unit
 docker compose up -d
 docker compose run --rm --entrypoint labios-data-path-test test
 docker compose run --rm --entrypoint labios-benchmark-test test
+docker compose run --rm --entrypoint labios-scheduling-test test
 docker compose run --rm --entrypoint sh test \
   -c "LD_PRELOAD=/usr/local/lib/liblabios_intercept.so labios-intercept-test"
 docker compose down -v

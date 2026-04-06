@@ -7,8 +7,14 @@
 
 namespace labios {
 
+/// Worker tiers from LABIOS-SPEC (Section 3).
+/// Tier 0: Stateless databot, single I/O ops only.
+/// Tier 1: Pipeline worker, executes SDS function DAGs.
+/// Tier 2: Agentic worker, reasoning-capable with tool use.
+enum class WorkerTier : uint8_t { Databot = 0, Pipeline = 1, Agentic = 2 };
+
 /// Worker score variables from the paper (Section 3.2.3, Table 2).
-/// The composite score is: sum(weight_j * variable_j) for j=1..5.
+/// The composite score is: sum(weight_j * variable_j) for j=1..6.
 struct WorkerInfo {
     int id;
     bool available = true;
@@ -20,6 +26,7 @@ struct WorkerInfo {
     // Static variables (set at initialization)
     int speed = 1;               // [1,5] bandwidth class of storage medium
     int energy = 1;              // [1,5] power wattage class
+    WorkerTier tier = WorkerTier::Databot;
 
     // Composite score computed by the worker manager
     double score = 1.0;          // [0,1] weighted combination
@@ -33,6 +40,7 @@ struct WeightProfile {
     double load = 0.0;
     double speed = 0.0;
     double energy = 0.0;
+    double tier = 0.0;
 };
 
 using AssignmentMap = std::unordered_map<int, std::vector<std::vector<std::byte>>>;

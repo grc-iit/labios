@@ -1,11 +1,19 @@
 #include <labios/catalog_manager.h>
+#include <labios/channel.h>
 #include <labios/config.h>
 #include <labios/content_manager.h>
+#include <labios/continuation.h>
 #include <labios/label.h>
+#include <labios/observability.h>
 #include <labios/shuffler.h>
+#include <labios/solver/constraint.h>
+#include <labios/solver/minmax.h>
+#include <labios/solver/random.h>
 #include <labios/solver/round_robin.h>
+#include <labios/telemetry.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
+#include <labios/uri.h>
 
 #include <chrono>
 #include <condition_variable>
@@ -14,10 +22,18 @@
 #include <fstream>
 #include <iostream>
 #include <mutex>
+#include <sstream>
 #include <thread>
 #include <vector>
 
 static std::jthread g_batch_thread;
+static std::jthread g_worker_refresh_thread;
+static std::vector<std::jthread> g_fanout_threads;
+static std::mutex g_fanout_mu;
+
+// Cached worker list, refreshed periodically by g_worker_refresh_thread.
+static std::mutex g_workers_mu;
+static std::vector<labios::WorkerInfo> g_cached_workers;
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -27,6 +43,44 @@ static std::string timestamp() {
     char buf[32];
     std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tm_buf);
     return buf;
+}
+
+static std::vector<labios::WorkerInfo> query_workers(
+    labios::transport::NatsConnection& nats) {
+    std::vector<labios::WorkerInfo> workers;
+    try {
+        auto reply = nats.request("labios.manager.workers", {},
+                                  std::chrono::milliseconds(2000));
+        std::string data(reinterpret_cast<const char*>(reply.data.data()),
+                         reply.data.size());
+        std::istringstream iss(data);
+        std::string line;
+        while (std::getline(iss, line)) {
+            if (line.empty()) continue;
+            try {
+                // Parse: id,available,capacity,load,speed,energy
+                std::istringstream ls(line);
+                std::string token;
+                labios::WorkerInfo w{};
+                if (std::getline(ls, token, ',')) w.id = std::stoi(token);
+                if (std::getline(ls, token, ',')) w.available = (token == "1");
+                if (std::getline(ls, token, ',')) w.capacity = std::stod(token);
+                if (std::getline(ls, token, ',')) w.load = std::stod(token);
+                if (std::getline(ls, token, ',')) w.speed = std::stoi(token);
+                if (std::getline(ls, token, ',')) w.energy = std::stoi(token);
+                workers.push_back(w);
+            } catch (const std::exception&) {
+                std::cerr << "[" << timestamp()
+                          << "] dispatcher: malformed worker entry, skipping\n"
+                          << std::flush;
+                continue;
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "[" << timestamp() << "] dispatcher: manager query failed: "
+                  << e.what() << "\n" << std::flush;
+    }
+    return workers;
 }
 
 static void signal_handler(int /*sig*/) {
@@ -46,15 +100,19 @@ int main() {
     labios::transport::RedisConnection redis(cfg.redis_host, cfg.redis_port);
     labios::transport::NatsConnection nats(cfg.nats_url);
 
-    // Hardcoded worker list for M2. M3 will replace with dynamic registry.
-    std::vector<labios::WorkerInfo> workers = {
-        {1, true},
-        {2, true},
-        {3, true},
-    };
-
     labios::CatalogManager catalog(redis);
-    labios::RoundRobinSolver solver;
+    labios::ChannelRegistry channels(redis, nats);
+
+    // Load weight profile for constraint-based solver.
+    auto profile = cfg.scheduler_profile_path.empty()
+        ? labios::WeightProfile{"default", 0.5, 0.0, 0.35, 0.15, 0.0}
+        : labios::load_weight_profile(cfg.scheduler_profile_path);
+
+    // Solver instances (one of these is used per batch based on config).
+    labios::RoundRobinSolver rr_solver;
+    labios::RandomSolver random_solver;
+    labios::ConstraintSolver constraint_solver(profile);
+    labios::MinMaxSolver minmax_solver;
 
     labios::ShufflerConfig shuf_cfg{
         .aggregation_enabled = cfg.dispatcher_aggregation_enabled,
@@ -62,11 +120,46 @@ int main() {
     };
     labios::Shuffler shuffler(shuf_cfg);
 
+    // Record dispatcher start time for uptime queries.
+    {
+        auto now = std::chrono::system_clock::now();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()).count();
+        redis.set("labios:dispatcher:start_ms", std::to_string(ms));
+    }
+
+    // Telemetry publisher streams metrics to labios.telemetry.
+    labios::TelemetryPublisher telemetry(nats,
+        [&]() -> std::vector<labios::WorkerInfo> {
+            std::lock_guard lock(g_workers_mu);
+            return g_cached_workers;
+        });
+    telemetry.start();
+
     std::vector<labios::LabelData> batch_buffer;
     std::mutex batch_mu;
     std::condition_variable batch_cv;
     auto batch_size = static_cast<size_t>(cfg.dispatcher_batch_size);
     auto batch_timeout = std::chrono::milliseconds(cfg.dispatcher_batch_timeout_ms);
+
+    // Seed the worker cache before accepting labels.
+    {
+        auto initial = query_workers(nats);
+        std::lock_guard lock(g_workers_mu);
+        g_cached_workers = std::move(initial);
+    }
+
+    // Background thread: periodically refresh the cached worker list.
+    auto refresh_ms = std::chrono::milliseconds(cfg.scheduler_worker_refresh_ms);
+    g_worker_refresh_thread = std::jthread([&nats, refresh_ms](std::stop_token stoken) {
+        while (!stoken.stop_requested()) {
+            std::this_thread::sleep_for(refresh_ms);
+            if (stoken.stop_requested()) break;
+            auto fresh = query_workers(nats);
+            std::lock_guard lock(g_workers_mu);
+            g_cached_workers = std::move(fresh);
+        }
+    });
 
     // NATS subscription: buffer incoming labels without routing.
     nats.subscribe("labios.labels",
@@ -83,8 +176,9 @@ int main() {
 
     // Batch processing thread: collect -> shuffle -> dispatch.
     g_batch_thread = std::jthread([&](std::stop_token stoken) {
-        auto location_lookup = [&](const std::string& file) -> std::optional<int> {
-            return catalog.get_location(file);
+        auto location_lookup = [&](const std::string& file, uint64_t offset,
+                                   uint64_t length) -> std::optional<int> {
+            return catalog.get_location(file, offset, length);
         };
 
         while (!stoken.stop_requested()) {
@@ -99,12 +193,106 @@ int main() {
                 batch = std::move(batch_buffer);
                 batch_buffer.clear();
             }
+            // Report queue depth to manager for elastic scaling and observability.
+            // Format: "total,with_pipeline,observe_count" for tier-aware decisions.
+            try {
+                int total = static_cast<int>(batch.size());
+                int with_pipeline = 0;
+                int observe_count = 0;
+                for (const auto& label : batch) {
+                    if (!label.pipeline.empty()) ++with_pipeline;
+                    if (label.type == labios::LabelType::Observe) ++observe_count;
+                }
+                auto depth_str = std::to_string(total) + ","
+                               + std::to_string(with_pipeline) + ","
+                               + std::to_string(observe_count);
+                nats.publish("labios.queue.depth", depth_str);
+                redis.set("labios:queue:depth", depth_str);
+            } catch (...) {}
             if (batch.empty()) continue;
+
+            // Handle OBSERVE labels inline (no shuffling/scheduling).
+            {
+                std::vector<labios::WorkerInfo> obs_workers;
+                {
+                    std::lock_guard lock(g_workers_mu);
+                    obs_workers = g_cached_workers;
+                }
+                std::erase_if(batch, [&](labios::LabelData& label) {
+                    if (label.type != labios::LabelType::Observe) return false;
+                    auto uri = labios::parse_uri(label.source_uri);
+                    auto obs = labios::handle_observe(uri, obs_workers, redis, nats, cfg);
+                    std::string data_key = "labios:observe:" + std::to_string(label.id);
+                    redis.set(data_key, obs.json_data);
+                    labios::CompletionData comp;
+                    comp.label_id = label.id;
+                    comp.status = obs.success ? labios::CompletionStatus::Complete
+                                              : labios::CompletionStatus::Error;
+                    comp.error = obs.error;
+                    comp.data_key = data_key;
+                    auto buf = labios::serialize_completion(comp);
+                    if (!label.reply_to.empty()) {
+                        nats.publish(label.reply_to, std::span<const std::byte>(buf));
+                    }
+                    std::cout << "[" << timestamp() << "] dispatcher: observe "
+                              << label.id << " -> " << label.source_uri << "\n"
+                              << std::flush;
+
+                    // Process continuation for OBSERVE labels.
+                    if (label.continuation.kind != labios::ContinuationKind::None) {
+                        try {
+                            auto chained = labios::process_continuation(
+                                label, comp, channels, nats, redis);
+                            if (chained) {
+                                auto buf = labios::serialize_label(*chained);
+                                nats.publish("labios.labels",
+                                             std::span<const std::byte>(buf));
+                            }
+                        } catch (...) {}
+                    }
+
+                    return true;
+                });
+                if (batch.empty()) {
+                    nats.flush();
+                    continue;
+                }
+            }
 
             std::cout << "[" << timestamp() << "] dispatcher: processing batch of "
                       << batch.size() << " labels\n" << std::flush;
 
             auto result = shuffler.shuffle(std::move(batch), location_lookup);
+
+            // Read cached worker list (refreshed by background thread).
+            std::vector<labios::WorkerInfo> workers;
+            {
+                std::lock_guard lock(g_workers_mu);
+                workers = g_cached_workers;
+            }
+            if (workers.empty()) {
+                std::cerr << "[" << timestamp()
+                          << "] dispatcher: no workers available, skipping batch\n"
+                          << std::flush;
+                continue;
+            }
+
+            // Solver dispatch based on configured policy.
+            auto solve = [&](std::vector<std::vector<std::byte>> solver_batch)
+                -> labios::AssignmentMap {
+                if (cfg.scheduler_policy == "random") {
+                    return random_solver.assign(std::move(solver_batch), workers);
+                } else if (cfg.scheduler_policy == "constraint") {
+                    return constraint_solver.assign(std::move(solver_batch), workers);
+                } else if (cfg.scheduler_policy == "minmax") {
+                    return minmax_solver.assign(std::move(solver_batch), workers);
+                }
+                return rr_solver.assign(std::move(solver_batch), workers);
+            };
+
+            std::cout << "[" << timestamp() << "] dispatcher: policy="
+                      << cfg.scheduler_policy << ", workers="
+                      << workers.size() << "\n" << std::flush;
 
             // (A) Direct-route labels (read-locality)
             if (!result.direct_route.empty()) {
@@ -118,6 +306,7 @@ int main() {
                     auto serialized = labios::serialize_label(label);
                     std::string subject = "labios.worker." + std::to_string(worker_id);
                     nats.publish(subject, std::span<const std::byte>(serialized));
+                    telemetry.record_label_dispatched();
 
                     std::cout << "[" << timestamp() << "] dispatcher: label "
                               << label.id << " -> worker " << worker_id
@@ -132,7 +321,7 @@ int main() {
                 auto dummy = labios::serialize_label(st.composite);
                 std::vector<std::vector<std::byte>> solver_batch;
                 solver_batch.push_back(std::move(dummy));
-                auto assignments = solver.assign(std::move(solver_batch), workers);
+                auto assignments = solve(std::move(solver_batch));
 
                 for (auto& [wid, _] : assignments) {
                     std::vector<labios::ScheduleEntry> sched;
@@ -153,7 +342,7 @@ int main() {
                     for (auto& child : st.children) {
                         if (child.type == labios::LabelType::Write) {
                             auto* dst = std::get_if<labios::FilePath>(&child.destination);
-                            if (dst) catalog.set_location(dst->path, wid);
+                            if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
                         }
                     }
 
@@ -164,6 +353,7 @@ int main() {
                     auto serialized = labios::serialize_label(st.composite);
                     std::string subject = "labios.worker." + std::to_string(wid);
                     nats.publish(subject, std::span<const std::byte>(serialized));
+                    telemetry.record_label_dispatched();
 
                     std::cout << "[" << timestamp() << "] dispatcher: supertask "
                               << st.composite.id << " (" << st.children.size()
@@ -202,12 +392,13 @@ int main() {
                             auto [inbox, reply_handle] = nats.create_reply_inbox();
                             label.reply_to = inbox;
 
-                            std::thread([reply_handle,
+                            auto fanout = std::jthread([reply_handle,
                                          replies = original_replies,
-                                         &nats]() {
+                                         &nats](std::stop_token stoken) {
                                 try {
                                     auto data = reply_handle->wait(
                                         std::chrono::seconds(60));
+                                    if (stoken.stop_requested()) return;
                                     for (auto& reply_to : replies) {
                                         nats.publish(reply_to,
                                             std::span<const std::byte>(data));
@@ -216,7 +407,14 @@ int main() {
                                 } catch (...) {
                                     // Timeout; clients will timeout on their end.
                                 }
-                            }).detach();
+                            });
+
+                            std::lock_guard flock(g_fanout_mu);
+                            // Clean up completed threads before adding new one.
+                            std::erase_if(g_fanout_threads, [](std::jthread& t) {
+                                return !t.joinable();
+                            });
+                            g_fanout_threads.push_back(std::move(fanout));
                         }
                     }
 
@@ -237,6 +435,7 @@ int main() {
                         auto serialized = labios::serialize_label(label);
                         std::string subject = "labios.worker." + std::to_string(target_worker);
                         nats.publish(subject, std::span<const std::byte>(serialized));
+                        telemetry.record_label_dispatched();
 
                         std::cout << "[" << timestamp() << "] dispatcher: label "
                                   << label.id << " -> worker " << target_worker
@@ -245,19 +444,20 @@ int main() {
                         auto serialized = labios::serialize_label(label);
                         std::vector<std::vector<std::byte>> solver_batch;
                         solver_batch.push_back(std::move(serialized));
-                        auto assignments = solver.assign(std::move(solver_batch), workers);
+                        auto assignments = solve(std::move(solver_batch));
 
                         for (auto& [wid, payloads] : assignments) {
                             sched.push_back({label.id, wid, label.flags});
 
                             if (label.type == labios::LabelType::Write) {
                                 auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                                if (dst) catalog.set_location(dst->path, wid);
+                                if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
                             }
 
                             for (auto& payload : payloads) {
                                 std::string subject = "labios.worker." + std::to_string(wid);
                                 nats.publish(subject, std::span<const std::byte>(payload));
+                                telemetry.record_label_dispatched();
                             }
 
                             std::cout << "[" << timestamp() << "] dispatcher: label "
@@ -284,6 +484,25 @@ int main() {
               << ")\n" << std::flush;
 
     g_batch_thread.join();
+    telemetry.stop();
+
+    // Stop the worker refresh thread.
+    if (g_worker_refresh_thread.joinable()) {
+        g_worker_refresh_thread.request_stop();
+        g_worker_refresh_thread.join();
+    }
+
+    // Join all tracked fanout threads for clean shutdown.
+    {
+        std::lock_guard flock(g_fanout_mu);
+        for (auto& t : g_fanout_threads) {
+            if (t.joinable()) {
+                t.request_stop();
+                t.join();
+            }
+        }
+        g_fanout_threads.clear();
+    }
 
     std::cout << "[" << timestamp() << "] dispatcher shutting down\n";
     return 0;

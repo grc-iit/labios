@@ -24,7 +24,8 @@ class LabelManager {
 public:
     LabelManager(ContentManager& content, CatalogManager& catalog,
                  transport::NatsConnection& nats,
-                 uint64_t max_label_size, uint32_t app_id);
+                 uint64_t max_label_size, uint32_t app_id,
+                 int reply_timeout_ms = 30000);
 
     std::vector<PendingLabel> publish_write(
         std::string_view filepath, uint64_t offset,
@@ -45,6 +46,7 @@ private:
     transport::NatsConnection& nats_;
     uint64_t max_label_size_;
     uint32_t app_id_;
+    int reply_timeout_ms_;
 };
 
 } // namespace labios

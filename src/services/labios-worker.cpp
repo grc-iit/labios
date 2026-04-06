@@ -1,11 +1,21 @@
+#include <labios/backend/posix_backend.h>
+#include <labios/backend/registry.h>
 #include <labios/catalog_manager.h>
+#include <labios/channel.h>
 #include <labios/config.h>
+#include <labios/continuation.h>
 #include <labios/label.h>
 #include <labios/content_manager.h>
+#include <labios/sds/executor.h>
+#include <labios/sds/program_repo.h>
 #include <labios/shuffler.h>
+#include <labios/solver/solver.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
+#include <labios/uri.h>
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <csignal>
 #include <cstdlib>
@@ -16,7 +26,31 @@
 #include <string>
 #include <thread>
 
+struct CompletionResult {
+    labios::CompletionStatus status = labios::CompletionStatus::Complete;
+    std::string data_key;
+};
+
+static CompletionResult execute_write(
+    labios::ContentManager& cm, labios::CatalogManager& cat,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends,
+    labios::WorkerTier tier, const labios::sds::ProgramRepository& sds_repo);
+
+static CompletionResult execute_read(
+    labios::ContentManager& cm, labios::CatalogManager& cat,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends);
+
 static std::jthread g_service_thread;
+static std::jthread g_score_thread;
+static std::atomic<int> g_active_labels{0};
+static constexpr int kMaxQueueSize = 100;
+static std::atomic<bool> g_suspended{false};
+static std::chrono::steady_clock::time_point g_last_label_time{
+    std::chrono::steady_clock::now()};
 
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
@@ -32,6 +66,153 @@ static void signal_handler(int /*sig*/) {
     if (g_service_thread.joinable()) {
         g_service_thread.request_stop();
     }
+}
+
+static CompletionResult execute_write(
+    labios::ContentManager& cm, labios::CatalogManager& cat,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends,
+    labios::WorkerTier tier, const labios::sds::ProgramRepository& sds_repo) {
+
+    // Tier gating: Databot workers cannot execute pipelines.
+    if (!label.pipeline.empty() && tier == labios::WorkerTier::Databot) {
+        throw std::runtime_error(
+            "Tier 0 (Databot) worker cannot execute labels with SDS pipelines");
+    }
+
+    auto blob = cm.retrieve(label.id);
+
+    // Execute SDS pipeline if present.
+    if (!label.pipeline.empty()) {
+        auto result = labios::sds::execute_pipeline(
+            label.pipeline, std::span<const std::byte>(blob), sds_repo);
+        if (!result.success) {
+            throw std::runtime_error("SDS pipeline failed: " + result.error);
+        }
+        blob = std::move(result.data);
+    }
+
+    // URI path: resolve dest_uri through backend registry.
+    if (!label.dest_uri.empty()) {
+        auto uri = labios::parse_uri(label.dest_uri);
+        auto* backend = backends.resolve(uri.scheme);
+        if (!backend) {
+            throw std::runtime_error(
+                "no backend for scheme: " + uri.scheme);
+        }
+        auto result = backend->put(uri.path, 0,
+            std::span<const std::byte>(blob));
+        if (!result.success) {
+            throw std::runtime_error(result.error);
+        }
+        cm.remove(label.id);
+        cat.set_location(uri.path, 0, blob.size(), worker_id);
+
+        std::cout << "[" << timestamp() << "] worker " << worker_id
+                  << ": WRITE " << label.dest_uri << " ("
+                  << blob.size() << " bytes)\n" << std::flush;
+        return {labios::CompletionStatus::Complete, {}};
+    }
+
+    // Legacy path: use Pointer variant.
+    auto* dst = std::get_if<labios::FilePath>(&label.destination);
+    if (!dst) {
+        throw std::runtime_error("WRITE label missing FilePath destination");
+    }
+
+    auto full_path = storage_root / dst->path;
+    std::filesystem::create_directories(full_path.parent_path());
+
+    if (dst->offset > 0 && std::filesystem::exists(full_path)) {
+        std::ofstream ofs(full_path,
+            std::ios::binary | std::ios::in | std::ios::out);
+        if (!ofs) {
+            throw std::runtime_error("failed to open " + full_path.string());
+        }
+        ofs.seekp(static_cast<std::streamoff>(dst->offset));
+        ofs.write(reinterpret_cast<const char*>(blob.data()),
+                  static_cast<std::streamsize>(blob.size()));
+    } else {
+        std::ofstream ofs(full_path, std::ios::binary | std::ios::out);
+        if (!ofs) {
+            throw std::runtime_error("failed to open " + full_path.string());
+        }
+        if (dst->offset > 0) {
+            ofs.seekp(static_cast<std::streamoff>(dst->offset));
+        }
+        ofs.write(reinterpret_cast<const char*>(blob.data()),
+                  static_cast<std::streamsize>(blob.size()));
+    }
+
+    cm.remove(label.id);
+    cat.set_location(dst->path, dst->offset, dst->length, worker_id);
+
+    std::cout << "[" << timestamp() << "] worker " << worker_id
+              << ": WRITE " << full_path.string() << " ("
+              << blob.size() << " bytes)\n" << std::flush;
+
+    return {labios::CompletionStatus::Complete, {}};
+}
+
+static CompletionResult execute_read(
+    labios::ContentManager& cm, labios::CatalogManager& /*cat*/,
+    const labios::LabelData& label,
+    const std::filesystem::path& storage_root, int worker_id,
+    const labios::BackendRegistry& backends) {
+
+    // URI path: resolve source_uri through backend registry.
+    if (!label.source_uri.empty()) {
+        auto uri = labios::parse_uri(label.source_uri);
+        auto* backend = backends.resolve(uri.scheme);
+        if (!backend) {
+            throw std::runtime_error(
+                "no backend for scheme: " + uri.scheme);
+        }
+        uint64_t read_size = label.data_size;
+        auto result = backend->get(uri.path, 0, read_size);
+        if (!result.success) {
+            throw std::runtime_error(result.error);
+        }
+        cm.stage(label.id, std::span<const std::byte>(result.data));
+
+        std::cout << "[" << timestamp() << "] worker " << worker_id
+                  << ": READ " << label.source_uri << " ("
+                  << result.data.size() << " bytes)\n" << std::flush;
+        return {labios::CompletionStatus::Complete,
+                labios::ContentManager::data_key(label.id)};
+    }
+
+    // Legacy path: use Pointer variant.
+    auto* src = std::get_if<labios::FilePath>(&label.source);
+    if (!src) {
+        throw std::runtime_error("READ label missing FilePath source");
+    }
+
+    uint64_t read_size = label.data_size > 0 ? label.data_size : src->length;
+
+    auto full_path = storage_root / src->path;
+    std::ifstream ifs(full_path, std::ios::binary);
+    if (!ifs) {
+        throw std::runtime_error(
+            "data not found on this worker for " + src->path);
+    }
+    if (src->offset > 0) {
+        ifs.seekg(static_cast<std::streamoff>(src->offset));
+    }
+    std::vector<std::byte> file_data(read_size);
+    ifs.read(reinterpret_cast<char*>(file_data.data()),
+             static_cast<std::streamsize>(read_size));
+    file_data.resize(static_cast<size_t>(ifs.gcount()));
+
+    cm.stage(label.id, std::span<const std::byte>(file_data));
+
+    std::cout << "[" << timestamp() << "] worker " << worker_id
+              << ": READ " << src->path << " ("
+              << file_data.size() << " bytes)\n" << std::flush;
+
+    return {labios::CompletionStatus::Complete,
+            labios::ContentManager::data_key(label.id)};
 }
 
 int main() {
@@ -56,12 +237,23 @@ int main() {
     std::string worker_subject = "labios.worker." + std::to_string(cfg.worker_id);
     std::string worker_name = "worker-" + std::to_string(cfg.worker_id);
 
+    // Backend registry for URI-based routing.
+    labios::BackendRegistry backends;
+    backends.register_backend(labios::PosixBackend(storage_root));
+
+    // SDS program repository (shared across all label executions).
+    labios::sds::ProgramRepository sds_repo;
+    auto worker_tier = static_cast<labios::WorkerTier>(
+        std::clamp(cfg.worker_tier, 0, 2));
+
+    labios::ChannelRegistry channels(redis, nats);
+
     // Mutex protects all Redis (warehouse + catalog) and file operations.
     std::mutex worker_mu;
 
     int worker_id = cfg.worker_id;
     nats.subscribe(worker_subject,
-        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id](
+        [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root, worker_id, &backends, worker_tier, &sds_repo, &channels](
             std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view /*reply_to*/) {
             labios::CompletionData completion{};
@@ -69,6 +261,11 @@ int main() {
             bool have_label = false;
 
             try {
+                g_active_labels.fetch_add(1);
+                g_last_label_time = std::chrono::steady_clock::now();
+                if (g_suspended.load()) {
+                    g_suspended.store(false);
+                }
                 label = labios::deserialize_label(data);
                 have_label = true;
                 completion.label_id = label.id;
@@ -80,95 +277,17 @@ int main() {
                 catalog.set_flags(label.id, label.flags);
 
                 if (label.type == labios::LabelType::Write) {
-                    auto blob = content_manager.retrieve(label.id);
-
-                    auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                    if (!dst) {
-                        throw std::runtime_error(
-                            "WRITE label missing FilePath destination");
-                    }
-
-                    auto full_path = storage_root / dst->path;
-                    std::filesystem::create_directories(full_path.parent_path());
-
-                    if (dst->offset > 0 &&
-                        std::filesystem::exists(full_path)) {
-                        std::ofstream ofs(full_path,
-                            std::ios::binary | std::ios::in | std::ios::out);
-                        if (!ofs) {
-                            throw std::runtime_error(
-                                "failed to open " + full_path.string());
-                        }
-                        ofs.seekp(static_cast<std::streamoff>(dst->offset));
-                        ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                  static_cast<std::streamsize>(blob.size()));
-                    } else {
-                        std::ofstream ofs(full_path,
-                            std::ios::binary | std::ios::out);
-                        if (!ofs) {
-                            throw std::runtime_error(
-                                "failed to open " + full_path.string());
-                        }
-                        if (dst->offset > 0) {
-                            ofs.seekp(
-                                static_cast<std::streamoff>(dst->offset));
-                        }
-                        ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                  static_cast<std::streamsize>(blob.size()));
-                    }
-
-                    content_manager.remove(label.id);
-
-                    // Record which worker holds this file so the dispatcher
-                    // can route READs here (read-locality, paper Section 2.3).
-                    catalog.set_location(dst->path, worker_id);
-
-                    completion.status = labios::CompletionStatus::Complete;
-
-                    std::cout << "[" << timestamp() << "] worker " << worker_id
-                              << ": WRITE " << full_path.string() << " ("
-                              << blob.size() << " bytes)\n" << std::flush;
+                    auto result = execute_write(
+                        content_manager, catalog, label, storage_root, worker_id, backends,
+                        worker_tier, sds_repo);
+                    completion.status = result.status;
 
                 } else if (label.type == labios::LabelType::Read) {
-                    auto* src = std::get_if<labios::FilePath>(&label.source);
-                    if (!src) {
-                        throw std::runtime_error(
-                            "READ label missing FilePath source");
-                    }
+                    auto result = execute_read(
+                        content_manager, catalog, label, storage_root, worker_id, backends);
+                    completion.status = result.status;
+                    completion.data_key = std::move(result.data_key);
 
-                    uint64_t read_size = label.data_size > 0
-                        ? label.data_size
-                        : src->length;
-
-                    std::vector<std::byte> file_data;
-
-                    // The dispatcher routes READs to the worker holding the
-                    // file (read-locality, paper Section 2.3). Read from
-                    // local storage directly.
-                    auto full_path = storage_root / src->path;
-                    std::ifstream ifs(full_path, std::ios::binary);
-                    if (!ifs) {
-                        throw std::runtime_error(
-                            "data not found on this worker for "
-                            + src->path);
-                    }
-                    if (src->offset > 0) {
-                        ifs.seekg(static_cast<std::streamoff>(src->offset));
-                    }
-                    file_data.resize(read_size);
-                    ifs.read(reinterpret_cast<char*>(file_data.data()),
-                             static_cast<std::streamsize>(read_size));
-                    file_data.resize(static_cast<size_t>(ifs.gcount()));
-
-                    content_manager.stage(label.id,
-                                    std::span<const std::byte>(file_data));
-                    completion.data_key =
-                        labios::ContentManager::data_key(label.id);
-                    completion.status = labios::CompletionStatus::Complete;
-
-                    std::cout << "[" << timestamp() << "] worker " << worker_id
-                              << ": READ " << src->path << " ("
-                              << file_data.size() << " bytes)\n" << std::flush;
                 } else if (label.type == labios::LabelType::Composite) {
                     // Supertask: retrieve packed children from Redis and execute in order.
                     std::string pack_key = "labios:supertask:" + std::to_string(label.id);
@@ -194,67 +313,17 @@ int main() {
                         catalog.set_flags(child.id, child.flags);
 
                         if (child.type == labios::LabelType::Write) {
-                            auto blob = content_manager.retrieve(child.id);
-                            auto* dst = std::get_if<labios::FilePath>(&child.destination);
-                            if (!dst) {
-                                throw std::runtime_error("WRITE child missing FilePath destination");
-                            }
-                            auto full_path = storage_root / dst->path;
-                            std::filesystem::create_directories(full_path.parent_path());
-
-                            if (dst->offset > 0 && std::filesystem::exists(full_path)) {
-                                std::ofstream ofs(full_path,
-                                    std::ios::binary | std::ios::in | std::ios::out);
-                                if (!ofs) throw std::runtime_error("failed to open " + full_path.string());
-                                ofs.seekp(static_cast<std::streamoff>(dst->offset));
-                                ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                          static_cast<std::streamsize>(blob.size()));
-                            } else {
-                                std::ofstream ofs(full_path, std::ios::binary | std::ios::out);
-                                if (!ofs) throw std::runtime_error("failed to open " + full_path.string());
-                                if (dst->offset > 0) {
-                                    ofs.seekp(static_cast<std::streamoff>(dst->offset));
-                                }
-                                ofs.write(reinterpret_cast<const char*>(blob.data()),
-                                          static_cast<std::streamsize>(blob.size()));
-                            }
-
-                            content_manager.remove(child.id);
-                            catalog.set_location(dst->path, worker_id);
-                            child_comp.status = labios::CompletionStatus::Complete;
-
-                            std::cout << "[" << timestamp() << "] worker " << worker_id
-                                      << ":   child WRITE " << full_path.string() << " ("
-                                      << blob.size() << " bytes)\n" << std::flush;
+                            auto result = execute_write(
+                                content_manager, catalog, child, storage_root, worker_id, backends,
+                                worker_tier, sds_repo);
+                            child_comp.status = result.status;
 
                         } else if (child.type == labios::LabelType::Read) {
-                            auto* src = std::get_if<labios::FilePath>(&child.source);
-                            if (!src) {
-                                throw std::runtime_error("READ child missing FilePath source");
-                            }
-                            uint64_t read_size = child.data_size > 0 ? child.data_size : src->length;
+                            auto result = execute_read(
+                                content_manager, catalog, child, storage_root, worker_id, backends);
+                            child_comp.status = result.status;
+                            child_comp.data_key = std::move(result.data_key);
 
-                            auto full_path = storage_root / src->path;
-                            std::ifstream ifs(full_path, std::ios::binary);
-                            if (!ifs) {
-                                throw std::runtime_error(
-                                    "data not found on this worker for " + src->path);
-                            }
-                            if (src->offset > 0) {
-                                ifs.seekg(static_cast<std::streamoff>(src->offset));
-                            }
-                            std::vector<std::byte> file_data(read_size);
-                            ifs.read(reinterpret_cast<char*>(file_data.data()),
-                                     static_cast<std::streamsize>(read_size));
-                            file_data.resize(static_cast<size_t>(ifs.gcount()));
-
-                            content_manager.stage(child.id, std::span<const std::byte>(file_data));
-                            child_comp.data_key = labios::ContentManager::data_key(child.id);
-                            child_comp.status = labios::CompletionStatus::Complete;
-
-                            std::cout << "[" << timestamp() << "] worker " << worker_id
-                                      << ":   child READ " << src->path << " ("
-                                      << file_data.size() << " bytes)\n" << std::flush;
                         } else {
                             throw std::runtime_error(
                                 "unsupported child label type: "
@@ -267,6 +336,23 @@ int main() {
                         if (!child.reply_to.empty()) {
                             auto reply = labios::serialize_completion(child_comp);
                             nats.publish(child.reply_to, std::span<const std::byte>(reply));
+                        }
+
+                        // Process continuation for each child.
+                        if (child.continuation.kind != labios::ContinuationKind::None) {
+                            try {
+                                auto chained = labios::process_continuation(
+                                    child, child_comp, channels, nats, redis);
+                                if (chained) {
+                                    auto buf = labios::serialize_label(*chained);
+                                    nats.publish("labios.labels",
+                                                 std::span<const std::byte>(buf));
+                                }
+                            } catch (const std::exception& ex) {
+                                std::cerr << "[" << timestamp() << "] worker "
+                                          << worker_id << ": child continuation error: "
+                                          << ex.what() << "\n" << std::flush;
+                            }
                         }
                     }
 
@@ -285,7 +371,26 @@ int main() {
                         auto reply_payload = labios::serialize_completion(completion);
                         nats.publish(label.reply_to, std::span<const std::byte>(reply_payload));
                     }
+
+                    // Process continuation for the composite label.
+                    if (label.continuation.kind != labios::ContinuationKind::None) {
+                        try {
+                            auto chained = labios::process_continuation(
+                                label, completion, channels, nats, redis);
+                            if (chained) {
+                                auto buf = labios::serialize_label(*chained);
+                                nats.publish("labios.labels",
+                                             std::span<const std::byte>(buf));
+                            }
+                        } catch (const std::exception& ex) {
+                            std::cerr << "[" << timestamp() << "] worker "
+                                      << worker_id << ": composite continuation error: "
+                                      << ex.what() << "\n" << std::flush;
+                        }
+                    }
+
                     nats.flush();
+                    g_active_labels.fetch_sub(1);
                     return; // Early return; skip the normal completion path below.
 
                 } else {
@@ -303,7 +408,28 @@ int main() {
                     nats.flush();
                 }
 
+                // Process continuation if present.
+                if (label.continuation.kind != labios::ContinuationKind::None) {
+                    try {
+                        auto chained = labios::process_continuation(
+                            label, completion, channels, nats, redis);
+                        if (chained) {
+                            auto buf = labios::serialize_label(*chained);
+                            nats.publish("labios.labels",
+                                         std::span<const std::byte>(buf));
+                            nats.flush();
+                        }
+                    } catch (const std::exception& ex) {
+                        std::cerr << "[" << timestamp() << "] worker "
+                                  << worker_id << ": continuation error: "
+                                  << ex.what() << "\n" << std::flush;
+                    }
+                }
+
+                g_active_labels.fetch_sub(1);
+
             } catch (const std::exception& e) {
+                g_active_labels.fetch_sub(1);
                 completion.status = labios::CompletionStatus::Error;
                 completion.error = e.what();
 
@@ -335,12 +461,82 @@ int main() {
 
     redis.set("labios:ready:" + worker_name, "1");
 
+    // Publish registration to manager.
+    std::string reg_msg = std::to_string(cfg.worker_id) + ","
+        + std::to_string(cfg.worker_speed) + ","
+        + std::to_string(cfg.worker_energy) + ","
+        + cfg.worker_capacity + ","
+        + std::to_string(cfg.worker_tier);
+    nats.publish("labios.worker.register", reg_msg);
+    nats.flush();
+
+    // Subscribe to resume commands from the elastic orchestrator.
+    nats.subscribe("labios.worker.resume." + std::to_string(cfg.worker_id),
+        [worker_id, &worker_name](std::string_view /*subject*/,
+            std::span<const std::byte> /*data*/,
+            std::string_view /*reply_to*/) {
+            g_suspended.store(false);
+            g_last_label_time = std::chrono::steady_clock::now();
+            std::cout << "[" << timestamp() << "] " << worker_name
+                      << ": resumed by manager\n" << std::flush;
+        });
+
+    // Periodic score update thread: publishes load and capacity every 2 seconds.
+    g_score_thread = std::jthread([&nats, &storage_root, worker_id, cfg, &worker_name](std::stop_token stoken) {
+        while (!stoken.stop_requested()) {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            if (stoken.stop_requested()) break;
+
+            double load = static_cast<double>(g_active_labels.load()) /
+                          static_cast<double>(kMaxQueueSize);
+            load = std::min(load, 1.0);
+
+            double cap_ratio = 1.0;
+            std::error_code ec;
+            auto space = std::filesystem::space(storage_root, ec);
+            if (!ec && space.capacity > 0) {
+                cap_ratio = static_cast<double>(space.available) /
+                            static_cast<double>(space.capacity);
+            }
+
+            // Self-suspend if idle beyond configured timeout.
+            if (!g_suspended.load() && g_active_labels.load() == 0) {
+                auto idle = std::chrono::steady_clock::now() - g_last_label_time;
+                auto timeout = std::chrono::milliseconds(
+                    cfg.elastic.worker_idle_timeout_ms);
+                if (idle > timeout) {
+                    g_suspended.store(true);
+                    std::cout << "[" << timestamp() << "] " << worker_name
+                              << ": self-suspending after "
+                              << std::chrono::duration_cast<std::chrono::seconds>(idle).count()
+                              << "s idle\n" << std::flush;
+                }
+            }
+
+            bool available = !g_suspended.load();
+
+            // Format: "id,capacity,load,available"
+            std::string msg = std::to_string(worker_id) + ","
+                + std::to_string(cap_ratio) + ","
+                + std::to_string(load) + ","
+                + (available ? "1" : "0");
+            try {
+                nats.publish("labios.worker.score_update", msg);
+                nats.flush();
+            } catch (...) {}
+        }
+    });
+
     // Signal healthcheck.
     { std::ofstream touch("/tmp/labios-ready"); }
 
+    static constexpr const char* tier_names[] = {"databot", "pipeline", "agentic"};
+    int tier_idx = std::clamp(cfg.worker_tier, 0, 2);
     std::cout << "[" << timestamp() << "] " << worker_name
               << " ready (speed=" << cfg.worker_speed
-              << ", capacity=" << cfg.worker_capacity << ")\n"
+              << ", energy=" << cfg.worker_energy
+              << ", capacity=" << cfg.worker_capacity
+              << ", tier=" << tier_names[tier_idx] << ")\n"
               << std::flush;
 
     g_service_thread = std::jthread([](std::stop_token stoken) {
@@ -349,6 +545,16 @@ int main() {
         }
     });
     g_service_thread.join();
+
+    // Stop the score update thread.
+    if (g_score_thread.joinable()) {
+        g_score_thread.request_stop();
+        g_score_thread.join();
+    }
+
+    // Deregister from manager before shutdown.
+    nats.publish("labios.worker.deregister", std::to_string(cfg.worker_id));
+    nats.flush();
 
     std::cout << "[" << timestamp() << "] " << worker_name
               << " shutting down\n";

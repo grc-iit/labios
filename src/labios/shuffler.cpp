@@ -76,7 +76,8 @@ ShuffleResult Shuffler::shuffle(std::vector<LabelData> batch,
 
     for (auto& label : batch) {
         if (label.type == LabelType::Read && lookup) {
-            auto loc = lookup(label.file_key);
+            auto range = label_range(label);
+            auto loc = lookup(label.file_key, range.offset, range.length);
             if (loc.has_value()) {
                 result.direct_route.emplace_back(std::move(label), *loc);
                 continue;

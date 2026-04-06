@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <fcntl.h>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -59,14 +60,16 @@ void CatalogManager::create(uint64_t label_id, uint32_t app_id,
 void CatalogManager::create(const LabelData& label) {
     auto key = catalog_key(label.id);
     auto ts = now_ms();
-    redis_.hset(key, "status", "queued");
-    redis_.hset(key, "app_id", std::to_string(label.app_id));
-    redis_.hset(key, "type", std::to_string(static_cast<int>(label.type)));
-    redis_.hset(key, "flags", std::to_string(label.flags));
-    redis_.hset(key, "priority", std::to_string(label.priority));
-    redis_.hset(key, "operation", label.operation);
-    redis_.hset(key, "created_at", ts);
-    redis_.hset(key, "updated_at", ts);
+    redis_.pipeline_begin();
+    redis_.pipeline_hset(key, "status", "queued");
+    redis_.pipeline_hset(key, "app_id", std::to_string(label.app_id));
+    redis_.pipeline_hset(key, "type", std::to_string(static_cast<int>(label.type)));
+    redis_.pipeline_hset(key, "flags", std::to_string(label.flags));
+    redis_.pipeline_hset(key, "priority", std::to_string(label.priority));
+    redis_.pipeline_hset(key, "operation", label.operation);
+    redis_.pipeline_hset(key, "created_at", ts);
+    redis_.pipeline_hset(key, "updated_at", ts);
+    redis_.pipeline_exec();
 }
 
 void CatalogManager::set_status(uint64_t label_id, LabelStatus status) {
@@ -98,7 +101,12 @@ uint32_t CatalogManager::get_flags(uint64_t label_id) {
         throw std::runtime_error(
             "catalog flags not found for label " + std::to_string(label_id));
     }
-    return static_cast<uint32_t>(std::stoul(*val));
+    try {
+        return static_cast<uint32_t>(std::stoul(*val));
+    } catch (const std::exception& e) {
+        std::cerr << "catalog: malformed flags value: " << e.what() << "\n";
+        return 0;
+    }
 }
 
 void CatalogManager::set_error(uint64_t label_id, std::string_view error) {
@@ -121,7 +129,12 @@ std::optional<int> CatalogManager::get_worker(uint64_t label_id) {
     if (!val.has_value()) {
         return std::nullopt;
     }
-    return std::stoi(*val);
+    try {
+        return std::stoi(*val);
+    } catch (const std::exception& e) {
+        std::cerr << "catalog: malformed worker_id value: " << e.what() << "\n";
+        return std::nullopt;
+    }
 }
 
 void CatalogManager::schedule_batch(std::span<const ScheduleEntry> entries) {
@@ -145,6 +158,10 @@ std::string CatalogManager::location_key(std::string_view filepath) {
     return "labios:location:" + std::string(filepath);
 }
 
+std::string CatalogManager::offset_location_key(std::string_view filepath) {
+    return "labios:olocation:" + std::string(filepath);
+}
+
 void CatalogManager::set_location(std::string_view filepath, int worker_id) {
     redis_.set(location_key(filepath), std::to_string(worker_id));
 }
@@ -154,7 +171,59 @@ std::optional<int> CatalogManager::get_location(std::string_view filepath) {
     if (!val.has_value()) {
         return std::nullopt;
     }
-    return std::stoi(*val);
+    try {
+        return std::stoi(*val);
+    } catch (const std::exception& e) {
+        std::cerr << "catalog: malformed location value: " << e.what() << "\n";
+        return std::nullopt;
+    }
+}
+
+void CatalogManager::set_location(std::string_view filepath,
+                                   uint64_t offset, uint64_t length,
+                                   int worker_id) {
+    // Store in a sorted set keyed by file. Score = start_offset so
+    // ZRANGEBYSCORE can narrow by offset range. Member = "worker_id:end"
+    // encodes the worker and the exclusive end of the range.
+    auto key = offset_location_key(filepath);
+    std::string member = std::to_string(worker_id) + ":"
+                       + std::to_string(offset + length);
+    redis_.zadd(key, static_cast<double>(offset), member);
+
+    // Update whole-file key to the latest writer.
+    redis_.set(location_key(filepath), std::to_string(worker_id));
+}
+
+std::optional<int> CatalogManager::get_location(std::string_view filepath,
+                                                  uint64_t offset,
+                                                  uint64_t length) {
+    if (offset == 0 && length == 0) {
+        return get_location(filepath);
+    }
+
+    // Score = start_offset, member = "worker_id:end". Query only entries
+    // whose start_offset <= our offset (a containing range must start at
+    // or before the queried offset).
+    auto key = offset_location_key(filepath);
+    auto entries = redis_.zrangebyscore(key, 0, static_cast<double>(offset));
+
+    for (auto& entry : entries) {
+        auto colon = entry.member.find(':');
+        if (colon == std::string::npos) continue;
+        try {
+            int wid = std::stoi(entry.member.substr(0, colon));
+            uint64_t end = std::stoull(entry.member.substr(colon + 1));
+            if (offset + length <= end) {
+                return wid;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "catalog: malformed offset entry: " << e.what() << "\n";
+            continue;
+        }
+    }
+
+    // Fall back to whole-file location.
+    return get_location(filepath);
 }
 
 std::string CatalogManager::filemeta_key(std::string_view filepath) {
@@ -184,7 +253,11 @@ void CatalogManager::track_write(std::string_view filepath,
     redis_.hset(key, "exists", "1");
     uint64_t end = offset + size;
     auto cur = redis_.hget(key, "size");
-    uint64_t cur_size = cur.has_value() ? std::stoull(*cur) : 0;
+    uint64_t cur_size = 0;
+    if (cur.has_value()) {
+        try { cur_size = std::stoull(*cur); }
+        catch (...) {}
+    }
     if (end > cur_size) {
         redis_.hset(key, "size", std::to_string(end));
     }
@@ -217,11 +290,13 @@ std::optional<FileInfo> CatalogManager::get_file_info(std::string_view filepath)
     info.exists = (*exists_val == "1");
     auto size_val = redis_.hget(key, "size");
     if (size_val.has_value()) {
-        info.size = std::stoull(*size_val);
+        try { info.size = std::stoull(*size_val); }
+        catch (...) {}
     }
     auto mtime_val = redis_.hget(key, "mtime");
     if (mtime_val.has_value()) {
-        info.mtime_ms = std::stoull(*mtime_val);
+        try { info.mtime_ms = std::stoull(*mtime_val); }
+        catch (...) {}
     }
     return info;
 }

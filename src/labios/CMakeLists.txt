@@ -15,18 +15,36 @@ add_custom_target(labios_fbs_generated DEPENDS ${LABIOS_FBS_GEN_HEADER})
 
 add_library(labios STATIC
     catalog_manager.cpp
+    channel.cpp
     client.cpp
+    continuation.cpp
     config.cpp
     label.cpp
     label_manager.cpp
     content_manager.cpp
     session.cpp
     shuffler.cpp
+    solver/constraint.cpp
+    solver/minmax.cpp
+    solver/random.cpp
     solver/round_robin.cpp
     transport/nats.cpp
     transport/redis.cpp
+    workspace.cpp
+    worker_manager.cpp
+    elastic/decision_engine.cpp
+    elastic/docker_client.cpp
     adapter/fd_table.cpp
     adapter/posix_adapter.cpp
+    uri.cpp
+    backend/posix_backend.cpp
+    backend/registry.cpp
+    sds/types.cpp
+    sds/builtins.cpp
+    sds/executor.cpp
+    sds/program_repo.cpp
+    observability.cpp
+    telemetry.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)
