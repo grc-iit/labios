@@ -46,8 +46,12 @@ TEST_CASE("ProgramRepository registers builtins", "[sds]") {
     REQUIRE(repo.has("builtin://sample"));
     REQUIRE(repo.has("builtin://truncate"));
 
+    REQUIRE(repo.has("builtin://deduplicate"));
+    REQUIRE(repo.has("builtin://median_uint64"));
+    REQUIRE(repo.has("builtin://format_convert"));
+
     auto names = repo.list();
-    REQUIRE(names.size() == 8);
+    REQUIRE(names.size() == 11);
 }
 
 TEST_CASE("ProgramRepository lookup returns nullptr for unknown", "[sds]") {
@@ -227,7 +231,7 @@ TEST_CASE("Pipeline with 2 stages: sort then truncate", "[sds]") {
     labios::sds::Pipeline pipeline;
     pipeline.stages.push_back({"builtin://sort_uint64", "", -1, -1});
     pipeline.stages.push_back({"builtin://truncate",
-        std::to_string(2 * sizeof(uint64_t)), -1, -1});
+        std::to_string(2 * sizeof(uint64_t)), 0, -1});
 
     auto input = make_uint64_array({50, 10, 40, 20, 30});
     auto result = labios::sds::execute_pipeline(pipeline, input, repo);
@@ -343,4 +347,136 @@ TEST_CASE("Databot tier is 0, Pipeline tier is 1, Agentic tier is 2", "[sds]") {
     REQUIRE(static_cast<int>(labios::WorkerTier::Databot) == 0);
     REQUIRE(static_cast<int>(labios::WorkerTier::Pipeline) == 1);
     REQUIRE(static_cast<int>(labios::WorkerTier::Agentic) == 2);
+}
+
+// ---------------------------------------------------------------------------
+// Builtin: deduplicate
+// ---------------------------------------------------------------------------
+
+TEST_CASE("SDS deduplicate removes consecutive duplicates", "[sds]") {
+    labios::sds::ProgramRepository repo;
+
+    std::vector<std::byte> input = {
+        std::byte{1}, std::byte{1}, std::byte{2}, std::byte{2}, std::byte{3}, std::byte{1}
+    };
+    auto* fn = repo.lookup("builtin://deduplicate");
+    REQUIRE(fn != nullptr);
+    auto result = (*fn)(std::span<const std::byte>(input), "");
+    REQUIRE(result.success);
+    REQUIRE(result.data.size() == 4); // 1, 2, 3, 1
+}
+
+TEST_CASE("SDS deduplicate on empty input", "[sds]") {
+    labios::sds::ProgramRepository repo;
+    auto* fn = repo.lookup("builtin://deduplicate");
+    std::vector<std::byte> empty;
+    auto result = (*fn)(std::span<const std::byte>(empty), "");
+    REQUIRE(result.success);
+    REQUIRE(result.data.empty());
+}
+
+// ---------------------------------------------------------------------------
+// Builtin: median_uint64
+// ---------------------------------------------------------------------------
+
+TEST_CASE("SDS median_uint64 odd count", "[sds]") {
+    labios::sds::ProgramRepository repo;
+    auto* fn = repo.lookup("builtin://median_uint64");
+    REQUIRE(fn != nullptr);
+
+    auto input = make_uint64_array({50, 10, 30, 20, 40});
+    auto result = (*fn)(std::span<const std::byte>(input), "");
+    REQUIRE(result.success);
+    REQUIRE(read_uint64(result.data) == 30);
+}
+
+TEST_CASE("SDS median_uint64 even count", "[sds]") {
+    labios::sds::ProgramRepository repo;
+    auto* fn = repo.lookup("builtin://median_uint64");
+
+    auto input = make_uint64_array({10, 20, 30, 40});
+    auto result = (*fn)(std::span<const std::byte>(input), "");
+    REQUIRE(result.success);
+    REQUIRE(read_uint64(result.data) == 25);
+}
+
+TEST_CASE("SDS median_uint64 rejects empty", "[sds]") {
+    labios::sds::ProgramRepository repo;
+    auto* fn = repo.lookup("builtin://median_uint64");
+
+    std::vector<std::byte> empty;
+    auto result = (*fn)(std::span<const std::byte>(empty), "");
+    REQUIRE_FALSE(result.success);
+}
+
+// ---------------------------------------------------------------------------
+// Builtin: format_convert
+// ---------------------------------------------------------------------------
+
+TEST_CASE("SDS format_convert upper", "[sds]") {
+    labios::sds::ProgramRepository repo;
+    auto* fn = repo.lookup("builtin://format_convert");
+    REQUIRE(fn != nullptr);
+
+    std::vector<std::byte> input = {std::byte{'h'}, std::byte{'i'}};
+    auto result = (*fn)(std::span<const std::byte>(input), "upper");
+    REQUIRE(result.success);
+    REQUIRE(result.data.size() == 2);
+    REQUIRE(static_cast<char>(result.data[0]) == 'H');
+    REQUIRE(static_cast<char>(result.data[1]) == 'I');
+}
+
+TEST_CASE("SDS format_convert unknown is identity", "[sds]") {
+    labios::sds::ProgramRepository repo;
+    auto* fn = repo.lookup("builtin://format_convert");
+
+    std::vector<std::byte> input = {std::byte{0xAA}, std::byte{0xBB}};
+    auto result = (*fn)(std::span<const std::byte>(input), "parquet");
+    REQUIRE(result.success);
+    REQUIRE(result.data == input);
+}
+
+// ---------------------------------------------------------------------------
+// DAG-aware executor
+// ---------------------------------------------------------------------------
+
+TEST_CASE("SDS executor respects input_stage field", "[sds]") {
+    labios::sds::ProgramRepository repo;
+
+    // Stage 0: truncate to 2 bytes. Stage 1: identity on SOURCE data (not stage 0).
+    labios::sds::Pipeline pipeline;
+    pipeline.stages.push_back({"builtin://truncate", "2", -1, -1});
+    pipeline.stages.push_back({"builtin://identity", "", -1, -1});
+
+    std::vector<std::byte> input = {std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+    auto result = labios::sds::execute_pipeline(pipeline, input, repo);
+    REQUIRE(result.success);
+    // Stage 1 reads from source (-1), so output is full 4 bytes
+    REQUIRE(result.data.size() == 4);
+}
+
+TEST_CASE("SDS executor chains stage outputs via input_stage", "[sds]") {
+    labios::sds::ProgramRepository repo;
+
+    // Stage 0: identity (pass-through). Stage 1: truncate reading from stage 0.
+    labios::sds::Pipeline pipeline;
+    pipeline.stages.push_back({"builtin://identity", "", -1, -1});
+    pipeline.stages.push_back({"builtin://truncate", "2", 0, -1});
+
+    std::vector<std::byte> input = {std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}};
+    auto result = labios::sds::execute_pipeline(pipeline, input, repo);
+    REQUIRE(result.success);
+    REQUIRE(result.data.size() == 2);
+}
+
+TEST_CASE("SDS executor rejects forward input_stage reference", "[sds]") {
+    labios::sds::ProgramRepository repo;
+
+    labios::sds::Pipeline pipeline;
+    pipeline.stages.push_back({"builtin://identity", "", 1, -1}); // references stage 1 (forward)
+
+    std::vector<std::byte> input = {std::byte{1}};
+    auto result = labios::sds::execute_pipeline(pipeline, input, repo);
+    REQUIRE_FALSE(result.success);
+    REQUIRE(result.error.find("future or self") != std::string::npos);
 }

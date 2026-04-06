@@ -155,6 +155,58 @@ StageResult fn_truncate(std::span<const std::byte> input, std::string_view args)
     return {true, {}, {input.begin(), input.begin() + take}};
 }
 
+// ---- builtin://deduplicate ----
+// Remove consecutive duplicate bytes.
+StageResult fn_deduplicate(std::span<const std::byte> input, std::string_view /*args*/) {
+    if (input.empty()) return {true, {}, {}};
+    std::vector<std::byte> out;
+    out.reserve(input.size());
+    out.push_back(input[0]);
+    for (size_t i = 1; i < input.size(); ++i) {
+        if (input[i] != input[i - 1]) {
+            out.push_back(input[i]);
+        }
+    }
+    return {true, {}, std::move(out)};
+}
+
+// ---- builtin://median_uint64 ----
+// Compute median of uint64 values.
+StageResult fn_median_uint64(std::span<const std::byte> input, std::string_view /*args*/) {
+    if (input.size() < sizeof(uint64_t))
+        return {false, "median requires at least one uint64", {}};
+
+    size_t count = input.size() / sizeof(uint64_t);
+    std::vector<uint64_t> values(count);
+    std::memcpy(values.data(), input.data(), count * sizeof(uint64_t));
+    std::sort(values.begin(), values.end());
+
+    uint64_t median = values[count / 2];
+    if (count % 2 == 0 && count > 1) {
+        median = (values[count / 2 - 1] + values[count / 2]) / 2;
+    }
+
+    std::vector<std::byte> out(sizeof(uint64_t));
+    std::memcpy(out.data(), &median, sizeof(uint64_t));
+    return {true, {}, std::move(out)};
+}
+
+// ---- builtin://format_convert ----
+// Basic text transformations. Supports "upper" and "lower" args.
+// Identity if format is unknown or unspecified.
+StageResult fn_format_convert(std::span<const std::byte> input, std::string_view args) {
+    if (args == "upper" || args == "lower") {
+        std::vector<std::byte> out(input.begin(), input.end());
+        for (auto& b : out) {
+            char c = static_cast<char>(b);
+            b = static_cast<std::byte>(args == "upper" ? std::toupper(c) : std::tolower(c));
+        }
+        return {true, {}, std::move(out)};
+    }
+    // Identity if format is unknown or unspecified
+    return {true, {}, {input.begin(), input.end()}};
+}
+
 } // anonymous namespace
 
 void register_all_builtins(ProgramRepository& repo) {
@@ -166,6 +218,9 @@ void register_all_builtins(ProgramRepository& repo) {
     repo.register_function("builtin://sort_uint64",      fn_sort_uint64);
     repo.register_function("builtin://sample",           fn_sample);
     repo.register_function("builtin://truncate",         fn_truncate);
+    repo.register_function("builtin://deduplicate",      fn_deduplicate);
+    repo.register_function("builtin://median_uint64",    fn_median_uint64);
+    repo.register_function("builtin://format_convert",   fn_format_convert);
 }
 
 } // namespace labios::sds
