@@ -158,11 +158,12 @@ services:
     environment:
       LABIOS_REDIS_HOST: "redis"
       LABIOS_REDIS_PORT: "6379"
-    ports:
-      - "8400:8400"
+      LABIOS_NATS_URL: "nats://nats:4222"
+    volumes:
+      - worker-1-data:/labios/data:ro
     stdin_open: true
     healthcheck:
-      test: ["CMD", "python", "-c", "import redis; redis.Redis(host='redis').ping()"]
+      test: ["CMD", "python", "-c", "import redis.asyncio as r; import asyncio; asyncio.run(r.Redis(host='redis').ping())"]
       interval: 5s
       retries: 5
       start_period: 5s
