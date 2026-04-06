@@ -24,4 +24,13 @@ set_target_properties(labios_intercept PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
+# Python bindings (optional, requires Python3 development headers)
+if(LABIOS_PYTHON_BINDINGS)
+    pybind11_add_module(_labios src/python/labios_module.cpp)
+    target_link_libraries(_labios PRIVATE labios)
+    set_target_properties(_labios PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python"
+    )
+endif()
+
 add_subdirectory(tests)

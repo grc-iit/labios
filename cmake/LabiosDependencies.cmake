@@ -18,6 +18,11 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
+    pybind11
+    URL https://github.com/pybind/pybind11/archive/refs/tags/v2.13.6.tar.gz
+)
+
+FetchContent_Declare(
     Catch2
     URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.7.1.tar.gz
 )
@@ -54,6 +59,16 @@ set(BUILD_TESTING ${_save_build_testing})
 get_target_property(_hiredis_inc hiredis INTERFACE_INCLUDE_DIRECTORIES)
 if(_hiredis_inc)
     set_target_properties(hiredis PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_hiredis_inc}")
+endif()
+
+# Python bindings (optional)
+find_package(Python3 COMPONENTS Interpreter Development QUIET)
+if(Python3_FOUND)
+    FetchContent_MakeAvailable(pybind11)
+    set(LABIOS_PYTHON_BINDINGS ON)
+else()
+    set(LABIOS_PYTHON_BINDINGS OFF)
+    message(STATUS "Python3 not found, skipping Python bindings")
 endif()
 
 # Keep BUILD_SHARED_LIBS OFF for Catch2 too so the test binary is self-contained
