@@ -178,6 +178,8 @@ TEST_CASE("Small I/O: cache preserves write ordering",
 // ---------------------------------------------------------------------------
 
 TEST_CASE("Small I/O benchmarks", "[bench][small_io][!benchmark]") {
+    if (!redis_available()) SKIP("Redis not available");
+
     auto dir = fs::temp_directory_path() / "labios_bench_smallio_perf";
     fs::create_directories(dir);
     auto filepath = dir / "output.dat";
@@ -186,7 +188,7 @@ TEST_CASE("Small I/O benchmarks", "[bench][small_io][!benchmark]") {
         return vanilla_small_writes(filepath);
     };
 
-    if (redis_available()) {
+    {
         const char* host = std::getenv("LABIOS_REDIS_HOST");
         labios::transport::RedisConnection redis(host ? host : "localhost", 6379);
         labios::ContentManager cm(redis, 8192, 0, labios::ReadPolicy::WriteOnly);

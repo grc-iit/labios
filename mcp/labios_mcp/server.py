@@ -359,6 +359,10 @@ async def _observe(query: str) -> list[TextContent]:
             worker_id = int(loc) if loc else None
             return _text({"file": file_path, "worker_id": worker_id})
 
+        if query == "workers/count":
+            keys = [k async for k in r.scan_iter("labios:worker:score:*")]
+            return _text({"worker_count": len(keys)})
+
         return _text({"error": f"unknown observe query: {query}"})
 
     except Exception as e:
@@ -376,27 +380,34 @@ async def _store(args: dict) -> list[TextContent]:
         ttl = args.get("ttl_seconds", 0)
 
         redis_key = _ws_data_key(scope, key)
-        await r.set(redis_key, data)
-
         meta_key = _ws_meta_key(scope, key)
-        now_ms = int(time.time() * 1000)
-        version_val = await r.hincrby(meta_key, "version", 1)
-        await r.hset(meta_key, mapping={
-            "intent": intent,
-            "size": len(data),
-            "updated_ms": str(now_ms),
-            "version": str(version_val),
-        })
+        now_us = int(time.time() * 1_000_000)
+        index_key = _ws_index_key(scope)
 
-        await r.sadd(_ws_index_key(scope), key)
+        async with r.pipeline(transaction=True) as pipe:
+            pipe.set(redis_key, data)
+            pipe.hincrby(meta_key, "version", 1)
+            pipe.hset(meta_key, mapping={
+                "intent": intent,
+                "size": len(data),
+                "updated_us": str(now_us),
+            })
+            pipe.sadd(index_key, key)
+            # version_key uses a placeholder; we fix it after execute
+            # because we need the hincrby result for the version number.
+            # Instead, do a two-phase approach: first get version, then store.
+            results = await pipe.execute()
+            version_val = results[1]  # hincrby returns the new value
 
         version_key = _ws_version_key(scope, key, version_val)
-        await r.set(version_key, data)
-
-        if ttl > 0:
-            await r.expire(redis_key, ttl)
-            await r.expire(meta_key, ttl)
-            await r.expire(version_key, ttl)
+        async with r.pipeline(transaction=True) as pipe:
+            pipe.set(version_key, data)
+            pipe.hset(meta_key, "version", str(version_val))
+            if ttl > 0:
+                pipe.expire(redis_key, ttl)
+                pipe.expire(meta_key, ttl)
+                pipe.expire(version_key, ttl)
+            await pipe.execute()
 
         return _text({
             "stored": True,
@@ -522,10 +533,12 @@ async def _process(args: dict) -> list[TextContent]:
         source = args["source"]
         pipeline = args.get("pipeline", [])
 
-        # Search in mounted worker data volume, fallback to local filesystem
+        if ".." in source:
+            return _text({"error": "path traversal not allowed"})
+
         search_root = pathlib.Path("/labios/data")
         if not search_root.exists():
-            search_root = pathlib.Path("/")
+            return _text({"error": "worker data volume not mounted at /labios/data"})
 
         # Resolve glob or single file
         if "*" in source or "?" in source:
@@ -542,27 +555,21 @@ async def _process(args: dict) -> list[TextContent]:
                 "search_root": str(search_root),
             })
 
-        # Read matched files (cap at 1000)
-        results = []
+        # Process each file individually; accumulate only pipeline output
+        output_lines: list[str] = []
         total_bytes = 0
         for f in files[:1000]:
             try:
                 content = pathlib.Path(f).read_text(errors="replace")
-                total_bytes += len(content)
-                results.append({"file": f, "content": content})
+                total_bytes += len(content.encode("utf-8"))
+                lines = content.splitlines()
+                for op in pipeline:
+                    lines = _apply_pipeline_op(op, lines, str(f))
+                if lines:
+                    output_lines.append(f"=== {f} ===")
+                    output_lines.extend(lines)
             except Exception as e:
-                results.append({"file": f, "error": str(e)})
-
-        # Apply pipeline operations per file
-        output_lines: list[str] = []
-        for item in results:
-            if "error" in item:
-                continue
-            lines = item["content"].splitlines()
-            for op in pipeline:
-                lines = _apply_pipeline_op(op, lines, item["file"])
-            if lines:
-                output_lines.extend([f"=== {item['file']} ==="] + lines)
+                output_lines.append(f"=== {f} === ERROR: {e}")
 
         return _text({
             "files_matched": len(files),
@@ -580,7 +587,11 @@ async def _process(args: dict) -> list[TextContent]:
 
 async def main():
     async with stdio_server() as (read_stream, write_stream):
-        await app.run(read_stream, write_stream, app.create_initialization_options())
+        try:
+            await app.run(read_stream, write_stream, app.create_initialization_options())
+        finally:
+            if _redis is not None:
+                await _redis.aclose()
 
 
 if __name__ == "__main__":

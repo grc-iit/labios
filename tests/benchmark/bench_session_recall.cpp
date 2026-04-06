@@ -191,6 +191,8 @@ TEST_CASE("Session recall: workspace versioning preserves history",
 // ---------------------------------------------------------------------------
 
 TEST_CASE("Session recall benchmarks", "[bench][session_recall][!benchmark]") {
+    if (!redis_available()) SKIP("Redis not available");
+
     auto dir = fs::temp_directory_path() / "labios_bench_recall_perf";
     create_source_files(dir);
 
@@ -198,7 +200,7 @@ TEST_CASE("Session recall benchmarks", "[bench][session_recall][!benchmark]") {
         return vanilla_file_recall(dir);
     };
 
-    if (redis_available()) {
+    {
         const char* host = std::getenv("LABIOS_REDIS_HOST");
         labios::transport::RedisConnection redis(host ? host : "localhost", 6379);
         labios::WorkspaceRegistry registry(redis);

@@ -173,7 +173,7 @@ TEST_CASE("Write conflict: vanilla concurrent write produces winner",
     REQUIRE(result.agent_b_wrote);
     // One of them won; data should be uniform (0xAA or 0xBB)
     // Note: corruption is possible but unlikely with 4KB writes on most FSes
-    INFO("Data corrupted: " << result.data_corrupted);
+    WARN("Vanilla corruption detected: " << result.data_corrupted);
 
     fs::remove_all(dir);
 }

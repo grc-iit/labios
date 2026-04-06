@@ -119,8 +119,8 @@ using hrc = std::chrono::high_resolution_clock;
 // Correctness: both paths find the same matches
 // ---------------------------------------------------------------------------
 
-TEST_CASE("Parallel scan: vanilla and LABIOS find same matches",
-          "[bench][parallel_scan]") {
+TEST_CASE("Sequential scan: vanilla and LABIOS find same matches",
+          "[bench][sequential_scan]") {
     auto dir = fs::temp_directory_path() / "labios_bench_pscan";
     create_test_files(dir);
 
@@ -138,8 +138,8 @@ TEST_CASE("Parallel scan: vanilla and LABIOS find same matches",
     cleanup_test_files(dir);
 }
 
-TEST_CASE("Parallel scan: label carries pipeline metadata",
-          "[bench][parallel_scan]") {
+TEST_CASE("Sequential scan: label carries pipeline metadata",
+          "[bench][sequential_scan]") {
     labios::LabelData label;
     label.id = labios::generate_label_id(1);
     label.type = labios::LabelType::Read;
@@ -160,7 +160,9 @@ TEST_CASE("Parallel scan: label carries pipeline metadata",
 // Benchmarks
 // ---------------------------------------------------------------------------
 
-TEST_CASE("Parallel scan benchmarks", "[bench][parallel_scan][!benchmark]") {
+// True parallel dispatch requires the live worker pool (NATS + dispatcher).
+// This benchmark runs sequentially to measure pipeline overhead in isolation.
+TEST_CASE("Sequential scan benchmarks", "[bench][sequential_scan][!benchmark]") {
     auto dir = fs::temp_directory_path() / "labios_bench_pscan_perf";
     create_test_files(dir);
     labios::sds::ProgramRepository repo;

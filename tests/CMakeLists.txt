@@ -165,7 +165,7 @@ set(BENCHMARKS
     bench_cross_backend_etl
     bench_agentic_worker
     bench_scale_adaptation
-    bench_parallel_scan
+    bench_sequential_scan
     bench_small_io
     bench_session_recall
     bench_write_conflict
