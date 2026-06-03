@@ -1,5 +1,9 @@
 import pytest
-from labios_mcp.server import _apply_pipeline_op
+from labios_mcp.server import (
+    _apply_pipeline_op,
+    _parse_queue_depth,
+    _parse_worker_registry,
+)
 
 
 def test_grep_matches():
@@ -89,3 +93,39 @@ def test_pipeline_chain():
     lines = _apply_pipeline_op("sort", lines, "test.txt")
     assert len(lines) == 2
     assert lines[0].startswith("TODO: add")
+
+
+def test_parse_queue_depth_breakdown():
+    assert _parse_queue_depth(b"12,3,1") == 12
+    assert _parse_queue_depth("7") == 7
+    assert _parse_queue_depth(b"bad") == 0
+    assert _parse_queue_depth(None) == 0
+
+
+def test_parse_worker_registry_with_tiers():
+    payload = b"1,1,0.5,0.2,5,1,0\n2,0,0.9,0.1,3,3,2\n"
+    workers, malformed = _parse_worker_registry(payload)
+
+    assert malformed == 0
+    assert workers[0]["id"] == 1
+    assert workers[0]["available"] is True
+    assert workers[0]["tier"] == 0
+    assert workers[1]["id"] == 2
+    assert workers[1]["available"] is False
+    assert workers[1]["tier"] == 2
+
+
+def test_parse_worker_registry_accepts_legacy_rows():
+    workers, malformed = _parse_worker_registry("7,1,1,0,4,2\nbad\n")
+
+    assert malformed == 1
+    assert workers == [{
+        "id": 7,
+        "available": True,
+        "capacity": 1.0,
+        "load": 0.0,
+        "speed": 4,
+        "energy": 2,
+        "tier": 0,
+        "score": 1.0,
+    }]

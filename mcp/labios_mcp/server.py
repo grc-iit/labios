@@ -6,6 +6,7 @@ Connects to DragonflyDB (warehouse) and reads/writes the same keys
 the C++ runtime uses. Runs inside Docker Compose on the same network.
 """
 import asyncio
+import contextlib
 import glob as globmod
 import json
 import os
@@ -14,6 +15,11 @@ import random
 import re
 import time
 from typing import Any
+
+try:
+    import nats
+except ImportError:  # pragma: no cover - host unit tests may not install nats-py
+    nats = None
 
 import redis.asyncio as aioredis
 from mcp.server import Server
@@ -44,6 +50,61 @@ def _text(data: Any) -> list[TextContent]:
     if isinstance(data, (dict, list)):
         return [TextContent(type="text", text=json.dumps(data, indent=2))]
     return [TextContent(type="text", text=str(data))]
+
+
+def _parse_queue_depth(raw: bytes | str | None) -> int:
+    """Parse dispatcher queue depth values like 'total,pipeline,observe'."""
+    if raw is None:
+        return 0
+    value = raw.decode() if isinstance(raw, bytes) else raw
+    try:
+        return int(value.split(",", 1)[0])
+    except (TypeError, ValueError):
+        return 0
+
+
+def _parse_worker_registry(payload: bytes | str) -> tuple[list[dict[str, Any]], int]:
+    """Parse manager worker registry rows: id,available,capacity,load,speed,energy,tier."""
+    text = payload.decode() if isinstance(payload, bytes) else payload
+    workers: list[dict[str, Any]] = []
+    malformed = 0
+    for line in text.splitlines():
+        if not line:
+            continue
+        parts = line.split(",")
+        if len(parts) < 6:
+            malformed += 1
+            continue
+        try:
+            tier = int(parts[6]) if len(parts) > 6 and parts[6] else 0
+            tier = max(0, min(2, tier))
+            workers.append({
+                "id": int(parts[0]),
+                "available": parts[1] == "1",
+                "capacity": float(parts[2]),
+                "load": float(parts[3]),
+                "speed": int(parts[4]),
+                "energy": int(parts[5]),
+                "tier": tier,
+                "score": 1.0,
+            })
+        except ValueError:
+            malformed += 1
+    return workers, malformed
+
+
+async def _query_workers_from_manager() -> tuple[list[dict[str, Any]], int]:
+    """Ask the live manager for the current worker registry over NATS."""
+    if nats is None:
+        raise RuntimeError("nats-py is not installed")
+
+    nc = await nats.connect(NATS_URL, connect_timeout=1)
+    try:
+        msg = await nc.request("labios.manager.workers", b"", timeout=2)
+        return _parse_worker_registry(msg.data)
+    finally:
+        with contextlib.suppress(Exception):
+            await nc.close()
 
 
 # ── Workspace key helpers (match C++ workspace.cpp key patterns) ──────────
@@ -277,13 +338,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
 
 async def _observe(query: str) -> list[TextContent]:
-    """Query LABIOS runtime state from Redis keys the dispatcher publishes."""
+    """Query LABIOS runtime state from Redis and the live worker manager."""
     try:
         r = await get_redis()
 
         if query == "queue/depth":
             val = await r.get("labios:queue:depth")
-            depth = int(val) if val else 0
+            depth = _parse_queue_depth(val)
             return _text({"queue_depth": depth, "timestamp_ms": int(time.time() * 1000)})
 
         if query == "system/health":
@@ -292,26 +353,30 @@ async def _observe(query: str) -> list[TextContent]:
                 redis_ok = True
             except Exception:
                 redis_ok = False
+            try:
+                workers, malformed = await _query_workers_from_manager()
+                nats_ok = True
+                worker_count = len(workers)
+            except Exception:
+                nats_ok = False
+                malformed = 0
+                worker_count = 0
             uptime_val = await r.get("labios:dispatcher:start_ms")
             uptime_s = 0
             if uptime_val:
                 start_ms = int(uptime_val)
                 uptime_s = (int(time.time() * 1000) - start_ms) // 1000
             return _text({
+                "nats": "connected" if nats_ok else "disconnected",
                 "redis": "connected" if redis_ok else "disconnected",
+                "worker_count": worker_count,
+                "malformed_worker_rows": malformed,
                 "uptime_seconds": uptime_s,
             })
 
         if query == "workers/scores":
-            keys = [k async for k in r.scan_iter("labios:worker:score:*")]
-            workers = []
-            for key in keys:
-                data = await r.hgetall(key)
-                if data:
-                    workers.append({
-                        k.decode(): v.decode() for k, v in data.items()
-                    })
-            return _text({"workers": workers})
+            workers, malformed = await _query_workers_from_manager()
+            return _text({"workers": workers, "malformed_worker_rows": malformed})
 
         if query == "workspaces/list":
             keys = [k async for k in r.scan_iter("labios:ws:*:_index")]
@@ -360,8 +425,18 @@ async def _observe(query: str) -> list[TextContent]:
             return _text({"file": file_path, "worker_id": worker_id})
 
         if query == "workers/count":
-            keys = [k async for k in r.scan_iter("labios:worker:score:*")]
-            return _text({"worker_count": len(keys)})
+            workers, malformed = await _query_workers_from_manager()
+            counts = {"databot": 0, "pipeline": 0, "agentic": 0}
+            for worker in workers:
+                if worker["tier"] == 0:
+                    counts["databot"] += 1
+                elif worker["tier"] == 1:
+                    counts["pipeline"] += 1
+                elif worker["tier"] == 2:
+                    counts["agentic"] += 1
+            counts["total"] = len(workers)
+            counts["malformed_worker_rows"] = malformed
+            return _text(counts)
 
         return _text({"error": f"unknown observe query: {query}"})
 

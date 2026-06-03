@@ -111,7 +111,7 @@ static void signal_handler(int /*sig*/) {
 static CompletionResult execute_write(
     labios::ContentManager& cm, labios::CatalogManager& cat,
     const labios::LabelData& label,
-    const std::filesystem::path& storage_root, int worker_id,
+    const std::filesystem::path& /*storage_root*/, int worker_id,
     const labios::BackendRegistry& backends,
     labios::WorkerTier tier, const labios::sds::ProgramRepository& sds_repo) {
 
@@ -165,35 +165,20 @@ static CompletionResult execute_write(
         throw std::runtime_error("WRITE label missing FilePath destination");
     }
 
-    auto full_path = storage_root / dst->path;
-    std::filesystem::create_directories(full_path.parent_path());
-
-    if (dst->offset > 0 && std::filesystem::exists(full_path)) {
-        std::ofstream ofs(full_path,
-            std::ios::binary | std::ios::in | std::ios::out);
-        if (!ofs) {
-            throw std::runtime_error("failed to open " + full_path.string());
-        }
-        ofs.seekp(static_cast<std::streamoff>(dst->offset));
-        ofs.write(reinterpret_cast<const char*>(blob.data()),
-                  static_cast<std::streamsize>(blob.size()));
-    } else {
-        std::ofstream ofs(full_path, std::ios::binary | std::ios::out);
-        if (!ofs) {
-            throw std::runtime_error("failed to open " + full_path.string());
-        }
-        if (dst->offset > 0) {
-            ofs.seekp(static_cast<std::streamoff>(dst->offset));
-        }
-        ofs.write(reinterpret_cast<const char*>(blob.data()),
-                  static_cast<std::streamsize>(blob.size()));
+    auto* backend = backends.resolve("file");
+    if (!backend) {
+        throw std::runtime_error("no backend for scheme: file");
+    }
+    auto result = backend->put(label, std::span<const std::byte>(blob));
+    if (!result.success) {
+        throw std::runtime_error(result.error);
     }
 
     cm.remove(label.id);
     cat.set_location(dst->path, dst->offset, dst->length, worker_id);
 
     std::cout << "[" << timestamp() << "] worker " << worker_id
-              << ": WRITE " << full_path.string() << " ("
+              << ": WRITE " << dst->path << " ("
               << blob.size() << " bytes)\n" << std::flush;
 
     return {
@@ -207,7 +192,7 @@ static CompletionResult execute_write(
 static CompletionResult execute_read(
     labios::ContentManager& cm, labios::CatalogManager& /*cat*/,
     const labios::LabelData& label,
-    const std::filesystem::path& storage_root, int worker_id,
+    const std::filesystem::path& /*storage_root*/, int worker_id,
     const labios::BackendRegistry& backends) {
 
     // URI path: resolve source_uri through backend registry.
@@ -244,19 +229,18 @@ static CompletionResult execute_read(
 
     uint64_t read_size = label.data_size > 0 ? label.data_size : src->length;
 
-    auto full_path = storage_root / src->path;
-    std::ifstream ifs(full_path, std::ios::binary);
-    if (!ifs) {
-        throw std::runtime_error(
-            "data not found on this worker for " + src->path);
+    auto* backend = backends.resolve("file");
+    if (!backend) {
+        throw std::runtime_error("no backend for scheme: file");
     }
-    if (src->offset > 0) {
-        ifs.seekg(static_cast<std::streamoff>(src->offset));
+    auto result = backend->get(label);
+    if (!result.success) {
+        throw std::runtime_error(result.error);
     }
-    std::vector<std::byte> file_data(read_size);
-    ifs.read(reinterpret_cast<char*>(file_data.data()),
-             static_cast<std::streamsize>(read_size));
-    file_data.resize(static_cast<size_t>(ifs.gcount()));
+    auto file_data = std::move(result.data);
+    if (read_size > 0 && file_data.size() > read_size) {
+        file_data.resize(static_cast<size_t>(read_size));
+    }
 
     cm.stage(label.id, std::span<const std::byte>(file_data));
 
