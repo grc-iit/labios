@@ -29,7 +29,7 @@ Dispatcher (Shuffler → Scheduler → Continuation Processor)
 Workers (Tier 0: Databot | Tier 1: Pipeline | Tier 2: Agentic)
     │
     ▼
-Backends (file:// | kv:// | sqlite:// | s3:// | vector:// | graph://)
+Backends (file:// | sqlite:// | optional kv:// | planned S3/vector/graph)
 ```
 
 Clients never talk to workers. The dispatcher is the only bridge.
@@ -113,26 +113,32 @@ docker compose exec test bash     # Shell into test container
 # Native
 cmake --preset dev
 cmake --build build/dev -j$(nproc)
-ctest --test-dir build/dev        # 353 tests
+ctest --test-dir build/dev -N     # list discovered tests
+ctest --test-dir build/dev        # run discovered C++ tests
 ```
 
 ## Test Suite
 
-367 tests across five categories:
+CTest discovery from the build tree is the authoritative source for C++ test
+counts. Python SDK and MCP tests are collected by pytest in their package
+directories.
 
-| Category | Count | Infrastructure |
-|----------|-------|----------------|
-| Unit | 224 | None |
-| Smoke | 72 | NATS + DragonflyDB |
-| Kernel | 15 | NATS + DragonflyDB |
-| Benchmark | 40 | None (unit-level comparison) |
-| Integration | 2 | Full stack |
-| MCP | 14 | Docker stack |
+| Label | Infrastructure | Scope |
+|-------|----------------|-------|
+| Unit | None | Components in isolation |
+| Smoke | NATS + DragonflyDB | Live runtime paths |
+| Kernel | NATS + DragonflyDB | Science application replays |
+| Benchmark | None | Unit-level vanilla-vs-LABIOS comparisons |
+| Integration | Full stack | Cross-service behavior |
+| MCP | Python + MCP dependencies | Coding-agent tool server |
 
 ```bash
+ctest --test-dir build/dev -N           # discovered C++ tests
 ctest --test-dir build/dev -L unit      # Fast, no infrastructure
 ctest --test-dir build/dev -L smoke     # Needs live cluster
 ctest --test-dir build/dev -L bench     # Vanilla-vs-LABIOS comparisons
+python3 -m pytest tests/python
+cd mcp && python3 -m pytest tests
 ```
 
 ## Tech Stack

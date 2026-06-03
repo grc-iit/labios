@@ -4,6 +4,7 @@
 #include <labios/transport/redis.h>
 #include <labios/elastic/docker_client.h>
 #include <labios/elastic/orchestrator.h>
+#include <labios/worker_registry_protocol.h>
 
 #include <algorithm>
 #include <chrono>
@@ -126,16 +127,7 @@ int main() {
 
         } else if (subject == "labios.manager.workers") {
             auto all = worker_mgr.all_workers();
-            std::string response;
-            for (auto& w : all) {
-                response += std::to_string(w.id) + ","
-                    + (w.available ? "1" : "0") + ","
-                    + std::to_string(w.capacity) + ","
-                    + std::to_string(w.load) + ","
-                    + std::to_string(w.speed) + ","
-                    + std::to_string(w.energy) + ","
-                    + std::to_string(static_cast<int>(w.tier)) + "\n";
-            }
+            auto response = labios::encode_worker_registry(all);
             if (!reply_to.empty()) {
                 nats.publish(reply_to, response);
                 nats.flush();

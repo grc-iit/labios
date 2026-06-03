@@ -204,9 +204,16 @@ std::string Client::observe(std::string_view query) {
     auto pending = publish(label);
     wait(pending);
 
-    // Retrieve result from warehouse using the label ID as key.
+    auto data_key = ContentManager::data_key(label.id);
+    if (!pending.pending.empty() && !pending.pending.front().reply_data.empty()) {
+        auto comp = deserialize_completion(pending.pending.front().reply_data);
+        if (!comp.data_key.empty()) {
+            data_key = std::move(comp.data_key);
+        }
+    }
+
     auto& content = session_->content_manager();
-    auto result = content.retrieve(label.id);
+    auto result = content.retrieve_key(data_key);
     return {reinterpret_cast<const char*>(result.data()), result.size()};
 }
 

@@ -48,6 +48,9 @@ public:
                 std::string_view room_id = "");
     bool exists(uint64_t label_id, uint32_t app_id = 0,
                 std::string_view room_id = "");
+    std::vector<std::byte> retrieve_key(std::string_view key);
+    void remove_key(std::string_view key);
+    bool exists_key(std::string_view key);
     static std::string data_key(uint64_t label_id, uint32_t app_id = 0,
                                  std::string_view room_id = "");
 

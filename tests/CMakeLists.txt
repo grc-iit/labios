@@ -68,6 +68,10 @@ add_executable(labios-worker-manager-test unit/worker_manager_test.cpp)
 target_link_libraries(labios-worker-manager-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-worker-manager-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-worker-registry-protocol-test unit/worker_registry_protocol_test.cpp)
+target_link_libraries(labios-worker-registry-protocol-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-worker-registry-protocol-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
 add_executable(labios-solver-constraint-test unit/solver_constraint_test.cpp)
 target_link_libraries(labios-solver-constraint-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-solver-constraint-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
@@ -107,6 +111,12 @@ catch_discover_tests(labios-client-async-test TEST_PREFIX "unit/" PROPERTIES LAB
 add_executable(labios-client-api-test unit/client_api_test.cpp)
 target_link_libraries(labios-client-api-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-client-api-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-c-api-link-test unit/c_api_link_test.c)
+target_link_libraries(labios-c-api-link-test PRIVATE labios)
+set_target_properties(labios-c-api-link-test PROPERTIES LINKER_LANGUAGE CXX)
+add_test(NAME unit/c-api-link-test COMMAND labios-c-api-link-test)
+set_tests_properties(unit/c-api-link-test PROPERTIES LABELS "unit")
 
 add_executable(labios-elastic-flood-test integration/elastic_flood_test.cpp)
 target_link_libraries(labios-elastic-flood-test PRIVATE labios)

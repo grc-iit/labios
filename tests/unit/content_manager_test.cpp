@@ -165,3 +165,18 @@ TEST_CASE("Warehouse stage and retrieve", "[content_manager]") {
     cm.remove(99999);
     REQUIRE_FALSE(cm.exists(99999));
 }
+
+TEST_CASE("Warehouse explicit keys roundtrip", "[content_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::ContentManager cm(redis, 4096, 0, labios::ReadPolicy::ReadThrough);
+
+    std::vector<std::byte> data{std::byte{'o'}, std::byte{'k'}};
+    auto key = labios::ContentManager::data_key(123456);
+    redis.set_binary(key, data);
+
+    REQUIRE(cm.exists_key(key));
+    CHECK(cm.retrieve_key(key) == data);
+
+    cm.remove_key(key);
+    REQUIRE_FALSE(cm.exists_key(key));
+}

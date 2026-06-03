@@ -180,17 +180,10 @@ client.write_to("kv://session/model-weights", data, 0)
 result = client.read_from("kv://session/model-weights", 0, 0)
 ```
 
-Supported URI schemes:
-
-| Scheme | Backend | Target |
-|--------|---------|--------|
-| `file://` | PosixBackend | Local or networked filesystem |
-| `kv://` | KvBackend | User's Redis or compatible KV store |
-| `sqlite://` | SqliteBackend | User's SQLite database |
-| `s3://` | (planned) | S3-compatible object store |
-| `vector://` | (planned) | Vector database (ChromaDB, Pinecone) |
-| `graph://` | (planned) | Graph database (Neo4j, DGraph) |
-| `pfs://` | (planned) | Parallel filesystem (Lustre, GPFS) |
+See [backends.md](backends.md#uri-scheme-reference) for the authoritative URI
+scheme support table. In this branch, workers always register `file://` and
+`sqlite://`; `kv://` is registered when `LABIOS_KV_HOST` and `LABIOS_KV_PORT`
+point at an external Redis-compatible store.
 
 ## Intent-driven API
 

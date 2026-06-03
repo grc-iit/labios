@@ -248,8 +248,8 @@ my-service:
 | Scheme | Backend | Status | External System |
 |--------|---------|--------|-----------------|
 | `file://` | PosixBackend | Implemented | Local/network filesystem |
-| `kv://` | KvBackend | Implemented | Redis, DragonflyDB, KeyDB |
 | `sqlite://` | SqliteBackend | Implemented | SQLite database |
+| `kv://` | KvBackend | Optional/configured | Redis, DragonflyDB, KeyDB |
 | `s3://` | S3Backend | Planned | S3, MinIO, R2 |
 | `vector://` | VectorBackend | Planned | ChromaDB, Pinecone, Weaviate |
 | `graph://` | GraphBackend | Planned | Neo4j, DGraph |
@@ -271,3 +271,6 @@ separate from backends.
 
 A `kv://` label connects to the user's Redis instance, not to LABIOS's internal
 DragonflyDB. This separation is a core architectural invariant.
+
+Workers register the KV backend only when `LABIOS_KV_HOST` and `LABIOS_KV_PORT`
+are set.

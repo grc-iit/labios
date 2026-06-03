@@ -16,6 +16,8 @@ static labios::Config test_config() {
     if (nats) cfg.nats_url = nats;
     const char* redis_host = std::getenv("LABIOS_REDIS_HOST");
     if (redis_host) cfg.redis_host = redis_host;
+    const char* redis_port = std::getenv("LABIOS_REDIS_PORT");
+    if (redis_port && redis_port[0] != '\0') cfg.redis_port = std::stoi(redis_port);
     return cfg;
 }
 
@@ -61,4 +63,16 @@ TEST_CASE("Write and read back through full pipeline", "[smoke]") {
 
     REQUIRE(result.size() == data.size());
     REQUIRE(std::equal(result.begin(), result.end(), data.begin()));
+}
+
+TEST_CASE("Observe system health returns JSON payload", "[smoke]") {
+    auto cfg = test_config();
+    auto client = labios::connect(cfg);
+
+    auto result = client.observe("system/health");
+
+    REQUIRE_FALSE(result.empty());
+    REQUIRE(result.find("\"nats\":\"connected\"") != std::string::npos);
+    REQUIRE(result.find("\"redis\":\"connected\"") != std::string::npos);
+    REQUIRE(result.find("\"uptime_seconds\"") != std::string::npos);
 }

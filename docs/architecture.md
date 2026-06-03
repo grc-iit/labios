@@ -62,7 +62,7 @@ Agent Frameworks (LangChain, CrewAI, custom)  |  HPC Apps (MPI, POSIX)
 │  Tier 2  Agentic     reasoning, tools, inference             │
 │                                                             │
 │  BackendRegistry → URI scheme resolution                     │
-│  file:// | s3:// | vector:// | graph:// | kv:// | pfs://    │
+│  file:// | sqlite:// | optional kv:// | planned extensions  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -564,39 +564,32 @@ Redis key patterns:
 ## URI Routing and Backends
 
 Labels carry `source_uri` and `dest_uri` fields that address storage through URI
-schemes. The `BackendRegistry` maps schemes to implementations via a C++20
-`BackendStore` concept:
+schemes. The `BackendRegistry` maps schemes to implementations via the
+label-based C++20 `BackendStore` concept:
 
 ```cpp
 template<typename B>
-concept BackendStore = requires(B b, std::string_view path,
-    uint64_t offset, uint64_t length, std::span<const std::byte> data) {
-    { b.put(path, offset, data) } -> std::same_as<BackendResult>;
-    { b.get(path, offset, length) } -> std::same_as<BackendDataResult>;
-    { b.del(path) } -> std::same_as<BackendResult>;
-    { b.scheme() } -> std::same_as<std::string_view>;
+concept BackendStore = requires(B b, const LabelData& label,
+    std::span<const std::byte> data) {
+    { b.put(label, data) } -> std::same_as<BackendResult>;
+    { b.get(label) }       -> std::same_as<BackendDataResult>;
+    { b.del(label) }       -> std::same_as<BackendResult>;
+    { b.query(label) }     -> std::same_as<BackendQueryResult>;
+    { b.scheme() }         -> std::same_as<std::string_view>;
 };
 ```
 
 Backends register with the registry. Workers resolve URIs at execution time and
-dispatch to the appropriate backend. The `PosixBackend` handles `file://`
-schemes. Additional backends (S3, vector, graph) plug in through the same
-concept.
+dispatch to the appropriate backend. `file://` and `sqlite://` are registered by
+default; `kv://` is registered when the worker has `LABIOS_KV_HOST` and
+`LABIOS_KV_PORT`. See [backends.md](backends.md) for the authoritative support
+matrix and backend-extension guide.
 
 URI structure: `scheme://authority/path?query`
 
-Supported schemes (current and planned):
-
-| Scheme     | Backend        | Status       |
-|------------|----------------|--------------|
-| `file://`  | PosixBackend   | Implemented  |
-| `s3://`    | S3Backend      | Planned      |
-| `vector://`| VectorBackend  | Planned      |
-| `graph://` | GraphBackend   | Planned      |
-| `kv://`    | KVBackend      | Planned      |
-| `observe://`| ObserveHandler| Implemented  |
-
----
+Supported scheme status is intentionally not duplicated here; keep
+[docs/backends.md](backends.md#uri-scheme-reference) as the single source of
+truth.
 
 ## Transport Layer
 
@@ -816,21 +809,25 @@ conf/
 
 ## Test Suite
 
-295 tests across four categories. All pass.
+CTest discovery from the build tree is the authoritative source for C++ test
+counts. Python SDK and MCP tests are collected by pytest.
 
-| Category    | Tests | Scope                                          |
-|-------------|-------|------------------------------------------------|
-| unit        | 192   | Every component in isolation                   |
-| smoke       | 62    | Live cluster integration (NATS, Redis, workers)|
-| kernel      | 15    | Science application replays (CM1, HACC, Montage, K-means) |
-| bench       | 25    | Agent I/O benchmarks (coding agent, RAG, checkpoint storm, multi-agent collab, cross-backend ETL, agentic worker, scale adaptation) |
-| integration | 1     | Elastic scaling under sustained load           |
+| Label | Scope |
+|-------|-------|
+| unit | Components in isolation |
+| smoke | Live cluster integration (NATS, Redis, workers) |
+| kernel | Science application replays (CM1, HACC, Montage, K-means) |
+| bench | Agent I/O benchmarks and vanilla-vs-LABIOS comparisons |
+| integration | Cross-service behavior such as scheduling and elasticity |
 
 ```bash
-ctest --test-dir build/dev              # All 295
+ctest --test-dir build/dev -N           # discovered C++ tests
+ctest --test-dir build/dev              # run discovered C++ tests
 ctest --test-dir build/dev -L unit      # Unit only
 ctest --test-dir build/dev -L kernel    # Science kernels
 ctest --test-dir build/dev -L bench     # Agent benchmarks
+python3 -m pytest tests/python          # Python SDK tests
+cd mcp && python3 -m pytest tests       # MCP server tests
 ```
 
 ---

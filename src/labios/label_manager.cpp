@@ -124,9 +124,12 @@ std::vector<std::byte> LabelManager::wait_read(
             throw std::runtime_error("read label " + std::to_string(p.label_id)
                                      + " failed: " + comp.error);
         }
-        auto data = content_.retrieve(p.label_id);
+        auto key = comp.data_key.empty()
+            ? ContentManager::data_key(p.label_id)
+            : comp.data_key;
+        auto data = content_.retrieve_key(key);
         result.insert(result.end(), data.begin(), data.end());
-        content_.remove(p.label_id);
+        content_.remove_key(key);
     }
     return result;
 }

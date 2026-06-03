@@ -66,6 +66,18 @@ bool ContentManager::exists(uint64_t label_id, uint32_t app_id,
     return redis_.get(data_key(label_id, app_id, room_id)).has_value();
 }
 
+std::vector<std::byte> ContentManager::retrieve_key(std::string_view key) {
+    return redis_.get_binary(key);
+}
+
+void ContentManager::remove_key(std::string_view key) {
+    redis_.del(key);
+}
+
+bool ContentManager::exists_key(std::string_view key) {
+    return redis_.get(key).has_value();
+}
+
 std::vector<FlushRegion> ContentManager::cache_write(
     int fd, std::string_view filepath, uint64_t offset,
     std::span<const std::byte> data) {

@@ -15,6 +15,7 @@ add_custom_target(labios_fbs_generated DEPENDS ${LABIOS_FBS_GEN_HEADER})
 
 add_library(labios STATIC
     catalog_manager.cpp
+    c_api.cpp
     channel.cpp
     client.cpp
     continuation.cpp
@@ -47,6 +48,7 @@ add_library(labios STATIC
     sds/program_repo.cpp
     observability.cpp
     telemetry.cpp
+    worker_registry_protocol.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)
