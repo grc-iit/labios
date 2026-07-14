@@ -1314,7 +1314,8 @@ Metric meanings are fixed as follows:
 
 #### 9.7.5 Verified worker-registry protocol v2
 
-The three CSV/text registry exchanges are replaced together by a generated
+The three CSV/text registration, resource-update, and snapshot exchanges plus
+the plain-text deregistration control are replaced together by a generated
 `worker_registry.fbs` protocol with one envelope:
 
 ```text
@@ -1323,6 +1324,7 @@ WorkerRegistryMessage
   payload union:
     WorkerRegistration
     WorkerResourceUpdate
+    WorkerDeregistration
     WorkerRegistrySnapshot
 ```
 
@@ -1334,17 +1336,24 @@ Malformed values never partially update the manager registry.
 
 Required field flow is:
 
-| Descriptor information | `WorkerRegistration` on `labios.worker.register` | `WorkerResourceUpdate` on `labios.worker.score_update` | `WorkerRegistrySnapshot` returned by `labios.manager.workers` |
-|---|---|---|---|
-| Protocol version and payload kind | Required | Required | Required |
-| Worker ID and registration epoch | Required | Required and must match the live epoch | Required for every worker row |
-| Registry generation and manager capture time | Assigned/advanced by manager after merge | Assigned/advanced by manager after merge | Required once for the immutable snapshot |
-| Availability | Required initial value | Required current value | Required merged value |
-| Total bytes, available bytes, normalized capacity, and load | Required initial values | Required current values | Required merged values |
-| Speed class, energy-cost class, tier, and maximum IR version | Required static values | Omitted; retained from matching registration epoch | Required merged values |
-| Core/refinement operation versions and pipeline operations | Required structured sets | Omitted; retained from matching registration epoch | Required structured sets |
-| Backend attachments and independent locality domains | Required structured rows/sets | Omitted; retained from matching registration epoch | Required structured rows/sets |
-| Optional skills, compute, and reasoning values | Advertised when supported | Resource update changes only fields declared dynamic by the v2 schema | Preserved in merged form |
+| Descriptor information | `WorkerRegistration` on `labios.worker.register` | `WorkerResourceUpdate` on `labios.worker.score_update` | `WorkerDeregistration` on `labios.worker.deregister` | `WorkerRegistrySnapshot` returned by `labios.manager.workers` |
+|---|---|---|---|---|
+| Protocol version and payload kind | Required | Required | Required | Required |
+| Worker ID and registration epoch | Required | Required and must match the live epoch | Required and must match the worker being removed | Required for every worker row |
+| Registry generation and manager capture time | Assigned/advanced by manager after merge | Assigned/advanced by manager after merge | Advanced by manager after successful removal | Required once for the immutable snapshot |
+| Availability | Required initial value | Required current value | Omitted; removal is the operation | Required merged value |
+| Total bytes, available bytes, normalized capacity, and load | Required initial values | Required current values | Omitted | Required merged values |
+| Speed class, energy-cost class, tier, and maximum IR version | Required static values | Omitted; retained from matching registration epoch | Omitted | Required merged values |
+| Core/refinement operation versions and pipeline operations | Required structured sets | Omitted; retained from matching registration epoch | Omitted | Required structured sets |
+| Backend attachments and independent locality domains | Required structured rows/sets | Omitted; retained from matching registration epoch | Omitted | Required structured rows/sets |
+| Optional skills, compute, and reasoning values | Advertised when supported | Resource update changes only fields declared dynamic by the v2 schema | Omitted | Preserved in merged form |
+
+The manager removes a worker only when `WorkerDeregistration.worker_id` and
+`registration_epoch` match the live descriptor. A malformed, unknown, or stale
+deregistration does not remove a newer registration and does not advance
+`registry_generation`; a successful removal advances the generation exactly as
+any other registry-state change. Every subject rejects a verified v2 payload
+whose union kind is not the kind assigned to that subject.
 
 Attachments are structured rows, not delimiter-encoded strings, so a
 family/backend/scheme/locality tuple cannot be split or conflated by CSV
@@ -1352,8 +1361,8 @@ parsing. Duplicate worker IDs, invalid epochs, invalid numeric ranges,
 inconsistent attachments, and duplicate/conflicting capability rows make the
 message invalid.
 
-There is no CSV fallback. Manager, workers, and dispatcher require one
-coordinated runtime cutover in P09; mixed CSV/v2 operation is unsupported. The
+There is no text/CSV fallback. Manager, workers, and dispatcher require one
+coordinated runtime cutover in P09; mixed text/v2 operation is unsupported. The
 current Python MCP parser for `labios.manager.workers` is deliberately
 incompatible after this cutover. P13 MUST add Python FlatBuffers support and
 generated registry-v2 bindings before MCP worker-registry, worker-score, or
@@ -1633,20 +1642,20 @@ independent label with one empty byte vector as the payload; a real
 post-shuffler batch never reaches a solver as a set. Read- and write-locality
 routes bypass the solver and do not apply the common feasibility checks.
 Capacity is only a normalized ratio, the manager's snapshot is a seven-column
-CSV row, registration and score updates are separate CSV strings, and the six-
-scalar `ScoreSnapshot` cannot explain excluded alternatives, capacity budgets,
-policy contributions, tie-breaks, or parking. Nothing in P08 changes that
-runtime behavior.
+CSV row, registration and score updates are separate CSV strings,
+deregistration is a plain-text worker ID, and the six-scalar `ScoreSnapshot`
+cannot explain excluded alternatives, capacity budgets, policy contributions,
+tie-breaks, or parking. Nothing in P08 changes that runtime behavior.
 
 **P08 status: Go and complete (2026-07-14).** This documentation contract and
-the matching planning decision are recorded. P09 is **No-Go under its current
-write ownership** because that ownership forbids the approved `schemas/`,
-`include/labios/label.h`, `src/labios/label.cpp`, registry schema-generation,
-and related codec-test changes. P09 becomes **Go without further semantic
-decisions** once its ownership is amended or a bounded pre-P09 schema/codec
-slice lands. Automatic provisioning, elasticity triggers, leader election,
-new solver algorithms, and distributed pipeline-stage placement remain out of
-scope.
+the matching planning decision are recorded. P09 was initially No-Go because
+its prompt forbade the approved schema and codec paths. That historical
+ownership gate was lifted on 2026-07-14: the executable P09 prompt now owns the
+Label residual schema/codec, registry-v2 schema/codegen, coordinated four-
+subject runtime cutover, scheduling implementation, and required tests.
+**P09 status is Go without further semantic decisions or a pre-P09 slice.**
+Automatic provisioning, elasticity triggers, leader election, new solver
+algorithms, and distributed pipeline-stage placement remain out of scope.
 
 ## 10. Deterministic validation rules
 
