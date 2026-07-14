@@ -88,6 +88,14 @@ LabelData Client::create_label(const LabelParams& params) {
     label.source_uri = params.source_uri;
     label.dest_uri = params.dest_uri;
     label.pipeline = params.pipeline;
+    label.declared_dependencies = params.declared_dependencies;
+    label.source_resource = params.source_resource;
+    label.destination_resource = params.destination_resource;
+    label.has_source_resource = params.has_source_resource;
+    label.has_destination_resource = params.has_destination_resource;
+    label.input_binding = params.input_binding;
+    label.has_input_binding = params.has_input_binding;
+    normalize_label_resources(label);
     mark_label_created(label);
     return label;
 }
@@ -97,11 +105,17 @@ PendingIO Client::publish(const LabelData& label,
     auto& content = session_->content_manager();
     auto& nats = session_->nats();
 
+    LabelData mutable_label = label;
     if (!data.empty()) {
         content.stage(label.id, data);
+        mutable_label.input_binding.provenance = mutable_label.has_source_resource
+            ? BindingProvenance::MaterializedSource : BindingProvenance::DirectProducer;
+        mutable_label.input_binding.content_id = std::to_string(label.id);
+        mutable_label.input_binding.logical_length = data.size();
+        mutable_label.has_input_binding = true;
     }
 
-    LabelData mutable_label = label;
+    normalize_label_resources(mutable_label);
     if (mutable_label.created_us == 0) {
         mark_label_created(mutable_label);
     }

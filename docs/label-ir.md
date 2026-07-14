@@ -619,7 +619,9 @@ extension is UNKNOWN_RESOURCE, not a generic escape hatch.
 The current Observe routes may normalize to the reserved registered resource
 kind org_labios.runtime_observation version 1. That resource exposes named
 runtime observations, not DragonflyDB keys, NATS subjects, or unrestricted
-configuration access.
+configuration access. P03 clarification: until that typed observation resource
+is carried end to end, an Observe label's `observe://` query is an exempt sealed
+runtime-query target and is not passed to user-resource URI normalization.
 
 ## 6. URI and Pointer compatibility normalization
 
@@ -1361,7 +1363,9 @@ current branch:
   LabelData.
 - typed ResourceRef, source_resource, destination_resource,
   declared_dependencies, serialized StagedInputBinding/input_binding, and
-  HazardType Order/Barrier do not exist.
+  HazardType Order/Barrier are implemented by the P03 ingress/codec slice;
+  downstream consumers still intentionally read compatibility mirrors until
+  their migration slices.
 - no current ingress path runs a FlatBuffers verifier.
 - no current component enforces sealed-field ownership or the validation
   contexts in this document.

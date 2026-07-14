@@ -2,7 +2,7 @@ namespace labios.schema;
 
 enum LabelType : byte { Read, Write, Delete, Flush, Composite, Observe }
 enum CompletionStatus : byte { Complete, Error }
-enum HazardType : byte { RAW, WAW, WAR }
+enum HazardType : byte { RAW, WAW, WAR, Order, Barrier }
 enum Intent : byte {
     None, Checkpoint, Cache, ToolOutput, FinalResult,
     Intermediate, SharedState,
@@ -12,6 +12,8 @@ enum Isolation : byte { None, Agent, Workspace, Global }
 enum Durability : byte { Ephemeral, Durable }
 enum StatusCode : byte { Created, Queued, Shuffled, Scheduled, Executing, Complete, Failed }
 enum ContinuationKind : byte { None, Notify, Chain, Conditional }
+enum ResourceFamily : byte { FileRange, Memory, Network, KeyValue, Relational, Object, Vector, Graph, Channel, Workspace, Extension }
+enum BindingProvenance : byte { DirectProducer, MaterializedSource }
 
 union PointerVariant { MemoryPtr, FilePath, NetworkEndpoint }
 
@@ -30,6 +32,22 @@ table NetworkEndpoint {
   host: string;
   port: uint16;
 }
+
+table FileRangeResource { backend_id: string; namespace: string; path: string; offset: ulong; length: ulong; extent: string; }
+table MemoryResource { owner: string; allocation_id: string; offset: ulong; length: ulong; transfer_token: string; }
+table NetworkResource { backend_id: string; transport: string; host: string; port: uint16; stream: string; }
+table KeyValueResource { backend_id: string; database: string; namespace: string; key: string; }
+table RelationalResource { backend_id: string; database: string; schema: string; relation: string; selector: string; }
+table ObjectResource { backend_id: string; bucket: string; key: string; offset: ulong; length: ulong; extent: string; }
+table VectorResource { backend_id: string; database: string; collection: string; item_id: string; }
+table GraphResource { backend_id: string; database: string; graph: string; element_id: string; }
+table ChannelResource { namespace: string; name: string; sequence_start: ulong; sequence_count: ulong; }
+table WorkspaceResource { namespace: string; name: string; entry_key: string; }
+table ExtensionResource { namespace: string; kind: string; schema_version: uint; identity: [ubyte]; address: [ubyte]; }
+union ResourceValue { FileRangeResource, MemoryResource, NetworkResource, KeyValueResource, RelationalResource, ObjectResource, VectorResource, GraphResource, ChannelResource, WorkspaceResource, ExtensionResource }
+table VersionConstraint { relation: ubyte; token: string; }
+table ResourceRef { backend_id: string; logical_id: string; version_constraint: VersionConstraint; value: ResourceValue; }
+table StagedInputBinding { provenance: BindingProvenance; content_id: string; logical_length: ulong; digest_algorithm: string; digest: [ubyte]; observed_version: string; }
 
 table Pointer {
   ptr: PointerVariant;
@@ -121,6 +139,11 @@ table Label {
 
   // Versioned Label I/O semantic IR. Appended for backwards-compatible parsing.
   ir_version:     uint;
+  operation_version: uint;
+  source_resource: ResourceRef;
+  destination_resource: ResourceRef;
+  declared_dependencies: [uint64];
+  input_binding: StagedInputBinding;
 }
 
 table Completion {

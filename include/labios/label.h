@@ -30,7 +30,9 @@ enum class Intent : uint8_t {
     Embedding, ModelWeight, KVCache, ReasoningTrace
 };
 enum class Isolation : uint8_t { None, Agent, Workspace, Global };
-enum class HazardType : uint8_t { RAW, WAW, WAR };
+enum class HazardType : uint8_t { RAW, WAW, WAR, Order, Barrier };
+enum class ResourceFamily : uint8_t { FileRange, Memory, Network, KeyValue, Relational, Object, Vector, Graph, Channel, Workspace, Extension };
+enum class BindingProvenance : uint8_t { DirectProducer, MaterializedSource };
 enum class CompletionStatus : uint8_t { Complete, Error };
 enum class Durability : uint8_t { Ephemeral, Durable };
 enum class StatusCode : uint8_t { Created, Queued, Shuffled, Scheduled, Executing, Complete, Failed };
@@ -63,6 +65,51 @@ struct NetworkEndpoint {
 };
 
 using Pointer = std::variant<std::monostate, MemoryPtr, FilePath, NetworkEndpoint>;
+
+struct ResourceRef {
+    ResourceFamily family = ResourceFamily::FileRange;
+    std::string backend_id;
+    std::string logical_id;
+    std::string namespace_name;
+    std::string database;
+    std::string schema;
+    std::string path;
+    std::string key;
+    std::string selector;
+    std::string host;
+    std::string transport;
+    std::string stream;
+    std::string bucket;
+    std::string collection;
+    std::string item_id;
+    std::string graph;
+    std::string element_id;
+    std::string owner;
+    std::string allocation_id;
+    std::string transfer_token;
+    std::string extent = "Unspecified";
+    uint64_t offset = 0;
+    uint64_t length = 0;
+    uint16_t port = 0;
+    uint32_t schema_version = 0;
+    std::string version_token;
+    bool version_exact = false;
+    bool version_must_not_exist = false;
+    friend bool operator==(const ResourceRef&, const ResourceRef&) = default;
+};
+
+struct StagedInputBinding {
+    BindingProvenance provenance = BindingProvenance::DirectProducer;
+    std::string content_id;
+    uint64_t logical_length = 0;
+    std::string digest_algorithm;
+    std::vector<std::byte> digest;
+    std::string observed_version;
+};
+
+ResourceRef resource_from_uri(std::string_view uri);
+ResourceRef resource_from_pointer(const Pointer& pointer, uint64_t label_id = 0,
+                                  uint32_t app_id = 0);
 
 Pointer memory_ptr(const void* addr, uint64_t size);
 Pointer file_path(std::string_view path);
@@ -123,6 +170,14 @@ struct LabelData {
     uint8_t priority = 0;
     uint32_t app_id = 0;
     std::vector<LabelDependency> dependencies;
+    std::vector<uint64_t> declared_dependencies;
+    ResourceRef source_resource;
+    ResourceRef destination_resource;
+    bool has_source_resource = false;
+    bool has_destination_resource = false;
+    StagedInputBinding input_binding;
+    bool has_input_binding = false;
+    uint32_t operation_version = 1;
     uint64_t data_size = 0;
     Intent intent = Intent::None;
     uint32_t ttl_seconds = 0;
@@ -164,7 +219,14 @@ struct LabelParams {
     uint32_t flags = 0;
     uint8_t priority = 0;
     std::vector<LabelDependency> dependencies;
+    std::vector<uint64_t> declared_dependencies;
     Intent intent = Intent::None;
+    ResourceRef source_resource;
+    ResourceRef destination_resource;
+    bool has_source_resource = false;
+    bool has_destination_resource = false;
+    StagedInputBinding input_binding;
+    bool has_input_binding = false;
     uint32_t ttl_seconds = 0;
     Isolation isolation = Isolation::None;
 
@@ -215,6 +277,7 @@ LabelData deserialize_label(std::span<const std::byte> buf);
 /// Validate a normalized producer label before admission.
 /// Throws LabelDecodeError with a stable CATEGORY: detail message.
 void validate_label_admission(const LabelData& label);
+void normalize_label_resources(LabelData& label);
 
 std::vector<std::byte> serialize_completion(const CompletionData& completion);
 CompletionData deserialize_completion(std::span<const std::byte> buf);

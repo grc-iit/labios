@@ -8,6 +8,125 @@
 
 #include <unordered_set>
 
+TEST_CASE("P03 Observe runtime queries bypass user-resource normalization", "[label][observe]") {
+    labios::LabelData label;
+    label.id = 108;
+    label.type = labios::LabelType::Observe;
+    label.source_uri = "observe://system/health";
+    labios::normalize_label_resources(label);
+    REQUIRE_FALSE(label.has_source_resource);
+    REQUIRE_NOTHROW(labios::validate_label_admission(label));
+}
+
+TEST_CASE("P03 normalizes supported URI schemes into typed resources", "[label][resources]") {
+    auto file = labios::resource_from_uri("file:///tmp/data.bin");
+    auto sqlite = labios::resource_from_uri("sqlite:///tmp/catalog.db");
+    auto kv = labios::resource_from_uri("kv://redis-host/cache-key");
+    REQUIRE(file.family == labios::ResourceFamily::FileRange);
+    REQUIRE(file.path == "/tmp/data.bin");
+    REQUIRE(sqlite.family == labios::ResourceFamily::Relational);
+    REQUIRE(sqlite.key == "/tmp/catalog.db");
+    REQUIRE(kv.family == labios::ResourceFamily::KeyValue);
+    REQUIRE(kv.database == "redis-host");
+    REQUIRE(kv.key == "/cache-key");
+}
+
+TEST_CASE("P03 URI and legacy Pointer forms coalesce into identical resources", "[label][resources]") {
+    labios::LabelData from_uri;
+    from_uri.id = 100;
+    from_uri.type = labios::LabelType::Write;
+    from_uri.dest_uri = "file:///tmp/equivalent.bin";
+    labios::normalize_label_resources(from_uri);
+
+    labios::LabelData from_pointer;
+    from_pointer.id = 101;
+    from_pointer.type = labios::LabelType::Write;
+    from_pointer.destination = labios::file_path("/tmp/equivalent.bin");
+    labios::normalize_label_resources(from_pointer);
+
+    REQUIRE(from_uri.has_destination_resource);
+    REQUIRE(from_pointer.has_destination_resource);
+    REQUIRE(from_uri.destination_resource == from_pointer.destination_resource);
+}
+
+TEST_CASE("P03 rejects conflicting dual addresses", "[label][resources]") {
+    labios::LabelData label;
+    label.id = 102;
+    label.type = labios::LabelType::Write;
+    label.dest_uri = "file:///tmp/one.bin";
+    label.destination = labios::file_path("/tmp/two.bin");
+    REQUIRE_THROWS_WITH(labios::normalize_label_resources(label),
+                        "ADDRESS_CONFLICT: destination representations disagree");
+}
+
+TEST_CASE("P03 normalizes a legacy Pointer and preserves typed wire roundtrip", "[label][resources]") {
+    labios::LabelData label;
+    label.id = 103;
+    label.type = labios::LabelType::Write;
+    label.destination = labios::file_path("/tmp/roundtrip.bin", 4, 12);
+    label.input_binding = {labios::BindingProvenance::DirectProducer, "content-103", 12, {}, {}, {}};
+    label.has_input_binding = true;
+    labios::normalize_label_resources(label);
+    auto decoded = labios::deserialize_label(labios::serialize_label(label));
+    REQUIRE(decoded.has_destination_resource);
+    REQUIRE(decoded.destination_resource == label.destination_resource);
+    REQUIRE(decoded.has_input_binding);
+    REQUIRE(decoded.input_binding.content_id == "content-103");
+    REQUIRE(decoded.input_binding.logical_length == 12);
+}
+
+TEST_CASE("P03 staged version-0 writes normalize to DirectProducer", "[label][staging]") {
+    labios::LabelData label;
+    label.ir_version = 0;
+    label.id = 104;
+    label.type = labios::LabelType::Write;
+    label.dest_uri = "file:///tmp/staged.bin";
+    label.data_size = 5;
+    label.input_binding = {labios::BindingProvenance::DirectProducer, "content-104", 5, {}, {}, {}};
+    label.has_input_binding = true;
+    labios::normalize_label_resources(label);
+    REQUIRE(label.input_binding.provenance == labios::BindingProvenance::DirectProducer);
+    REQUIRE_NOTHROW(labios::validate_label_admission(label));
+}
+
+TEST_CASE("P03 rejects an unbound staged blob beside a declared source", "[label][staging]") {
+    labios::LabelData label;
+    label.id = 105;
+    label.type = labios::LabelType::Write;
+    label.source_uri = "file:///tmp/source.bin";
+    label.dest_uri = "file:///tmp/destination.bin";
+    label.input_binding = {labios::BindingProvenance::DirectProducer, "content-105", 4, {}, {}, {}};
+    label.has_input_binding = true;
+    REQUIRE_THROWS_WITH(labios::normalize_label_resources(label),
+                        "AMBIGUOUS_INPUT: staged input is not bound to declared source");
+}
+
+TEST_CASE("P03 lowers declared dependencies to append-only residual edges", "[label][dependencies]") {
+    labios::LabelData label;
+    label.id = 106;
+    label.type = labios::LabelType::Write;
+    label.dest_uri = "file:///tmp/deps.bin";
+    label.declared_dependencies = {11, 12};
+    labios::normalize_label_resources(label);
+    REQUIRE(label.dependencies.size() == 2);
+    REQUIRE(label.dependencies[0].label_id == 11);
+    REQUIRE(label.dependencies[0].hazard_type == labios::HazardType::Order);
+    REQUIRE(label.dependencies[1].label_id == 12);
+}
+
+TEST_CASE("P03 rejects an invalid resource family and operation combination", "[label][validation]") {
+    labios::LabelData label;
+    label.id = 107;
+    label.type = labios::LabelType::Delete;
+    label.destination_resource.family = labios::ResourceFamily::Memory;
+    label.destination_resource.owner = "owner";
+    label.destination_resource.allocation_id = "allocation";
+    label.destination_resource.transfer_token = "token";
+    label.has_destination_resource = true;
+    REQUIRE_THROWS_WITH(labios::validate_label_admission(label),
+                        "ILLEGAL_COMBINATION: destination family is incompatible with operation");
+}
+
 TEST_CASE("Serialized labels carry the current IR version", "[label][ir]") {
     labios::LabelData label;
     label.id = 1;

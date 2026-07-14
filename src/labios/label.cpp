@@ -1,9 +1,11 @@
 #include <labios/label.h>
+#include <labios/uri.h>
 
 #include <flatbuffers/flatbuffers.h>
 #include <label_generated.h>
 
 #include <atomic>
+#include <algorithm>
 #include <chrono>
 #include <random>
 #include <thread>
@@ -31,6 +33,83 @@ Pointer file_path(std::string_view path, uint64_t offset, uint64_t length) {
 
 Pointer network_endpoint(std::string_view host, uint16_t port) {
     return NetworkEndpoint{std::string(host), port};
+}
+
+namespace {
+ResourceRef parse_resource(std::string_view raw) {
+    auto u = parse_uri(raw); ResourceRef r;
+    r.backend_id = u.authority.empty() ? "default" : u.authority; r.path = u.path;
+    if (u.scheme == "file") { r.family = ResourceFamily::FileRange; r.namespace_name = "default"; }
+    else if (u.scheme == "sqlite" || u.scheme == "postgres") { r.family = ResourceFamily::Relational; r.database = u.authority; r.schema = "main"; r.key = u.path; }
+    else if (u.scheme == "kv") { r.family = ResourceFamily::KeyValue; r.database = u.authority; r.namespace_name = "default"; r.key = u.path; }
+    else if (u.scheme == "memory") { r.family = ResourceFamily::Memory; r.owner = u.authority; r.allocation_id = u.path; }
+    else if (u.scheme == "channel") { r.family = ResourceFamily::Channel; r.namespace_name = u.authority; r.key = u.path; }
+    else if (u.scheme == "workspace") { r.family = ResourceFamily::Workspace; r.namespace_name = u.authority; r.key = u.path; }
+    else if (u.scheme == "vector") { r.family = ResourceFamily::Vector; r.database = u.authority; r.collection = u.path; }
+    else if (u.scheme == "graph") { r.family = ResourceFamily::Graph; r.database = u.authority; r.graph = u.path; }
+    else if (u.scheme == "object" || u.scheme == "s3") { r.family = ResourceFamily::Object; r.bucket = u.authority; r.key = u.path; }
+    else throw LabelDecodeError("UNKNOWN_RESOURCE", "unregistered URI scheme: " + u.scheme);
+    return r;
+}
+bool has_pointer(const Pointer& p) { return !std::holds_alternative<std::monostate>(p); }
+}
+
+ResourceRef resource_from_uri(std::string_view uri) { return parse_resource(uri); }
+
+ResourceRef resource_from_pointer(const Pointer& p, uint64_t label_id, uint32_t app_id) {
+    ResourceRef r;
+    if (auto* f = std::get_if<FilePath>(&p)) { r.family=ResourceFamily::FileRange; r.backend_id="default"; r.namespace_name="default"; r.path=f->path; r.offset=f->offset; r.length=f->length; r.extent=f->length ? "Exact" : "Unspecified"; }
+    else if (auto* m = std::get_if<MemoryPtr>(&p)) { r.family=ResourceFamily::Memory; r.owner=std::to_string(app_id); r.allocation_id=std::to_string(label_id); r.transfer_token=std::to_string(m->address); r.length=m->size; r.extent="Exact"; }
+    else if (auto* n = std::get_if<NetworkEndpoint>(&p)) { r.family=ResourceFamily::Network; r.backend_id="default"; r.transport="tcp"; r.host=n->host; r.port=n->port; }
+    else throw LabelDecodeError("INVALID_RESOURCE", "empty pointer");
+    return r;
+}
+
+void normalize_label_resources(LabelData& label) {
+    // Version-0 is ingress syntax only; normalization always produces IR 1.
+    label.ir_version = kCurrentIrVersion;
+    auto choose = [&](bool source) {
+        const auto& typed = source ? label.source_resource : label.destination_resource;
+        bool typed_present = source ? label.has_source_resource : label.has_destination_resource;
+        const auto& ptr = source ? label.source : label.destination;
+        const auto& uri = source ? label.source_uri : label.dest_uri;
+        bool have=false; ResourceRef result;
+        auto add = [&](const ResourceRef& c) { if (!have) { result=c; have=true; } else if (!(result==c)) throw LabelDecodeError("ADDRESS_CONFLICT", source ? "source representations disagree" : "destination representations disagree"); };
+        if (typed_present) add(typed);
+        // Observe's observe:// value is a runtime query target, not a user
+        // ResourceRef. It remains the sealed query string for the OBSERVE
+        // handler and is intentionally exempt from backend normalization.
+        const bool runtime_observe_query = source && label.type == LabelType::Observe &&
+            !uri.empty() && parse_uri(uri).scheme == "observe";
+        if (!uri.empty() && !runtime_observe_query) add(resource_from_uri(uri));
+        if (has_pointer(ptr)) add(resource_from_pointer(ptr, label.id, label.app_id));
+        if (source && std::holds_alternative<MemoryPtr>(ptr) && std::get<MemoryPtr>(ptr).address==0 && label.type==LabelType::Read) have=false;
+        if (have) {
+            if (source) { label.source_resource=result; label.has_source_resource=true; }
+            else { label.destination_resource=result; label.has_destination_resource=true; }
+            std::string projected;
+            if (result.family == ResourceFamily::FileRange) projected = "file://" + result.path;
+            else if (result.family == ResourceFamily::KeyValue) projected = "kv://" + result.database + result.key;
+            else if (result.family == ResourceFamily::Relational) projected = "sqlite://" + result.key;
+            if (source && label.source_uri.empty()) label.source_uri = projected;
+            if (!source && label.dest_uri.empty()) label.dest_uri = projected;
+            if (result.family == ResourceFamily::FileRange) {
+                Pointer mirror = FilePath{result.path, result.offset, result.length};
+                if (source && !has_pointer(label.source)) label.source = mirror;
+                if (!source && !has_pointer(label.destination)) label.destination = mirror;
+            }
+        }
+    };
+    choose(true); choose(false);
+    if (label.type == LabelType::Write && label.has_source_resource && label.has_input_binding &&
+        label.input_binding.provenance == BindingProvenance::DirectProducer)
+        throw LabelDecodeError("AMBIGUOUS_INPUT", "staged input is not bound to declared source");
+    for (auto id : label.declared_dependencies) {
+        if (id==0 || id==label.id) throw LabelDecodeError("INVALID_DEPENDENCY","invalid declared dependency");
+        auto found = std::find_if(label.dependencies.begin(), label.dependencies.end(),
+            [id](const LabelDependency& d) { return d.label_id == id; });
+        if (found == label.dependencies.end()) label.dependencies.push_back({id,HazardType::Order});
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -293,6 +372,34 @@ maybe_string(flatbuffers::FlatBufferBuilder& fbb, const std::string& s) {
 
 } // namespace
 
+static flatbuffers::Offset<schema::ResourceRef> serialize_resource(flatbuffers::FlatBufferBuilder& fbb, const ResourceRef& r) {
+    auto s = [&](const std::string& v) { return v.empty() ? flatbuffers::Offset<flatbuffers::String>(0) : fbb.CreateString(v); };
+    auto version = r.version_token.empty() ? flatbuffers::Offset<schema::VersionConstraint>(0) : schema::CreateVersionConstraint(fbb, r.version_must_not_exist ? 2 : (r.version_exact ? 1 : 0), s(r.version_token));
+    flatbuffers::Offset<void> value; schema::ResourceValue kind = schema::ResourceValue_NONE;
+    switch (r.family) {
+    case ResourceFamily::FileRange: { auto x=schema::CreateFileRangeResource(fbb,s(r.backend_id),s(r.namespace_name),s(r.path),r.offset,r.length,s(r.extent)); value=x.Union(); kind=schema::ResourceValue_FileRangeResource; break; }
+    case ResourceFamily::Memory: { auto x=schema::CreateMemoryResource(fbb,s(r.owner),s(r.allocation_id),r.offset,r.length,s(r.transfer_token)); value=x.Union(); kind=schema::ResourceValue_MemoryResource; break; }
+    case ResourceFamily::KeyValue: { auto x=schema::CreateKeyValueResource(fbb,s(r.backend_id),s(r.database),s(r.namespace_name),s(r.key)); value=x.Union(); kind=schema::ResourceValue_KeyValueResource; break; }
+    case ResourceFamily::Relational: { auto x=schema::CreateRelationalResource(fbb,s(r.backend_id),s(r.database),s(r.schema),s(r.key),s(r.selector)); value=x.Union(); kind=schema::ResourceValue_RelationalResource; break; }
+    case ResourceFamily::Network: { auto x=schema::CreateNetworkResource(fbb,s(r.backend_id),s(r.transport),s(r.host),r.port,s(r.stream)); value=x.Union(); kind=schema::ResourceValue_NetworkResource; break; }
+    case ResourceFamily::Object: { auto x=schema::CreateObjectResource(fbb,s(r.backend_id),s(r.bucket),s(r.key),r.offset,r.length,s(r.extent)); value=x.Union(); kind=schema::ResourceValue_ObjectResource; break; }
+    case ResourceFamily::Vector: { auto x=schema::CreateVectorResource(fbb,s(r.backend_id),s(r.database),s(r.collection),s(r.item_id)); value=x.Union(); kind=schema::ResourceValue_VectorResource; break; }
+    case ResourceFamily::Graph: { auto x=schema::CreateGraphResource(fbb,s(r.backend_id),s(r.database),s(r.graph),s(r.element_id)); value=x.Union(); kind=schema::ResourceValue_GraphResource; break; }
+    case ResourceFamily::Channel: { auto x=schema::CreateChannelResource(fbb,s(r.namespace_name),s(r.key),r.offset,r.length); value=x.Union(); kind=schema::ResourceValue_ChannelResource; break; }
+    case ResourceFamily::Workspace: { auto x=schema::CreateWorkspaceResource(fbb,s(r.namespace_name),s(r.key),s(r.selector)); value=x.Union(); kind=schema::ResourceValue_WorkspaceResource; break; }
+    case ResourceFamily::Extension: { auto x=schema::CreateExtensionResource(fbb,s(r.namespace_name),s(r.key),r.schema_version,0,0); value=x.Union(); kind=schema::ResourceValue_ExtensionResource; break; }
+    }
+    return schema::CreateResourceRef(fbb,s(r.backend_id),s(r.logical_id),version,kind,value);
+}
+
+static flatbuffers::Offset<schema::StagedInputBinding> serialize_binding(flatbuffers::FlatBufferBuilder& fbb, const StagedInputBinding& b) {
+    auto cid=fbb.CreateString(b.content_id);
+    auto alg=b.digest_algorithm.empty() ? flatbuffers::Offset<flatbuffers::String>(0) : fbb.CreateString(b.digest_algorithm);
+    auto obs=b.observed_version.empty() ? flatbuffers::Offset<flatbuffers::String>(0) : fbb.CreateString(b.observed_version);
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> dig=0; if(!b.digest.empty()) dig=fbb.CreateVector(reinterpret_cast<const uint8_t*>(b.digest.data()),b.digest.size());
+    return schema::CreateStagedInputBinding(fbb,static_cast<schema::BindingProvenance>(b.provenance),cid,b.logical_length,alg,dig,obs);
+}
+
 // Core serialization into thread-local FBB. Returns pointer and size.
 static std::pair<const std::byte*, size_t> serialize_label_core(
     const LabelData& label, flatbuffers::FlatBufferBuilder& fbb) {
@@ -305,6 +412,11 @@ static std::pair<const std::byte*, size_t> serialize_label_core(
     auto file_key_off   = maybe_string(fbb, label.file_key);
     auto source_uri_off = maybe_string(fbb, label.source_uri);
     auto dest_uri_off   = maybe_string(fbb, label.dest_uri);
+    auto src_resource_off = label.has_source_resource ? serialize_resource(fbb, label.source_resource) : flatbuffers::Offset<schema::ResourceRef>(0);
+    auto dst_resource_off = label.has_destination_resource ? serialize_resource(fbb, label.destination_resource) : flatbuffers::Offset<schema::ResourceRef>(0);
+    auto binding_off = label.has_input_binding ? serialize_binding(fbb, label.input_binding) : flatbuffers::Offset<schema::StagedInputBinding>(0);
+    flatbuffers::Offset<flatbuffers::Vector<uint64_t>> declared_off=0;
+    if (!label.declared_dependencies.empty()) declared_off=fbb.CreateVector(label.declared_dependencies);
 
     // Only serialize pipeline when non-empty.
     flatbuffers::Offset<flatbuffers::String> pipeline_data_off = 0;
@@ -402,6 +514,11 @@ static std::pair<const std::byte*, size_t> serialize_label_core(
     schema::LabelBuilder builder(fbb);
     builder.add_id(label.id);
     builder.add_ir_version(label.ir_version == 0 ? kCurrentIrVersion : label.ir_version);
+    builder.add_operation_version(label.operation_version);
+    if (src_resource_off.o != 0) builder.add_source_resource(src_resource_off);
+    if (dst_resource_off.o != 0) builder.add_destination_resource(dst_resource_off);
+    if (declared_off.o != 0) builder.add_declared_dependencies(declared_off);
+    if (binding_off.o != 0) builder.add_input_binding(binding_off);
     builder.add_type(static_cast<schema::LabelType>(label.type));
     builder.add_source(src_off);
     builder.add_destination(dst_off);
@@ -467,6 +584,17 @@ inline void fb_read_string(std::string& dst, const flatbuffers::String* src) {
 
 } // namespace
 
+static ResourceRef deserialize_resource(const schema::ResourceRef* x) {
+    ResourceRef r; if (!x) return r;
+    r.backend_id=x->backend_id()?x->backend_id()->str():""; r.logical_id=x->logical_id()?x->logical_id()->str():"";
+    if (auto* v=x->value_as_FileRangeResource()) { r.family=ResourceFamily::FileRange; r.namespace_name=v->namespace_()?v->namespace_()->str():""; r.path=v->path()?v->path()->str():""; r.offset=v->offset(); r.length=v->length(); r.extent=v->extent()?v->extent()->str():"Unspecified"; }
+    else if (auto* v=x->value_as_MemoryResource()) { r.family=ResourceFamily::Memory; r.owner=v->owner()?v->owner()->str():""; r.allocation_id=v->allocation_id()?v->allocation_id()->str():""; r.offset=v->offset(); r.length=v->length(); r.transfer_token=v->transfer_token()?v->transfer_token()->str():""; }
+    else if (auto* v=x->value_as_KeyValueResource()) { r.family=ResourceFamily::KeyValue; r.database=v->database()?v->database()->str():""; r.namespace_name=v->namespace_()?v->namespace_()->str():""; r.key=v->key()?v->key()->str():""; }
+    else if (auto* v=x->value_as_RelationalResource()) { r.family=ResourceFamily::Relational; r.database=v->database()?v->database()->str():""; r.schema=v->schema()?v->schema()->str():""; r.key=v->relation()?v->relation()->str():""; r.selector=v->selector()?v->selector()->str():""; }
+    if (auto* vc=x->version_constraint()) { r.version_token=vc->token()?vc->token()->str():""; r.version_exact=vc->relation()==1; r.version_must_not_exist=vc->relation()==2; }
+    return r;
+}
+
 LabelData deserialize_label(std::span<const std::byte> buf) {
     if (buf.empty()) {
         throw LabelDecodeError("MALFORMED_BUFFER", "empty label buffer");
@@ -483,6 +611,12 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     const auto isolation = static_cast<uint8_t>(fb->isolation());
     const auto durability = static_cast<uint8_t>(fb->durability());
     const auto status = static_cast<uint8_t>(fb->status());
+    if (fb->dependencies()) {
+        for (auto* dep : *fb->dependencies()) {
+            if (static_cast<uint8_t>(dep->hazard_type()) > static_cast<uint8_t>(HazardType::Barrier))
+                throw LabelDecodeError("INVALID_ENUM", "hazard type is out of range");
+        }
+    }
     if (type > static_cast<uint8_t>(LabelType::Observe) ||
         intent > static_cast<uint8_t>(Intent::ReasoningTrace) ||
         isolation > static_cast<uint8_t>(Isolation::Global) ||
@@ -506,6 +640,12 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
     out.type        = static_cast<LabelType>(fb->type());
     out.source      = deserialize_pointer(fb->source());
     out.destination = deserialize_pointer(fb->destination());
+    out.operation_version = fb->operation_version() == 0 ? 1 : fb->operation_version();
+    if (auto* sr=fb->source_resource()) { out.source_resource=deserialize_resource(sr); out.has_source_resource=true; }
+    if (auto* dr=fb->destination_resource()) { out.destination_resource=deserialize_resource(dr); out.has_destination_resource=true; }
+    if (auto* dd=fb->declared_dependencies()) out.declared_dependencies.assign(dd->begin(),dd->end());
+    if (auto* ib=fb->input_binding()) { out.has_input_binding=true; out.input_binding.provenance=static_cast<BindingProvenance>(ib->provenance()); out.input_binding.content_id=ib->content_id()?ib->content_id()->str():""; out.input_binding.logical_length=ib->logical_length(); out.input_binding.digest_algorithm=ib->digest_algorithm()?ib->digest_algorithm()->str():""; out.input_binding.observed_version=ib->observed_version()?ib->observed_version()->str():""; if(ib->digest()) out.input_binding.digest.assign(reinterpret_cast<const std::byte*>(ib->digest()->data()),reinterpret_cast<const std::byte*>(ib->digest()->data()+ib->digest()->size())); }
+
     fb_read_string(out.operation, fb->operation());
     out.flags       = fb->flags();
     out.priority    = fb->priority();
@@ -662,10 +802,8 @@ void validate_label_admission(const LabelData& label) {
     if (label.flags != 0)
         throw LabelDecodeError("ILLEGAL_COMBINATION", "producer flags must be zero");
 
-    const bool has_source = !std::holds_alternative<std::monostate>(label.source) ||
-                            !label.source_uri.empty();
-    const bool has_destination = !std::holds_alternative<std::monostate>(label.destination) ||
-                                 !label.dest_uri.empty();
+    const bool has_source = label.has_source_resource || !std::holds_alternative<std::monostate>(label.source) || !label.source_uri.empty();
+    const bool has_destination = label.has_destination_resource || !std::holds_alternative<std::monostate>(label.destination) || !label.dest_uri.empty();
     auto operation = label.operation;
     if (operation.empty()) {
         switch (label.type) {
@@ -684,6 +822,18 @@ void validate_label_admission(const LabelData& label) {
                        (operation == "write" && label.type == LabelType::Write);
     if (!core_name && !alias)
         throw LabelDecodeError("UNKNOWN_REFINEMENT", "unregistered operation " + operation);
+    auto family_ok = [](ResourceFamily f, LabelType t, bool destination) {
+        if (f == ResourceFamily::Extension) return t == LabelType::Observe;
+        if (destination && (t == LabelType::Delete || t == LabelType::Flush))
+            return f != ResourceFamily::Memory;
+        return true;
+    };
+    if (label.has_source_resource && !family_ok(label.source_resource.family, label.type, false))
+        throw LabelDecodeError("ILLEGAL_COMBINATION", "source family is incompatible with operation");
+    if (label.has_destination_resource && !family_ok(label.destination_resource.family, label.type, true))
+        throw LabelDecodeError("ILLEGAL_COMBINATION", "destination family is incompatible with operation");
+    if (label.type == LabelType::Write && !label.has_input_binding && !has_source && label.data_size == 0)
+        throw LabelDecodeError("AMBIGUOUS_INPUT", "Write has no bound input");
     switch (label.type) {
     case LabelType::Read:
         if (!has_source) throw LabelDecodeError("MISSING_FIELD", "Read requires a source");

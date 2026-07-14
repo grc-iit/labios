@@ -41,6 +41,11 @@ std::vector<PendingLabel> LabelManager::publish_write(
         label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
+        label.input_binding.provenance = BindingProvenance::MaterializedSource;
+        label.input_binding.content_id = std::to_string(label.id);
+        label.input_binding.logical_length = chunk_size;
+        label.has_input_binding = true;
+        normalize_label_resources(label);
         mark_label_created(label);
         validate_label_admission(label);
         auto serialized = serialize_label(label);
@@ -79,6 +84,7 @@ std::vector<PendingLabel> LabelManager::publish_read(
         label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
+        normalize_label_resources(label);
         mark_label_created(label);
         validate_label_admission(label);
         auto serialized = serialize_label(label);
