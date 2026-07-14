@@ -12,6 +12,8 @@ namespace labios {
 
 struct Config {
     std::string nats_url = "nats://localhost:4222";
+    int nats_max_deliver = 5;
+    int nats_ack_wait_ms = 10000;
     std::string redis_host = "localhost";
     int redis_port = 6379;
     int worker_id = 0;

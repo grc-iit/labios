@@ -168,7 +168,7 @@ int main() {
     });
 
     // NATS subscription: buffer incoming labels without routing.
-    nats.subscribe("labios.labels",
+    nats.subscribe_durable("labios.labels", "dispatcher",
         [&](std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view reply_to) {
             labios::LabelData label;
@@ -204,7 +204,8 @@ int main() {
                 batch_buffer.push_back(std::move(label));
             }
             batch_cv.notify_one();
-        });
+        }, cfg.nats_max_deliver,
+           std::chrono::milliseconds(cfg.nats_ack_wait_ms));
 
     // Batch processing thread: collect -> shuffle -> dispatch.
     g_batch_thread = std::jthread([&](std::stop_token stoken) {
@@ -277,8 +278,8 @@ int main() {
                                 label, comp, channels, nats, redis);
                             if (chained) {
                                 auto buf = labios::serialize_label(*chained);
-                                nats.publish("labios.labels",
-                                             std::span<const std::byte>(buf));
+                                nats.publish_durable("labios.labels",
+                                                     std::span<const std::byte>(buf));
                             }
                         } catch (...) {}
                     }
@@ -317,8 +318,15 @@ int main() {
             }
             if (workers.empty()) {
                 std::cerr << "[" << timestamp()
-                          << "] dispatcher: no workers registered, skipping batch\n"
+                          << "] dispatcher: no workers registered, parking batch\n"
                           << std::flush;
+                for (auto& label : batch) {
+                    catalog.set_status(label.id, labios::LabelStatus::Parked);
+                    auto parked = labios::serialize_label(label);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                    nats.publish_durable("labios.labels", parked);
+                }
+                nats.flush();
                 continue;
             }
 
@@ -393,7 +401,7 @@ int main() {
 
                     auto serialized = labios::serialize_label_view(label);
                     std::string subject = "labios.worker." + std::to_string(worker_id);
-                    nats.publish(subject, serialized);
+                    nats.publish_durable(subject, serialized);
                     telemetry.record_label_dispatched();
 
                     std::cout << "[" << timestamp() << "] dispatcher: label "
@@ -448,7 +456,7 @@ int main() {
 
                 auto serialized = labios::serialize_label_view(st.composite);
                 std::string subject = "labios.worker." + std::to_string(wid);
-                nats.publish(subject, serialized);
+                nats.publish_durable(subject, serialized);
                 telemetry.record_label_dispatched();
 
                 std::cout << "[" << timestamp() << "] dispatcher: supertask "
@@ -559,7 +567,7 @@ int main() {
 
                         auto routed = labios::serialize_label_view(label);
                         std::string subject = "labios.worker." + std::to_string(wid);
-                        nats.publish(subject, routed);
+                        nats.publish_durable(subject, routed);
                         telemetry.record_label_dispatched();
 
                         std::cout << "[" << timestamp() << "] dispatcher: label "

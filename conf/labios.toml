@@ -1,5 +1,8 @@
 [nats]
 url = "nats://localhost:4222"
+# Durable JetStream delivery defaults: bounded redelivery and ack deadline.
+max_deliver = 5
+ack_wait_ms = 10000
 
 [redis]
 host = "localhost"

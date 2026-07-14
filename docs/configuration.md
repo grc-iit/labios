@@ -29,6 +29,8 @@ client = labios.connect("/path/to/custom.toml")
 # ─── Connection ──────────────────────────────────────────────
 [nats]
 url = "nats://localhost:4222"          # NATS server URL
+max_deliver = 5                         # bounded JetStream redeliveries
+ack_wait_ms = 10000                     # acknowledgement deadline
 
 [redis]
 host = "localhost"                      # DragonflyDB host
@@ -199,6 +201,8 @@ Every config field has a corresponding environment variable. Variables use the
 | TOML Path | Environment Variable | Default |
 |-----------|---------------------|---------|
 | `nats.url` | `LABIOS_NATS_URL` | `nats://localhost:4222` |
+| `nats.max_deliver` | `LABIOS_NATS_MAX_DELIVER` | `5` |
+| `nats.ack_wait_ms` | `LABIOS_NATS_ACK_WAIT_MS` | `10000` |
 | `redis.host` | `LABIOS_REDIS_HOST` | `localhost` |
 | `redis.port` | `LABIOS_REDIS_PORT` | `6379` |
 | `worker.id` | `LABIOS_WORKER_ID` | `worker-1` |

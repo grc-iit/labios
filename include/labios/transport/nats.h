@@ -52,6 +52,18 @@ public:
     /// again replaces that subject's callback, but other subjects are unaffected.
     void subscribe(std::string_view subject, MessageCallback callback);
 
+    /// Subscribe through a durable JetStream consumer. The callback completes
+    /// before the message is acknowledged; failures therefore cause bounded
+    /// server-side redelivery.
+    void subscribe_durable(std::string_view subject, std::string_view durable,
+                           MessageCallback callback,
+                           int max_deliver = 5,
+                           std::chrono::milliseconds ack_wait = std::chrono::seconds(10));
+
+    /// Publish to the durable label stream. Throws unless JetStream accepted
+    /// the message and returned a publication acknowledgement.
+    void publish_durable(std::string_view subject, std::span<const std::byte> data);
+
     /// Flush the outbound buffer so published messages reach the server.
     void flush();
 

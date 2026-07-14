@@ -74,6 +74,8 @@ Config load_config(const std::filesystem::path& path) {
         auto tbl = toml::parse_file(path.string());
 
         cfg.nats_url        = tbl["nats"]["url"].value_or(cfg.nats_url);
+        cfg.nats_max_deliver = tbl["nats"]["max_deliver"].value_or(cfg.nats_max_deliver);
+        cfg.nats_ack_wait_ms = tbl["nats"]["ack_wait_ms"].value_or(cfg.nats_ack_wait_ms);
         cfg.redis_host      = tbl["redis"]["host"].value_or(cfg.redis_host);
         cfg.redis_port      = tbl["redis"]["port"].value_or(cfg.redis_port);
         cfg.worker_id       = tbl["worker"]["id"].value_or(cfg.worker_id);
@@ -132,6 +134,8 @@ Config load_config(const std::filesystem::path& path) {
     }
 
     cfg.nats_url        = env_or("LABIOS_NATS_URL", cfg.nats_url);
+    cfg.nats_max_deliver = env_int_or("LABIOS_NATS_MAX_DELIVER", cfg.nats_max_deliver);
+    cfg.nats_ack_wait_ms = env_int_or("LABIOS_NATS_ACK_WAIT_MS", cfg.nats_ack_wait_ms);
     cfg.redis_host      = env_or("LABIOS_REDIS_HOST", cfg.redis_host);
     cfg.redis_port      = env_int_or("LABIOS_REDIS_PORT", cfg.redis_port);
     cfg.worker_id       = env_int_or("LABIOS_WORKER_ID", cfg.worker_id);

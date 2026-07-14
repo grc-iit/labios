@@ -81,7 +81,7 @@ static void publish_completion(labios::transport::NatsConnection& nats,
 static void publish_chained_label(labios::transport::NatsConnection& nats,
                                   const labios::LabelData& label) {
     auto payload = labios::serialize_label(label);
-    nats.publish("labios.labels", std::span<const std::byte>(payload));
+    nats.publish_durable("labios.labels", std::span<const std::byte>(payload));
 }
 
 static void maybe_process_continuation(
@@ -349,7 +349,8 @@ int main() {
     std::mutex worker_mu;
 
     int worker_id = cfg.worker_id;
-    nats.subscribe(worker_subject,
+    nats.subscribe_durable(worker_subject,
+        "worker-" + std::to_string(worker_id),
         [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root,
          worker_id, &backends, worker_tier, &sds_repo, &channels, &worker_name](
             std::string_view /*subject*/, std::span<const std::byte> data,
@@ -367,6 +368,14 @@ int main() {
                 label = labios::deserialize_label(data);
                 have_label = true;
                 completion.label_id = label.id;
+
+                // Terminal completion is the stable idempotency record for
+                // JetStream redelivery; never repeat an external effect.
+                if (auto prior = catalog.get_completion(label.id)) {
+                    publish_completion(nats, label.reply_to, *prior);
+                    g_active_labels.fetch_sub(1);
+                    return;
+                }
 
                 std::lock_guard lock(worker_mu);
                 labios::mark_label_executing(label, worker_name, now_us());
@@ -457,6 +466,7 @@ int main() {
                             catalog.set_status(child.id,
                                                labios::LabelStatus::Error);
                             catalog.set_error(child.id, ex.what());
+                            catalog.set_completion(child_comp);
                             publish_completion(nats, child.reply_to, child_comp);
                             maybe_process_continuation(
                                 child, child_comp, channels, nats, redis,
@@ -464,6 +474,7 @@ int main() {
                             throw;
                         }
 
+                        catalog.set_completion(child_comp);
                         publish_completion(nats, child.reply_to, child_comp);
                         maybe_process_continuation(
                             child, child_comp, channels, nats, redis,
@@ -475,6 +486,7 @@ int main() {
                     labios::mark_label_finished(
                         label, completion.status, {}, composite_bytes);
                     catalog.set_status(label.id, labios::LabelStatus::Complete);
+                    catalog.set_completion(completion);
 
                     std::cout << "[" << timestamp() << "] worker " << worker_id
                               << ": SUPERTASK " << label.id << " complete\n"
@@ -495,6 +507,7 @@ int main() {
                 }
 
                 catalog.set_status(label.id, labios::LabelStatus::Complete);
+                catalog.set_completion(completion);
                 publish_completion(nats, label.reply_to, completion);
                 maybe_process_continuation(
                     label, completion, channels, nats, redis, worker_name,
@@ -520,6 +533,7 @@ int main() {
                         catalog.set_status(completion.label_id,
                                            labios::LabelStatus::Error);
                         catalog.set_error(completion.label_id, e.what());
+                        catalog.set_completion(completion);
                     }
                 } catch (...) {
                     // Best effort catalog update on error path.
@@ -537,7 +551,8 @@ int main() {
                     }
                 }
             }
-        });
+        }, cfg.nats_max_deliver,
+           std::chrono::milliseconds(cfg.nats_ack_wait_ms));
 
     redis.set("labios:ready:" + worker_name, "1");
 

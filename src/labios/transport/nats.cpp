@@ -34,7 +34,10 @@ std::vector<std::byte> AsyncReply::wait(std::chrono::milliseconds timeout) {
 
 struct NatsConnection::Impl {
     natsConnection* conn = nullptr;
+    jsCtx* js = nullptr;
     std::vector<natsSubscription*> subs;
+    std::string stream_name = "LABIOS_LABELS";
+    std::string stream_subject = "labios.>";
     std::mutex cb_mu;
     std::unordered_map<std::string, MessageCallback, StringHash, std::equal_to<>> callbacks;
 
@@ -55,9 +58,36 @@ struct NatsConnection::Impl {
             natsSubscription_Drain(sub);
             natsSubscription_Destroy(sub);
         }
+        if (js != nullptr) {
+            jsCtx_Destroy(js);
+        }
         if (conn != nullptr) {
             natsConnection_Drain(conn);
             natsConnection_Destroy(conn);
+        }
+    }
+
+    void ensure_stream() {
+        jsStreamConfig sc;
+        jsStreamConfig_Init(&sc);
+        const char* subjects[] = {"labios.labels", "labios.worker.*"};
+        sc.Name = stream_name.c_str();
+        sc.Subjects = subjects;
+        sc.SubjectsLen = 2;
+        sc.Retention = js_LimitsPolicy;
+        sc.Storage = js_FileStorage;
+        sc.MaxAge = 7LL * 24 * 60 * 60 * 1000000000LL;
+        jsStreamInfo* info = nullptr;
+        jsErrCode err{};
+        auto s = js_AddStream(&info, js, &sc, nullptr, &err);
+        if (info != nullptr) jsStreamInfo_Destroy(info);
+        if (s != NATS_OK) {
+            // A previous process may have created the stream. Updating with
+            // the same contract is safe and makes startup idempotent.
+            s = js_UpdateStream(nullptr, js, &sc, nullptr, &err);
+        }
+        if (s != NATS_OK) {
+            throw std::runtime_error("nats: JetStream label stream setup failed");
         }
     }
 
@@ -173,6 +203,11 @@ NatsConnection::NatsConnection(std::string_view url)
     if (s != NATS_OK) {
         throw std::runtime_error("nats: connection failed to " + std::string(url));
     }
+    s = natsConnection_JetStream(&impl_->js, impl_->conn, nullptr);
+    if (s != NATS_OK || impl_->js == nullptr) {
+        throw std::runtime_error("nats: JetStream is required for durable delivery");
+    }
+    impl_->ensure_stream();
 }
 
 NatsConnection::~NatsConnection() = default;
@@ -228,6 +263,83 @@ void NatsConnection::subscribe(std::string_view subject,
     impl_->subs.push_back(sub);
 }
 
+void NatsConnection::publish_durable(
+    std::string_view subject, std::span<const std::byte> data) {
+    jsPubAck* ack = nullptr;
+    jsErrCode err{};
+    auto s = js_Publish(&ack, impl_->js, std::string(subject).c_str(),
+                        data.data(), static_cast<int>(data.size()), nullptr, &err);
+    if (ack != nullptr) jsPubAck_Destroy(ack);
+    if (s != NATS_OK) {
+        throw std::runtime_error("nats: durable publish failed on " +
+                                 std::string(subject));
+    }
+}
+
+void NatsConnection::subscribe_durable(
+    std::string_view subject, std::string_view durable,
+    MessageCallback callback, int max_deliver,
+    std::chrono::milliseconds ack_wait) {
+    struct DurableClosure {
+        Impl* impl;
+        MessageCallback callback;
+    };
+    auto closure = std::make_shared<DurableClosure>(
+        DurableClosure{impl_.get(), std::move(callback)});
+    auto* raw_closure = closure.get();
+
+    jsSubOptions opts;
+    jsSubOptions_Init(&opts);
+    opts.ManualAck = true;
+    std::string durable_name(durable);
+    std::string filter_subject(subject);
+    opts.Config.Durable = durable_name.c_str();
+    opts.Config.Name = durable_name.c_str();
+    opts.Config.DeliverPolicy = js_DeliverAll;
+    opts.Config.AckPolicy = js_AckExplicit;
+    opts.Config.AckWait = ack_wait.count() * 1000000LL;
+    opts.Config.MaxDeliver = max_deliver;
+    opts.Config.FilterSubject = filter_subject.c_str();
+
+    // The library owns the consumer configuration strings during this call.
+    // Keep the closure alive for the subscription callback.
+    natsSubscription* sub = nullptr;
+    auto cb = [](natsConnection*, natsSubscription*, natsMsg* msg, void* data) {
+        auto* c = static_cast<DurableClosure*>(data);
+        const char* subj = natsMsg_GetSubject(msg);
+        const char* raw = natsMsg_GetData(msg);
+        int len = natsMsg_GetDataLength(msg);
+        try {
+            const char* reply = natsMsg_GetReply(msg);
+            c->callback(std::string_view(subj ? subj : ""),
+                std::span<const std::byte>(reinterpret_cast<const std::byte*>(raw),
+                                            static_cast<size_t>(len)),
+                std::string_view(reply ? reply : ""));
+            if (natsMsg_Ack(msg, nullptr) != NATS_OK) {
+                fprintf(stderr, "[nats] durable ack failed\\n");
+            }
+        } catch (const std::exception& e) {
+            fprintf(stderr, "[nats] durable callback exception: %s\\n", e.what());
+        } catch (...) {
+            fprintf(stderr, "[nats] durable callback exception\\n");
+        }
+        natsMsg_Destroy(msg);
+    };
+    jsErrCode err{};
+    auto s = js_Subscribe(&sub, impl_->js, std::string(subject).c_str(), cb,
+                          raw_closure, nullptr, &opts, &err);
+    if (s != NATS_OK) {
+        throw std::runtime_error("nats: durable subscribe failed on " +
+                                 std::string(subject));
+    }
+    // Store the closure by using the callback map's lifetime anchor. The
+    // subscription is destroyed before the connection, so release is safe.
+    impl_->callbacks["__durable_closure_" + std::string(durable)] =
+        [holder = std::move(closure)](std::string_view, std::span<const std::byte>,
+                                      std::string_view) {};
+    impl_->subs.push_back(sub);
+}
+
 void NatsConnection::flush() {
     if (impl_->conn != nullptr) {
         natsStatus s = natsConnection_FlushTimeout(impl_->conn, 2000);
@@ -278,12 +390,28 @@ std::shared_ptr<AsyncReply> NatsConnection::publish_request_async(
     }
 
     char subj_buf[64];
-    natsStatus s = natsConnection_PublishRequest(
-        impl_->conn,
-        to_cstr(subject, subj_buf, sizeof(subj_buf)),
-        reply_to.c_str(),
-        reinterpret_cast<const void*>(data.data()),
-        static_cast<int>(data.size()));
+    natsStatus s;
+    if (subject == "labios.labels") {
+        natsMsg* msg = nullptr;
+        s = natsMsg_Create(&msg, to_cstr(subject, subj_buf, sizeof(subj_buf)),
+                           reply_to.c_str(),
+                           reinterpret_cast<const char*>(data.data()),
+                           static_cast<int>(data.size()));
+        if (s == NATS_OK) {
+            jsPubAck* ack = nullptr;
+            jsErrCode err{};
+            s = js_PublishMsg(&ack, impl_->js, msg, nullptr, &err);
+            if (ack != nullptr) jsPubAck_Destroy(ack);
+            if (s != NATS_OK) natsMsg_Destroy(msg);
+        }
+    } else {
+        s = natsConnection_PublishRequest(
+            impl_->conn,
+            to_cstr(subject, subj_buf, sizeof(subj_buf)),
+            reply_to.c_str(),
+            reinterpret_cast<const void*>(data.data()),
+            static_cast<int>(data.size()));
+    }
     if (s != NATS_OK) {
         std::lock_guard lock(impl_->reply_mu);
         impl_->pending_replies.erase(reply_to);
