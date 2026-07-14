@@ -11,7 +11,7 @@ wait for the worker's reply.
 > `write_with_intent`, `execute_pipeline`, channel/workspace *creation*, and
 > `set_config` are **C++-only today**. Python examples below that use those
 > methods describe the intended API and are not yet callable from Python. See
-> `.planning/implementation-status.md` (note N7).
+> `.planning/LABIOS-2.1.md` (current engineering baseline).
 
 ## API Layers
 

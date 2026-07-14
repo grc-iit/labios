@@ -13,8 +13,8 @@ the current code from this description: the runtime uses **core NATS pub/sub**
 process), **Tier 2 "Agentic" reasoning is planned** (Tier 2 executes pipelines
 exactly like Tier 1 today), **elastic scaling is off by default**, and there is
 **no io_uring or coroutine** async path. For the authoritative
-capability-by-capability status see the internal engineering ledger
-`.planning/implementation-status.md`.
+capability-by-capability status see the internal planning authority
+`.planning/LABIOS-2.1.md`.
 
 ---
 
@@ -459,7 +459,7 @@ compatibility when routing labels that carry SDS pipelines.
 > workers reject labels carrying SDS pipelines. Tier 2 (Agentic) currently
 > executes pipelines exactly like Tier 1 (Pipeline); the reasoning/tool/inference
 > capabilities are planned, not implemented. Default Compose workers set no tier
-> and therefore run as Tier 0. See `.planning/implementation-status.md`.
+> and therefore run as Tier 0. See `.planning/LABIOS-2.1.md`.
 
 ---
 

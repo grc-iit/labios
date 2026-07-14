@@ -11,7 +11,7 @@ over files.
 > `labios_observe` reads Redis keys and queries the manager over NATS. These
 > tools do **not** yet create labels or traverse the dispatcher/scheduler/worker
 > path, and the `labios_process` pipeline ops are a separate implementation from
-> the C++ SDS builtins. See `.planning/implementation-status.md`.
+> the C++ SDS builtins. See `.planning/LABIOS-2.1.md`.
 
 ## Prerequisites
 

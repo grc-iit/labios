@@ -38,9 +38,8 @@ Clients never talk to workers. The dispatcher is the only bridge.
 > capabilities are component-level or prototype rather than verified end to end
 > (for example, the runtime uses core NATS rather than JetStream, Tier 2 workers
 > are not yet reasoning-capable, and elastic scaling is off by default). See the
-> internal engineering ledger `.planning/implementation-status.md` for the
-> capability-by-capability truth table and `.planning/direction.md` for the
-> project direction.
+> internal planning authority `.planning/LABIOS-2.1.md` for the engineering
+> truth baseline and project direction.
 
 ## Quick Start
 
@@ -84,7 +83,7 @@ Eight layers of abstraction. The C++ API is the most complete; the Python
 bindings currently expose a subset (sync/async I/O, URI I/O, channel publish,
 workspace put/get/del/grant, and `observe`). Label-level `create_label`/`publish`,
 `write_with_intent`, `execute_pipeline`, channel/workspace *creation*, and
-`set_config` are C++-only today — see `.planning/implementation-status.md`.
+`set_config` are C++-only today — see `.planning/LABIOS-2.1.md`.
 
 | Layer | C++ | Python | C |
 |-------|-----|--------|---|
