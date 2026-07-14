@@ -4,9 +4,17 @@ LABIOS is the first agent I/O runtime. It converts all I/O into self-describing
 labels that flow through a distributed pipeline of shufflers, schedulers, and
 workers. Each component enriches the label as it passes through. The label is the
 information highway, the state machine, and the audit trail. US Patent
-11,630,834 B2. NSF Award #2331480. HPDC'19 Best Paper Nominee.
+11,630,834 B2. NSF Award #2313154. HPDC'19 Best Paper Nominee.
 
-This document describes the system as built.
+This document describes the intended architecture. Some elements below are
+component-level or planned rather than verified end to end. Known deviations of
+the current code from this description: the runtime uses **core NATS pub/sub**
+(not JetStream), there is **no leader election** (the manager is a single
+process), **Tier 2 "Agentic" reasoning is planned** (Tier 2 executes pipelines
+exactly like Tier 1 today), **elastic scaling is off by default**, and there is
+**no io_uring or coroutine** async path. For the authoritative
+capability-by-capability status see the internal engineering ledger
+`.planning/implementation-status.md`.
 
 ---
 
@@ -28,7 +36,7 @@ Agent Frameworks (LangChain, CrewAI, custom)  |  HPC Apps (MPI, POSIX)
 │  streaming pub/sub      persistent ACL       OBSERVE labels │
 └──────────────────────────┬──────────────────────────────────┘
                            |
-         NATS JetStream (labels)  +  DragonflyDB (data + metadata)
+         NATS core pub/sub (labels)  +  DragonflyDB (data + metadata)
                            |
 ┌──────────────────────────v──────────────────────────────────┐
 │                    Label Dispatcher                          │
@@ -46,7 +54,7 @@ Agent Frameworks (LangChain, CrewAI, custom)  |  HPC Apps (MPI, POSIX)
 └──────────────────────────┬──────────────────────────────────┘
                            |
 ┌──────────────────────────v──────────────────────────────────┐
-│              Worker Manager (leader-elected)                  │
+│              Worker Manager (single-process)                  │
 │                                                             │
 │  Bucket-sorted registry (5 buckets by composite score)      │
 │  Per-tier queries: Databot | Pipeline | Agentic             │
@@ -442,10 +450,16 @@ for elastic scaling decisions.
 |------|----------|-------------------------------------|-------------|
 | 0    | Databot  | Single I/O operations, stateless    | Rejected    |
 | 1    | Pipeline | SDS DAG execution, program repo     | Full        |
-| 2    | Agentic  | Reasoning, tool use, inference      | Full        |
+| 2    | Agentic  | Reasoning, tool use, inference (planned) | Full   |
 
 Workers declare their tier at registration. The scheduler considers tier
 compatibility when routing labels that carry SDS pipelines.
+
+> **Status:** The only behavioral tier difference today is that Databot (Tier 0)
+> workers reject labels carrying SDS pipelines. Tier 2 (Agentic) currently
+> executes pipelines exactly like Tier 1 (Pipeline); the reasoning/tool/inference
+> capabilities are planned, not implemented. Default Compose workers set no tier
+> and therefore run as Tier 0. See `.planning/implementation-status.md`.
 
 ---
 
@@ -593,9 +607,12 @@ truth.
 
 ## Transport Layer
 
-### NATS JetStream
+### NATS
 
-All label routing flows through NATS. Key subjects:
+All label routing flows through NATS. The transport wrapper currently uses
+**core NATS** publish/subscribe/request (at-most-once); it does not use JetStream
+streams, durable consumers, or acknowledgements, even though the server is
+started with `--jetstream`. Key subjects:
 
 | Subject                     | Direction      | Payload               |
 |-----------------------------|----------------|-----------------------|
@@ -697,7 +714,7 @@ Eight services, all health-checked:
 
 | Service      | Image                                          | Ports          | Role                      |
 |--------------|------------------------------------------------|----------------|---------------------------|
-| nats         | nats:2.10-alpine                               | 4222, 8222     | Message broker, JetStream |
+| nats         | nats:2.10-alpine                               | 4222, 8222     | Message broker (JetStream enabled; runtime uses core NATS) |
 | redis        | docker.dragonflydb.io/dragonflydb/dragonfly    | 6379           | Warehouse + metadata      |
 | dispatcher   | labios-dispatcher (built)                      | internal       | Label routing             |
 | worker-1     | labios-worker (built)                          | internal       | speed=5, energy=1, 10GB   |
@@ -774,7 +791,7 @@ src/labios/                          Core library
     docker_client.h/cpp              Docker Engine API over Unix socket
     orchestrator.h/cpp               Template<ContainerRuntime>, commission/decommission
   transport/                         Infrastructure
-    nats.h/cpp                       NATS JetStream client wrapper
+    nats.h/cpp                       NATS core pub/sub client wrapper
     redis.h/cpp                      DragonflyDB client (pipeline, sorted sets, scans)
   adapter/                           POSIX intercept support
     adapter.h                        IOAdapter concept
@@ -864,12 +881,12 @@ deployment model; the architecture does not change.
 
 | Component       | Choice                              |
 |-----------------|-------------------------------------|
-| Language        | C++20 (coroutines, jthread, concepts) |
+| Language        | C++20 (`std::jthread`, concepts)    |
 | Build           | CMake 3.25+ with presets            |
 | Serialization   | FlatBuffers                         |
-| Label queue     | NATS 2.10+ with JetStream           |
+| Label queue     | NATS 2.10 (server JetStream-enabled; runtime uses core NATS) |
 | Warehouse       | DragonflyDB (Redis 7 wire-compatible)|
-| Async I/O       | io_uring with POSIX fallback        |
+| Async I/O       | POSIX file I/O (io_uring planned)   |
 | Hashing         | xxHash3                             |
 | Python bindings | pybind11 (planned)                  |
 | Testing         | Catch2 (C++) + pytest (Python)      |

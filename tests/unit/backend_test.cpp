@@ -311,7 +311,7 @@ TEST_CASE("SQLiteBackend preserves zero-length blobs", "[backend][sqlite]") {
 // KVBackend tests
 // ---------------------------------------------------------------------------
 
-TEST_CASE("KVBackend preserves zero-length values", "[backend][kv]") {
+TEST_CASE("KVBackend preserves zero-length values", "[backend][kv][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::KVBackend backend(redis, "labios:kv:test:");
 
@@ -332,7 +332,7 @@ TEST_CASE("KVBackend preserves zero-length values", "[backend][kv]") {
     REQUIRE(del_result.success);
 }
 
-TEST_CASE("KVBackend get missing key returns failure", "[backend][kv]") {
+TEST_CASE("KVBackend get missing key returns failure", "[backend][kv][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::KVBackend backend(redis, "labios:kv:test:missing:");
 

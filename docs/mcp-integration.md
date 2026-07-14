@@ -1,9 +1,17 @@
 # LABIOS MCP Integration Guide
 
 LABIOS ships an MCP (Model Context Protocol) server that gives coding agents
-direct access to the runtime. When connected, Claude Code, Codex CLI, or any
-MCP-compatible agent gains five tools for storing data, querying state, and
-running pipelines at the storage layer.
+five tools for storing data, querying state, and running line-oriented pipelines
+over files.
+
+> **Status:** The MCP server currently connects **directly** to the DragonflyDB
+> warehouse and the mounted worker data volume. `labios_store`/`labios_retrieve`
+> read and write Redis workspace keys directly, `labios_process` reads files from
+> the worker volume and runs a Python-side pipeline in-process, and
+> `labios_observe` reads Redis keys and queries the manager over NATS. These
+> tools do **not** yet create labels or traverse the dispatcher/scheduler/worker
+> path, and the `labios_process` pipeline ops are a separate implementation from
+> the C++ SDS builtins. See `.planning/implementation-status.md`.
 
 ## Prerequisites
 
@@ -120,7 +128,7 @@ Example:
 ```json
 labios_store(
     key="analysis/findings",
-    value="The codebase uses C++20 coroutines for all async paths...",
+    value="The dispatcher batches labels every 50ms before shuffling...",
     scope="project/labios",
     metadata={"source": "code_review", "confidence": 0.95}
 )
@@ -142,7 +150,7 @@ Example:
 labios_retrieve(key="analysis/findings")
 → {
     "key": "analysis/findings",
-    "value": "The codebase uses C++20 coroutines...",
+    "value": "The dispatcher batches labels every 50ms before shuffling...",
     "scope": "project/labios",
     "version": 1,
     "metadata": {"source": "code_review", "confidence": 0.95}

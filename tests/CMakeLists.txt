@@ -143,7 +143,17 @@ catch_discover_tests(labios-uri-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit
 
 add_executable(labios-backend-test unit/backend_test.cpp)
 target_link_libraries(labios-backend-test PRIVATE labios Catch2::Catch2WithMain)
-catch_discover_tests(labios-backend-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+# backend_test mixes hermetic cases (POSIX, SQLite, registry) with KVBackend
+# cases that require a live Redis. Register the hermetic subset as unit and the
+# infrastructure-dependent [live] subset as smoke so `ctest -L unit` stays offline.
+catch_discover_tests(labios-backend-test
+    TEST_SPEC "~[live]"
+    TEST_PREFIX "unit/"
+    PROPERTIES LABELS "unit" TIMEOUT 60)
+catch_discover_tests(labios-backend-test
+    TEST_SPEC "[live]"
+    TEST_PREFIX "smoke/"
+    PROPERTIES LABELS "smoke" TIMEOUT 60)
 
 add_executable(labios-sds-test unit/sds_test.cpp)
 target_link_libraries(labios-sds-test PRIVATE labios Catch2::Catch2WithMain)
@@ -155,7 +165,17 @@ catch_discover_tests(labios-channel-test TEST_PREFIX "smoke/" PROPERTIES LABELS 
 
 add_executable(labios-continuation-test unit/continuation_test.cpp)
 target_link_libraries(labios-continuation-test PRIVATE labios Catch2::Catch2WithMain)
-catch_discover_tests(labios-continuation-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+# continuation_test mixes hermetic cases (chain-param codec, evaluate_condition)
+# with process_continuation cases that publish through live NATS/Redis. Register
+# the hermetic subset as unit and the [live] subset as smoke.
+catch_discover_tests(labios-continuation-test
+    TEST_SPEC "~[live]"
+    TEST_PREFIX "unit/"
+    PROPERTIES LABELS "unit" TIMEOUT 60)
+catch_discover_tests(labios-continuation-test
+    TEST_SPEC "[live]"
+    TEST_PREFIX "smoke/"
+    PROPERTIES LABELS "smoke" TIMEOUT 60)
 
 add_executable(labios-transport-test unit/transport_test.cpp)
 target_link_libraries(labios-transport-test PRIVATE labios Catch2::Catch2WithMain)

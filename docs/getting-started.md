@@ -24,7 +24,7 @@ binaries). Subsequent starts are instant.
 
 ```bash
 docker compose ps                       # all 10 services healthy
-curl -s http://localhost:8222/healthz    # NATS JetStream ok
+curl -s http://localhost:8222/healthz    # NATS healthy
 docker compose exec redis redis-cli ping  # DragonflyDB ok
 ```
 
@@ -140,7 +140,7 @@ Once connected, Claude Code gains five MCP tools:
 
 | Service | Image | Port | Role |
 |---------|-------|------|------|
-| **nats** | nats:2.10-alpine | 4222, 8222 | Message broker with JetStream. All labels route through NATS subjects. |
+| **nats** | nats:2.10-alpine | 4222, 8222 | Message broker (server JetStream-enabled; runtime uses core NATS). All labels route through NATS subjects. |
 | **redis** | DragonflyDB | 6379 | Internal warehouse and metadata store. Stages data in transit, tracks label status and file locations. NOT a backend for user data. |
 | **redis-kv** | Redis 7 Alpine | 6380 | External KV backend for `kv://` URIs. Simulates user infrastructure. |
 | **dispatcher** | labios-dispatcher | internal | Receives all labels, runs shuffler (aggregation, dependency detection), scheduler (4 policies), continuation processor, and telemetry publisher. |

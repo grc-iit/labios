@@ -4,7 +4,7 @@ LABIOS converts all I/O into self-describing labels that flow through a distribu
 runtime of shufflers, schedulers, and workers. Each component enriches the label
 as it passes. Labels are the information highway of the system.
 
-**US Patent 11,630,834 B2 | NSF Award #2331480 | HPDC'19 Best Paper 1st Place**
+**US Patent 11,630,834 B2 | NSF Award #2313154 | HPDC'19 Best Paper Nominee**
 
 ## What Is It
 
@@ -21,7 +21,7 @@ Agent / HPC App
     ▼
 LABIOS Client (Label Manager + Content Manager + Catalog Manager)
     │
-    │ NATS JetStream (labels) + DragonflyDB (data staging)
+    │ NATS (labels) + DragonflyDB (data staging)
     ▼
 Dispatcher (Shuffler → Scheduler → Continuation Processor)
     │
@@ -33,6 +33,14 @@ Backends (file:// | sqlite:// | optional kv:// | planned S3/vector/graph)
 ```
 
 Clients never talk to workers. The dispatcher is the only bridge.
+
+> **Implementation status:** This README describes the intended system. Several
+> capabilities are component-level or prototype rather than verified end to end
+> (for example, the runtime uses core NATS rather than JetStream, Tier 2 workers
+> are not yet reasoning-capable, and elastic scaling is off by default). See the
+> internal engineering ledger `.planning/implementation-status.md` for the
+> capability-by-capability truth table and `.planning/direction.md` for the
+> project direction.
 
 ## Quick Start
 
@@ -60,11 +68,11 @@ with C++, C, and MCP examples.
 | Label routing | URI-based routing to any backend (file, KV, SQLite, and more) |
 | Shuffler | Write aggregation, RAW/WAW/WAR dependency detection, supertask creation |
 | 4 schedulers | Round Robin, Random, Constraint-based, MinMax DP with weight profiles |
-| 3 worker tiers | Databot (stateless I/O), Pipeline (DAG execution), Agentic (reasoning) |
-| SDS pipelines | 11 built-in operations, programmable DAGs, pipeline-at-storage execution |
-| Channels | Streaming pub/sub with backpressure, TTL, and ordered delivery |
-| Workspaces | Persistent shared state with per-key versioning and ACLs |
-| Elastic scaling | Per-tier auto-scaling via Docker Engine API with energy budgets |
+| 3 worker tiers | Databot (stateless I/O) and Pipeline (DAG execution) are behavioral; Agentic/Tier 2 reasoning is planned (enum + scoring only today) |
+| SDS pipelines | 11 built-in byte-level operations, programmable DAGs, pipeline-at-storage execution |
+| Channels | Streaming pub/sub with TTL and ordered delivery (registries are process-local today) |
+| Workspaces | Shared state (Redis) with per-key versioning; ACLs are process-local today |
+| Elastic scaling | Per-tier auto-scaling via Docker Engine API (off by default; enable via `docker-compose.elastic.yml`) |
 | POSIX intercept | LD_PRELOAD transparent interception of 30 POSIX and stdio calls |
 | MCP server | 5 tools for coding agent integration (observe, store, retrieve, process, knowledge) |
 | Observability | 8 query endpoints, continuous telemetry with p50/p95/p99 latencies |
@@ -72,7 +80,11 @@ with C++, C, and MCP examples.
 
 ## Client APIs
 
-Eight layers of abstraction across three languages:
+Eight layers of abstraction. The C++ API is the most complete; the Python
+bindings currently expose a subset (sync/async I/O, URI I/O, channel publish,
+workspace put/get/del/grant, and `observe`). Label-level `create_label`/`publish`,
+`write_with_intent`, `execute_pipeline`, channel/workspace *creation*, and
+`set_config` are C++-only today — see `.planning/implementation-status.md`.
 
 | Layer | C++ | Python | C |
 |-------|-----|--------|---|
@@ -100,7 +112,9 @@ Connect Claude Code, Codex CLI, or any MCP-compatible agent:
 ```
 
 The agent gains five MCP tools: `labios_observe`, `labios_store`,
-`labios_retrieve`, `labios_process`, and `labios_knowledge`. See
+`labios_retrieve`, `labios_process`, and `labios_knowledge`. Note: the MCP server
+currently talks directly to the DragonflyDB warehouse and the worker data volume;
+it does not yet create labels or traverse the dispatcher/worker path. See
 [docs/mcp-integration.md](docs/mcp-integration.md) for the full reference.
 
 ## Build
@@ -143,9 +157,10 @@ cd mcp && python3 -m pytest tests
 
 ## Tech Stack
 
-C++20 (coroutines, jthread, concepts) | FlatBuffers | NATS 2.10 JetStream |
-DragonflyDB | io_uring with POSIX fallback | xxHash3 | pybind11 | Catch2 |
-Docker Compose | CMake 3.25+ | GitHub Actions (ASan, TSan, UBSan)
+C++20 (`std::jthread`, concepts) | FlatBuffers | NATS 2.10 (server runs with
+JetStream enabled; the runtime currently uses core NATS pub/sub) | DragonflyDB |
+POSIX file I/O (io_uring planned) | xxHash3 | pybind11 | Catch2 | Docker Compose |
+CMake 3.25+ | GitHub Actions (ASan, TSan, UBSan)
 
 ## Documentation
 
@@ -157,7 +172,7 @@ Docker Compose | CMake 3.25+ | GitHub Actions (ASan, TSan, UBSan)
 | [Configuration](docs/configuration.md) | TOML fields, weight profiles, env vars |
 | [Backends](docs/backends.md) | BackendStore concept, writing new backends |
 | [MCP Integration](docs/mcp-integration.md) | Connecting coding agents via MCP |
-| [Architecture](docs/architecture.md) | Complete implementation reference |
+| [Architecture](docs/architecture.md) | Intended architecture reference |
 
 ## Contributing
 

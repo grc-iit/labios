@@ -111,7 +111,7 @@ TEST_CASE("evaluate_condition: label_id comparison", "[continuation]") {
 // Tests requiring live Redis + NATS
 // ---------------------------------------------------------------------------
 
-TEST_CASE("ContinuationKind::None returns nullopt", "[continuation]") {
+TEST_CASE("ContinuationKind::None returns nullopt", "[continuation][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);
@@ -128,7 +128,7 @@ TEST_CASE("ContinuationKind::None returns nullopt", "[continuation]") {
     REQUIRE_FALSE(result.has_value());
 }
 
-TEST_CASE("ContinuationKind::Notify publishes completion to channel", "[continuation]") {
+TEST_CASE("ContinuationKind::Notify publishes completion to channel", "[continuation][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);
@@ -179,7 +179,7 @@ TEST_CASE("ContinuationKind::Notify publishes completion to channel", "[continua
     channels.remove("test-cont-notify");
 }
 
-TEST_CASE("ContinuationKind::Chain creates new label from chain_params", "[continuation]") {
+TEST_CASE("ContinuationKind::Chain creates new label from chain_params", "[continuation][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);
@@ -214,7 +214,7 @@ TEST_CASE("ContinuationKind::Chain creates new label from chain_params", "[conti
     REQUIRE(src.path == "/data/result.bin");
 }
 
-TEST_CASE("Chained label gets unique snowflake ID", "[continuation]") {
+TEST_CASE("Chained label gets unique snowflake ID", "[continuation][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);
@@ -241,7 +241,7 @@ TEST_CASE("Chained label gets unique snowflake ID", "[continuation]") {
     REQUIRE(r2->app_id == 3);
 }
 
-TEST_CASE("ContinuationKind::Conditional chains when condition is true", "[continuation]") {
+TEST_CASE("ContinuationKind::Conditional chains when condition is true", "[continuation][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);
@@ -267,7 +267,7 @@ TEST_CASE("ContinuationKind::Conditional chains when condition is true", "[conti
     REQUIRE(result->type == labios::LabelType::Write);
 }
 
-TEST_CASE("ContinuationKind::Conditional returns nullopt when false", "[continuation]") {
+TEST_CASE("ContinuationKind::Conditional returns nullopt when false", "[continuation][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);
@@ -291,7 +291,7 @@ TEST_CASE("ContinuationKind::Conditional returns nullopt when false", "[continua
     REQUIRE_FALSE(result.has_value());
 }
 
-TEST_CASE("Notify auto-creates channel if not found in registry", "[continuation]") {
+TEST_CASE("Notify auto-creates channel if not found in registry", "[continuation][live]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);

@@ -1,8 +1,17 @@
 # LABIOS SDK Guide
 
-Complete API reference for the LABIOS client libraries. All three language
-bindings (C++, Python, C) wrap the same runtime. Every operation creates a label,
-publishes it through NATS to the dispatcher, and waits for the worker's reply.
+API reference for the LABIOS client libraries. The C++ client is the most
+complete surface. Operations publish a label through NATS to the dispatcher and
+wait for the worker's reply.
+
+> **Binding coverage:** The C API exposes only synchronous and asynchronous I/O.
+> The Python bindings expose a subset of the C++ client: sync/async I/O, URI I/O
+> (`write_to`/`read_from`), `publish_to_channel`, `workspace_put`/`get`/`del`/
+> `grant`, and `observe`. Label-level `create_label`/`publish`,
+> `write_with_intent`, `execute_pipeline`, channel/workspace *creation*, and
+> `set_config` are **C++-only today**. Python examples below that use those
+> methods describe the intended API and are not yet callable from Python. See
+> `.planning/implementation-status.md` (note N7).
 
 ## API Layers
 
@@ -12,11 +21,11 @@ The client exposes eight layers, ordered from highest to lowest abstraction:
 |-------|---------|-----|--------|---|
 | Synchronous I/O | Read/write with blocking wait | `write()` / `read()` | `write()` / `read()` | `labios_write()` / `labios_read()` |
 | Asynchronous I/O | Non-blocking with explicit wait | `async_write()` / `async_read()` / `wait()` | `async_write()` / `async_read()` / `wait()` | `labios_async_write()` / `labios_async_read()` / `labios_wait()` |
-| Label-level | Build and publish raw labels | `create_label()` / `publish()` | `create_label()` / `publish()` | -- |
+| Label-level | Build and publish raw labels | `create_label()` / `publish()` | not yet bound | -- |
 | URI-based | Route by URI scheme | `write_to()` / `read_from()` | `write_to()` / `read_from()` | -- |
-| Intent-driven | Semantic intent on labels | `write_with_intent()` / `execute_pipeline()` | `write_with_intent()` / `execute_pipeline()` | -- |
-| Channels | Streaming pub/sub | `create_channel()` / `publish_to_channel()` / `subscribe_to_channel()` | same | -- |
-| Workspaces | Persistent shared state with ACL | `create_workspace()` / `workspace_put()` / `workspace_get()` | same | -- |
+| Intent-driven | Semantic intent on labels | `write_with_intent()` / `execute_pipeline()` | not yet bound | -- |
+| Channels | Streaming pub/sub | `create_channel()` / `publish_to_channel()` / `subscribe_to_channel()` | `publish_to_channel()` only | -- |
+| Workspaces | Persistent shared state with ACL | `create_workspace()` / `workspace_put()` / `workspace_get()` | `workspace_put/get/del/grant` (no create) | -- |
 | Observability | Query runtime state | `observe()` | `observe()` | -- |
 
 ## Connecting

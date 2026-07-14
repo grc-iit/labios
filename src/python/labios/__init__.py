@@ -1,6 +1,6 @@
 """LABIOS 2.0 Python SDK.
 
-US Patent 11,630,834 B2 | NSF Award #2331480
+US Patent 11,630,834 B2 | NSF Award #2313154
 """
 try:
     from _labios import (

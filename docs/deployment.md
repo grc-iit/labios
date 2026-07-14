@@ -11,7 +11,7 @@ The default `docker-compose.yml` starts 10 services:
 ┌─────────┐     ┌──────────┐     ┌─────────┐
 │  NATS   │     │ Dragonfly│     │ Redis-KV│
 │ :4222   │     │  :6379   │     │  :6380  │
-│ JetStream│    │ warehouse│     │ kv://   │
+│ core NATS│    │ warehouse│     │ kv://   │
 └────┬────┘     └────┬─────┘     └────┬────┘
      │               │                │
      └───────┬───────┘                │
@@ -43,7 +43,7 @@ The default `docker-compose.yml` starts 10 services:
 
 | Service | Image | Ports | Purpose |
 |---------|-------|-------|---------|
-| nats | nats:2.10-alpine | 4222 (client), 8222 (monitoring) | Message broker. All labels flow through NATS subjects with JetStream persistence. |
+| nats | nats:2.10-alpine | 4222 (client), 8222 (monitoring) | Message broker. All labels flow through NATS subjects. The server runs with `--jetstream`, but the runtime currently uses core NATS pub/sub (no stream persistence). |
 | redis | docker.dragonflydb/dragonfly | 6379 | Internal warehouse and metadata store (DragonflyDB). Stages data in transit, tracks label status. This is internal plumbing, not a user-facing backend. |
 | redis-kv | redis:7-alpine | 6380 | External KV backend for `kv://` URIs. Simulates user infrastructure for development. |
 | dispatcher | labios-dispatcher | internal | Processes label batches: OBSERVE handler, shuffler (aggregation, dependency detection), scheduler (4 policies), continuation processor, telemetry publisher. |
@@ -209,7 +209,7 @@ LABIOS does not yet ship Helm charts but the architecture maps directly to K8s:
 - NATS: use the [nats-operator](https://github.com/nats-io/nats-operator) or NATS Helm chart
 - DragonflyDB: use the [Dragonfly operator](https://github.com/dragonflydb/dragonfly-operator)
 - Dispatcher: single-replica Deployment
-- Manager: single-replica Deployment (leader election via NATS)
+- Manager: single-replica Deployment (single process; leader election is not yet implemented, so run one replica)
 - Workers: StatefulSet with per-pod PVCs for data volumes
 - MCP server: sidecar in the agent pod or standalone Deployment
 

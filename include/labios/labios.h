@@ -1,5 +1,5 @@
 /* labios.h — LABIOS 2.0 Public C API
- * US Patent 11,630,834 B2, NSF Award #2331480
+ * US Patent 11,630,834 B2, NSF Award #2313154
  *
  * This header provides a C-compatible interface for language bindings
  * (Python, Rust, Go) and agent frameworks. For C++ applications, prefer
