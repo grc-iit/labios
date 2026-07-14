@@ -171,7 +171,32 @@ int main() {
     nats.subscribe("labios.labels",
         [&](std::string_view /*subject*/, std::span<const std::byte> data,
             std::string_view reply_to) {
-            auto label = labios::deserialize_label(data);
+            labios::LabelData label;
+            try {
+                label = labios::deserialize_label(data);
+            } catch (const labios::LabelDecodeError& ex) {
+                std::cerr << "dispatcher: rejected label (" << ex.category()
+                          << "): " << ex.what() << "\n" << std::flush;
+                if (!reply_to.empty()) {
+                    labios::CompletionData rejection;
+                    rejection.status = labios::CompletionStatus::Error;
+                    rejection.error = ex.what();
+                    auto payload = labios::serialize_completion(rejection);
+                    nats.publish(reply_to, std::span<const std::byte>(payload));
+                }
+                return;
+            } catch (const std::exception& ex) {
+                std::cerr << "dispatcher: rejected malformed label: "
+                          << ex.what() << "\n" << std::flush;
+                if (!reply_to.empty()) {
+                    labios::CompletionData rejection;
+                    rejection.status = labios::CompletionStatus::Error;
+                    rejection.error = std::string("MALFORMED_BUFFER: ") + ex.what();
+                    auto payload = labios::serialize_completion(rejection);
+                    nats.publish(reply_to, std::span<const std::byte>(payload));
+                }
+                return;
+            }
             label.reply_to = std::string(reply_to);
             labios::mark_label_queued(label, now_us());
             {

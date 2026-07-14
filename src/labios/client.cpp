@@ -105,6 +105,7 @@ PendingIO Client::publish(const LabelData& label,
     if (mutable_label.created_us == 0) {
         mark_label_created(mutable_label);
     }
+    validate_label_admission(mutable_label);
     auto serialized = serialize_label(mutable_label);
     auto async = nats.publish_request_async("labios.labels", serialized);
     nats.flush();

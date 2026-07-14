@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
 
 namespace labios {
 
@@ -36,11 +37,12 @@ std::vector<PendingLabel> LabelManager::publish_write(
         label.source = memory_ptr(chunk.data(), chunk_size);
         label.destination = file_path(filepath, offset + pos, chunk_size);
         label.operation = "write";
-        label.flags = LabelFlags::Queued;
+        label.flags = 0;
         label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
         mark_label_created(label);
+        validate_label_admission(label);
         auto serialized = serialize_label(label);
 
         content_.stage(label.id, chunk);
@@ -73,11 +75,12 @@ std::vector<PendingLabel> LabelManager::publish_read(
         label.source = file_path(filepath, offset + pos, chunk_size);
         label.destination = memory_ptr(nullptr, chunk_size);
         label.operation = "read";
-        label.flags = LabelFlags::Queued;
+        label.flags = 0;
         label.file_key = std::string(filepath);
         label.app_id = app_id_;
         label.data_size = chunk_size;
         mark_label_created(label);
+        validate_label_admission(label);
         auto serialized = serialize_label(label);
 
         catalog_.create(label);
@@ -104,7 +107,14 @@ void LabelManager::wait(std::span<PendingLabel> pending) {
     for (auto& p : pending) {
         resolve_reply(p, reply_timeout_ms_);
         if (p.reply_data.empty()) continue;
-        auto comp = deserialize_completion(p.reply_data);
+        CompletionData comp;
+        try {
+            comp = deserialize_completion(p.reply_data);
+        } catch (const LabelDecodeError& ex) {
+            std::cerr << "label manager: rejected completion (" << ex.category()
+                      << "): " << ex.what() << "\n" << std::flush;
+            continue;
+        }
         if (comp.status == CompletionStatus::Error) {
             throw std::runtime_error("label " + std::to_string(p.label_id)
                                      + " failed: " + comp.error);
@@ -119,7 +129,14 @@ std::vector<std::byte> LabelManager::wait_read(
     for (auto& p : pending) {
         resolve_reply(p, reply_timeout_ms_);
         if (p.reply_data.empty()) continue;
-        auto comp = deserialize_completion(p.reply_data);
+        CompletionData comp;
+        try {
+            comp = deserialize_completion(p.reply_data);
+        } catch (const LabelDecodeError& ex) {
+            std::cerr << "label manager: rejected completion (" << ex.category()
+                      << "): " << ex.what() << "\n" << std::flush;
+            continue;
+        }
         if (comp.status == CompletionStatus::Error) {
             throw std::runtime_error("read label " + std::to_string(p.label_id)
                                      + " failed: " + comp.error);

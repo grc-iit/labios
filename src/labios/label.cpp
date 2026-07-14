@@ -10,6 +10,9 @@
 
 namespace labios {
 
+LabelDecodeError::LabelDecodeError(std::string category, std::string detail)
+    : std::runtime_error(category + ": " + detail), category_(std::move(category)) {}
+
 // ---------------------------------------------------------------------------
 // Factory functions
 // ---------------------------------------------------------------------------
@@ -398,6 +401,7 @@ static std::pair<const std::byte*, size_t> serialize_label_core(
     // Build the Label table.
     schema::LabelBuilder builder(fbb);
     builder.add_id(label.id);
+    builder.add_ir_version(label.ir_version == 0 ? kCurrentIrVersion : label.ir_version);
     builder.add_type(static_cast<schema::LabelType>(label.type));
     builder.add_source(src_off);
     builder.add_destination(dst_off);
@@ -464,9 +468,40 @@ inline void fb_read_string(std::string& dst, const flatbuffers::String* src) {
 } // namespace
 
 LabelData deserialize_label(std::span<const std::byte> buf) {
+    if (buf.empty()) {
+        throw LabelDecodeError("MALFORMED_BUFFER", "empty label buffer");
+    }
+    flatbuffers::Verifier verifier(
+        reinterpret_cast<const uint8_t*>(buf.data()), buf.size());
+    if (!schema::VerifyLabelBuffer(verifier)) {
+        throw LabelDecodeError("MALFORMED_BUFFER", "FlatBuffers verification failed");
+    }
     auto fb = schema::GetLabel(buf.data());
 
+    const auto type = static_cast<uint8_t>(fb->type());
+    const auto intent = static_cast<uint8_t>(fb->intent());
+    const auto isolation = static_cast<uint8_t>(fb->isolation());
+    const auto durability = static_cast<uint8_t>(fb->durability());
+    const auto status = static_cast<uint8_t>(fb->status());
+    if (type > static_cast<uint8_t>(LabelType::Observe) ||
+        intent > static_cast<uint8_t>(Intent::ReasoningTrace) ||
+        isolation > static_cast<uint8_t>(Isolation::Global) ||
+        durability > static_cast<uint8_t>(Durability::Durable) ||
+        status > static_cast<uint8_t>(StatusCode::Failed)) {
+        throw LabelDecodeError("INVALID_ENUM", "label enum value is out of range");
+    }
+
+    const auto ir_version = fb->ir_version();
+    if (ir_version != 0 && ir_version != kCurrentIrVersion) {
+        throw LabelDecodeError("UNSUPPORTED_IR_VERSION",
+                               "unsupported Label I/O IR version " +
+                               std::to_string(ir_version));
+    }
+
     LabelData out;
+    // A missing field is version 0 compatibility input. It is normalized to
+    // the current canonical in-memory representation after decoding.
+    out.ir_version = kCurrentIrVersion;
     out.id          = fb->id();
     out.type        = static_cast<LabelType>(fb->type());
     out.source      = deserialize_pointer(fb->source());
@@ -597,7 +632,19 @@ std::vector<std::byte> serialize_completion(const CompletionData& comp) {
 }
 
 CompletionData deserialize_completion(std::span<const std::byte> buf) {
+    if (buf.empty()) {
+        throw LabelDecodeError("MALFORMED_BUFFER", "empty completion buffer");
+    }
+    flatbuffers::Verifier verifier(
+        reinterpret_cast<const uint8_t*>(buf.data()), buf.size());
+    if (!verifier.VerifyBuffer<schema::Completion>(nullptr)) {
+        throw LabelDecodeError("MALFORMED_BUFFER", "FlatBuffers verification failed");
+    }
     auto fb = flatbuffers::GetRoot<schema::Completion>(buf.data());
+    if (static_cast<uint8_t>(fb->status()) >
+        static_cast<uint8_t>(CompletionStatus::Error)) {
+        throw LabelDecodeError("INVALID_ENUM", "completion status is out of range");
+    }
 
     CompletionData out;
     out.label_id = fb->label_id();
@@ -605,6 +652,59 @@ CompletionData deserialize_completion(std::span<const std::byte> buf) {
     fb_read_string(out.error, fb->error());
     fb_read_string(out.data_key, fb->data_key());
     return out;
+}
+
+void validate_label_admission(const LabelData& label) {
+    if (label.ir_version != kCurrentIrVersion)
+        throw LabelDecodeError("UNSUPPORTED_IR_VERSION", "producer label is not IR version 1");
+    if (label.id == 0)
+        throw LabelDecodeError("DUPLICATE_ID", "label id must be nonzero");
+    if (label.flags != 0)
+        throw LabelDecodeError("ILLEGAL_COMBINATION", "producer flags must be zero");
+
+    const bool has_source = !std::holds_alternative<std::monostate>(label.source) ||
+                            !label.source_uri.empty();
+    const bool has_destination = !std::holds_alternative<std::monostate>(label.destination) ||
+                                 !label.dest_uri.empty();
+    auto operation = label.operation;
+    if (operation.empty()) {
+        switch (label.type) {
+        case LabelType::Read: operation = "read"; break;
+        case LabelType::Write: operation = "write"; break;
+        case LabelType::Delete: operation = "core.delete"; break;
+        case LabelType::Flush: operation = "core.flush"; break;
+        case LabelType::Composite: operation = "core.composite"; break;
+        case LabelType::Observe: operation = "core.observe"; break;
+        }
+    }
+    const bool core_name = operation == "core.read" || operation == "core.write" ||
+                           operation == "core.delete" || operation == "core.flush" ||
+                           operation == "core.observe" || operation == "core.composite";
+    const bool alias = (operation == "read" && label.type == LabelType::Read) ||
+                       (operation == "write" && label.type == LabelType::Write);
+    if (!core_name && !alias)
+        throw LabelDecodeError("UNKNOWN_REFINEMENT", "unregistered operation " + operation);
+    switch (label.type) {
+    case LabelType::Read:
+        if (!has_source) throw LabelDecodeError("MISSING_FIELD", "Read requires a source");
+        break;
+    case LabelType::Write:
+        if (!has_destination) throw LabelDecodeError("MISSING_FIELD", "Write requires a destination");
+        if (!has_source && label.data_size == 0)
+            throw LabelDecodeError("MISSING_FIELD", "Write requires an input");
+        break;
+    case LabelType::Delete:
+    case LabelType::Flush:
+        if (!has_destination) throw LabelDecodeError("MISSING_FIELD", "operation requires a destination");
+        break;
+    case LabelType::Observe:
+        if (!has_source) throw LabelDecodeError("MISSING_FIELD", "Observe requires a source");
+        break;
+    case LabelType::Composite:
+        if (label.children.empty()) throw LabelDecodeError("MISSING_FIELD", "Composite requires children");
+        if (has_source || has_destination) throw LabelDecodeError("ILLEGAL_COMBINATION", "Composite cannot have resources");
+        break;
+    }
 }
 
 } // namespace labios

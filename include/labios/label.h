@@ -7,10 +7,21 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <stdexcept>
 #include <variant>
 #include <vector>
 
 namespace labios {
+
+inline constexpr uint32_t kCurrentIrVersion = 1;
+
+class LabelDecodeError : public std::runtime_error {
+public:
+    LabelDecodeError(std::string category, std::string detail);
+    const std::string& category() const noexcept { return category_; }
+private:
+    std::string category_;
+};
 
 enum class LabelType : uint8_t { Read, Write, Delete, Flush, Composite, Observe };
 enum class Intent : uint8_t {
@@ -102,6 +113,7 @@ struct LabelResult {
 };
 
 struct LabelData {
+    uint32_t ir_version = kCurrentIrVersion;
     uint64_t id = 0;
     LabelType type = LabelType::Write;
     Pointer source;
@@ -199,6 +211,10 @@ std::vector<std::byte> serialize_label(const LabelData& label);
 std::span<const std::byte> serialize_label_view(const LabelData& label);
 
 LabelData deserialize_label(std::span<const std::byte> buf);
+
+/// Validate a normalized producer label before admission.
+/// Throws LabelDecodeError with a stable CATEGORY: detail message.
+void validate_label_admission(const LabelData& label);
 
 std::vector<std::byte> serialize_completion(const CompletionData& completion);
 CompletionData deserialize_completion(std::span<const std::byte> buf);

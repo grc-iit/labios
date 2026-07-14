@@ -118,6 +118,9 @@ table Label {
   started_us:     uint64;
   completed_us:   uint64;
   result:         LabelResult;
+
+  // Versioned Label I/O semantic IR. Appended for backwards-compatible parsing.
+  ir_version:     uint;
 }
 
 table Completion {

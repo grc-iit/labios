@@ -1,8 +1,80 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <labios/label.h>
+#include <flatbuffers/flatbuffers.h>
+#include <label_generated.h>
 
 #include <unordered_set>
+
+TEST_CASE("Serialized labels carry the current IR version", "[label][ir]") {
+    labios::LabelData label;
+    label.id = 1;
+    auto buf = labios::serialize_label(label);
+    auto* fb = labios::schema::GetLabel(buf.data());
+    REQUIRE(fb->ir_version() == labios::kCurrentIrVersion);
+    REQUIRE(labios::deserialize_label(buf).ir_version == labios::kCurrentIrVersion);
+}
+
+TEST_CASE("FlatBuffers rejects malformed label and completion buffers", "[label][verifier]") {
+    labios::LabelData label;
+    label.id = 1;
+    auto label_buf = labios::serialize_label(label);
+    label_buf.resize(label_buf.size() - 1);
+    REQUIRE_THROWS_WITH(labios::deserialize_label(label_buf),
+                        "MALFORMED_BUFFER: FlatBuffers verification failed");
+
+    auto flipped = labios::serialize_label(label);
+    flipped[0] ^= std::byte{0xff};
+    REQUIRE_THROWS_WITH(labios::deserialize_label(flipped),
+                        "MALFORMED_BUFFER: FlatBuffers verification failed");
+    REQUIRE_THROWS_WITH(labios::deserialize_label({}),
+                        "MALFORMED_BUFFER: empty label buffer");
+
+    auto completion = labios::serialize_completion({});
+    completion.resize(completion.size() - 1);
+    REQUIRE_THROWS_WITH(labios::deserialize_completion(completion),
+                        "MALFORMED_BUFFER: FlatBuffers verification failed");
+}
+
+TEST_CASE("Legacy label without ir_version normalizes to version 1", "[label][ir]") {
+    flatbuffers::FlatBufferBuilder builder;
+    labios::schema::LabelBuilder label_builder(builder);
+    label_builder.add_id(9);
+    auto root = label_builder.Finish();
+    labios::schema::FinishLabelBuffer(builder, root);
+    auto bytes = std::span<const std::byte>(
+        reinterpret_cast<const std::byte*>(builder.GetBufferPointer()), builder.GetSize());
+    auto result = labios::deserialize_label(bytes);
+    REQUIRE(result.ir_version == labios::kCurrentIrVersion);
+}
+
+TEST_CASE("Unknown future IR versions are rejected", "[label][ir]") {
+    labios::LabelData label;
+    label.id = 1;
+    label.ir_version = labios::kCurrentIrVersion + 1;
+    REQUIRE_THROWS_WITH(labios::deserialize_label(labios::serialize_label(label)),
+                        "UNSUPPORTED_IR_VERSION: unsupported Label I/O IR version 2");
+}
+
+TEST_CASE("Admission validation distinguishes codec fixtures", "[label][validation]") {
+    labios::LabelData fixture;
+    fixture.id = 1;
+    fixture.type = labios::LabelType::Write;
+    fixture.operation = "write_block";
+    auto decoded = labios::deserialize_label(labios::serialize_label(fixture));
+    REQUIRE(decoded.id == fixture.id);
+    REQUIRE_THROWS_WITH(labios::validate_label_admission(decoded),
+                        "UNKNOWN_REFINEMENT: unregistered operation write_block");
+
+    labios::LabelData invalid;
+    invalid.id = 2;
+    invalid.type = labios::LabelType::Write;
+    invalid.source = labios::file_path("/tmp/input");
+    REQUIRE_THROWS_WITH(labios::validate_label_admission(invalid),
+                        "MISSING_FIELD: Write requires a destination");
+}
 
 TEST_CASE("Label serialization roundtrip with FilePath", "[label]") {
     labios::LabelData label;
