@@ -1104,6 +1104,550 @@ cooperative executor cancellation must obey the descriptor's last safe
 cancellation point and the completion rules; that mechanism belongs to the
 asynchronous-completion Working Set.
 
+### 9.7 Resource-aware scheduling and placement
+
+This subsection defines the normative WS3 solver-input and placement contract.
+It is a contract for a future implementation slice, not a claim that the
+current dispatcher, solver interfaces, worker registry, or score residual
+already implement it. The scheduler replaces opaque label-byte inputs with
+typed runtime descriptors, prepares one complete post-shuffler batch, applies
+one policy-independent legality and feasibility gate, and then asks the
+selected policy to choose workers. Every unit receives an explicit assigned or
+deferred decision.
+
+#### 9.7.1 Batch boundary and placement objects
+
+The conceptual internal interfaces are:
+
+```text
+SchedulingBatch
+  batch_id
+  registry_generation
+  scheduling_units[]       // stable P01-legal order
+
+SchedulingUnitDescriptor
+  unit_id
+  job_ordinal
+  members[]                // one JobDescriptor, or ordered Composite children
+  readiness
+  external_dependencies[]
+
+PreparedSchedulingBatch
+  scheduling_batch
+  worker_snapshot
+  feasibility_matrix       // every unit/worker evaluation
+  per_worker_capacity_budget
+
+PlacementPlan
+  decisions[]              // exactly one, in input order, per scheduling unit
+
+PlacementDecision
+  unit_id
+  Assigned(worker_id) | Deferred(park_reason)
+  policy_evidence
+```
+
+A raw dispatcher collection boundary closes when the configured size threshold
+wakes the collector or when the configured timeout expires. Every label moved
+from the input buffer at that instant belongs to that raw batch; a label that
+arrives afterward belongs to the next raw batch. Dispatcher-local core Observe
+labels remain outside worker scheduling. Every other admitted label that
+survives shuffling participates in exactly one post-shuffler
+`SchedulingBatch`.
+
+The post-shuffler batch contains all placement units represented by the current
+`direct_route`, `supertasks`, and `independent` outputs. Read-locality and
+write-locality results become typed preferred or hard locality inputs to the
+common path; neither is permission to bypass availability, tier, operation,
+backend-attachment, locality, or capacity checks.
+
+Placement-unit rules are:
+
+- A non-aggregated label is one scheduling unit with one `JobDescriptor`.
+- A valid aggregate is one unit described by its new synthetic label. Its
+  original labels remain independently attributable as required by Section
+  9.4.
+- A Composite/supertask is one co-location unit whose `members` are the ordered
+  descriptors of all children. One worker must be feasible for every member,
+  and a policy MUST NOT split or reorder the children.
+- Dependency-blocked units remain represented in the batch. Only the P01-ready
+  frontier may be assigned; a blocked unit receives a deferred decision and
+  remains on the P05 queued/parked path rather than disappearing.
+- A solver is invoked once for the complete prepared batch, not once per label,
+  aggregate, Composite, intent, or locality class. Intent remains a per-job
+  policy input inside that invocation.
+- A solver chooses workers only. It does not receive ownership of `LabelData`,
+  move or rewrite serialized labels, mutate dependencies, change child order,
+  or return a replacement execution order.
+- `PlacementPlan.decisions` is aligned one-to-one with the input units and is
+  in exactly the same order. A missing, duplicate, unknown, out-of-order,
+  infeasible, or over-budget assignment fails common plan validation. No such
+  assignment is dispatched; the corresponding admitted unit is deferred
+  through P05 parking.
+- The dispatcher retains the corresponding `LabelData` objects, applies only
+  validated decisions, appends the scheduling residual, persists the lifecycle
+  transition, and only then serializes worker deliveries.
+
+`batch_id`, `job_ordinal`, readiness, external dependency status, registry
+generation, and physical catalog residence are runtime scheduling context.
+They are not new producer-visible fields in the sealed I/O program.
+
+#### 9.7.2 JobDescriptor derivation and byte demand
+
+Every program property in a `JobDescriptor` is derived from an existing sealed
+Label/P03 field, a registered operation descriptor, or authenticated runtime
+catalog state:
+
+| Descriptor area | Required contents | Existing source |
+|---|---|---|
+| Identity | Stable label ID and scheduling-unit membership | `Label.id`, `children`, `supertask_id`, and aggregation residual |
+| Operation | `LabelType`, canonical operation name, and operation version | `type`, `operation`, and `operation_version`; empty/read/write aliases are canonicalized by the single Section 4 helper |
+| Byte demand | Known reservation bytes, whether complete size is exact, and the derivation basis | `input_binding.logical_length`, nonzero `data_size`, exact typed-resource extents, aggregation length, or a checked Composite-member sum |
+| Resource requirements | Role, access mode, family, backend ID, resolved adapter scheme, canonical identity, scope, and version constraint | P03 `source_resource`/`destination_resource`, the registered operation descriptor, and Section 9.1 access-record derivation |
+| Locality | Preferred locality domains and any semantic hard-locality domain | Typed resource identity plus authenticated catalog residence; raw local-memory and worker-private attachments may impose hard locality |
+| Pipeline and tier | Minimum tier and every required pipeline operation/version | Decoded pipeline stages; a nonempty pipeline requires at least Tier 1, and no current core program inherently requires Tier 2 |
+| Policy inputs | Intent and priority | `intent` and `priority` |
+| Legality inputs | Predecessor IDs and hazard kinds | Canonical append-only `dependencies`, after declared dependencies and shuffler hazards have been lowered |
+| Other hard requirements | IR version, isolation, durability, and checked latest-start deadline | `ir_version`, `isolation`, `durability`, and checked `created_us + ttl_seconds` |
+
+No row requires another producer-visible Label field. The only Label schema
+change selected by this contract is append-only runtime-residual scheduling
+explainability under Section 9.7.8; it does not add a second wire format or a
+new sealed job input.
+
+Descriptor derivation is usable only for typed locators that survive the queue
+round trip losslessly. Full C++ decoding for Network, Object, Vector, Graph,
+Channel, Workspace, and Extension locators remains a P03 follow-up; P09 MUST
+NOT advertise one of those families until its identity and locator are
+preserved. File, SQLite, and optional external KV are the initial executable
+capability set. Internal DragonflyDB is warehouse/catalog plumbing and MUST
+NOT appear as a user-backend requirement or worker attachment.
+
+Byte-demand derivation obeys all of these rules:
+
+1. Known inputs and outputs contribute a checked byte lower bound. The
+   reservation for one label is the maximum concurrently relevant known
+   footprint under its registered operation contract. The reservation for an
+   atomic Composite unit is the checked sum of its member reservations.
+2. `data_size == 0` means unknown or operation-defined, not a proved zero-byte
+   demand.
+3. A pipeline output remains unknown unless the registered stage declarations
+   derive a bound. A known input remains a reservable lower bound even when the
+   output is unknown.
+4. Unknown residual size does not fabricate a byte count and does not by itself
+   make every worker infeasible. Capacity feasibility enforces the known
+   reservation and records `complete_size_known=false` in decision evidence.
+5. Delete, Flush, and other metadata-only effects have zero payload reservation
+   only when their registered operation contract declares that they carry no
+   bytes.
+6. Overflow, underflow, or any other checked-arithmetic failure is rejected
+   before policy evaluation.
+
+#### 9.7.3 P01 legality, readiness, order, and priority
+
+The scheduler consumes the canonical residual dependency graph. It MUST NOT
+infer semantic order from transport arrival, label ID, application ID,
+priority, timestamp, or input-vector position.
+
+A stable runtime ordinal is captured before shuffling. It is a deterministic
+tie-break and preserves relative order where P01 does not authorize
+reordering; it is not a new program-order edge. The scheduling coordinator
+computes or validates a P01 topological order before policy selection. If
+aliasing, scope, descriptor commutativity, or an ordering edge is unknown, the
+original legal relative order is retained.
+
+Priority may prefer a higher-priority unit only among simultaneously ready
+units whose relative order is legally interchangeable under Section 9.3. A
+policy may place multiple independent ready units on different workers, but it
+MUST NOT dispatch a successor before its predecessor completes unless a valid
+Composite execution unit enforces that order internally. If a predecessor is
+parked, its successor remains deferred; unrelated ready units may still be
+placed. Composite child order is fixed by a validated P01 topological order
+before policy selection and is immutable inside the solver.
+
+Policy therefore chooses placement, not legal execution order. Partial success
+is allowed only across independent scheduling units: feasible ready units may
+be assigned while unrelated blocked or currently infeasible units park. A
+Composite is all-or-nothing.
+
+#### 9.7.4 WorkerDescriptor and metric meanings
+
+One immutable worker snapshot is captured for a scheduling attempt. Every
+`WorkerDescriptor` contains:
+
+- identity and snapshot context: worker ID, registration/descriptor epoch,
+  registry generation, and manager capture time;
+- dynamic resource state: available flag, normalized remaining-capacity ratio,
+  absolute total and available capacity bytes, load ratio, speed class,
+  energy-cost class, and the existing optional skills, compute, and reasoning
+  values;
+- execution capability: worker tier, maximum supported IR version, supported
+  core/refinement operation versions, and advertised pipeline operations;
+- backend capability: an exact set of attachments, each containing
+  `ResourceFamily`, `backend_id`, compatible adapter scheme, locality kind, and
+  locality domain; and
+- locality domains exposed independently of individual backend attachments.
+
+Static capability values are replaced only by a registration carrying a new
+registration epoch. Dynamic availability, load, and capacity updates merge
+into the descriptor for that epoch. A stale update from another epoch is
+rejected. The manager increments `registry_generation` whenever registration,
+deregistration, availability, load, capacity, or static capability state
+changes. One scheduling attempt uses exactly one immutable generation; a
+refresh affects only a subsequent attempt or legal pre-execution reschedule.
+
+Metric meanings are fixed as follows:
+
+- Capacity and load are finite and normalized to `[0,1]`.
+  `available_capacity_bytes` is the hard comparable unit for byte demand;
+  normalized capacity remains a policy input.
+- Speed is a class from 1 through 5, with higher values meaning faster
+  service. Its standard normalized desirability is `speed / 5`.
+- Energy is a cost class from 1 through 5, with lower values preferred. A
+  positive Constraint weight applies to inverse desirability
+  `1 - (energy - 1) / 4`, never directly to the cost class. MinMax retains its
+  lower-energy preference in its profit function.
+- Tier is a hard minimum before it may be a scoring component. Tier 0 is
+  Databot, Tier 1 is Pipeline, and Tier 2 is Agentic.
+- `WorkerInfo.score` is not registry truth. A composite score is derived per
+  job, policy profile, and scheduling attempt from the captured raw values.
+
+#### 9.7.5 Verified worker-registry protocol v2
+
+The three CSV/text registry exchanges are replaced together by a generated
+`worker_registry.fbs` protocol with one envelope:
+
+```text
+WorkerRegistryMessage
+  protocol_version = 2
+  payload union:
+    WorkerRegistration
+    WorkerResourceUpdate
+    WorkerRegistrySnapshot
+```
+
+The FlatBuffers file identifier is `LWR2`. Every receiver verifies the buffer
+before generated access, checks the file identifier and
+`protocol_version == 2`, checks union
+discriminator/payload consistency, and rejects an unexpected payload kind.
+Malformed values never partially update the manager registry.
+
+Required field flow is:
+
+| Descriptor information | `WorkerRegistration` on `labios.worker.register` | `WorkerResourceUpdate` on `labios.worker.score_update` | `WorkerRegistrySnapshot` returned by `labios.manager.workers` |
+|---|---|---|---|
+| Protocol version and payload kind | Required | Required | Required |
+| Worker ID and registration epoch | Required | Required and must match the live epoch | Required for every worker row |
+| Registry generation and manager capture time | Assigned/advanced by manager after merge | Assigned/advanced by manager after merge | Required once for the immutable snapshot |
+| Availability | Required initial value | Required current value | Required merged value |
+| Total bytes, available bytes, normalized capacity, and load | Required initial values | Required current values | Required merged values |
+| Speed class, energy-cost class, tier, and maximum IR version | Required static values | Omitted; retained from matching registration epoch | Required merged values |
+| Core/refinement operation versions and pipeline operations | Required structured sets | Omitted; retained from matching registration epoch | Required structured sets |
+| Backend attachments and independent locality domains | Required structured rows/sets | Omitted; retained from matching registration epoch | Required structured rows/sets |
+| Optional skills, compute, and reasoning values | Advertised when supported | Resource update changes only fields declared dynamic by the v2 schema | Preserved in merged form |
+
+Attachments are structured rows, not delimiter-encoded strings, so a
+family/backend/scheme/locality tuple cannot be split or conflated by CSV
+parsing. Duplicate worker IDs, invalid epochs, invalid numeric ranges,
+inconsistent attachments, and duplicate/conflicting capability rows make the
+message invalid.
+
+There is no CSV fallback. Manager, workers, and dispatcher require one
+coordinated runtime cutover in P09; mixed CSV/v2 operation is unsupported. The
+current Python MCP parser for `labios.manager.workers` is deliberately
+incompatible after this cutover. P13 MUST add Python FlatBuffers support and
+generated registry-v2 bindings before MCP worker-registry, worker-score, or
+worker-count observations are again claimed as supported. The P09-to-P13 gap
+is intentional and MUST be reported as a compatibility gap, not as transparent
+compatibility.
+
+#### 9.7.6 Common feasibility and plan validation
+
+Before any policy optimization, one common engine evaluates every
+scheduling-unit/worker pair. For a Composite it evaluates every member, and the
+pair is feasible only when all members pass. The engine evaluates all checks
+and records every failed reason rather than stopping after the first:
+
+1. The worker descriptor is structurally valid and the worker is currently
+   available.
+2. The worker supports every member's IR version and canonical
+   operation/version.
+3. The worker tier meets the maximum member requirement; Tier 0 always rejects
+   a nonempty pipeline.
+4. The worker advertises every pipeline operation/version required by the unit.
+5. Every source and destination access has an exact supported backend
+   attachment. A one-worker pipeline must support both its source and
+   destination attachments.
+6. Every hard locality requirement is satisfied. Preferred/shared locality is
+   retained only as a policy input and never overrides a hard check.
+7. The unit's known byte reservation fits the worker's captured absolute
+   available capacity.
+8. During assignment, the checked sum of known reservations already selected
+   for the worker plus the candidate reservation fits that worker's captured
+   per-batch available-byte budget.
+
+The feasibility matrix and decision-time candidate rows use stable reason codes
+including at least:
+
+- `UNAVAILABLE`;
+- `UNSUPPORTED_IR`;
+- `UNSUPPORTED_OPERATION`;
+- `INSUFFICIENT_TIER`;
+- `MISSING_PIPELINE_OPERATION`;
+- `MISSING_BACKEND_ATTACHMENT`;
+- `HARD_LOCALITY_MISMATCH`;
+- `INSUFFICIENT_SINGLE_JOB_CAPACITY`; and
+- `EXHAUSTED_BATCH_CAPACITY`.
+
+The matrix captures pair feasibility before policy optimization. The
+decision-time row additionally captures capacity before and after the unit so
+cumulative budget exhaustion is reproducible. A policy may choose only a
+matrix-feasible worker whose remaining batch budget still fits the unit.
+
+Placement outcomes map to P05 as follows:
+
+- no registered workers produces `NO_WORKERS`;
+- registered workers with none currently available produces
+  `NO_AVAILABLE_WORKER`; and
+- a ready unit with no current feasible candidate produces
+  `NO_FEASIBLE_CURRENT_PLACEMENT`.
+
+These are transient parking outcomes unless the finite Section 9.6 proof set
+establishes permanent `BACKEND_UNSUPPORTED` or
+`UNSATISFIABLE_REQUIREMENTS`. Missing capability in one current snapshot is not
+permanent proof when dynamic registration is allowed. Catalog locality never
+forces a bad placement. Every unassigned admitted unit, including a dependency-
+deferred unit or a unit rejected by common plan validation, remains in the P05
+queued/parked lifecycle with its reason and complete failed-attempt snapshot;
+an empty assignment is never a `continue` that loses the unit.
+
+#### 9.7.7 Preserved policy families
+
+All policies consume the same prepared batch, candidate matrix, stable P01
+unit order, and mutable per-worker batch budgets. Every policy returns one
+explicit deferred decision when no candidate remains and MUST NOT omit a unit
+or select outside the common feasible set.
+
+**Round Robin.** Process units in P01-valid batch order. Sort workers by
+ascending worker ID, begin at a persistent cursor, and scan circularly for the
+first feasible worker whose remaining batch budget fits. Advance the cursor to
+the next worker ID after a selection. Size affects feasibility and budget but
+does not otherwise change Round Robin order. Evidence records the cursor before
+selection and the selected scan rank.
+
+**Random.** Process units in batch order. For each unit, form the sorted list of
+feasible worker IDs with sufficient residual budget and select uniformly from
+that list. Use a recorded batch seed and record the raw draw, candidate count,
+and selected index. Historical assignment to suspended or otherwise infeasible
+workers is superseded by the common filter.
+
+**Constraint.** Retain per-job intent-adjusted weighted scoring. Score every
+feasible candidate from availability, remaining-capacity ratio, inverse load,
+normalized speed, inverse energy cost, tier, and the existing optional skills,
+compute, and reasoning values. Standard normalizations are availability as
+`1` for a feasible candidate, capacity unchanged in `[0,1]`, `1 - load`,
+`speed / 5`, `1 - (energy - 1) / 4`, numeric tier divided by 2, skills and
+compute unchanged in `[0,1]`, and reasoning divided by 5. The final score is
+the sum of effective per-job weight times normalized value. Evidence records
+the actual profile name and version and, for every candidate, each raw value,
+normalization, effective per-job weight, and contribution. Soft locality is
+the first equal-score tie-break; ascending worker ID is final.
+
+**MinMax.** Retain the performance/energy profit and proportional batch-
+distribution policy. The current profit family maximizes normalized speed,
+remaining capacity, and inverse load while dividing by normalized energy cost:
+
+```text
+profit(w) = (speed / 5) * remaining_capacity_ratio * (1 - load)
+            / max(energy / 5, 0.01)
+```
+
+When every relevant unit demand is known, target shares and consumption use
+reservation bytes rather than label count; unknown-size units use unit counts
+without fabricating byte demand. Skip infeasible or exhausted workers and spill
+to the next profit-ranked feasible candidate. Equal profit resolves by soft
+locality and then worker ID. Evidence records worker profit, target share,
+known/unknown demand basis, capacity before/after, spill rank, and final batch
+objective.
+
+#### 9.7.8 Append-only explainable scheduling residual
+
+The six existing `ScoreSnapshot` scalar slots retain their current order and
+meaning. They are never reordered or reinterpreted. The schema appends a
+version and decision history conceptually shaped as follows:
+
+```text
+ScoreSnapshot
+  availability             // legacy mirror of latest selected worker
+  capacity
+  load
+  speed
+  energy
+  tier
+  decision_version = 1
+  decisions[]              // append-only scheduling attempt history
+
+SchedulingDecisionSnapshot
+  decision_id
+  batch_id
+  scheduling_unit_id
+  attempt
+  registry_generation
+  job_ordinal
+  outcome                   // Assigned or Parked
+  chosen_worker_id
+  park_reason
+  reservation_bytes
+  complete_size_known
+  candidates[]
+  policy_evidence union
+
+CandidateEvaluation
+  worker_id
+  feasible
+  reason_codes[]
+  available_capacity_before
+  available_capacity_after
+  locality_match
+  score_components[]
+  final_objective
+  policy_rank
+  selected
+
+ScoreComponent
+  metric
+  raw_value
+  normalized_value
+  weight
+  contribution
+
+PolicyEvidence union
+  RoundRobinEvidence
+  RandomEvidence
+  ConstraintEvidence
+  MinMaxEvidence
+```
+
+One `SchedulingDecisionSnapshot` is appended for every assignment, failed
+placement attempt, parking decision, and legal pre-execution reschedule. An
+earlier attempt is never overwritten. Candidate rows are ordered by ascending
+worker ID.
+
+Policy evidence is sufficient to replay the particular policy:
+
+- Round Robin carries the cursor before selection and selected scan rank.
+- Random carries the seed, raw draw, candidate count, and selected index.
+- Constraint carries the actual profile name/version; candidate components
+  carry the effective weights and contributions used for that job.
+- MinMax carries target shares, known/unknown demand basis, spill decisions,
+  and the final batch objective; candidate rows carry capacity before and after
+  the unit decision.
+
+The latest successful decision mirrors the chosen worker's six raw legacy
+metrics into the existing scalar fields. A parked attempt does not fabricate a
+chosen vector. An all-zero chosen vector or a parked attempt MUST still
+serialize `ScoreSnapshot` whenever decision history is nonempty; serialization
+presence may no longer depend only on the six scalar values.
+
+The completed residual must reconstruct hard exclusions, feasible
+alternatives, cumulative capacity state, deterministic tie-breaking, policy
+objective, selected worker, and the reason a scheduling attempt parked. These
+are append-only runtime-residual additions under the mutation authority in
+Section 2, not new producer requirements and not a second Label wire format.
+
+#### 9.7.9 Required implementation evidence
+
+The P09 correctness slice MUST add tests for all of these scenarios:
+
+1. A mixed post-shuffler batch invokes the selected solver once and produces
+   exactly one decision per scheduling unit.
+2. Direct-read and write locality use the common feasibility path and cannot
+   target an unavailable or incompatible worker.
+3. Tier 0 rejects every pipeline unit; Tier 1 and Tier 2 remain eligible only
+   if they also support all required pipeline and backend capabilities.
+4. A worker missing either the source or destination attachment is infeasible
+   for a one-worker pipeline.
+5. A known job larger than a worker's absolute available bytes is infeasible.
+6. Multiple individually fitting jobs cannot cumulatively exceed one worker's
+   captured batch budget.
+7. Unknown-size jobs do not fabricate capacity and record their uncertainty.
+8. A parked predecessor prevents successor dispatch; unrelated ready jobs may
+   still schedule.
+9. Priority changes dispatch preference only within a P01-legally
+   interchangeable ready frontier.
+10. Round Robin remains Round Robin when feasibility is unchanged; Random
+    samples only feasible workers; Constraint records exact weighted
+    contributions; and MinMax responds to byte demand and residual capacity.
+11. Empty feasible sets persist P05 parking state rather than producing an
+    empty-assignment `continue`.
+12. Registry v2 rejects malformed buffers, unknown versions, duplicate worker
+    IDs, invalid ranges, and inconsistent capability attachments.
+13. Every assigned and parked attempt can be replayed from the completed
+    label's decision history, including equal-score tie-breaking, Round Robin
+    cursor, Random draw, and MinMax batch context.
+
+The required paper trace is one ready pipeline Write whose completed
+dependencies leave an 8 MiB known reservation. Its source attachment is
+`File/posix-main/file`, its destination attachment is
+`Relational/sqlite-main/sqlite`, and it requires
+`builtin://identity`. The pipeline output is treated as unknown for this trace,
+so the reservation is 8 MiB and `complete_size_known=false`.
+
+Candidate rows, in worker-ID order, are:
+
+| Worker | Relevant descriptor | Result |
+|---|---|---|
+| 10 | Tier 0; both attachments; 64 MiB available | Infeasible: `INSUFFICIENT_TIER` |
+| 20 | Tier 1; source attachment only; 64 MiB available | Infeasible: `MISSING_BACKEND_ATTACHMENT` for the destination |
+| 30 | Tier 1; both attachments; 4 MiB available | Infeasible: `INSUFFICIENT_SINGLE_JOB_CAPACITY` |
+| 40 | Tier 1; both attachments; 12/16 MiB available; load 0.25; speed 4; energy 2 | Feasible |
+| 50 | Tier 1; both attachments; 18/20 MiB available; load 0.10; speed 3; energy 1 | Feasible |
+
+For a trace profile `paper-trace/v1` with weight 0.20 each on availability,
+capacity, inverse load, speed, and inverse energy, and zero on other metrics,
+worker 40 records:
+
+```text
+0.20*1.00 + 0.20*0.75 + 0.20*0.75 + 0.20*0.80 + 0.20*0.75
+= 0.81
+```
+
+Worker 50 records:
+
+```text
+0.20*1.00 + 0.20*0.90 + 0.20*0.90 + 0.20*0.60 + 0.20*1.00
+= 0.88
+```
+
+Constraint therefore selects worker 50. The choice is reproducible from the
+raw metrics, normalizations, weights, contributions, candidate order, and
+tie-break metadata, and the latest successful decision mirrors worker 50 into
+the six legacy scalar slots. Removing workers 40 and 50 leaves the first three
+rejection rows, produces `NO_FEASIBLE_CURRENT_PLACEMENT`, and appends an equally
+reconstructable parked snapshot with no fabricated chosen worker.
+
+#### 9.7.10 Current capability and implementation gate
+
+At commit `d8e6a4d`, the dispatcher still invokes a solver once per supertask or
+independent label with one empty byte vector as the payload; a real
+post-shuffler batch never reaches a solver as a set. Read- and write-locality
+routes bypass the solver and do not apply the common feasibility checks.
+Capacity is only a normalized ratio, the manager's snapshot is a seven-column
+CSV row, registration and score updates are separate CSV strings, and the six-
+scalar `ScoreSnapshot` cannot explain excluded alternatives, capacity budgets,
+policy contributions, tie-breaks, or parking. Nothing in P08 changes that
+runtime behavior.
+
+**P08 status: Go and complete (2026-07-14).** This documentation contract and
+the matching planning decision are recorded. P09 is **No-Go under its current
+write ownership** because that ownership forbids the approved `schemas/`,
+`include/labios/label.h`, `src/labios/label.cpp`, registry schema-generation,
+and related codec-test changes. P09 becomes **Go without further semantic
+decisions** once its ownership is amended or a bounded pre-P09 schema/codec
+slice lands. Automatic provisioning, elasticity triggers, leader election,
+new solver algorithms, and distributed pipeline-stage placement remain out of
+scope.
+
 ## 10. Deterministic validation rules
 
 ### 10.1 Structural verification
