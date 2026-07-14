@@ -118,17 +118,54 @@ static CompletionResult execute_write(
     // Tier gating: Databot workers cannot execute pipelines.
     if (!label.pipeline.empty() && tier == labios::WorkerTier::Databot) {
         throw std::runtime_error(
-            "Tier 0 (Databot) worker cannot execute labels with SDS pipelines");
+            "BACKEND_UNSUPPORTED: Tier 0 (Databot) worker cannot execute labels with SDS pipelines");
     }
 
-    auto blob = cm.retrieve(label.id);
+    std::vector<std::byte> blob;
+    const bool has_staged_bytes = cm.exists(label.id);
+    const bool has_declared_source = label.has_source_resource ||
+        !label.source_uri.empty() ||
+        !std::holds_alternative<std::monostate>(label.source);
+
+    // A declared source is authoritative. Warehouse bytes may be used only
+    // when the producer explicitly bound them as a materialization of that
+    // source; otherwise the worker performs the backend read here. A write
+    // without a source retains the existing direct-producer warehouse path.
+    if (has_declared_source &&
+        !(has_staged_bytes && label.has_input_binding &&
+          label.input_binding.provenance == labios::BindingProvenance::MaterializedSource)) {
+        if (label.source_uri.empty()) {
+            throw std::runtime_error(
+                "STAGED_CONTENT_UNAVAILABLE: declared source has no backend URI");
+        }
+
+        auto source_uri = labios::parse_uri(label.source_uri);
+        auto* source_backend = backends.resolve(source_uri.scheme);
+        if (!source_backend) {
+            throw std::runtime_error(
+                "BACKEND_UNSUPPORTED: no backend for source scheme: " +
+                source_uri.scheme);
+        }
+        auto source_result = source_backend->get(label);
+        if (!source_result.success) {
+            throw std::runtime_error(
+                "EXECUTION_FAILED: source read failed: " + source_result.error);
+        }
+        blob = std::move(source_result.data);
+    } else if (has_staged_bytes) {
+        blob = cm.retrieve(label.id);
+    } else {
+        throw std::runtime_error(
+            "STAGED_CONTENT_UNAVAILABLE: write input is not staged");
+    }
 
     // Execute SDS pipeline if present.
     if (!label.pipeline.empty()) {
         auto result = labios::sds::execute_pipeline(
             label.pipeline, std::span<const std::byte>(blob), sds_repo);
         if (!result.success) {
-            throw std::runtime_error("SDS pipeline failed: " + result.error);
+            throw std::runtime_error("EXECUTION_FAILED: SDS pipeline failed: " +
+                                     result.error);
         }
         blob = std::move(result.data);
     }
@@ -139,11 +176,13 @@ static CompletionResult execute_write(
         auto* backend = backends.resolve(uri.scheme);
         if (!backend) {
             throw std::runtime_error(
-                "no backend for scheme: " + uri.scheme);
+                "BACKEND_UNSUPPORTED: no backend for destination scheme: " +
+                uri.scheme);
         }
         auto result = backend->put(label, std::span<const std::byte>(blob));
         if (!result.success) {
-            throw std::runtime_error(result.error);
+            throw std::runtime_error(
+                "EXECUTION_FAILED: destination write failed: " + result.error);
         }
         cm.remove(label.id);
         cat.set_location(uri.path, 0, blob.size(), worker_id);
@@ -162,16 +201,18 @@ static CompletionResult execute_write(
     // Legacy path: use Pointer variant.
     auto* dst = std::get_if<labios::FilePath>(&label.destination);
     if (!dst) {
-        throw std::runtime_error("WRITE label missing FilePath destination");
+        throw std::runtime_error("MISSING_FIELD: WRITE label missing destination");
     }
 
     auto* backend = backends.resolve("file");
     if (!backend) {
-        throw std::runtime_error("no backend for scheme: file");
+        throw std::runtime_error(
+            "BACKEND_UNSUPPORTED: no backend for destination scheme: file");
     }
     auto result = backend->put(label, std::span<const std::byte>(blob));
     if (!result.success) {
-        throw std::runtime_error(result.error);
+        throw std::runtime_error(
+            "EXECUTION_FAILED: destination write failed: " + result.error);
     }
 
     cm.remove(label.id);

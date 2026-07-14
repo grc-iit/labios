@@ -11,7 +11,9 @@
 
 namespace labios {
 
-enum class LabelStatus : uint8_t { Queued, Scheduled, Executing, Complete, Error };
+enum class LabelStatus : uint8_t {
+    Queued, Parked, Scheduled, Executing, Complete, Error, Cancelled
+};
 
 struct ScheduleEntry {
     uint64_t label_id;
@@ -35,7 +37,11 @@ public:
     void create(uint64_t label_id, uint32_t app_id, LabelType type);
     void create(const LabelData& label);
     void set_status(uint64_t label_id, LabelStatus status);
+    /// Compare-and-set used by the pre-execution cancellation boundary.
+    bool cancel_if_pre_execution(uint64_t label_id);
     LabelStatus get_status(uint64_t label_id);
+    void set_completion(const CompletionData& completion);
+    std::optional<CompletionData> get_completion(uint64_t label_id);
     void set_flags(uint64_t label_id, uint32_t flags);
     uint32_t get_flags(uint64_t label_id);
     void set_error(uint64_t label_id, std::string_view error);

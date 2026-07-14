@@ -7,6 +7,7 @@
 #include <labios/sds/types.h>
 #include <labios/workspace.h>
 
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -56,8 +57,19 @@ public:
     PendingIO async_read(std::string_view filepath,
                            uint64_t offset, uint64_t size);
 
-    /// Block until all labels in the status are complete.
+    /// Nonblocking lifecycle inspection of the first label in a handle.
+    CompletionResult test(const PendingIO& status);
+
+    /// Wait for every label in a handle. Timeout never cancels the labels.
     void wait(PendingIO& status);
+    WaitResult wait_for(PendingIO& status,
+                        std::chrono::milliseconds timeout);
+
+    WaitResult wait_any(std::span<const uint64_t> label_ids,
+                        std::chrono::milliseconds timeout = std::chrono::milliseconds(30000));
+    WaitResult wait_all(std::span<const uint64_t> label_ids,
+                        std::chrono::milliseconds timeout = std::chrono::milliseconds(30000));
+    bool cancel(uint64_t label_id);
 
     /// Block until read labels complete and return the data.
     std::vector<std::byte> wait_read(PendingIO& status);

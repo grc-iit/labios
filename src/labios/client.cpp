@@ -54,8 +54,39 @@ PendingIO Client::async_read(std::string_view filepath,
     return PendingIO{label_mgr.publish_read(filepath, offset, size)};
 }
 
+CompletionResult Client::test(const PendingIO& status) {
+    if (status.pending.empty()) return {0, CompletionState::Complete, {}, {}};
+    return session_->label_manager().test(status.pending.front().label_id);
+}
+
 void Client::wait(PendingIO& status) {
-    session_->label_manager().wait(status.pending);
+    auto result = wait_for(status, std::chrono::milliseconds(30000));
+    for (const auto& item : result.results) {
+        if (item.state == CompletionState::Failed ||
+            item.state == CompletionState::Cancelled) {
+            throw std::runtime_error("label " + std::to_string(item.label_id) +
+                                     " failed: " + item.error);
+        }
+    }
+}
+
+WaitResult Client::wait_for(PendingIO& status,
+                            std::chrono::milliseconds timeout) {
+    return session_->label_manager().wait(status.pending, timeout);
+}
+
+WaitResult Client::wait_any(std::span<const uint64_t> label_ids,
+                            std::chrono::milliseconds timeout) {
+    return session_->label_manager().wait_any(label_ids, timeout);
+}
+
+WaitResult Client::wait_all(std::span<const uint64_t> label_ids,
+                            std::chrono::milliseconds timeout) {
+    return session_->label_manager().wait_all(label_ids, timeout);
+}
+
+bool Client::cancel(uint64_t label_id) {
+    return session_->label_manager().cancel(label_id);
 }
 
 std::vector<std::byte> Client::wait_read(PendingIO& status) {

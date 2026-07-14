@@ -25,7 +25,7 @@ The public `Client` workspace methods are in `include/labios/client.h:96-114`, b
 
 Provides URI parsing, URI roundtrip, and file backend-registry lookup control-plane measurements. It does not read source data, transform it, write a destination, wait for a worker, or verify a destination result; therefore it makes no cross-backend ETL claim.
 
-The advertised API exists at `include/labios/client.h:144-148`, but `Client::execute_pipeline` only puts source/destination URI strings and the pipeline on a write label (`src/labios/client.cpp:272-283`) and publishes it without staging source bytes. The worker retrieves bytes staged under the label ID (`src/services/labios-worker.cpp:124`), runs the pipeline on those bytes (`:126-133`), and writes only the destination URI (`:136-145`); it never reads `source_uri`. Thus source → transform → destination cannot be honestly benchmarked without changing runtime code. The benchmark does not use direct backend calls, Redis, mocks, or benchmark-local ETL as a substitute.
+The advertised API now has a worker-executed source URI → pipeline → destination URI path. The worker resolves a declared source through the backend registry when no bound warehouse materialization applies, executes the SDS pipeline, and writes the result to the destination backend. The live correctness evidence is the `[data_path][pipeline]` integration test; this benchmark remains a control-plane measurement and makes no ETL performance or benchmark claim. It does not use direct backend calls, Redis, mocks, or benchmark-local ETL as a substitute.
 
 ## Commands
 

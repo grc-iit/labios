@@ -1452,3 +1452,291 @@ Later implementation work should use this contract to add:
 
 Those changes are outside P01. This document is the semantic authority against
 which P02, P03, and P04 are evaluated.
+
+## 13. Asynchronous completion contract
+
+This section defines completion as an IR/runtime property. A transport reply is
+only a notification of a persisted completion record; it is not the record and
+its loss does not make an admitted label disappear. The contract deliberately
+does not select a NATS API, consumer type, or scheduler policy.
+
+### 13.1 Lifecycle states and ownership
+
+The semantic lifecycle is:
+
+    Submitted -> Admitted -> Queued/Parked -> Shuffled -> Scheduled -> Executing
+                                                                    |          |
+                                                                    v          v
+                                                               Cancelled   Completed/Failed
+
+`Submitted` is a client-side state before the runtime accepts the label. It is
+not an admitted runtime state and has no completion guarantee. `Admitted` means
+the canonical, sealed label and its catalog record have been durably accepted.
+`Parked` is a substate of `Queued`: the label is admitted but intentionally
+waiting for a transient condition such as an empty worker pool. It is not a
+failure and is not a second scheduling policy.
+
+`Cancelled` is a semantic terminal state. The current flat wire status has no
+Cancelled value, so a version-1 compatibility projection stores `Failed` and
+emits `CANCELED: ...` in the result error; the catalog additionally records
+`lifecycle=cancelled`. `Completed` and `Failed` project to the existing
+Complete and Failed status values. A terminal label never leaves its terminal
+state.
+
+Each legal transition has one owner:
+
+| Transition | Owner | Rule |
+|---|---|---|
+| Submitted -> Admitted | Dispatcher admission coordinator | Verify, normalize, validate, seal, persist the canonical label snapshot and catalog record. |
+| Admitted -> Queued | Dispatcher admission coordinator | Publish or enqueue the admitted record only after its durable catalog record exists. |
+| Queued/Parked -> Shuffled | Dispatcher shuffler | Apply only the legal P01 shuffle/aggregation decisions and persist the residual snapshot. |
+| Shuffled -> Scheduled | Dispatcher scheduler | Record one feasible placement and its lease; scheduling policy remains WS3. |
+| Shuffled -> Queued/Parked | Dispatcher scheduler | Defer before execution when placement or another transient prerequisite is unavailable. |
+| Scheduled -> Queued/Parked | Dispatcher scheduler | Requeue a scheduled label when a pre-execution delivery/placement attempt is deferred. |
+| Scheduled -> Queued/Parked after lease recovery | Dispatcher recovery coordinator | Reclaim a scheduled record whose dispatcher/worker delivery lease expired before execution. |
+| Scheduled -> Executing | Worker executor | Atomically claim the delivery, record the worker lease and start time, then begin covered I/O. |
+| Executing -> Completed | Worker completion coordinator | Persist the successful result only after the declared completion boundary, including durability, is satisfied. |
+| Executing -> Failed | Worker completion coordinator | Persist the categorized failure; no rollback is implied. |
+| Admitted/Queued/Parked/Shuffled/Scheduled -> Cancelled | Dispatcher cancellation coordinator | Win the pre-execution cancellation compare-and-set and prevent worker execution. |
+| Admitted/Queued/Parked/Shuffled/Scheduled -> Failed | Dispatcher cancellation/expiry coordinator | Terminalize only for validated rejection, expiration, dependency failure, permanent infeasibility, or an equivalent pre-execution failure. |
+
+The owner writes the state and its timestamps atomically with the catalog
+version/lease check. A competing owner that loses that check must reread the
+record and must not publish a second terminal transition. Recovery does not
+invent a new transition from `Executing`: an execution record with an expired
+worker lease is terminalized as `EXECUTION_FAILED: WORKER_LOST` unless a
+persisted terminal completion already exists. This conservative rule avoids
+claiming that an external effect was rolled back or safely repeating a possibly
+non-idempotent operation.
+
+The state representation is compatible with P01 and the current catalog:
+
+| Semantic state | Label status | Required catalog meaning |
+|---|---|---|
+| Admitted | Created | `lifecycle=admitted`; canonical label snapshot exists. |
+| Queued | Queued | Ready for dispatch; `parked=0`. |
+| Parked | Queued | `parked=1`, reason, retry count, and next retry time are recorded. |
+| Shuffled | Shuffled | Shuffler residual is persisted. |
+| Scheduled | Scheduled | Worker, dispatch lease, and delivery attempt are recorded. |
+| Executing | Executing | Worker claim and execution lease are recorded. |
+| Completed | Complete | Terminal completion record is persisted. |
+| Failed | Failed | Terminal category/detail and no successful data handle are persisted. |
+| Cancelled | Failed | `lifecycle=cancelled`, category `CANCELED`, and no external I/O was started. |
+
+A rejected submission that never reaches `Admitted` receives an error reply but
+is not represented as a successful runtime label. An admitted label is never
+silently discarded. `Created -> Queued -> Shuffled -> Scheduled -> Executing`
+and the terminal transitions above are the only normal paths; terminal states
+cannot transition again. The P01 TTL rule remains in force: expiration before
+`Executing` is `EXPIRED`, while expiration during execution does not cancel or
+rewrite the result.
+
+### 13.2 Client observation and waiting
+
+Client operations use a conceptual `CompletionView` containing the label ID,
+current semantic state, terminal category/detail, result metadata, and (for a
+successful read/observe) a retrieval handle or value. This is an API contract,
+not a textual IR or a new wire object.
+
+- **`test(id)`** is nonblocking. It reads the catalog/completion record and
+  returns `Pending` with the current nonterminal state, or the terminal view.
+  `Parked` is reported as pending with its park reason and next retry time.
+  It never waits for a transport reply and never cancels the label.
+- **`wait(id, timeout)`** waits for that one label to become terminal. On
+  `Completed` it returns success and the result. On `Failed` it returns a
+  typed failure whose primary category is the stable P01 category. On
+  `Cancelled` it returns `CANCELED`. If the deadline expires first it returns
+  `Timeout` plus the last observed nonterminal state; the handle remains valid
+  and the label continues running. A timeout is never a cancellation.
+- **`wait_any(ids, timeout)`** returns one terminal view as soon as any member
+  is terminal, including a failure or cancellation. If several are already
+  terminal, selection is deterministic: earliest persisted terminal time,
+  then lowest label ID. On timeout it returns `Timeout` and no selected label;
+  all handles remain valid.
+- **`wait_all(ids, timeout)`** waits until every member is terminal. It returns
+  one result per input ID in input order, including successful, failed, and
+  cancelled results. On timeout it returns the terminal results already known
+  and `Pending` views for the remainder. It does not turn one failure into
+  cancellation of unrelated labels.
+
+An empty `wait_any`/`wait_all` set returns immediately with an empty result.
+An unknown or never-admitted ID is a client lookup/submission error, not a
+label failure. Repeating any wait or test is idempotent while the catalog
+record is retained. Retrieval of a completed value is likewise repeatable
+within its declared retention window; reading it does not erase the completion
+record. A separate explicit release/retention operation may remove result
+bytes after the client no longer needs them.
+
+For a `PendingIO` containing chunks, the one-label operations apply to each
+label ID. Existing convenience `wait`/`wait_read` behavior is defined as
+`wait_all` in input order; a successful read concatenates the successful chunk
+values in that order. A failed or cancelled member makes the aggregate
+operation unsuccessful and identifies every member result rather than hiding
+which chunk failed.
+
+### 13.3 Cancellation boundary
+
+Cancellation is an authenticated request addressed to a label ID and is
+idempotent. The cancellation coordinator linearizes it against the lifecycle
+compare-and-set:
+
+1. Before `Executing` is recorded, cancellation is guaranteed to prevent
+   external I/O if the cancellation transition wins. It produces
+   `Cancelled/CANCELED` and persists that terminal record.
+2. During the `Scheduled -> Executing` delivery race, cancellation is
+   best-effort. The winner is observable: a successful cancellation is
+   `Cancelled`; if the worker claim wins first, cancellation returns `TooLate`
+   and the label follows its execution result.
+3. Once `Executing` is recorded, version 1 cannot interrupt the worker or
+   promise rollback. Cancellation is impossible and returns `TooLate`; the
+   label completes or fails normally. A worker MUST NOT rewrite a later
+   completion to `Cancelled`.
+
+A repeated cancellation of a cancelled label returns the same cancelled
+completion. A repeated cancellation of a completed or failed label returns
+that existing terminal outcome and performs no transition. Concurrent
+cancellation requests therefore produce one logical terminal record, not
+multiple completions. Cancellation of a Composite follows the same boundary
+for the Composite; its children retain their own terminal outcomes and are
+not silently erased.
+
+### 13.4 Failure taxonomy and retryability
+
+A parked label is not a failure. It remains retryable until it is cancelled,
+expires, or a permanent requirement failure is proved. Terminal errors use the
+P01 category as the primary prefix in `Completion.error`; retryability is a
+catalog/completion attribute and is not inferred from an arbitrary detail
+string.
+
+| Failure group | P01 categories | Automatic retry |
+|---|---|---|
+| Malformed or unsupported program | MALFORMED_BUFFER, LIMIT_EXCEEDED, UNSUPPORTED_IR_VERSION, INVALID_ENUM, INVALID_IDENTIFIER, UNKNOWN_REFINEMENT, UNKNOWN_RESOURCE, FORBIDDEN_INTERNAL_RESOURCE, ADDRESS_CONFLICT, AMBIGUOUS_INPUT, MISSING_FIELD, ILLEGAL_COMBINATION, INVALID_PIPELINE, INVALID_DEPENDENCY, DUPLICATE_ID | No. Correct the producer or submit a new label. |
+| Authorization or unsafe input | AUTHORIZATION_FAILED, UNSAFE_MEMORY_REFERENCE, UNAUTHORIZED_MUTATION | No. Resubmission without changing the cause is not useful. |
+| Permanent capability/constraint failure | BACKEND_UNSUPPORTED when no registered adapter exists, UNSATISFIABLE_REQUIREMENTS | No. A newly registered capability may justify a new submission, not blind replay. |
+| Version or dependency outcome | RESOURCE_VERSION_CONFLICT, DEPENDENCY_FAILED, COMPOSITE_ABORTED | No automatic replay; the producer must choose a new version/dependency intent. |
+| Explicit lifecycle outcome | CANCELED, EXPIRED, INVALID_STATE_TRANSITION | No automatic replay. Cancellation and TTL are producer-visible decisions. |
+| Recoverable staged content | STAGED_CONTENT_UNAVAILABLE caused by temporary catalog/warehouse unavailability | Bounded recovery retry while the binding and retention guarantee remain valid; otherwise fail with the same category. |
+| Recoverable execution/transport loss | EXECUTION_FAILED with a transient backend outage, delivery timeout, or worker loss | Only when the registered descriptor/backend declares the operation idempotent or supplies the label ID as an idempotency key. |
+| Unknown execution outcome | EXECUTION_FAILED after an effect may have occurred and idempotency is not proved | No automatic replay; preserve the uncertain outcome for reconciliation. |
+
+`BACKEND_UNSUPPORTED` is not used merely because the current worker list is
+empty; that condition is parking. Descriptor and backend declarations decide
+whether an execution retry is safe. At-least-once delivery never upgrades a
+non-idempotent effect into exactly-once execution.
+
+### 13.5 Admission and no-worker parking
+
+Admission is durable before dispatch. The dispatcher MUST NOT remove a label
+from its input batch merely because no worker is registered, all workers are
+unavailable, or the solver produces no current feasible assignment. It returns
+the label to `Queued/Parked`, persists the canonical snapshot and reason, and
+keeps it eligible for recovery.
+
+The bounded parking policy is:
+
+- park with reason `NO_WORKERS`, `NO_AVAILABLE_WORKER`, or
+  `NO_FEASIBLE_CURRENT_PLACEMENT`;
+- retry with bounded exponential backoff (implementation defaults MUST have a
+  finite maximum delay) and reset/wake the retry when a capable worker
+  registers or becomes available;
+- keep the parked record in the catalog-backed queue rather than in dispatcher
+  memory, so the number of retries and queue memory are bounded without a
+  loss-inducing attempt limit;
+- if the label has a TTL, expire it as `EXPIRED` when its latest-start deadline
+  passes; without a TTL it remains parked until execution, cancellation, or a
+  separately proved permanent infeasibility;
+- preserve the original admission and queued timestamps across requeues.
+
+Parked labels are observable through both `test` and the catalog's observation
+surface. The catalog record contains at least `parked`, `park_reason`,
+`park_attempts`, `parked_since`, `next_retry_at`, and the last transition time.
+The queue observation reports parked count, oldest parked label, counts by
+reason, retry rate, and the next retry time. Per-label status queries expose
+those fields subject to authorization. A worker registration wake-up and a
+periodic recovery scan are both allowed to make a parked label runnable; they
+must use the same catalog compare-and-set and may not dispatch it twice
+without at-least-once deduplication.
+
+### 13.6 Delivery, deduplication, and recovery
+
+The transport contract required by this section is **at least once** for each
+admitted label and each terminal completion notification:
+
+1. The admission coordinator persists the canonical label snapshot, input
+   binding, and initial catalog state before acknowledging admission.
+2. A dispatcher-to-worker delivery is acknowledged only after the durable
+   queue/lease record exists. A dispatcher or worker may redeliver after a
+   lost acknowledgement or expired lease.
+3. A worker records its claim/attempt before external I/O and persists the
+   terminal result before acknowledging the delivery.
+4. The completion publisher may repeat a terminal notification until the
+   transport or catalog query path confirms delivery. Clients treat duplicate
+   completions for one label ID as the same completion.
+
+Workers MUST deduplicate by stable label ID and operation identity, not by
+transport message identity. A duplicate before execution returns the persisted
+result or resumes the existing claim. A duplicate after terminalization
+replays the persisted completion and performs no backend effect. Aggregated
+labels retain their original IDs and require per-original completion
+idempotency; the synthetic aggregate ID is not a substitute for those IDs.
+
+The worker/backend boundary MUST use a label-derived idempotency key, a native
+conditional operation, or a descriptor declaration proving that replay is
+safe. For a non-idempotent operation whose prior effect is uncertain after a
+crash, the worker records `EXECUTION_FAILED` with an uncertain-outcome detail
+and does not blindly retry. This is an at-least-once contract, not an
+exactly-once distributed transaction.
+
+The existing DragonflyDB catalog is the completion authority; no new storage
+system is required. The catalog implementation stores, under the existing
+`labios:catalog:{label_id}` record (or an equivalent catalog-owned key):
+
+- canonical lifecycle state, transition version, timestamps, lease/attempt,
+  worker, and park fields;
+- the terminal state, primary category, detail, completion time, and serialized
+  completion metadata/result handle;
+- delivery and deduplication markers sufficient to reject stale transitions
+  and replay a completion.
+
+A catalog-owned durable label snapshot keyed by label ID stores the admitted
+canonical label and runtime residual needed for recovery. The existing
+ContentManager/catalog binding for staged input and completed retrieval data
+is retained with the label's completion guarantee. Physical warehouse
+locations may move, but the stable binding cannot identify different bytes.
+
+Therefore:
+
+- **Dispatcher restart:** an admitted label whose dispatcher stopped after
+  admission but before scheduling remains `Admitted` or `Queued/Parked` in the
+  catalog. Recovery scans those records and re-enqueues them. A label that was
+  `Scheduled` is reclaimed after its lease expires; a persisted terminal
+  record wins over any stale delivery.
+- **Worker restart:** an unacknowledged delivery is redelivered. A persisted
+  terminal record is replayed without re-execution. If execution was recorded
+  but its external effect is uncertain, the worker-loss rule and idempotency
+  declaration determine whether it is safely retried or terminalized as
+  uncertain `EXECUTION_FAILED`.
+- **Client restart:** the local pending handle is disposable. A client that
+  retained the label ID reconstructs a handle by querying the catalog and can
+  use `test`, `wait`, `wait_any`, or `wait_all`; completion does not depend on
+  the original NATS inbox subscription. A lost client process does not cancel
+  the label.
+- **Catalog loss:** this contract does not promise recovery after loss or
+  corruption of the catalog itself. Dragonfly persistence/replication and
+  backup policy are deployment guarantees outside the Label I/O completion
+  semantics.
+
+Completion and deduplication records remain available for the configured
+completion-retention window; the deployment MUST expose that window and MUST
+not delete a record before it expires. Durable labels and any durable result
+binding remain until explicit release or the stronger backend/deployment
+retention rule. After retention expires, a client may receive
+`COMPLETION_EXPIRED` as a lookup result rather than a fabricated label
+failure; that lookup condition is outside the label's historical terminal
+state.
+
+This section is the completion contract consumed by P06 and P07. P06 adds
+client operations over these persisted records. P07 selects acknowledged,
+durable transport machinery and recovery scans that satisfy these guarantees;
+it must not redefine the states, timeout meaning, cancellation boundary, or
+no-worker outcome.

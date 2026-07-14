@@ -23,20 +23,24 @@ std::string now_ms() {
 std::string to_string(LabelStatus status) {
     switch (status) {
         case LabelStatus::Queued:    return "queued";
+        case LabelStatus::Parked:    return "parked";
         case LabelStatus::Scheduled: return "scheduled";
         case LabelStatus::Executing: return "executing";
         case LabelStatus::Complete:  return "complete";
         case LabelStatus::Error:     return "error";
+        case LabelStatus::Cancelled: return "cancelled";
     }
     return "unknown";
 }
 
 LabelStatus label_status_from_string(std::string_view s) {
     if (s == "queued")    return LabelStatus::Queued;
+    if (s == "parked")    return LabelStatus::Parked;
     if (s == "scheduled") return LabelStatus::Scheduled;
     if (s == "executing") return LabelStatus::Executing;
     if (s == "complete")  return LabelStatus::Complete;
     if (s == "error")     return LabelStatus::Error;
+    if (s == "cancelled") return LabelStatus::Cancelled;
     throw std::invalid_argument(
         "unknown label status: " + std::string(s));
 }
@@ -76,6 +80,44 @@ void CatalogManager::set_status(uint64_t label_id, LabelStatus status) {
     auto key = catalog_key(label_id);
     redis_.hset(key, "status", to_string(status));
     redis_.hset(key, "updated_at", now_ms());
+}
+
+bool CatalogManager::cancel_if_pre_execution(uint64_t label_id) {
+    // The atomic cross-process compare-and-set is supplied by P07's durable
+    // catalog coordinator.  This local transaction is deliberately
+    // conservative: never claim cancellation once execution is observable.
+    auto status = get_status(label_id);
+    if (status != LabelStatus::Queued && status != LabelStatus::Parked) return false;
+    set_status(label_id, LabelStatus::Cancelled);
+    CompletionData completion;
+    completion.label_id = label_id;
+    completion.status = CompletionStatus::Error;
+    completion.error = "CANCELED: cancelled before execution";
+    set_completion(completion);
+    return true;
+}
+
+void CatalogManager::set_completion(const CompletionData& completion) {
+    auto key = catalog_key(completion.label_id);
+    redis_.set_binary(key + ":completion", serialize_completion(completion));
+    if (completion.status == CompletionStatus::Complete) {
+        set_status(completion.label_id, LabelStatus::Complete);
+    } else if (completion.error.rfind("CANCELED:", 0) == 0) {
+        set_status(completion.label_id, LabelStatus::Cancelled);
+    } else {
+        set_status(completion.label_id, LabelStatus::Error);
+        set_error(completion.label_id, completion.error);
+    }
+}
+
+std::optional<CompletionData> CatalogManager::get_completion(uint64_t label_id) {
+    auto bytes = redis_.get_binary(catalog_key(label_id) + ":completion");
+    if (bytes.empty()) return std::nullopt;
+    try {
+        return deserialize_completion(bytes);
+    } catch (const LabelDecodeError&) {
+        return std::nullopt;
+    }
 }
 
 LabelStatus CatalogManager::get_status(uint64_t label_id) {

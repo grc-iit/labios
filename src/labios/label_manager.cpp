@@ -109,23 +109,100 @@ static void resolve_reply(PendingLabel& p, int timeout_ms) {
     }
 }
 
-void LabelManager::wait(std::span<PendingLabel> pending) {
-    for (auto& p : pending) {
-        resolve_reply(p, reply_timeout_ms_);
-        if (p.reply_data.empty()) continue;
-        CompletionData comp;
-        try {
-            comp = deserialize_completion(p.reply_data);
-        } catch (const LabelDecodeError& ex) {
-            std::cerr << "label manager: rejected completion (" << ex.category()
-                      << "): " << ex.what() << "\n" << std::flush;
-            continue;
+static CompletionResult view(uint64_t id, const CompletionData& c) {
+    return {id, c.status == CompletionStatus::Complete
+                    ? CompletionState::Complete
+                    : (c.error.rfind("CANCELED:", 0) == 0
+                           ? CompletionState::Cancelled : CompletionState::Failed),
+            c.error, c.data_key};
+}
+
+CompletionResult LabelManager::test(uint64_t label_id) {
+    if (auto completion = catalog_.get_completion(label_id))
+        return view(label_id, *completion);
+    try {
+        auto status = catalog_.get_status(label_id);
+        if (status == LabelStatus::Parked) {
+            return {label_id, CompletionState::Parked, {}, {}};
         }
-        if (comp.status == CompletionStatus::Error) {
-            throw std::runtime_error("label " + std::to_string(p.label_id)
-                                     + " failed: " + comp.error);
-        }
+    } catch (const std::exception&) {
+        // A handle can be observed before admission creates its catalog row.
     }
+    return {label_id, CompletionState::Pending, {}, {}};
+}
+
+CompletionResult LabelManager::wait_one(uint64_t label_id,
+                                         std::chrono::milliseconds timeout) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    for (;;) {
+        auto result = test(label_id);
+        if (result.terminal()) return result;
+        if (timeout.count() == 0 || std::chrono::steady_clock::now() >= deadline) {
+            result.state = CompletionState::Timeout;
+            return result;
+        }
+        std::unique_lock lock(completion_mu_);
+        completion_cv_.wait_for(lock, std::min(std::chrono::milliseconds(25),
+                                                std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now())));
+    }
+}
+
+WaitResult LabelManager::wait_any(std::span<const uint64_t> ids,
+                                   std::chrono::milliseconds timeout) {
+    if (ids.empty()) return {CompletionState::Complete, {}};
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    for (;;) {
+        for (auto id : ids) {
+            auto result = test(id);
+            if (result.terminal()) return {result.state, {std::move(result)}};
+        }
+        if (timeout.count() == 0 || std::chrono::steady_clock::now() >= deadline)
+            return {CompletionState::Timeout, {}};
+        std::unique_lock lock(completion_mu_);
+        completion_cv_.wait_for(lock, std::chrono::milliseconds(25));
+    }
+}
+
+WaitResult LabelManager::wait_all(std::span<const uint64_t> ids,
+                                   std::chrono::milliseconds timeout) {
+    WaitResult out{CompletionState::Complete, {}};
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    for (auto id : ids) {
+        auto remaining = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now());
+        auto result = wait_one(id, std::max(std::chrono::milliseconds(0), remaining));
+        out.results.push_back(result);
+        if (result.state == CompletionState::Timeout) out.state = CompletionState::Timeout;
+        else if (result.state == CompletionState::Failed || result.state == CompletionState::Cancelled)
+            out.state = result.state;
+    }
+    return out;
+}
+
+bool LabelManager::cancel(uint64_t label_id) {
+    try {
+        auto cancelled = catalog_.cancel_if_pre_execution(label_id);
+        if (cancelled) completion_cv_.notify_all();
+        return cancelled;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+WaitResult LabelManager::wait(std::span<PendingLabel> pending,
+                              std::chrono::milliseconds timeout) {
+    std::vector<uint64_t> ids;
+    ids.reserve(pending.size());
+    for (auto& p : pending) {
+        resolve_reply(p, std::min<int64_t>(timeout.count(), reply_timeout_ms_));
+        if (!p.reply_data.empty()) {
+            try {
+                catalog_.set_completion(deserialize_completion(p.reply_data));
+                completion_cv_.notify_all();
+            } catch (const LabelDecodeError&) { /* catalog remains authoritative */ }
+        }
+        ids.push_back(p.label_id);
+    }
+    return wait_all(ids, timeout);
 }
 
 std::vector<std::byte> LabelManager::wait_read(
@@ -138,6 +215,8 @@ std::vector<std::byte> LabelManager::wait_read(
         CompletionData comp;
         try {
             comp = deserialize_completion(p.reply_data);
+            catalog_.set_completion(comp);
+            completion_cv_.notify_all();
         } catch (const LabelDecodeError& ex) {
             std::cerr << "label manager: rejected completion (" << ex.category()
                       << "): " << ex.what() << "\n" << std::flush;

@@ -1,11 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
 #include <labios/client.h>
 #include <labios/config.h>
+#include <labios/session.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
+#include <chrono>
+#include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -138,6 +141,72 @@ TEST_CASE("Read routes to the holding worker", "[data_path]") {
 
     REQUIRE(result.size() == sz);
     REQUIRE(std::equal(result.begin(), result.end(), data.begin()));
+}
+
+TEST_CASE("Source URI pipeline writes to a different SQLite backend", "[data_path][pipeline]") {
+    auto cfg = test_config();
+    std::unique_ptr<labios::Client> client;
+    try {
+        client = std::make_unique<labios::Client>(cfg);
+    } catch (const std::exception& ex) {
+        SKIP(std::string("Docker Compose services unavailable: ") + ex.what());
+    }
+    for (const auto* service : {"dispatcher", "worker-1", "worker-2", "worker-3"}) {
+        if (!client->session().redis().get("labios:ready:" + std::string(service))) {
+            SKIP(std::string("Docker Compose service is not ready: ") + service);
+        }
+    }
+
+    const auto suffix = std::to_string(
+        std::chrono::steady_clock::now().time_since_epoch().count());
+    const std::string source_uri = "file:///p04/source_" + suffix + ".bin";
+    const std::string destination_uri = "sqlite:///p04/result_" + suffix;
+
+    // Create the source through LABIOS's file backend, not by writing the
+    // worker volume from the test process.
+    std::vector<std::byte> source(sizeof(uint64_t) * 5);
+    const uint64_t values[] = {50, 10, 40, 20, 30};
+    std::memcpy(source.data(), values, sizeof(values));
+    client->write_to(source_uri, source);
+
+    labios::sds::Pipeline pipeline;
+    pipeline.stages.push_back({"builtin://sort_uint64", "", -1, 1});
+    pipeline.stages.push_back({"builtin://truncate",
+                               std::to_string(2 * sizeof(uint64_t)), 0, -1});
+
+    // Compose models each worker's file/SQLite backend with its own volume.
+    // Retry the label until scheduling selects the worker holding this source;
+    // every attempt still completes through the normal completion path.
+    bool pipeline_complete = false;
+    std::string last_pipeline_error;
+    for (int attempt = 0; attempt < 6 && !pipeline_complete; ++attempt) {
+        auto pending = client->execute_pipeline(
+            source_uri, destination_uri, pipeline);
+        try {
+            client->wait(pending);
+            pipeline_complete = true;
+        } catch (const std::exception& ex) {
+            last_pipeline_error = ex.what();
+        }
+    }
+    INFO("last pipeline error: " << last_pipeline_error);
+    REQUIRE(pipeline_complete);
+
+    std::vector<std::byte> transformed;
+    std::string last_read_error;
+    for (int attempt = 0; attempt < 6 && transformed.empty(); ++attempt) {
+        try {
+            transformed = client->read_from(
+                destination_uri, 2 * sizeof(uint64_t));
+        } catch (const std::exception& ex) {
+            last_read_error = ex.what();
+        }
+    }
+    INFO("last destination read error: " << last_read_error);
+    REQUIRE(transformed.size() == 2 * sizeof(uint64_t));
+    REQUIRE(std::memcmp(transformed.data(), values + 1, sizeof(uint64_t)) == 0);
+    REQUIRE(std::memcmp(transformed.data() + sizeof(uint64_t), values + 3,
+                        sizeof(uint64_t)) == 0);
 }
 
 TEST_CASE("Write 10 labels and verify all complete", "[data_path]") {
