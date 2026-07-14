@@ -72,6 +72,10 @@ add_executable(labios-worker-registry-protocol-test unit/worker_registry_protoco
 target_link_libraries(labios-worker-registry-protocol-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-worker-registry-protocol-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-scheduling-feasibility-test unit/scheduling_feasibility_test.cpp)
+target_link_libraries(labios-scheduling-feasibility-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-scheduling-feasibility-test TEST_PREFIX "unit/scheduling/" PROPERTIES LABELS "unit")
+
 add_executable(labios-solver-constraint-test unit/solver_constraint_test.cpp)
 target_link_libraries(labios-solver-constraint-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-solver-constraint-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")

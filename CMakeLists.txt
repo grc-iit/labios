@@ -7,6 +7,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # All targets need -fPIC so the static lib can link into the LD_PRELOAD .so
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# WorkerInfo and score residuals are append-only wire models; older aggregate
+# initializers intentionally omit newly appended fields.
+add_compile_options(-Wno-missing-field-initializers)
 
 include(cmake/LabiosDependencies.cmake)
 

@@ -81,6 +81,44 @@ table AggregationInfo {
   merged_length:   uint64;
 }
 
+table ScoreComponent {
+  metric: string;
+  raw_value: double;
+  normalized_value: double;
+  weight: double;
+  contribution: double;
+}
+
+table CandidateEvaluation {
+  worker_id: int;
+  feasible: bool;
+  reason_codes: [string];
+  available_capacity_before: ulong;
+  available_capacity_after: ulong;
+  locality_match: bool;
+  score_components: [ScoreComponent];
+  final_objective: double;
+  policy_rank: uint;
+  selected: bool;
+}
+
+table SchedulingDecisionSnapshot {
+  decision_id: ulong;
+  batch_id: ulong;
+  scheduling_unit_id: ulong;
+  attempt: uint;
+  registry_generation: ulong;
+  job_ordinal: ulong;
+  outcome: string;
+  chosen_worker_id: int;
+  park_reason: string;
+  reservation_bytes: ulong;
+  complete_size_known: bool;
+  candidates: [CandidateEvaluation];
+  policy_name: string;
+  policy_evidence: string;
+}
+
 table ScoreSnapshot {
   availability: double;
   capacity:     double;
@@ -88,6 +126,8 @@ table ScoreSnapshot {
   speed:        double;
   energy:       double;
   tier:         double;
+  decision_version: uint;
+  decisions: [SchedulingDecisionSnapshot];
 }
 
 table LabelResult {

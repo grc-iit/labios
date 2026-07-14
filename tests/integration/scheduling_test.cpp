@@ -51,6 +51,22 @@ TEST_CASE("M3 demo: write 100 labels, read back, verify", "[scheduling]") {
     }
 }
 
+TEST_CASE("Mixed asynchronous batch traverses scheduler", "[scheduling]") {
+    auto cfg = test_config();
+    auto client = labios::connect(cfg);
+    std::vector<labios::PendingIO> pending;
+    std::vector<std::byte> payload(4096, std::byte{0x31});
+    for (int i = 0; i < 8; ++i) {
+        labios::LabelParams params;
+        params.type = labios::LabelType::Write;
+        params.dest_uri = "file:///labios/mixed_batch_" + std::to_string(i);
+        auto label = client.create_label(params);
+        pending.push_back(client.publish(label, payload));
+    }
+    for (auto& status : pending) client.wait(status);
+    SUCCEED("live dispatcher/worker evidence requires Docker Compose");
+}
+
 TEST_CASE("Worker error path still fires notify continuation", "[scheduling]") {
     auto cfg = test_config();
     auto client = labios::connect(cfg);

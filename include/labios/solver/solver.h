@@ -15,8 +15,17 @@ enum class WorkerTier : uint8_t { Databot = 0, Pipeline = 1, Agentic = 2 };
 
 /// Worker score variables from the paper (Section 3.2.3, Table 2).
 /// The composite score is: sum(weight_j * variable_j) for j=1..6.
+enum class LocalityKind : uint8_t { Shared, Preferred, Hard };
+struct WorkerAttachment {
+    uint8_t family = 0;
+    std::string backend_id;
+    std::string scheme;
+    LocalityKind locality = LocalityKind::Shared;
+    std::string locality_domain;
+};
+
 struct WorkerInfo {
-    int id;
+    int id = 0;
     bool available = true;
 
     // Dynamic variables (updated continuously by workers)
@@ -35,6 +44,18 @@ struct WorkerInfo {
 
     // Composite score computed by the worker manager
     double score = 1.0;          // [0,1] weighted combination
+
+    // Verified registry-v2 descriptor fields. These are appended so existing
+    // aggregate initialization remains source-compatible.
+    uint64_t registration_epoch = 1;
+    uint64_t registry_generation = 0;
+    uint64_t total_capacity_bytes = 0;
+    uint64_t available_capacity_bytes = 0;
+    uint32_t max_ir_version = 1;
+    std::vector<std::string> operations;
+    std::vector<std::string> pipeline_operations;
+    std::vector<WorkerAttachment> attachments;
+    std::vector<std::string> locality_domains;
 };
 
 /// Weight profile for computing worker composite scores (Table 2).

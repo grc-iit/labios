@@ -1,0 +1,14 @@
+namespace labios.registry;
+file_identifier "LWR2";
+
+enum PayloadKind: byte { Registration, ResourceUpdate, Deregistration, Snapshot }
+table Attachment { family:ubyte; backend_id:string; scheme:string; locality:ubyte; domain:string; }
+table WorkerDescriptor { id:int; registration_epoch:ulong; registry_generation:ulong; available:bool; total_capacity_bytes:ulong; available_capacity_bytes:ulong; capacity:double; load:double; speed:ubyte; energy:ubyte; tier:ubyte; max_ir_version:uint; operations:[string]; pipeline_operations:[string]; attachments:[Attachment]; locality_domains:[string]; skills:double; compute:double; reasoning:ubyte; }
+table WorkerRegistration { worker:WorkerDescriptor; }
+table WorkerResourceUpdate { worker_id:int; registration_epoch:ulong; available:bool; total_capacity_bytes:ulong; available_capacity_bytes:ulong; capacity:double; load:double; skills:double; compute:double; reasoning:ubyte; }
+table WorkerDeregistration { worker_id:int; registration_epoch:ulong; }
+table WorkerRegistrySnapshot { registry_generation:ulong; captured_us:ulong; workers:[WorkerDescriptor]; }
+union Payload { WorkerRegistration, WorkerResourceUpdate, WorkerDeregistration, WorkerRegistrySnapshot }
+table WorkerRegistryMessage { protocol_version:uint; kind:PayloadKind; payload:Payload; }
+root_type WorkerRegistryMessage;
+file_extension "lwr2";

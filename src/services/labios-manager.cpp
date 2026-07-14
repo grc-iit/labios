@@ -69,67 +69,42 @@ int main() {
     auto handler = [&](std::string_view subject,
                        std::span<const std::byte> data,
                        std::string_view reply_to) {
-        std::string msg(reinterpret_cast<const char*>(data.data()), data.size());
-
-        if (subject == "labios.worker.register") {
-            // Parse: "id,speed,energy,capacity[,tier]"
+        if (subject == "labios.worker.register" ||
+            subject == "labios.worker.deregister" ||
+            subject == "labios.worker.score_update") {
             try {
-                std::istringstream iss(msg);
-                std::string token;
-                int id = 0, speed = 1, energy = 1;
-                std::string capacity_str;
-                int tier_int = 0;
-
-                if (std::getline(iss, token, ',')) id = std::stoi(token);
-                if (std::getline(iss, token, ',')) speed = std::stoi(token);
-                if (std::getline(iss, token, ',')) energy = std::stoi(token);
-                if (std::getline(iss, token, ',')) capacity_str = token;
-                if (std::getline(iss, token, ',')) tier_int = std::clamp(std::stoi(token), 0, 2);
-
-                double cap_ratio = 1.0;
-                if (!capacity_str.empty() && cfg.max_worker_capacity > 0) {
-                    uint64_t cap_bytes = labios::parse_size(capacity_str);
-                    cap_ratio = std::min(
-                        static_cast<double>(cap_bytes) /
-                        static_cast<double>(cfg.max_worker_capacity),
-                        1.0);
+                const auto message = labios::decode_worker_message(data);
+                if ((subject == "labios.worker.register" &&
+                     message.kind != labios::WorkerRegistryMessage::Kind::Registration) ||
+                    (subject == "labios.worker.deregister" &&
+                     message.kind != labios::WorkerRegistryMessage::Kind::Deregistration) ||
+                    (subject == "labios.worker.score_update" &&
+                     message.kind != labios::WorkerRegistryMessage::Kind::ResourceUpdate)) {
+                    throw std::runtime_error("WRONG_KIND");
                 }
-
-                labios::WorkerInfo info{id, true, cap_ratio, 0.0, speed, energy,
-                    static_cast<labios::WorkerTier>(tier_int)};
-                worker_mgr.register_worker(info);
-
-                static constexpr const char* tier_names[] = {"databot", "pipeline", "agentic"};
-                std::cout << "[" << timestamp() << "] manager: registered worker "
-                          << id << " (speed=" << speed << ", energy=" << energy
-                          << ", capacity=" << capacity_str
-                          << ", tier=" << tier_names[tier_int] << ")\n" << std::flush;
+                bool changed = false;
+                if (message.kind == labios::WorkerRegistryMessage::Kind::Registration) {
+                    changed = worker_mgr.register_worker_v2(message.worker);
+                } else if (message.kind == labios::WorkerRegistryMessage::Kind::ResourceUpdate) {
+                    changed = worker_mgr.update_worker_v2(message.worker);
+                } else {
+                    changed = worker_mgr.deregister_worker_v2(
+                        message.worker_id, message.registration_epoch);
+                }
+                if (!changed) std::cerr << "[" << timestamp()
+                    << "] manager: stale or duplicate registry message\n" << std::flush;
             } catch (const std::exception& e) {
-                std::cerr << "[" << timestamp()
-                          << "] manager: malformed register message: "
+                std::cerr << "[" << timestamp() << "] manager: rejected registry message: "
                           << e.what() << "\n" << std::flush;
-                return;
             }
-
-        } else if (subject == "labios.worker.deregister") {
-            try {
-                int id = std::stoi(msg);
-                worker_mgr.deregister_worker(id);
-
-                std::cout << "[" << timestamp() << "] manager: deregistered worker "
-                          << id << "\n" << std::flush;
-            } catch (const std::exception& e) {
-                std::cerr << "[" << timestamp()
-                          << "] manager: malformed deregister message: "
-                          << e.what() << "\n" << std::flush;
-                return;
-            }
-
         } else if (subject == "labios.manager.workers") {
             auto all = worker_mgr.all_workers();
-            auto response = labios::encode_worker_registry(all);
+            auto response = labios::encode_worker_snapshot(
+                all, worker_mgr.registry_generation(),
+                static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count()));
             if (!reply_to.empty()) {
-                nats.publish(reply_to, response);
+                nats.publish(reply_to, std::span<const std::byte>(response));
                 nats.flush();
             }
         }
@@ -137,42 +112,8 @@ int main() {
 
     nats.subscribe("labios.worker.register", handler);
     nats.subscribe("labios.worker.deregister", handler);
+    nats.subscribe("labios.worker.score_update", handler);
     nats.subscribe("labios.manager.workers", handler);
-
-    // Score update handler: workers publish "id,capacity,load[,available]" every 2 seconds.
-    nats.subscribe("labios.worker.score_update",
-        [&worker_mgr](std::string_view /*subject*/,
-                       std::span<const std::byte> data,
-                       std::string_view /*reply_to*/) {
-            std::string msg(reinterpret_cast<const char*>(data.data()), data.size());
-            try {
-                std::istringstream iss(msg);
-                std::string token;
-                int id = 0;
-                double capacity = 1.0, load = 0.0;
-                bool available = true;
-
-                if (std::getline(iss, token, ',')) id = std::stoi(token);
-                if (std::getline(iss, token, ',')) capacity = std::stod(token);
-                if (std::getline(iss, token, ',')) load = std::stod(token);
-                if (std::getline(iss, token, ',')) available = (token == "1");
-
-                auto all = worker_mgr.all_workers();
-                for (auto& w : all) {
-                    if (w.id == id) {
-                        w.capacity = capacity;
-                        w.load = load;
-                        w.available = available;
-                        worker_mgr.update_score(id, w);
-                        break;
-                    }
-                }
-            } catch (const std::exception& e) {
-                std::cerr << "[" << timestamp()
-                          << "] manager: malformed score_update: "
-                          << e.what() << "\n" << std::flush;
-            }
-        });
 
     // Queue depth subscription (for elastic scaling).
     if (orchestrator) {

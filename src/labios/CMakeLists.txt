@@ -1,14 +1,16 @@
 set(LABIOS_FBS_SCHEMA ${PROJECT_SOURCE_DIR}/schemas/label.fbs)
+set(LABIOS_REGISTRY_FBS_SCHEMA ${PROJECT_SOURCE_DIR}/schemas/worker_registry.fbs)
 set(LABIOS_FBS_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 set(LABIOS_FBS_GEN_HEADER ${LABIOS_FBS_GEN_DIR}/label_generated.h)
+set(LABIOS_REGISTRY_FBS_GEN_HEADER ${LABIOS_FBS_GEN_DIR}/worker_registry_generated.h)
 
 file(MAKE_DIRECTORY ${LABIOS_FBS_GEN_DIR})
 
 add_custom_command(
-    OUTPUT ${LABIOS_FBS_GEN_HEADER}
-    COMMAND flatc --cpp -o ${LABIOS_FBS_GEN_DIR} ${LABIOS_FBS_SCHEMA}
-    DEPENDS ${LABIOS_FBS_SCHEMA} flatc
-    COMMENT "Generating FlatBuffers header from label.fbs"
+    OUTPUT ${LABIOS_FBS_GEN_HEADER} ${LABIOS_REGISTRY_FBS_GEN_HEADER}
+    COMMAND flatc --cpp -o ${LABIOS_FBS_GEN_DIR} ${LABIOS_FBS_SCHEMA} ${LABIOS_REGISTRY_FBS_SCHEMA}
+    DEPENDS ${LABIOS_FBS_SCHEMA} ${LABIOS_REGISTRY_FBS_SCHEMA} flatc
+    COMMENT "Generating FlatBuffers headers"
 )
 
 add_custom_target(labios_fbs_generated DEPENDS ${LABIOS_FBS_GEN_HEADER})
@@ -49,6 +51,7 @@ add_library(labios STATIC
     observability.cpp
     telemetry.cpp
     worker_registry_protocol.cpp
+    scheduling/scheduling.cpp
 )
 
 add_dependencies(labios labios_fbs_generated)

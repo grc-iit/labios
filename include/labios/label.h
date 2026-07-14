@@ -144,6 +144,44 @@ struct AggregationInfo {
     uint64_t merged_length = 0;
 };
 
+struct ScoreComponent {
+    std::string metric;
+    double raw_value = 0.0;
+    double normalized_value = 0.0;
+    double weight = 0.0;
+    double contribution = 0.0;
+};
+
+struct CandidateEvaluation {
+    int worker_id = 0;
+    bool feasible = false;
+    std::vector<std::string> reason_codes;
+    uint64_t available_capacity_before = 0;
+    uint64_t available_capacity_after = 0;
+    bool locality_match = false;
+    std::vector<ScoreComponent> score_components;
+    double final_objective = 0.0;
+    uint32_t policy_rank = 0;
+    bool selected = false;
+};
+
+struct SchedulingDecisionSnapshot {
+    uint64_t decision_id = 0;
+    uint64_t batch_id = 0;
+    uint64_t scheduling_unit_id = 0;
+    uint32_t attempt = 0;
+    uint64_t registry_generation = 0;
+    uint64_t job_ordinal = 0;
+    std::string outcome; // Assigned or Parked
+    int chosen_worker_id = -1;
+    std::string park_reason;
+    uint64_t reservation_bytes = 0;
+    bool complete_size_known = false;
+    std::vector<CandidateEvaluation> candidates;
+    std::string policy_name;
+    std::string policy_evidence;
+};
+
 struct ScoreSnapshot {
     double availability = 0.0;
     double capacity = 0.0;
@@ -151,6 +189,8 @@ struct ScoreSnapshot {
     double speed = 0.0;
     double energy = 0.0;
     double tier = 0.0;
+    uint32_t decision_version = 0;
+    std::vector<SchedulingDecisionSnapshot> decisions;
 };
 
 struct LabelResult {

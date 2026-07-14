@@ -6,11 +6,7 @@
 #include <labios/label.h>
 #include <labios/observability.h>
 #include <labios/shuffler.h>
-#include <labios/solver/constraint.h>
-#include <labios/solver/minmax.h>
-#include <labios/solver/random.h>
-#include <labios/solver/round_robin.h>
-#include <labios/solver/intent_profiles.h>
+#include <labios/scheduling/scheduling.h>
 #include <labios/telemetry.h>
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
@@ -27,6 +23,7 @@
 #include <sstream>
 #include <thread>
 #include <vector>
+#include <limits>
 
 static std::jthread g_batch_thread;
 static std::jthread g_worker_refresh_thread;
@@ -36,6 +33,7 @@ static std::mutex g_fanout_mu;
 // Cached worker list, refreshed periodically by g_worker_refresh_thread.
 static std::mutex g_workers_mu;
 static std::vector<labios::WorkerInfo> g_cached_workers;
+static uint64_t g_registry_generation = 0;
 
 static uint64_t now_us() {
     return labios::label_timestamp_now_us();
@@ -45,14 +43,14 @@ static labios::ScoreSnapshot snapshot_worker(int worker_id,
     const std::vector<labios::WorkerInfo>& workers) {
     for (auto& w : workers) {
         if (w.id == worker_id) {
-            return {
-                w.available ? 1.0 : 0.0,
-                w.capacity,
-                w.load,
-                static_cast<double>(w.speed),
-                static_cast<double>(w.energy),
-                static_cast<double>(static_cast<int>(w.tier))
-            };
+            labios::ScoreSnapshot snapshot;
+            snapshot.availability = w.available ? 1.0 : 0.0;
+            snapshot.capacity = w.capacity;
+            snapshot.load = w.load;
+            snapshot.speed = static_cast<double>(w.speed);
+            snapshot.energy = static_cast<double>(w.energy);
+            snapshot.tier = static_cast<double>(static_cast<int>(w.tier));
+            return snapshot;
         }
     }
     return {};
@@ -74,14 +72,15 @@ static std::vector<labios::WorkerInfo> query_workers(
     try {
         auto reply = nats.request("labios.manager.workers", {},
                                   std::chrono::milliseconds(2000));
-        std::string data(reinterpret_cast<const char*>(reply.data.data()),
-                         reply.data.size());
-        auto snapshot = labios::decode_worker_registry(data);
+        auto snapshot = labios::decode_worker_message(
+            std::span<const std::byte>(reply.data));
+        if (snapshot.kind != labios::WorkerRegistryMessage::Kind::Snapshot) {
+            throw std::runtime_error("WRONG_KIND");
+        }
         workers = std::move(snapshot.workers);
-        if (snapshot.malformed_rows > 0) {
-            std::cerr << "[" << timestamp()
-                      << "] dispatcher: skipped " << snapshot.malformed_rows
-                      << " malformed worker entries\n" << std::flush;
+        {
+            std::lock_guard lock(g_workers_mu);
+            g_registry_generation = snapshot.registry_generation;
         }
     } catch (const std::exception& e) {
         std::cerr << "[" << timestamp() << "] dispatcher: manager query failed: "
@@ -114,11 +113,6 @@ int main() {
     auto profile = cfg.scheduler_profile_path.empty()
         ? labios::WeightProfile{"default", 0.5, 0.0, 0.35, 0.15, 0.0}
         : labios::load_weight_profile(cfg.scheduler_profile_path);
-
-    // Solver instances (one of these is used per batch based on config).
-    labios::RoundRobinSolver rr_solver;
-    labios::RandomSolver random_solver;
-    labios::MinMaxSolver minmax_solver;
 
     labios::ShufflerConfig shuf_cfg{
         .aggregation_enabled = cfg.dispatcher_aggregation_enabled,
@@ -316,20 +310,6 @@ int main() {
                 std::lock_guard lock(g_workers_mu);
                 workers = g_cached_workers;
             }
-            if (workers.empty()) {
-                std::cerr << "[" << timestamp()
-                          << "] dispatcher: no workers registered, parking batch\n"
-                          << std::flush;
-                for (auto& label : batch) {
-                    catalog.set_status(label.id, labios::LabelStatus::Parked);
-                    auto parked = labios::serialize_label(label);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(250));
-                    nats.publish_durable("labios.labels", parked);
-                }
-                nats.flush();
-                continue;
-            }
-
             // If all workers are suspended, send resume commands and re-query.
             {
                 bool any_available = false;
@@ -355,230 +335,194 @@ int main() {
                 }
             }
 
-            // Solver dispatch based on configured policy.
-            // Intent-aware scheduling (S7.4): the constraint solver receives
-            // a weight profile adjusted for each label's intent.
-            auto solve = [&](std::vector<std::vector<std::byte>> solver_batch,
-                             labios::Intent intent = labios::Intent::None)
-                -> labios::AssignmentMap {
-                if (cfg.scheduler_policy == "random") {
-                    return random_solver.assign(std::move(solver_batch), workers);
-                } else if (cfg.scheduler_policy == "constraint") {
-                    auto adjusted = labios::profile_for_intent(profile, intent);
-                    labios::ConstraintSolver intent_solver(adjusted);
-                    return intent_solver.assign(std::move(solver_batch), workers);
-                } else if (cfg.scheduler_policy == "minmax") {
-                    return minmax_solver.assign(std::move(solver_batch), workers);
-                }
-                return rr_solver.assign(std::move(solver_batch), workers);
+            // One typed solver invocation for the complete post-shuffler batch.
+            struct DispatchUnit {
+                labios::SchedulingUnitDescriptor descriptor;
+                labios::LabelData representative;
+                std::vector<labios::LabelData> children;
+                bool composite = false;
             };
-
-            auto select_worker = [&](labios::Intent intent)
-                -> std::optional<int> {
-                std::vector<std::vector<std::byte>> solver_batch(1);
-                auto assignments = solve(std::move(solver_batch), intent);
-                if (assignments.empty()) {
-                    return std::nullopt;
+            std::vector<DispatchUnit> units;
+            units.reserve(result.direct_route.size() + result.independent.size() +
+                          result.supertasks.size());
+            uint64_t ordinal = 0;
+            auto add_label_unit = [&](labios::LabelData label, int preferred_worker = 0) {
+                DispatchUnit unit;
+                unit.representative = std::move(label);
+                unit.descriptor.unit_id = unit.representative.id;
+                unit.descriptor.ordinal = ordinal;
+                auto job = labios::describe_job(unit.representative, ordinal++);
+                if (job) {
+                    if (preferred_worker > 0) {
+                        const auto domain = "worker:" + std::to_string(preferred_worker);
+                        for (auto& source : job->sources) source.locality_domain = domain;
+                        for (auto& destination : job->destinations) destination.locality_domain = domain;
+                    }
+                    unit.descriptor.members.push_back(std::move(*job));
                 }
-                return assignments.begin()->first;
-            };
-
-            std::cout << "[" << timestamp() << "] dispatcher: policy="
-                      << cfg.scheduler_policy << ", workers="
-                      << workers.size() << "\n" << std::flush;
-
-            // (A) Direct-route labels (read-locality)
-            if (!result.direct_route.empty()) {
-                std::vector<labios::ScheduleEntry> sched;
-                sched.reserve(result.direct_route.size());
-
-                for (auto& [label, worker_id] : result.direct_route) {
-                    auto dispatch_time = now_us();
-                    labios::mark_label_scheduled(
-                        label, worker_id, "read-locality",
-                        snapshot_worker(worker_id, workers), dispatch_time);
-                    sched.push_back({label.id, worker_id, label.flags});
-
-                    auto serialized = labios::serialize_label_view(label);
-                    std::string subject = "labios.worker." + std::to_string(worker_id);
-                    nats.publish_durable(subject, serialized);
-                    telemetry.record_label_dispatched();
-
-                    std::cout << "[" << timestamp() << "] dispatcher: label "
-                              << label.id << " -> worker " << worker_id
-                              << " (read locality)\n" << std::flush;
-                }
-
-                catalog.schedule_batch(sched);
-            }
-
-            // (B) Supertasks
-            for (auto& st : result.supertasks) {
-                auto assigned_worker = select_worker(st.composite.intent);
-                if (!assigned_worker.has_value()) {
-                    std::cerr << "[" << timestamp()
-                              << "] dispatcher: no worker available for supertask "
-                              << st.composite.id << "\n" << std::flush;
-                    continue;
-                }
-
-                int wid = *assigned_worker;
-                std::vector<labios::ScheduleEntry> sched;
-                sched.reserve(st.children.size() + 1);
-
-                auto snap = snapshot_worker(wid, workers);
-                auto dispatch_time = now_us();
-
-                std::vector<std::vector<std::byte>> child_payloads;
-                child_payloads.reserve(st.children.size());
-                for (auto& child : st.children) {
-                    labios::mark_label_scheduled(
-                        child, wid, cfg.scheduler_policy, snap, dispatch_time);
-                    sched.push_back({child.id, wid, child.flags});
-                    child_payloads.push_back(labios::serialize_label(child));
-                }
-
-                auto packed = labios::pack_labels(child_payloads);
-                std::string pack_key = "labios:supertask:" + std::to_string(st.composite.id);
-                redis.set_binary(pack_key, std::span<const std::byte>(packed));
-
-                for (auto& child : st.children) {
-                    if (child.type == labios::LabelType::Write) {
-                        auto* dst = std::get_if<labios::FilePath>(&child.destination);
-                        if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
+                unit.descriptor.ready = true;
+                for (const auto& dependency : unit.representative.dependencies) {
+                    unit.descriptor.predecessors.push_back(dependency.label_id);
+                    if (catalog.get_status(dependency.label_id) != labios::LabelStatus::Complete) {
+                        unit.descriptor.ready = false;
                     }
                 }
-
-                labios::mark_label_scheduled(
-                    st.composite, wid, cfg.scheduler_policy, snap, dispatch_time);
-                sched.push_back({st.composite.id, wid, st.composite.flags});
-                catalog.schedule_batch(sched);
-
-                auto serialized = labios::serialize_label_view(st.composite);
-                std::string subject = "labios.worker." + std::to_string(wid);
-                nats.publish_durable(subject, serialized);
-                telemetry.record_label_dispatched();
-
-                std::cout << "[" << timestamp() << "] dispatcher: supertask "
-                          << st.composite.id << " (" << st.children.size()
-                          << " children) -> worker " << wid << "\n" << std::flush;
+                if (unit.descriptor.members.empty()) unit.descriptor.ready = false;
+                for (auto& member : unit.descriptor.members) member.ready = unit.descriptor.ready;
+                units.push_back(std::move(unit));
+            };
+            for (auto& entry : result.direct_route) add_label_unit(std::move(entry.first), entry.second);
+            for (auto& label : result.independent) {
+                // Materialize an aggregate before deriving its typed descriptor.
+                if (!label.children.empty() && label.type == labios::LabelType::Write) {
+                    std::vector<std::byte> combined;
+                    if (label.data_size != 0) combined.reserve(static_cast<size_t>(label.data_size));
+                    for (const auto child_id : label.children) {
+                        auto chunk = redis.get_binary(labios::ContentManager::data_key(child_id));
+                        combined.insert(combined.end(), chunk.begin(), chunk.end());
+                        redis.del(labios::ContentManager::data_key(child_id));
+                    }
+                    label.data_size = static_cast<uint64_t>(combined.size());
+                    redis.set_binary(labios::ContentManager::data_key(label.id),
+                                     std::span<const std::byte>(combined));
+                }
+                int preferred_worker = 0;
+                if (label.type == labios::LabelType::Write && !label.file_key.empty()) {
+                    if (auto location = catalog.get_location(label.file_key)) preferred_worker = *location;
+                }
+                add_label_unit(std::move(label), preferred_worker);
+            }
+            for (auto& supertask : result.supertasks) {
+                DispatchUnit unit;
+                unit.composite = true;
+                unit.representative = std::move(supertask.composite);
+                unit.children = std::move(supertask.children);
+                unit.descriptor.unit_id = unit.representative.id;
+                unit.descriptor.ordinal = ordinal;
+                unit.descriptor.ready = true;
+                for (const auto& child : unit.children) {
+                    auto job = labios::describe_job(child, ordinal++);
+                    if (job) unit.descriptor.members.push_back(std::move(*job));
+                    for (const auto& dependency : child.dependencies) {
+                        unit.descriptor.predecessors.push_back(dependency.label_id);
+                        if (catalog.get_status(dependency.label_id) != labios::LabelStatus::Complete) {
+                            unit.descriptor.ready = false;
+                        }
+                    }
+                }
+                for (auto& member : unit.descriptor.members) member.ready = unit.descriptor.ready;
+                units.push_back(std::move(unit));
             }
 
-            // (C) Independent labels
+            labios::SchedulingBatch scheduling_batch;
+            scheduling_batch.batch_id = now_us();
             {
-                std::vector<labios::ScheduleEntry> sched;
-                sched.reserve(result.independent.size());
-
-                for (auto& label : result.independent) {
-                    bool aggregated = (!label.children.empty() &&
-                                       label.type == labios::LabelType::Write);
-                    if (aggregated) {
-                        std::vector<std::byte> combined;
-                        combined.reserve(label.data_size);
-                        for (auto child_id : label.children) {
-                            auto key = labios::ContentManager::data_key(child_id);
-                            auto chunk = redis.get_binary(key);
-                            combined.insert(combined.end(), chunk.begin(), chunk.end());
-                            redis.del(key);
-                        }
-                        redis.set_binary(labios::ContentManager::data_key(label.id),
-                                         std::span<const std::byte>(combined));
-
-                        std::cout << "[" << timestamp() << "] dispatcher: aggregated "
-                                  << label.children.size() << " labels for "
-                                  << label.file_key << "\n" << std::flush;
-
-                        // Fan out completion to all original clients.
-                        auto fanout_it = result.reply_fanout.find(label.id);
-                        if (fanout_it != result.reply_fanout.end()) {
-                            auto [inbox, reply_handle] = nats.create_reply_inbox();
-                            label.reply_to = inbox;
-
-                            auto fanout = std::jthread([reply_handle,
-                                         replies = fanout_it->second,
-                                         &nats](std::stop_token stoken) {
-                                try {
-                                    auto data = reply_handle->wait(
-                                        std::chrono::seconds(60));
-                                    if (stoken.stop_requested()) return;
-                                    for (auto& reply_to : replies) {
-                                        nats.publish(reply_to,
-                                            std::span<const std::byte>(data));
-                                    }
-                                    nats.flush();
-                                } catch (...) {
-                                    // Timeout; clients will timeout on their end.
-                                }
-                            });
-
-                            std::lock_guard flock(g_fanout_mu);
-                            // Clean up completed threads before adding new one.
-                            std::erase_if(g_fanout_threads, [](std::jthread& t) {
-                                return !t.joinable();
-                            });
-                            g_fanout_threads.push_back(std::move(fanout));
-                        }
-                    }
-
-                    int target_worker = -1;
-                    if (label.type == labios::LabelType::Write) {
-                        auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                        if (dst) {
-                            auto loc = catalog.get_location(dst->path);
-                            if (loc.has_value()) target_worker = *loc;
-                        }
-                    }
-
-                    if (target_worker > 0) {
-                        auto dispatch_time = now_us();
-                        labios::mark_label_scheduled(
-                            label, target_worker, "write-locality",
-                            snapshot_worker(target_worker, workers), dispatch_time);
-                        sched.push_back({label.id, target_worker, label.flags});
-
-                        auto serialized = labios::serialize_label_view(label);
-                        std::string subject = "labios.worker." + std::to_string(target_worker);
-                        nats.publish(subject, serialized);
-                        telemetry.record_label_dispatched();
-
-                        std::cout << "[" << timestamp() << "] dispatcher: label "
-                                  << label.id << " -> worker " << target_worker
-                                  << " (write locality)\n" << std::flush;
-                    } else {
-                        auto assigned_worker = select_worker(label.intent);
-                        if (!assigned_worker.has_value()) {
-                            std::cerr << "[" << timestamp()
-                                      << "] dispatcher: no worker available for label "
-                                      << label.id << "\n" << std::flush;
-                            continue;
-                        }
-
-                        int wid = *assigned_worker;
-                        auto dispatch_time = now_us();
-                        labios::mark_label_scheduled(
-                            label, wid, cfg.scheduler_policy,
-                            snapshot_worker(wid, workers), dispatch_time);
-                        sched.push_back({label.id, wid, label.flags});
-
-                        if (label.type == labios::LabelType::Write) {
-                            auto* dst = std::get_if<labios::FilePath>(&label.destination);
-                            if (dst) catalog.set_location(dst->path, dst->offset, dst->length, wid);
-                        }
-
-                        auto routed = labios::serialize_label_view(label);
-                        std::string subject = "labios.worker." + std::to_string(wid);
-                        nats.publish_durable(subject, routed);
-                        telemetry.record_label_dispatched();
-
-                        std::cout << "[" << timestamp() << "] dispatcher: label "
-                                  << label.id << " -> worker " << wid << "\n"
-                                  << std::flush;
-                    }
-                }
-
-                catalog.schedule_batch(sched);
+                std::lock_guard lock(g_workers_mu);
+                scheduling_batch.registry_generation = g_registry_generation;
             }
+            for (const auto& unit : units) scheduling_batch.units.push_back(unit.descriptor);
+            const auto prepared = labios::prepare_scheduling_batch(
+                std::move(scheduling_batch), workers);
+            auto policy_profile = profile;
+            auto plan = labios::solve_prepared(prepared, cfg.scheduler_policy, policy_profile);
+            const bool valid_plan = labios::validate_plan(prepared, plan);
 
+            auto make_history = [&](const DispatchUnit& unit,
+                                    const labios::PlacementDecision& decision) {
+                labios::SchedulingDecisionSnapshot history;
+                history.decision_id = (prepared.batch.batch_id << 1U) ^ unit.representative.id;
+                history.batch_id = prepared.batch.batch_id;
+                history.scheduling_unit_id = unit.descriptor.unit_id;
+                history.attempt = static_cast<uint32_t>(unit.representative.score_snapshot.decisions.size() + 1U);
+                history.registry_generation = prepared.batch.registry_generation;
+                history.job_ordinal = unit.descriptor.ordinal;
+                history.outcome = decision.outcome == labios::PlacementOutcome::Assigned ? "Assigned" : "Parked";
+                history.chosen_worker_id = decision.worker_id;
+                history.park_reason = decision.outcome == labios::PlacementOutcome::Assigned
+                    ? std::string{} : (decision.park_reason.empty()
+                        ? labios::feasibility_reason_name(decision.deferred_reason) : decision.park_reason);
+                bool known = true;
+                uint64_t bytes = 0;
+                for (const auto& member : unit.descriptor.members) {
+                    if (member.demand.kind == labios::DemandKind::Unknown) known = false;
+                    if (std::numeric_limits<uint64_t>::max() - bytes < member.demand.bytes) {
+                        known = false;
+                        bytes = 0;
+                        break;
+                    }
+                    bytes += member.demand.bytes;
+                }
+                history.reservation_bytes = bytes;
+                history.complete_size_known = known;
+                history.candidates = decision.candidates;
+                history.policy_name = cfg.scheduler_policy;
+                history.policy_evidence = decision.evidence;
+                return history;
+            };
+
+            std::vector<labios::ScheduleEntry> scheduled;
+            std::vector<size_t> assigned_units;
+            std::cout << "[" << timestamp() << "] dispatcher: policy="
+                      << cfg.scheduler_policy << ", workers=" << workers.size()
+                      << ", units=" << units.size() << "\n" << std::flush;
+            for (size_t index = 0; index < units.size(); ++index) {
+                auto& unit = units[index];
+                auto decision = index < plan.decisions.size() ? plan.decisions[index]
+                    : labios::PlacementDecision{unit.descriptor.unit_id};
+                if (!valid_plan) {
+                    decision.outcome = labios::PlacementOutcome::Deferred;
+                    decision.worker_id = -1;
+                    decision.deferred_reason = labios::FeasibilityReason::NoFeasibleCurrentPlacement;
+                    decision.park_reason = "INVALID_PLAN";
+                }
+                const auto history = make_history(unit, decision);
+                auto apply = [&](labios::LabelData& label) {
+                    if (decision.outcome == labios::PlacementOutcome::Assigned) {
+                        auto snapshot = snapshot_worker(decision.worker_id, workers);
+                        snapshot.decisions = label.score_snapshot.decisions;
+                        snapshot.decision_version = 1;
+                        snapshot.decisions.push_back(history);
+                        labios::mark_label_scheduled(label, static_cast<uint32_t>(decision.worker_id),
+                                                     cfg.scheduler_policy, snapshot, now_us());
+                    } else {
+                        label.score_snapshot.decision_version = 1;
+                        label.score_snapshot.decisions.push_back(history);
+                        label.status = labios::StatusCode::Queued;
+                    }
+                };
+                apply(unit.representative);
+                for (auto& child : unit.children) apply(child);
+                if (decision.outcome == labios::PlacementOutcome::Assigned) {
+                    assigned_units.push_back(index);
+                    scheduled.push_back({unit.representative.id, decision.worker_id,
+                                         unit.representative.flags});
+                    for (const auto& child : unit.children) {
+                        scheduled.push_back({child.id, decision.worker_id, child.flags});
+                    }
+                } else {
+                    catalog.set_status(unit.representative.id, labios::LabelStatus::Parked);
+                    auto parked = labios::serialize_label(unit.representative);
+                    nats.publish_durable("labios.labels", parked);
+                }
+            }
+            // Persist every validated residual and lifecycle transition before
+            // publishing any worker delivery.
+            catalog.schedule_batch(scheduled);
+            for (const auto index : assigned_units) {
+                auto& unit = units[index];
+                const auto worker_id = unit.representative.routing.worker_id;
+                if (unit.composite) {
+                    std::vector<std::vector<std::byte>> children;
+                    for (const auto& child : unit.children) children.push_back(labios::serialize_label(child));
+                    auto packed = labios::pack_labels(children);
+                    redis.set_binary("labios:supertask:" + std::to_string(unit.representative.id),
+                                     std::span<const std::byte>(packed));
+                }
+                auto payload = labios::serialize_label(unit.representative);
+                nats.publish_durable("labios.worker." + std::to_string(worker_id), payload);
+                telemetry.record_label_dispatched();
+            }
+            nats.flush();
             nats.flush();
         }
     });

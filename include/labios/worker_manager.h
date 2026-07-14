@@ -35,6 +35,12 @@ public:
     void register_worker(WorkerInfo info);
     void deregister_worker(int worker_id);
 
+    // Registry-v2 merge operations. They reject stale epochs without mutation.
+    bool register_worker_v2(WorkerInfo info);
+    bool update_worker_v2(const WorkerInfo& dynamic_info);
+    bool deregister_worker_v2(int worker_id, uint64_t registration_epoch);
+    uint64_t registry_generation() const;
+
     // M4: Elastic worker tracking.
     size_t worker_count();
     int next_worker_id();
@@ -66,6 +72,7 @@ private:
     WeightProfile last_profile_;
     int next_elastic_id_ = 100;
     std::unordered_map<int, std::chrono::steady_clock::time_point> suspended_since_;
+    uint64_t registry_generation_ = 0;
 };
 
 static_assert(WorkerManager<InMemoryWorkerManager>);

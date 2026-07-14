@@ -387,7 +387,13 @@ static flatbuffers::Offset<schema::ResourceRef> serialize_resource(flatbuffers::
     case ResourceFamily::Graph: { auto x=schema::CreateGraphResource(fbb,s(r.backend_id),s(r.database),s(r.graph),s(r.element_id)); value=x.Union(); kind=schema::ResourceValue_GraphResource; break; }
     case ResourceFamily::Channel: { auto x=schema::CreateChannelResource(fbb,s(r.namespace_name),s(r.key),r.offset,r.length); value=x.Union(); kind=schema::ResourceValue_ChannelResource; break; }
     case ResourceFamily::Workspace: { auto x=schema::CreateWorkspaceResource(fbb,s(r.namespace_name),s(r.key),s(r.selector)); value=x.Union(); kind=schema::ResourceValue_WorkspaceResource; break; }
-    case ResourceFamily::Extension: { auto x=schema::CreateExtensionResource(fbb,s(r.namespace_name),s(r.key),r.schema_version,0,0); value=x.Union(); kind=schema::ResourceValue_ExtensionResource; break; }
+    case ResourceFamily::Extension: {
+        flatbuffers::Offset<flatbuffers::Vector<uint8_t>> identity = 0;
+        flatbuffers::Offset<flatbuffers::Vector<uint8_t>> address = 0;
+        if (!r.logical_id.empty()) identity = fbb.CreateVector(reinterpret_cast<const uint8_t*>(r.logical_id.data()), r.logical_id.size());
+        if (!r.selector.empty()) address = fbb.CreateVector(reinterpret_cast<const uint8_t*>(r.selector.data()), r.selector.size());
+        auto x=schema::CreateExtensionResource(fbb,s(r.namespace_name),s(r.key),r.schema_version,identity,address);
+        value=x.Union(); kind=schema::ResourceValue_ExtensionResource; break; }
     }
     return schema::CreateResourceRef(fbb,s(r.backend_id),s(r.logical_id),version,kind,value);
 }
@@ -488,16 +494,57 @@ static std::pair<const std::byte*, size_t> serialize_label_core(
             fbb, ids_off, label.aggregation.merged_offset, label.aggregation.merged_length);
     }
 
-    // ScoreSnapshot sub-table.
+    // ScoreSnapshot is runtime explainability. History presence, rather than
+    // the legacy scalar values, determines whether the table is emitted.
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::SchedulingDecisionSnapshot>>> decisions_off = 0;
+    if (!label.score_snapshot.decisions.empty()) {
+        std::vector<flatbuffers::Offset<schema::SchedulingDecisionSnapshot>> decisions;
+        for (const auto& d : label.score_snapshot.decisions) {
+            std::vector<flatbuffers::Offset<schema::CandidateEvaluation>> candidates;
+            for (const auto& c : d.candidates) {
+                std::vector<flatbuffers::Offset<schema::ScoreComponent>> components;
+                for (const auto& s : c.score_components) {
+                    auto metric = maybe_string(fbb, s.metric);
+                    schema::ScoreComponentBuilder b(fbb);
+                    b.add_metric(metric); b.add_raw_value(s.raw_value);
+                    b.add_normalized_value(s.normalized_value); b.add_weight(s.weight);
+                    b.add_contribution(s.contribution);
+                    components.push_back(b.Finish());
+                }
+                auto cv = c.reason_codes.empty() ? flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>>{0} : fbb.CreateVector([&] { std::vector<flatbuffers::Offset<flatbuffers::String>> v; for (const auto& r : c.reason_codes) v.push_back(fbb.CreateString(r)); return v; }());
+                auto sv = components.empty() ? flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::ScoreComponent>>>{0} : fbb.CreateVector(components);
+                schema::CandidateEvaluationBuilder b(fbb);
+                b.add_worker_id(c.worker_id); b.add_feasible(c.feasible); if (cv.o) b.add_reason_codes(cv);
+                b.add_available_capacity_before(c.available_capacity_before); b.add_available_capacity_after(c.available_capacity_after);
+                b.add_locality_match(c.locality_match); if (sv.o) b.add_score_components(sv);
+                b.add_final_objective(c.final_objective); b.add_policy_rank(c.policy_rank); b.add_selected(c.selected);
+                candidates.push_back(b.Finish());
+            }
+            auto cv = candidates.empty() ? flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::CandidateEvaluation>>>{0} : fbb.CreateVector(candidates);
+            auto outcome=maybe_string(fbb,d.outcome), park=maybe_string(fbb,d.park_reason), policy=maybe_string(fbb,d.policy_name), evidence=maybe_string(fbb,d.policy_evidence);
+            schema::SchedulingDecisionSnapshotBuilder b(fbb);
+            b.add_decision_id(d.decision_id); b.add_batch_id(d.batch_id); b.add_scheduling_unit_id(d.scheduling_unit_id);
+            b.add_attempt(d.attempt); b.add_registry_generation(d.registry_generation); b.add_job_ordinal(d.job_ordinal);
+            if (outcome.o) b.add_outcome(outcome);
+            b.add_chosen_worker_id(d.chosen_worker_id);
+            if (park.o) b.add_park_reason(park);
+            b.add_reservation_bytes(d.reservation_bytes);
+            b.add_complete_size_known(d.complete_size_known);
+            if (cv.o) b.add_candidates(cv);
+            if (policy.o) b.add_policy_name(policy);
+            if (evidence.o) b.add_policy_evidence(evidence);
+            decisions.push_back(b.Finish());
+        }
+        decisions_off = fbb.CreateVector(decisions);
+    }
     flatbuffers::Offset<schema::ScoreSnapshot> score_off = 0;
-    if (label.score_snapshot.availability != 0.0 || label.score_snapshot.capacity != 0.0 ||
-        label.score_snapshot.load != 0.0 || label.score_snapshot.speed != 0.0 ||
-        label.score_snapshot.energy != 0.0 || label.score_snapshot.tier != 0.0) {
-        score_off = schema::CreateScoreSnapshot(
-            fbb,
-            label.score_snapshot.availability, label.score_snapshot.capacity,
-            label.score_snapshot.load, label.score_snapshot.speed,
-            label.score_snapshot.energy, label.score_snapshot.tier);
+    const auto& score = label.score_snapshot;
+    if (score.decision_version || !score.decisions.empty() || score.availability != 0.0 || score.capacity != 0.0 || score.load != 0.0 || score.speed != 0.0 || score.energy != 0.0 || score.tier != 0.0) {
+        schema::ScoreSnapshotBuilder b(fbb);
+        b.add_availability(score.availability); b.add_capacity(score.capacity); b.add_load(score.load);
+        b.add_speed(score.speed); b.add_energy(score.energy); b.add_tier(score.tier); b.add_decision_version(score.decision_version);
+        if (decisions_off.o) b.add_decisions(decisions_off);
+        score_off = b.Finish();
     }
 
     // LabelResult sub-table.
@@ -585,13 +632,58 @@ inline void fb_read_string(std::string& dst, const flatbuffers::String* src) {
 } // namespace
 
 static ResourceRef deserialize_resource(const schema::ResourceRef* x) {
-    ResourceRef r; if (!x) return r;
-    r.backend_id=x->backend_id()?x->backend_id()->str():""; r.logical_id=x->logical_id()?x->logical_id()->str():"";
-    if (auto* v=x->value_as_FileRangeResource()) { r.family=ResourceFamily::FileRange; r.namespace_name=v->namespace_()?v->namespace_()->str():""; r.path=v->path()?v->path()->str():""; r.offset=v->offset(); r.length=v->length(); r.extent=v->extent()?v->extent()->str():"Unspecified"; }
-    else if (auto* v=x->value_as_MemoryResource()) { r.family=ResourceFamily::Memory; r.owner=v->owner()?v->owner()->str():""; r.allocation_id=v->allocation_id()?v->allocation_id()->str():""; r.offset=v->offset(); r.length=v->length(); r.transfer_token=v->transfer_token()?v->transfer_token()->str():""; }
-    else if (auto* v=x->value_as_KeyValueResource()) { r.family=ResourceFamily::KeyValue; r.database=v->database()?v->database()->str():""; r.namespace_name=v->namespace_()?v->namespace_()->str():""; r.key=v->key()?v->key()->str():""; }
-    else if (auto* v=x->value_as_RelationalResource()) { r.family=ResourceFamily::Relational; r.database=v->database()?v->database()->str():""; r.schema=v->schema()?v->schema()->str():""; r.key=v->relation()?v->relation()->str():""; r.selector=v->selector()?v->selector()->str():""; }
-    if (auto* vc=x->version_constraint()) { r.version_token=vc->token()?vc->token()->str():""; r.version_exact=vc->relation()==1; r.version_must_not_exist=vc->relation()==2; }
+    ResourceRef r;
+    if (!x) return r;
+    r.backend_id = x->backend_id() ? x->backend_id()->str() : "";
+    r.logical_id = x->logical_id() ? x->logical_id()->str() : "";
+    if (auto* v = x->value_as_FileRangeResource()) {
+        r.family = ResourceFamily::FileRange; r.namespace_name = v->namespace_() ? v->namespace_()->str() : "";
+        r.path = v->path() ? v->path()->str() : ""; r.offset = v->offset(); r.length = v->length();
+        r.extent = v->extent() ? v->extent()->str() : "Unspecified";
+    } else if (auto* v = x->value_as_MemoryResource()) {
+        r.family = ResourceFamily::Memory; r.owner = v->owner() ? v->owner()->str() : "";
+        r.allocation_id = v->allocation_id() ? v->allocation_id()->str() : "";
+        r.offset = v->offset(); r.length = v->length(); r.transfer_token = v->transfer_token() ? v->transfer_token()->str() : "";
+    } else if (auto* v = x->value_as_NetworkResource()) {
+        r.family = ResourceFamily::Network; r.backend_id = v->backend_id() ? v->backend_id()->str() : r.backend_id;
+        r.transport = v->transport() ? v->transport()->str() : ""; r.host = v->host() ? v->host()->str() : "";
+        r.port = v->port(); r.stream = v->stream() ? v->stream()->str() : "";
+    } else if (auto* v = x->value_as_KeyValueResource()) {
+        r.family = ResourceFamily::KeyValue; r.backend_id = v->backend_id() ? v->backend_id()->str() : r.backend_id;
+        r.database = v->database() ? v->database()->str() : ""; r.namespace_name = v->namespace_() ? v->namespace_()->str() : "";
+        r.key = v->key() ? v->key()->str() : "";
+    } else if (auto* v = x->value_as_RelationalResource()) {
+        r.family = ResourceFamily::Relational; r.backend_id = v->backend_id() ? v->backend_id()->str() : r.backend_id;
+        r.database = v->database() ? v->database()->str() : ""; r.schema = v->schema() ? v->schema()->str() : "";
+        r.key = v->relation() ? v->relation()->str() : ""; r.selector = v->selector() ? v->selector()->str() : "";
+    } else if (auto* v = x->value_as_ObjectResource()) {
+        r.family = ResourceFamily::Object; r.backend_id = v->backend_id() ? v->backend_id()->str() : r.backend_id;
+        r.bucket = v->bucket() ? v->bucket()->str() : ""; r.key = v->key() ? v->key()->str() : "";
+        r.offset = v->offset(); r.length = v->length(); r.extent = v->extent() ? v->extent()->str() : "Unspecified";
+    } else if (auto* v = x->value_as_VectorResource()) {
+        r.family = ResourceFamily::Vector; r.backend_id = v->backend_id() ? v->backend_id()->str() : r.backend_id;
+        r.database = v->database() ? v->database()->str() : ""; r.collection = v->collection() ? v->collection()->str() : "";
+        r.item_id = v->item_id() ? v->item_id()->str() : "";
+    } else if (auto* v = x->value_as_GraphResource()) {
+        r.family = ResourceFamily::Graph; r.backend_id = v->backend_id() ? v->backend_id()->str() : r.backend_id;
+        r.database = v->database() ? v->database()->str() : ""; r.graph = v->graph() ? v->graph()->str() : "";
+        r.element_id = v->element_id() ? v->element_id()->str() : "";
+    } else if (auto* v = x->value_as_ChannelResource()) {
+        r.family = ResourceFamily::Channel; r.namespace_name = v->namespace_() ? v->namespace_()->str() : "";
+        r.key = v->name() ? v->name()->str() : ""; r.offset = v->sequence_start(); r.length = v->sequence_count();
+    } else if (auto* v = x->value_as_WorkspaceResource()) {
+        r.family = ResourceFamily::Workspace; r.namespace_name = v->namespace_() ? v->namespace_()->str() : "";
+        r.key = v->name() ? v->name()->str() : ""; r.selector = v->entry_key() ? v->entry_key()->str() : "";
+    } else if (auto* v = x->value_as_ExtensionResource()) {
+        r.family = ResourceFamily::Extension; r.namespace_name = v->namespace_() ? v->namespace_()->str() : "";
+        r.key = v->kind() ? v->kind()->str() : ""; r.schema_version = v->schema_version();
+        if (v->identity()) r.logical_id.assign(reinterpret_cast<const char*>(v->identity()->data()), v->identity()->size());
+        if (v->address()) r.selector.assign(reinterpret_cast<const char*>(v->address()->data()), v->address()->size());
+    }
+    if (auto* vc = x->version_constraint()) {
+        r.version_token = vc->token() ? vc->token()->str() : "";
+        r.version_exact = vc->relation() == 1; r.version_must_not_exist = vc->relation() == 2;
+    }
     return r;
 }
 
@@ -725,6 +817,26 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
         out.score_snapshot.speed        = ss->speed();
         out.score_snapshot.energy       = ss->energy();
         out.score_snapshot.tier         = ss->tier();
+        out.score_snapshot.decision_version = ss->decision_version();
+        if (auto* dv = ss->decisions()) {
+            for (auto* d : *dv) {
+                SchedulingDecisionSnapshot x;
+                x.decision_id=d->decision_id(); x.batch_id=d->batch_id(); x.scheduling_unit_id=d->scheduling_unit_id();
+                x.attempt=d->attempt(); x.registry_generation=d->registry_generation(); x.job_ordinal=d->job_ordinal();
+                fb_read_string(x.outcome,d->outcome()); x.chosen_worker_id=d->chosen_worker_id(); fb_read_string(x.park_reason,d->park_reason());
+                x.reservation_bytes=d->reservation_bytes(); x.complete_size_known=d->complete_size_known();
+                fb_read_string(x.policy_name,d->policy_name()); fb_read_string(x.policy_evidence,d->policy_evidence());
+                if(auto* cs=d->candidates()) for(auto* c:*cs) {
+                    CandidateEvaluation y; y.worker_id=c->worker_id(); y.feasible=c->feasible();
+                    y.available_capacity_before=c->available_capacity_before(); y.available_capacity_after=c->available_capacity_after();
+                    y.locality_match=c->locality_match(); y.final_objective=c->final_objective(); y.policy_rank=c->policy_rank(); y.selected=c->selected();
+                    if(auto* rs=c->reason_codes()) for(auto* r:*rs) y.reason_codes.emplace_back(r->str());
+                    if(auto* ss2=c->score_components()) for(auto* q:*ss2) { ScoreComponent z; fb_read_string(z.metric,q->metric()); z.raw_value=q->raw_value(); z.normalized_value=q->normalized_value(); z.weight=q->weight(); z.contribution=q->contribution(); y.score_components.push_back(std::move(z)); }
+                    x.candidates.push_back(std::move(y));
+                }
+                out.score_snapshot.decisions.push_back(std::move(x));
+            }
+        }
     }
 
     // State

@@ -15,6 +15,7 @@
 #include <labios/transport/nats.h>
 #include <labios/transport/redis.h>
 #include <labios/uri.h>
+#include <labios/worker_registry_protocol.h>
 
 #include <algorithm>
 #include <atomic>
@@ -349,6 +350,31 @@ int main() {
     std::mutex worker_mu;
 
     int worker_id = cfg.worker_id;
+    const uint64_t registration_epoch = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count()) * 1000ULL +
+        static_cast<uint64_t>(worker_id);
+    labios::WorkerInfo registration;
+    registration.id = worker_id;
+    registration.registration_epoch = registration_epoch;
+    registration.available = true;
+    registration.speed = cfg.worker_speed;
+    registration.energy = cfg.worker_energy;
+    registration.tier = worker_tier;
+    registration.max_ir_version = labios::kCurrentIrVersion;
+    registration.operations = {"core.read", "core.write", "core.delete", "core.flush", "core.observe", "core.composite"};
+    registration.pipeline_operations = {
+        "builtin://identity", "builtin://compress_rle", "builtin://decompress_rle",
+        "builtin://filter_bytes", "builtin://sum_uint64", "builtin://sort_uint64",
+        "builtin://sample", "builtin://truncate", "builtin://deduplicate",
+        "builtin://median_uint64", "builtin://format_convert"};
+    registration.attachments = {
+        {static_cast<uint8_t>(labios::ResourceFamily::FileRange), "default", "file", labios::LocalityKind::Shared, {}},
+        {static_cast<uint8_t>(labios::ResourceFamily::Relational), "default", "sqlite", labios::LocalityKind::Shared, {}}};
+    registration.locality_domains = {"worker:" + std::to_string(worker_id)};
+    registration.total_capacity_bytes = labios::parse_size(cfg.worker_capacity);
+    registration.available_capacity_bytes = registration.total_capacity_bytes;
+    registration.capacity = 1.0;
     nats.subscribe_durable(worker_subject,
         "worker-" + std::to_string(worker_id),
         [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root,
@@ -556,26 +582,29 @@ int main() {
 
     redis.set("labios:ready:" + worker_name, "1");
 
-    // Publish registration to manager.
-    std::string reg_msg = std::to_string(cfg.worker_id) + ","
-        + std::to_string(cfg.worker_speed) + ","
-        + std::to_string(cfg.worker_energy) + ","
-        + cfg.worker_capacity + ","
-        + std::to_string(cfg.worker_tier);
-    nats.publish("labios.worker.register", reg_msg);
+    // Publish one verified registry-v2 registration. There is no CSV fallback.
+    auto registration_payload = labios::encode_worker_registration(registration);
+    nats.publish("labios.worker.register",
+                 std::span<const std::byte>(registration_payload));
     nats.flush();
 
     // Subscribe to resume commands from the elastic orchestrator.
     nats.subscribe("labios.worker.resume." + std::to_string(cfg.worker_id),
-        [worker_id, &worker_name, &nats](std::string_view /*subject*/,
+        [worker_id, &worker_name, &nats, &registration](std::string_view /*subject*/,
             std::span<const std::byte> /*data*/,
             std::string_view /*reply_to*/) {
             g_suspended.store(false);
             g_last_label_time = std::chrono::steady_clock::now();
             // Immediately publish availability so the dispatcher sees us.
-            std::string msg = std::to_string(worker_id) + ",1.0,0.0,1";
+            auto update = registration;
+            update.available = true;
+            update.capacity = 1.0;
+            update.load = 0.0;
+            update.available_capacity_bytes = update.total_capacity_bytes;
             try {
-                nats.publish("labios.worker.score_update", msg);
+                auto payload = labios::encode_worker_resource_update(update);
+                nats.publish("labios.worker.score_update",
+                             std::span<const std::byte>(payload));
                 nats.flush();
             } catch (...) {}
             std::cout << "[" << timestamp() << "] " << worker_name
@@ -583,7 +612,7 @@ int main() {
         });
 
     // Periodic score update thread: publishes load and capacity every 2 seconds.
-    g_score_thread = std::jthread([&nats, &storage_root, worker_id, cfg, &worker_name](std::stop_token stoken) {
+    g_score_thread = std::jthread([&nats, &storage_root, worker_id, cfg, &worker_name, registration](std::stop_token stoken) {
         while (!stoken.stop_requested()) {
             std::this_thread::sleep_for(std::chrono::seconds(2));
             if (stoken.stop_requested()) break;
@@ -616,13 +645,18 @@ int main() {
 
             bool available = !g_suspended.load();
 
-            // Format: "id,capacity,load,available"
-            std::string msg = std::to_string(worker_id) + ","
-                + std::to_string(cap_ratio) + ","
-                + std::to_string(load) + ","
-                + (available ? "1" : "0");
+            auto update = registration;
+            update.available = available;
+            update.capacity = cap_ratio;
+            update.load = load;
+            if (update.total_capacity_bytes != 0) {
+                update.available_capacity_bytes = static_cast<uint64_t>(
+                    static_cast<long double>(update.total_capacity_bytes) * cap_ratio);
+            }
             try {
-                nats.publish("labios.worker.score_update", msg);
+                auto payload = labios::encode_worker_resource_update(update);
+                nats.publish("labios.worker.score_update",
+                             std::span<const std::byte>(payload));
                 nats.flush();
             } catch (...) {}
         }
@@ -653,8 +687,10 @@ int main() {
         g_score_thread.join();
     }
 
-    // Deregister from manager before shutdown.
-    nats.publish("labios.worker.deregister", std::to_string(cfg.worker_id));
+    // Deregister by matching epoch; stale removals cannot remove a replacement.
+    auto deregistration = labios::encode_worker_deregistration(worker_id, registration_epoch);
+    nats.publish("labios.worker.deregister",
+                 std::span<const std::byte>(deregistration));
     nats.flush();
 
     std::cout << "[" << timestamp() << "] " << worker_name

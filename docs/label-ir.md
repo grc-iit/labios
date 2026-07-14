@@ -1637,25 +1637,23 @@ reconstructable parked snapshot with no fabricated chosen worker.
 
 #### 9.7.10 Current capability and implementation gate
 
-At commit `d8e6a4d`, the dispatcher still invokes a solver once per supertask or
-independent label with one empty byte vector as the payload; a real
-post-shuffler batch never reaches a solver as a set. Read- and write-locality
-routes bypass the solver and do not apply the common feasibility checks.
-Capacity is only a normalized ratio, the manager's snapshot is a seven-column
-CSV row, registration and score updates are separate CSV strings,
-deregistration is a plain-text worker ID, and the six-scalar `ScoreSnapshot`
-cannot explain excluded alternatives, capacity budgets, policy contributions,
-tie-breaks, or parking. Nothing in P08 changes that runtime behavior.
+P09 implements the Section 9.7 runtime slice: one complete typed post-shuffler
+batch reaches one selected policy invocation; every unit receives one validated
+assigned/deferred decision; common feasibility checks cover capabilities,
+attachments, locality, absolute demand, and cumulative capacity; and the
+six-scalar residual now carries replayable append-only decision history.
+Registry v2 is verified and coordinated across manager, worker, and dispatcher
+with no runtime CSV/text fallback. The 13 hermetic P09 scheduling-feasibility cases, existing solver cases,
+registry codec tests, and exact 8 MiB paper trace pass in the native unit lane.
 
-**P08 status: Go and complete (2026-07-14).** This documentation contract and
-the matching planning decision are recorded. P09 was initially No-Go because
-its prompt forbade the approved schema and codec paths. That historical
-ownership gate was lifted on 2026-07-14: the executable P09 prompt now owns the
-Label residual schema/codec, registry-v2 schema/codegen, coordinated four-
-subject runtime cutover, scheduling implementation, and required tests.
-**P09 status is Go without further semantic decisions or a pre-P09 slice.**
-Automatic provisioning, elasticity triggers, leader election, new solver
-algorithms, and distributed pipeline-stage placement remain out of scope.
+The live mixed-batch scheduling integration path was not run because Docker
+Compose was unavailable on the verification host; no live end-to-end claim is
+made. The Python MCP registry parser remains intentionally incompatible with
+registry v2. P13 must add Python FlatBuffers support and generated bindings
+before MCP worker-registry, worker-score, or worker-count behavior is claimed
+again. Automatic provisioning, elasticity triggers, leader election, new
+solver algorithms, and distributed pipeline-stage placement remain out of
+scope.
 
 ## 10. Deterministic validation rules
 

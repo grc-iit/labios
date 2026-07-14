@@ -117,6 +117,7 @@ void InMemoryWorkerManager::register_worker(WorkerInfo info) {
     std::lock_guard lock(mu_);
     int id = info.id;
     workers_[id] = info;
+    ++registry_generation_;
     // Bucket only if a profile has been set (by a prior top_n_workers call).
     if (!last_profile_.name.empty()) {
         remove_from_buckets(id);
@@ -126,9 +127,66 @@ void InMemoryWorkerManager::register_worker(WorkerInfo info) {
 
 void InMemoryWorkerManager::deregister_worker(int worker_id) {
     std::lock_guard lock(mu_);
+    if (workers_.erase(worker_id) != 0) {
+        remove_from_buckets(worker_id);
+        suspended_since_.erase(worker_id);
+        ++registry_generation_;
+    }
+}
+
+bool InMemoryWorkerManager::register_worker_v2(WorkerInfo info) {
+    std::lock_guard lock(mu_);
+    if (info.id <= 0 || info.registration_epoch == 0) return false;
+    const auto found = workers_.find(info.id);
+    if (found != workers_.end() && found->second.registration_epoch >= info.registration_epoch) {
+        return false;
+    }
+    info.registry_generation = ++registry_generation_;
+    workers_[info.id] = std::move(info);
+    remove_from_buckets(found == workers_.end() ? info.id : found->first);
+    if (!last_profile_.name.empty()) place_in_bucket(info.id, compute_score(workers_[info.id], last_profile_));
+    return true;
+}
+
+bool InMemoryWorkerManager::update_worker_v2(const WorkerInfo& dynamic_info) {
+    std::lock_guard lock(mu_);
+    const auto found = workers_.find(dynamic_info.id);
+    if (found == workers_.end() || found->second.registration_epoch != dynamic_info.registration_epoch) return false;
+    auto merged = found->second;
+    merged.available = dynamic_info.available;
+    merged.total_capacity_bytes = dynamic_info.total_capacity_bytes;
+    merged.available_capacity_bytes = dynamic_info.available_capacity_bytes;
+    merged.capacity = dynamic_info.capacity;
+    merged.load = dynamic_info.load;
+    merged.skills = dynamic_info.skills;
+    merged.compute = dynamic_info.compute;
+    merged.reasoning = dynamic_info.reasoning;
+    merged.registry_generation = ++registry_generation_;
+    const bool was_available = found->second.available;
+    found->second = std::move(merged);
+    if (was_available && !found->second.available) suspended_since_[found->first] = std::chrono::steady_clock::now();
+    if (!was_available && found->second.available) suspended_since_.erase(found->first);
+    if (!last_profile_.name.empty()) {
+        remove_from_buckets(found->first);
+        place_in_bucket(found->first, compute_score(found->second, last_profile_));
+    }
+    return true;
+}
+
+bool InMemoryWorkerManager::deregister_worker_v2(int worker_id, uint64_t registration_epoch) {
+    std::lock_guard lock(mu_);
+    const auto found = workers_.find(worker_id);
+    if (found == workers_.end() || found->second.registration_epoch != registration_epoch) return false;
     remove_from_buckets(worker_id);
-    workers_.erase(worker_id);
+    workers_.erase(found);
     suspended_since_.erase(worker_id);
+    ++registry_generation_;
+    return true;
+}
+
+uint64_t InMemoryWorkerManager::registry_generation() const {
+    std::shared_lock lock(mu_);
+    return registry_generation_;
 }
 
 size_t InMemoryWorkerManager::worker_count() {
