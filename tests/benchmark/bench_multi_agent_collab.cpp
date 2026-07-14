@@ -7,11 +7,15 @@
 #include <cstdlib>
 #include <numeric>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
 
 bool redis_available() {
+    // RedisConnection may wait on a network timeout; keep default CI hermetic.
+    const char* opt_in = std::getenv("LABIOS_BENCH_REDIS");
+    if (!opt_in || std::string_view(opt_in) != "1") return false;
     try {
         const char* host = std::getenv("LABIOS_REDIS_HOST");
         labios::transport::RedisConnection redis(host ? host : "localhost", 6379);
@@ -32,10 +36,12 @@ std::vector<std::byte> make_value(size_t size) {
 } // anonymous namespace
 
 // ---------------------------------------------------------------------------
-// Correctness: workspace access control and data roundtrip
+// Correctness: one-process workspace component
 // ---------------------------------------------------------------------------
 
-TEST_CASE("Multi-agent collab: workspace ACL and data ops", "[bench][collab]") {
+// This exercises the public Workspace component, but all logical app IDs share
+// one process and one WorkspaceRegistry. It is not a multi-agent test.
+TEST_CASE("Workspace component: ACL and data roundtrip", "[bench][workspace][component]") {
     if (!redis_available()) SKIP("Redis not available");
 
     const char* host = std::getenv("LABIOS_REDIS_HOST");
@@ -68,10 +74,10 @@ TEST_CASE("Multi-agent collab: workspace ACL and data ops", "[bench][collab]") {
 }
 
 // ---------------------------------------------------------------------------
-// Benchmarks (require live Redis)
+// Component benchmarks (require the workspace's external Redis service)
 // ---------------------------------------------------------------------------
 
-TEST_CASE("Multi-agent collab benchmarks", "[bench][collab][!benchmark]") {
+TEST_CASE("Workspace component benchmarks", "[bench][workspace][component][!benchmark]") {
     if (!redis_available()) SKIP("Redis not available");
 
     const char* host = std::getenv("LABIOS_REDIS_HOST");
@@ -87,7 +93,7 @@ TEST_CASE("Multi-agent collab benchmarks", "[bench][collab][!benchmark]") {
 
     auto value = make_value(1024);
 
-    BENCHMARK("Workspace put 1000 keys") {
+    BENCHMARK("Workspace component: put 1000 keys") {
         for (int i = 0; i < 1000; ++i) {
             ws->put("key_" + std::to_string(i), value, 1);
         }
@@ -99,7 +105,7 @@ TEST_CASE("Multi-agent collab benchmarks", "[bench][collab][!benchmark]") {
         ws->put("rkey_" + std::to_string(i), value, 1);
     }
 
-    BENCHMARK("Workspace get 1000 keys") {
+    BENCHMARK("Workspace component: get 1000 keys") {
         for (int i = 0; i < 1000; ++i) {
             auto v = ws->get("rkey_" + std::to_string(i), 2);
             (void)v;
@@ -107,7 +113,7 @@ TEST_CASE("Multi-agent collab benchmarks", "[bench][collab][!benchmark]") {
         return 1000;
     };
 
-    BENCHMARK("Workspace ACL check 10000x") {
+    BENCHMARK("Workspace component: ACL check 10000x") {
         int count = 0;
         for (int i = 0; i < 10000; ++i) {
             if (ws->has_access(static_cast<uint32_t>((i % 10) + 1))) ++count;

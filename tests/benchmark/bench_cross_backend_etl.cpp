@@ -31,10 +31,12 @@ const std::vector<std::string>& mixed_uris() {
 } // anonymous namespace
 
 // ---------------------------------------------------------------------------
-// Correctness: URI parsing and registry resolution
+// Correctness: control-plane URI routing and registry resolution
 // ---------------------------------------------------------------------------
 
-TEST_CASE("Cross-backend ETL: mixed URI parsing", "[bench][etl]") {
+// These tests do not read, transform, or write backend data. They are routing
+// control-plane tests, not cross-backend ETL.
+TEST_CASE("URI routing microbenchmark: mixed URI parsing", "[bench][uri][control_plane]") {
     const auto& uris = mixed_uris();
 
     auto file_uri = labios::parse_uri(uris[0]);
@@ -50,7 +52,7 @@ TEST_CASE("Cross-backend ETL: mixed URI parsing", "[bench][etl]") {
     REQUIRE(graph_uri.scheme == "graph");
 }
 
-TEST_CASE("Cross-backend ETL: registry resolves file scheme", "[bench][etl]") {
+TEST_CASE("Backend registry component: resolves file scheme", "[bench][backend_registry][component]") {
     auto tmp = std::filesystem::temp_directory_path() / "labios_bench_etl";
     std::filesystem::create_directories(tmp);
 
@@ -67,7 +69,7 @@ TEST_CASE("Cross-backend ETL: registry resolves file scheme", "[bench][etl]") {
     std::filesystem::remove_all(tmp);
 }
 
-TEST_CASE("Cross-backend ETL: 10K URIs all parse successfully", "[bench][etl]") {
+TEST_CASE("URI routing characterization: 10K URIs parse successfully", "[bench][uri][control_plane]") {
     const auto& uris = mixed_uris();
     for (const auto& raw : uris) {
         auto uri = labios::parse_uri(raw);
@@ -77,13 +79,13 @@ TEST_CASE("Cross-backend ETL: 10K URIs all parse successfully", "[bench][etl]") 
 }
 
 // ---------------------------------------------------------------------------
-// Benchmarks
+// Control-plane microbenchmarks
 // ---------------------------------------------------------------------------
 
-TEST_CASE("Cross-backend ETL benchmarks", "[bench][etl][!benchmark]") {
+TEST_CASE("URI routing and backend registry microbenchmarks", "[bench][uri][backend_registry][control_plane][!benchmark]") {
     const auto& uris = mixed_uris();
 
-    BENCHMARK("URI parse 10K mixed") {
+    BENCHMARK("URI routing microbenchmark: parse 10K mixed URIs") {
         labios::URI last;
         for (const auto& raw : uris) {
             last = labios::parse_uri(raw);
@@ -104,7 +106,7 @@ TEST_CASE("Cross-backend ETL benchmarks", "[bench][etl][!benchmark]") {
         parsed.push_back(labios::parse_uri(raw));
     }
 
-    BENCHMARK("Backend resolve 10K") {
+    BENCHMARK("Backend registry microbenchmark: resolve 10K schemes") {
         int resolved = 0;
         for (const auto& uri : parsed) {
             if (registry.resolve(uri.scheme) != nullptr) ++resolved;
@@ -112,7 +114,7 @@ TEST_CASE("Cross-backend ETL benchmarks", "[bench][etl][!benchmark]") {
         return resolved;
     };
 
-    BENCHMARK("URI roundtrip (parse + to_string) 10K") {
+    BENCHMARK("URI routing microbenchmark: parse and stringify 10K") {
         std::string last;
         for (const auto& raw : uris) {
             auto uri = labios::parse_uri(raw);
