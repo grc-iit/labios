@@ -88,6 +88,10 @@ add_executable(labios-solver-intent-test unit/solver_intent_test.cpp)
 target_link_libraries(labios-solver-intent-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-solver-intent-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-trace-guided-selection-test unit/trace_guided_selection_test.cpp)
+target_link_libraries(labios-trace-guided-selection-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-trace-guided-selection-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
 add_executable(labios-durable-dispatcher-test unit/durable_dispatcher_test.cpp)
 target_link_libraries(labios-durable-dispatcher-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-durable-dispatcher-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
@@ -216,6 +220,7 @@ set(BENCHMARKS
     bench_session_recall
     bench_write_conflict
     bench_large_file_pipeline
+    bench_trace_guided_selection
 )
 
 foreach(bench ${BENCHMARKS})

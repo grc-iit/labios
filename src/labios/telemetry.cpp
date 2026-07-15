@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <sstream>
 
 namespace labios {
@@ -36,6 +37,18 @@ void TelemetryPublisher::record_label_dispatched(uint8_t priority) {
     lane_dispatched_[lane].fetch_add(1, std::memory_order_relaxed);
 }
 
+void TelemetryPublisher::record_label_dispatched(int worker_id, uint8_t priority) {
+    record_label_dispatched(priority);
+    std::lock_guard lock(trace_mu_);
+    auto& trace = trace_features_[worker_id];
+    const auto inflight = ++inflight_by_worker_[worker_id];
+    constexpr double alpha = 0.2;
+    trace.queue_depth_ewma = trace.samples == 0
+        ? static_cast<double>(inflight)
+        : (alpha * static_cast<double>(inflight) +
+           (1.0 - alpha) * trace.queue_depth_ewma);
+}
+
 void TelemetryPublisher::record_label_completed(std::chrono::microseconds latency,
                                                  uint8_t priority) {
     labels_completed_.fetch_add(1, std::memory_order_relaxed);
@@ -46,6 +59,53 @@ void TelemetryPublisher::record_label_completed(std::chrono::microseconds latenc
     {
         std::lock_guard lock(latency_mu_);
         latency_samples_.push_back(static_cast<uint64_t>(latency.count()));
+    }
+}
+
+void TelemetryPublisher::record_label_completed(
+    int worker_id, std::string_view scheme, uint64_t bytes,
+    std::chrono::microseconds latency, uint8_t priority) {
+    record_label_completed(latency, priority);
+    std::lock_guard lock(trace_mu_);
+    auto& trace = trace_features_[worker_id];
+    trace.samples++;
+    const auto service_us = static_cast<double>(std::max<int64_t>(1, latency.count()));
+    constexpr double alpha = 0.2;
+    trace.service_us_ewma = trace.samples == 1
+        ? service_us
+        : alpha * service_us + (1.0 - alpha) * trace.service_us_ewma;
+    const auto inflight_it = inflight_by_worker_.find(worker_id);
+    if (inflight_it != inflight_by_worker_.end() && inflight_it->second > 0) {
+        --inflight_it->second;
+    }
+    const auto inflight = inflight_it == inflight_by_worker_.end()
+        ? 0ULL : inflight_it->second;
+    trace.queue_depth_ewma = trace.samples == 1
+        ? static_cast<double>(inflight)
+        : alpha * static_cast<double>(inflight) +
+          (1.0 - alpha) * trace.queue_depth_ewma;
+    const auto throughput = bytes == 0 ? 0.0
+        : static_cast<double>(bytes) * 1'000'000.0 / service_us;
+    trace.throughput_bytes_per_sec_ewma = trace.samples == 1
+        ? throughput
+        : alpha * throughput + (1.0 - alpha) * trace.throughput_bytes_per_sec_ewma;
+    if (!scheme.empty()) {
+        auto& scheme_rate = trace.scheme_throughput_bytes_per_sec[std::string(scheme)];
+        scheme_rate = trace.samples == 1 || scheme_rate == 0.0
+            ? throughput : alpha * throughput + (1.0 - alpha) * scheme_rate;
+    }
+}
+
+void TelemetryPublisher::enrich_workers(std::vector<WorkerInfo>& workers) const {
+    std::lock_guard lock(trace_mu_);
+    for (auto& worker : workers) {
+        const auto it = trace_features_.find(worker.id);
+        if (it == trace_features_.end()) continue;
+        worker.trace_samples = it->second.samples;
+        worker.trace_service_us = it->second.service_us_ewma;
+        worker.trace_queue_depth = it->second.queue_depth_ewma;
+        worker.trace_throughput_bytes_per_sec = it->second.throughput_bytes_per_sec_ewma;
+        worker.trace_scheme_throughput = it->second.scheme_throughput_bytes_per_sec;
     }
 }
 
@@ -94,6 +154,7 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
         uint64_t p99 = percentile(samples, 0.99);
 
         auto workers = worker_fn_();
+        enrich_workers(workers);
 
         auto tp = std::chrono::system_clock::now();
         auto ts_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -120,6 +181,23 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
                 << ",\"load\":" << workers[i].load
                 << ",\"available\":" << (workers[i].available ? "true" : "false")
                 << "}";
+        }
+        oss << "],\"trace_workers\":[";
+        for (size_t i = 0; i < workers.size(); ++i) {
+            if (i > 0) oss << ",";
+            oss << "{\"id\":" << workers[i].id
+                << ",\"samples\":" << workers[i].trace_samples
+                << ",\"service_us_ewma\":" << workers[i].trace_service_us
+                << ",\"queue_depth_ewma\":" << workers[i].trace_queue_depth
+                << ",\"throughput_bytes_per_sec_ewma\":"
+                << workers[i].trace_throughput_bytes_per_sec
+                << ",\"scheme_throughput_bytes_per_sec\":{";
+            size_t scheme_index = 0;
+            for (const auto& [scheme, throughput] : workers[i].trace_scheme_throughput) {
+                if (scheme_index++ > 0) oss << ",";
+                oss << "\"" << scheme << "\":" << throughput;
+            }
+            oss << "}}";
         }
         oss << "]}";
 

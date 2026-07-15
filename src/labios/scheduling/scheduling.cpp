@@ -182,6 +182,29 @@ double profit(const WorkerInfo& worker, uint64_t remaining) {
            (1.0 - std::clamp(worker.load, 0.0, 1.0)) / energy;
 }
 
+bool trace_guided(std::string_view policy_profile) {
+    return policy_profile == "trace_guided" ||
+           policy_profile.starts_with("trace_guided/");
+}
+
+std::string trace_scheme(const SchedulingUnitDescriptor& unit) {
+    if (unit.members.empty()) return {};
+    const auto& job = unit.members.front();
+    if (!job.destinations.empty() && !job.destinations.front().scheme.empty()) {
+        return job.destinations.front().scheme;
+    }
+    if (!job.sources.empty()) return job.sources.front().scheme;
+    return {};
+}
+
+double scheme_throughput(const WorkerInfo& worker, std::string_view scheme) {
+    if (!scheme.empty()) {
+        const auto it = worker.trace_scheme_throughput.find(std::string(scheme));
+        if (it != worker.trace_scheme_throughput.end()) return it->second;
+    }
+    return worker.trace_throughput_bytes_per_sec;
+}
+
 std::atomic_size_t rr_cursor{0};
 }
 
@@ -356,6 +379,28 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
         } else if (policy == "constraint") {
             const auto job_profile = unit.members.empty() ? profile
                 : profile_for_intent(profile, unit.members.front().intent);
+            const bool informed = trace_guided(job_profile.name);
+            const auto scheme = trace_scheme(unit);
+            double fastest_trace = std::numeric_limits<double>::max();
+            double highest_throughput = 0.0;
+            for (const auto worker_index : feasible) {
+                const auto& worker = prepared.workers[worker_index];
+                if (worker.trace_samples != 0 && worker.trace_service_us > 0.0)
+                    fastest_trace = std::min(fastest_trace, worker.trace_service_us);
+                highest_throughput = std::max(highest_throughput,
+                                               scheme_throughput(worker, scheme));
+            }
+            const bool has_service_trace = fastest_trace != std::numeric_limits<double>::max();
+            auto trace_values = [&](const WorkerInfo& worker) {
+                const auto service = informed && has_service_trace &&
+                                     worker.trace_service_us > 0.0
+                    ? std::clamp(fastest_trace / worker.trace_service_us, 0.0, 1.0) : 0.5;
+                const auto queue = informed
+                    ? 1.0 - std::clamp(worker.trace_queue_depth / 100.0, 0.0, 1.0) : 0.5;
+                const auto throughput = informed && highest_throughput > 0.0
+                    ? std::clamp(scheme_throughput(worker, scheme) / highest_throughput, 0.0, 1.0) : 0.5;
+                return std::array<double, 3>{service, queue, throughput};
+            };
             auto score = [&](size_t worker_index) {
                 const auto& worker = prepared.workers[worker_index];
                 const auto availability = 1.0;
@@ -363,12 +408,14 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                 const auto inverse_load = 1.0 - std::clamp(worker.load, 0.0, 1.0);
                 const auto speed = std::clamp(static_cast<double>(worker.speed) / 5.0, 0.0, 1.0);
                 const auto energy = 1.0 - std::clamp((static_cast<double>(worker.energy) - 1.0) / 4.0, 0.0, 1.0);
+                const auto traces = trace_values(worker);
                 return job_profile.availability * availability + job_profile.capacity * capacity +
                        job_profile.load * inverse_load + job_profile.speed * speed +
                        job_profile.energy * energy + job_profile.tier *
                        (static_cast<double>(static_cast<uint8_t>(worker.tier)) / 2.0) +
                        job_profile.skills * worker.skills + job_profile.compute * worker.compute +
-                       job_profile.reasoning * (static_cast<double>(worker.reasoning) / 5.0);
+                       job_profile.reasoning * (static_cast<double>(worker.reasoning) / 5.0) +
+                       (informed ? 0.45 * traces[0] + 0.20 * traces[1] + 0.35 * traces[2] : 0.0);
             };
             selected = *std::max_element(feasible.begin(), feasible.end(), [&](size_t left, size_t right) {
                 const auto left_score = score(left);
@@ -378,7 +425,8 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
             });
             std::ostringstream evidence;
             evidence << "profile=" << (job_profile.name.empty() ? "default" : job_profile.name)
-                     << ";version=1";
+                     << ";version=1;trace=" << (informed ? "enabled" : "disabled")
+                     << ";scheme=" << scheme;
             decision.evidence = evidence.str();
             for (auto& candidate : decision.candidates) {
                 const auto worker_it = std::find_if(prepared.workers.begin(), prepared.workers.end(),
@@ -386,7 +434,8 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                 if (worker_it == prepared.workers.end()) continue;
                 const auto& worker = *worker_it;
                 const auto cap = remaining_ratio(worker, candidate.available_capacity_before);
-                const std::array<std::tuple<std::string, double, double>, 9> metrics{{
+                const auto traces = trace_values(worker);
+                const std::array<std::tuple<std::string, double, double>, 12> metrics{{
                     {"availability", 1.0, job_profile.availability},
                     {"capacity", cap, job_profile.capacity},
                     {"inverse_load", 1.0 - std::clamp(worker.load, 0.0, 1.0), job_profile.load},
@@ -395,7 +444,10 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                     {"tier", static_cast<double>(static_cast<uint8_t>(worker.tier)) / 2.0, job_profile.tier},
                     {"skills", worker.skills, job_profile.skills},
                     {"compute", worker.compute, job_profile.compute},
-                    {"reasoning", static_cast<double>(worker.reasoning) / 5.0, job_profile.reasoning}
+                    {"reasoning", static_cast<double>(worker.reasoning) / 5.0, job_profile.reasoning},
+                    {"trace_service_time", traces[0], informed ? 0.45 : 0.0},
+                    {"trace_queue_depth", traces[1], informed ? 0.20 : 0.0},
+                    {"trace_throughput", traces[2], informed ? 0.35 : 0.0}
                 }};
                 double objective = 0.0;
                 for (const auto& [name, normalized, weight] : metrics) {
@@ -406,21 +458,61 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                 candidate.final_objective = objective;
             }
         } else if (policy == "minmax") {
+            const bool informed = trace_guided(profile.name);
+            const auto scheme = trace_scheme(unit);
+            double fastest_trace = std::numeric_limits<double>::max();
+            double highest_throughput = 0.0;
+            for (const auto worker_index : feasible) {
+                const auto& worker = prepared.workers[worker_index];
+                if (worker.trace_samples != 0 && worker.trace_service_us > 0.0)
+                    fastest_trace = std::min(fastest_trace, worker.trace_service_us);
+                highest_throughput = std::max(highest_throughput,
+                                               scheme_throughput(worker, scheme));
+            }
+            auto objective = [&](size_t worker_index) {
+                const auto& worker = prepared.workers[worker_index];
+                const auto base = profit(worker, remaining[worker_index]);
+                if (!informed || fastest_trace == std::numeric_limits<double>::max()) return base;
+                const auto service = worker.trace_service_us > 0.0
+                    ? fastest_trace / worker.trace_service_us : 0.5;
+                const auto queue = 1.0 - std::clamp(worker.trace_queue_depth / 100.0, 0.0, 1.0);
+                const auto throughput = highest_throughput > 0.0
+                    ? scheme_throughput(worker, scheme) / highest_throughput : 0.5;
+                return base * (0.4 + 0.3 * service + 0.1 * queue + 0.2 * throughput);
+            };
             selected = *std::max_element(feasible.begin(), feasible.end(), [&](size_t left, size_t right) {
-                const auto left_profit = profit(prepared.workers[left], remaining[left]);
-                const auto right_profit = profit(prepared.workers[right], remaining[right]);
+                const auto left_profit = objective(left);
+                const auto right_profit = objective(right);
                 if (left_profit != right_profit) return left_profit < right_profit;
                 return prepared.workers[left].id > prepared.workers[right].id;
             });
             std::ostringstream evidence;
             evidence << "basis=" << (known ? "bytes" : "unit-count")
-                     << ";spill_rank=0;objective=" << profit(prepared.workers[selected], remaining[selected]);
+                     << ";spill_rank=0;objective=" << objective(selected)
+                     << ";trace=" << (informed ? "enabled" : "disabled")
+                     << ";scheme=" << scheme;
             decision.evidence = evidence.str();
             for (auto& candidate : decision.candidates) {
                 const auto worker_it = std::find_if(prepared.workers.begin(), prepared.workers.end(),
                     [&](const WorkerInfo& worker) { return worker.id == candidate.worker_id; });
-                if (worker_it != prepared.workers.end()) candidate.final_objective =
-                    profit(*worker_it, candidate.available_capacity_before);
+                if (worker_it != prepared.workers.end()) {
+                    candidate.final_objective =
+                        objective(static_cast<size_t>(worker_it - prepared.workers.begin()));
+                    if (informed && fastest_trace != std::numeric_limits<double>::max()) {
+                        const auto& worker = *worker_it;
+                        const auto service = worker.trace_service_us > 0.0
+                            ? std::clamp(fastest_trace / worker.trace_service_us, 0.0, 1.0) : 0.5;
+                        const auto queue = 1.0 - std::clamp(worker.trace_queue_depth / 100.0, 0.0, 1.0);
+                        const auto throughput = highest_throughput > 0.0
+                            ? std::clamp(scheme_throughput(worker, scheme) / highest_throughput, 0.0, 1.0) : 0.5;
+                        candidate.score_components.push_back(
+                            {"trace_service_time", service, service, 0.3, service * 0.3});
+                        candidate.score_components.push_back(
+                            {"trace_queue_depth", queue, queue, 0.1, queue * 0.1});
+                        candidate.score_components.push_back(
+                            {"trace_throughput", throughput, throughput, 0.2, throughput * 0.2});
+                    }
+                }
             }
         } else {
             const auto before = cursor;

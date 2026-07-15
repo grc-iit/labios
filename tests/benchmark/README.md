@@ -47,7 +47,52 @@ LABIOS_BENCH_REDIS=1 ./build/dev/tests/labios-bench_multi_agent_collab [!benchma
 ./build/dev/tests/benchmark/labios-bench_cross_backend_etl [!benchmark]
 ```
 
-There is currently no opt-in live benchmark in these three files. A future live command must document the dispatcher/worker and external-backend topology and use an explicit gate such as `LABIOS_BENCH_LIVE=1`.
+### `bench_trace_guided_selection.cpp` (P10)
+
+This is the opt-in category-3 experiment. It uses only the public `Client` API
+for three deterministic profiles: 16 small hot metadata writes, four 1 MiB
+sequential writes, and a 256 KiB source → `builtin://identity` → SQLite
+pipeline. Every label is completion-waited and the destination is read back for
+verification. The CSV records submission latency separately from completion
+latency for every repetition.
+
+The predeclared baseline is **Round Robin** on the same three-worker Compose
+topology. The informed arm is **MinMax with `conf/profiles/trace_guided.toml`**.
+The dispatcher enriches each scheduling snapshot with completed-label trace
+features: dispatch-to-completion service proxy, in-flight queue-depth EWMA, and
+per-scheme throughput EWMA. Constraint and MinMax include those features only
+when the profile name is `trace_guided`; cold-start choices use neutral trace
+values. The resulting `score_snapshot` decision history records the trace
+components and selected worker. No worker is provisioned or decommissioned.
+
+Build and run one arm as follows, using the same fixed `LABIOS_BENCH_RUN_ID`
+for both arms and fresh service state between arms:
+
+```sh
+cmake --preset dev
+cmake --build build/dev --target labios-bench_trace_guided_selection -j"$(nproc)"
+docker compose down -v
+docker compose up -d
+LABIOS_BENCH_LIVE=1 LABIOS_BENCH_ARM=baseline \\
+  LABIOS_BENCH_RUN_ID=p10-fixed-seed LABIOS_BENCH_REPETITIONS=5 \\
+  LABIOS_BENCH_OUTPUT=p10-baseline.csv \\
+  ./build/dev/tests/labios-bench_trace_guided_selection "[!benchmark]"
+docker compose down -v
+
+LABIOS_SCHEDULER_POLICY=minmax LABIOS_SCHEDULER_PROFILE=conf/profiles/trace_guided.toml \\
+  docker compose up -d
+LABIOS_BENCH_LIVE=1 LABIOS_BENCH_ARM=informed \\
+  LABIOS_BENCH_RUN_ID=p10-fixed-seed LABIOS_BENCH_REPETITIONS=5 \\
+  LABIOS_BENCH_OUTPUT=p10-informed.csv \\
+  ./build/dev/tests/labios-bench_trace_guided_selection "[!benchmark]"
+docker compose down -v
+```
+
+The two CSV files are the performance artifact. Report median and p95 of
+`completion_us` (and the corresponding submission distributions) per profile;
+exclude any row whose `verified` column is not `1`. No result is reported in
+this repository yet because Docker Compose was unavailable on the verification
+host. Therefore P10 has no speedup or negative-result claim.
 
 ## Methodology and interpretation
 

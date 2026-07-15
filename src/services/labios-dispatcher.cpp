@@ -71,6 +71,16 @@ static labios::ScoreSnapshot snapshot_worker(int worker_id,
     return {};
 }
 
+static std::string trace_scheme_for_label(const labios::LabelData& label) {
+    try {
+        if (!label.dest_uri.empty()) return labios::parse_uri(label.dest_uri).scheme;
+        if (!label.source_uri.empty()) return labios::parse_uri(label.source_uri).scheme;
+    } catch (...) {
+        // Admission already validates URIs; telemetry must never affect routing.
+    }
+    return "file";
+}
+
 static std::string timestamp() {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
@@ -185,6 +195,42 @@ int main() {
     std::condition_variable batch_cv;
     auto batch_size = static_cast<size_t>(cfg.dispatcher_batch_size);
     auto batch_timeout = std::chrono::milliseconds(cfg.dispatcher_batch_timeout_ms);
+
+    struct DispatchTraceContext {
+        int worker_id = 0;
+        uint64_t dispatched_us = 0;
+        uint64_t bytes = 0;
+        std::string scheme;
+    };
+    std::mutex trace_context_mu;
+    std::unordered_map<uint64_t, DispatchTraceContext> trace_contexts;
+
+    // Observe client completion replies without changing their delivery. This
+    // gives telemetry a completed-label trace while the client remains the
+    // completion authority. The interval is a conservative dispatch-to-reply
+    // service proxy and is never used as a correctness signal.
+    nats.subscribe("_INBOX.>", [&](std::string_view /*subject*/,
+                                   std::span<const std::byte> data,
+                                   std::string_view /*reply_to*/) {
+        try {
+            const auto completion = labios::deserialize_completion(data);
+            DispatchTraceContext context;
+            {
+                std::lock_guard lock(trace_context_mu);
+                const auto it = trace_contexts.find(completion.label_id);
+                if (it == trace_contexts.end()) return;
+                context = it->second;
+                trace_contexts.erase(it);
+            }
+            const auto elapsed = now_us() > context.dispatched_us
+                ? now_us() - context.dispatched_us : 1ULL;
+            telemetry.record_label_completed(
+                context.worker_id, context.scheme, context.bytes,
+                std::chrono::microseconds(elapsed));
+        } catch (...) {
+            // Completion observation is best effort and must not affect delivery.
+        }
+    });
 
     // Seed the worker cache before accepting labels.
     {
@@ -436,6 +482,9 @@ int main() {
                 std::lock_guard lock(g_workers_mu);
                 workers = g_cached_workers;
             }
+            // Trace features are runtime-derived from completed labels and are
+            // layered onto the immutable registry snapshot for this attempt.
+            telemetry.enrich_workers(workers);
             // If all workers are suspended, send resume commands and re-query.
             {
                 bool any_available = false;
@@ -708,9 +757,20 @@ int main() {
                         children.push_back(labios::serialize_label(child));
                     catalog.persist_composite(unit.representative, children);
                 }
+                auto record_trace = [&](const labios::LabelData& label) {
+                    const auto dispatched = label.dispatched_us == 0 ? now_us() : label.dispatched_us;
+                    {
+                        std::lock_guard lock(trace_context_mu);
+                        trace_contexts[label.id] = {
+                            static_cast<int>(worker_id), dispatched, label.data_size,
+                            trace_scheme_for_label(label)};
+                    }
+                    telemetry.record_label_dispatched(worker_id, label.priority);
+                };
+                record_trace(unit.representative);
+                for (const auto& child : unit.children) record_trace(child);
                 auto payload = labios::serialize_label(unit.representative);
                 nats.publish_durable("labios.worker." + std::to_string(worker_id), payload);
-                telemetry.record_label_dispatched();
                 std::lock_guard lock(batch_mu);
                 local_handoff_ids.erase(unit.representative.id);
             }

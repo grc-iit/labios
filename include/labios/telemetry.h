@@ -7,7 +7,10 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
+#include <string>
+#include <string_view>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace labios {
@@ -16,6 +19,16 @@ namespace labios {
 /// The dispatcher supplies this so the publisher can read workers
 /// without owning the InMemoryWorkerManager directly.
 using WorkerSnapshot = std::function<std::vector<WorkerInfo>()>;
+
+/// Trace-derived metrics used by the scheduler. Samples are accumulated from
+/// completed labels; no provisioning or worker-registry state is changed.
+struct TraceFeatures {
+    uint64_t samples = 0;
+    double service_us_ewma = 0.0;
+    double queue_depth_ewma = 0.0;
+    double throughput_bytes_per_sec_ewma = 0.0;
+    std::unordered_map<std::string, double> scheme_throughput_bytes_per_sec;
+};
 
 /// Publishes continuous telemetry metrics to NATS subject "labios.telemetry".
 /// Agents subscribe to this stream for real-time system monitoring.
@@ -36,8 +49,20 @@ public:
     /// Priority is used to bucket into lanes: 0=low, 1=medium, 2=high (priority/85).
     void record_label_dispatched(uint8_t priority = 0);
 
+    /// Records a dispatch against a worker so trace queue depth is observable.
+    void record_label_dispatched(int worker_id, uint8_t priority);
+
     /// Called by the dispatcher when a label completion arrives.
     void record_label_completed(std::chrono::microseconds latency, uint8_t priority = 0);
+
+    /// Adds a completed-label sample to the worker/scheme trace. The latency
+    /// is dispatch-to-completion, a conservative end-to-end service proxy.
+    void record_label_completed(int worker_id, std::string_view scheme,
+                                uint64_t bytes, std::chrono::microseconds latency,
+                                uint8_t priority = 0);
+
+    /// Applies the latest trace snapshot to a scheduling worker snapshot.
+    void enrich_workers(std::vector<WorkerInfo>& workers) const;
 
     /// Called when an elastic scaling event occurs (commission/decommission).
     void record_scaling_event();
@@ -59,6 +84,10 @@ private:
 
     std::mutex latency_mu_;
     std::vector<uint64_t> latency_samples_;
+
+    mutable std::mutex trace_mu_;
+    std::unordered_map<int, TraceFeatures> trace_features_;
+    std::unordered_map<int, uint64_t> inflight_by_worker_;
 
     void publish_loop(std::stop_token stoken);
 };

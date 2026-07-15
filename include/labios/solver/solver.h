@@ -58,6 +58,14 @@ struct WorkerInfo {
     std::vector<uint32_t> pipeline_operation_versions;
     std::vector<WorkerAttachment> attachments;
     std::vector<std::string> locality_domains;
+
+    // Runtime-only trace features. These are enriched by the dispatcher from
+    // completed-label telemetry and are intentionally not registry truth.
+    uint64_t trace_samples = 0;
+    double trace_service_us = 0.0;
+    double trace_queue_depth = 0.0;
+    double trace_throughput_bytes_per_sec = 0.0;
+    std::unordered_map<std::string, double> trace_scheme_throughput;
 };
 
 /// Weight profile for computing worker composite scores (Table 2).
