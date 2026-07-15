@@ -239,8 +239,17 @@ std::optional<JobDescriptor> describe_job(const LabelData& label, uint64_t ordin
     job.ir_version = label.ir_version == 0 ? kCurrentIrVersion : label.ir_version;
     job.intent = label.intent;
     job.priority = label.priority;
-    if (label.has_source_resource) job.sources.push_back(requirement(label.source_resource));
-    if (label.has_destination_resource) job.destinations.push_back(requirement(label.destination_resource));
+    // Memory resources used for staged producer input and completion retrieval
+    // are internal data bindings, not external backend attachments. Requiring a
+    // worker to advertise them would permanently park ordinary SDK reads/writes.
+    if (label.has_source_resource &&
+        label.source_resource.family != ResourceFamily::Memory) {
+        job.sources.push_back(requirement(label.source_resource));
+    }
+    if (label.has_destination_resource &&
+        label.destination_resource.family != ResourceFamily::Memory) {
+        job.destinations.push_back(requirement(label.destination_resource));
+    }
     if (!label.pipeline.stages.empty()) {
         job.minimum_tier = WorkerTier::Pipeline;
         for (const auto& stage : label.pipeline.stages) {

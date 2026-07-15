@@ -132,6 +132,46 @@ TEST_CASE("empty or mismatched capability versions are infeasible", "[scheduling
           prepared.matrix.values[0][2].reasons.end());
 }
 
+TEST_CASE("staged memory bindings do not require an external backend attachment",
+          "[scheduling][staging]") {
+    labios::LabelData label;
+    label.id = 99;
+    label.type = labios::LabelType::Write;
+    label.operation = "core.write";
+    label.operation_version = 1;
+    label.ir_version = labios::kCurrentIrVersion;
+    label.has_source_resource = true;
+    label.source_resource.family = labios::ResourceFamily::Memory;
+    label.has_destination_resource = true;
+    label.destination_resource.family = labios::ResourceFamily::FileRange;
+    label.destination_resource.backend_id = "default";
+    label.destination_resource.path = "/staged/out";
+    label.has_input_binding = true;
+    label.input_binding.content_id = "99";
+    label.input_binding.logical_length = 8;
+
+    auto job = labios::describe_job(label, 0);
+    REQUIRE(job.has_value());
+    CHECK(job->sources.empty());
+    REQUIRE(job->destinations.size() == 1);
+
+    labios::SchedulingUnitDescriptor descriptor;
+    descriptor.unit_id = label.id;
+    descriptor.members.push_back(*job);
+    auto candidate = worker(1, 64, labios::WorkerTier::Databot);
+    candidate.operations = {"core.write"};
+    candidate.operation_versions = {1};
+    candidate.pipeline_operations.clear();
+    candidate.pipeline_operation_versions.clear();
+    candidate.attachments = {{
+        static_cast<uint8_t>(labios::ResourceFamily::FileRange),
+        "default", "file", labios::LocalityKind::Shared, {}}};
+
+    auto prepared = labios::prepare_scheduling_batch(
+        labios::SchedulingBatch{1, 1, {descriptor}}, {candidate});
+    CHECK(prepared.matrix.values[0][0].feasible);
+}
+
 TEST_CASE("both pipeline attachments are required", "[scheduling]") {
     auto source_only = worker(1, 64);
     source_only.attachments.pop_back();
