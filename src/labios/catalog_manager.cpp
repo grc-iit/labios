@@ -1,10 +1,13 @@
 #include <labios/catalog_manager.h>
+#include <labios/shuffler.h>
 
+#include <algorithm>
 #include <chrono>
 #include <fcntl.h>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 
 namespace labios {
 
@@ -16,6 +19,17 @@ std::string now_ms() {
                         now.time_since_epoch())
                         .count();
     return std::to_string(epoch_ms);
+}
+
+transport::RedisConnection::HashField text_field(
+    std::string name, std::string value) {
+    const auto* begin = reinterpret_cast<const std::byte*>(value.data());
+    return {std::move(name), {begin, begin + value.size()}};
+}
+
+transport::RedisConnection::HashField binary_field(
+    std::string name, std::span<const std::byte> value) {
+    return {std::move(name), {value.begin(), value.end()}};
 }
 
 } // namespace
@@ -31,6 +45,13 @@ std::string to_string(LabelStatus status) {
         case LabelStatus::Cancelled: return "cancelled";
     }
     return "unknown";
+}
+
+uint64_t parking_backoff_ms(uint64_t attempt) noexcept {
+    constexpr uint64_t initial_ms = 100;
+    constexpr uint64_t maximum_ms = 60'000;
+    const auto exponent = std::min<uint64_t>(attempt, 9);
+    return std::min(maximum_ms, initial_ms << exponent);
 }
 
 LabelStatus label_status_from_string(std::string_view s) {
@@ -62,18 +83,175 @@ void CatalogManager::create(uint64_t label_id, uint32_t app_id,
 }
 
 void CatalogManager::create(const LabelData& label) {
-    auto key = catalog_key(label.id);
-    auto ts = now_ms();
-    redis_.pipeline_begin();
-    redis_.pipeline_hset(key, "status", "queued");
-    redis_.pipeline_hset(key, "app_id", std::to_string(label.app_id));
-    redis_.pipeline_hset(key, "type", std::to_string(static_cast<int>(label.type)));
-    redis_.pipeline_hset(key, "flags", std::to_string(label.flags));
-    redis_.pipeline_hset(key, "priority", std::to_string(label.priority));
-    redis_.pipeline_hset(key, "operation", label.operation);
-    redis_.pipeline_hset(key, "created_at", ts);
-    redis_.pipeline_hset(key, "updated_at", ts);
-    redis_.pipeline_exec();
+    admit(label);
+}
+
+void CatalogManager::admit(const LabelData& label) {
+    const auto key = catalog_key(label.id);
+    const auto ts = now_ms();
+    const auto snapshot = serialize_label(label);
+    const std::vector<transport::RedisConnection::HashField> fields{
+        text_field("status", "queued"), text_field("parked", "0"),
+        text_field("app_id", std::to_string(label.app_id)),
+        text_field("type", std::to_string(static_cast<int>(label.type))),
+        text_field("flags", std::to_string(label.flags)),
+        text_field("priority", std::to_string(label.priority)),
+        text_field("operation", label.operation), text_field("created_at", ts),
+        text_field("updated_at", ts), text_field("last_transition_at", ts),
+        binary_field("canonical_label", snapshot)};
+    redis_.hset_fields(key, fields);
+}
+
+bool CatalogManager::durable_handoff(const LabelData& label) {
+    const auto key = catalog_key(label.id);
+    const auto ts = now_ms();
+    const auto snapshot = serialize_label(label);
+    const std::vector<transport::RedisConnection::HashField> fields{
+        text_field("status", "queued"), text_field("parked", "0"),
+        text_field("app_id", std::to_string(label.app_id)),
+        text_field("type", std::to_string(static_cast<int>(label.type))),
+        text_field("flags", std::to_string(label.flags)),
+        text_field("priority", std::to_string(label.priority)),
+        text_field("operation", label.operation), text_field("updated_at", ts),
+        text_field("last_transition_at", ts),
+        binary_field("canonical_label", snapshot)};
+    return redis_.hset_fields_if(key, "status", "queued", true, fields);
+}
+
+void CatalogManager::persist_snapshot(const LabelData& label) {
+    const auto snapshot = serialize_label(label);
+    const std::vector<transport::RedisConnection::HashField> fields{
+        binary_field("canonical_label", snapshot),
+        text_field("updated_at", now_ms())};
+    redis_.hset_fields(catalog_key(label.id), fields);
+}
+
+std::optional<LabelData> CatalogManager::get_snapshot(uint64_t label_id) {
+    auto bytes = redis_.hget_binary(catalog_key(label_id), "canonical_label");
+    if (bytes.empty()) {
+        // Rolling compatibility with snapshots written before the catalog hash
+        // became the atomic admission record.
+        bytes = redis_.get_binary(catalog_key(label_id) + ":label");
+    }
+    if (bytes.empty()) return std::nullopt;
+    try { return deserialize_label(bytes); }
+    catch (...) { return std::nullopt; }
+}
+
+void CatalogManager::persist_composite(
+    const LabelData& parent,
+    std::span<const std::vector<std::byte>> children) {
+    const auto snapshot = serialize_label(parent);
+    const std::vector<std::vector<std::byte>> child_payloads(
+        children.begin(), children.end());
+    const auto packed = pack_labels(child_payloads);
+    const auto ts = now_ms();
+    const auto key = catalog_key(parent.id);
+    std::vector<transport::RedisConnection::HashField> fields{
+        binary_field("canonical_label", snapshot),
+        binary_field("composite_program", packed),
+        text_field("updated_at", ts), text_field("last_transition_at", ts)};
+    if (!redis_.hget(key, "status")) {
+        fields.push_back(text_field("status", "queued"));
+        fields.push_back(text_field("parked", "0"));
+        fields.push_back(text_field("created_at", ts));
+    }
+    redis_.hset_fields(key, fields);
+}
+
+std::vector<std::vector<std::byte>> CatalogManager::get_composite_program(
+    uint64_t parent_id) {
+    auto packed = redis_.hget_binary(catalog_key(parent_id), "composite_program");
+    if (packed.empty()) return {};
+    try { return unpack_labels(packed); }
+    catch (...) { return {}; }
+}
+
+std::vector<LabelData> CatalogManager::recoverable_labels(uint64_t now) {
+    struct Candidate { LabelData label; bool due = false; bool legacy_child = false; };
+    std::vector<Candidate> candidates;
+    std::unordered_set<uint64_t> committed_composite_children;
+    for (const auto& key : redis_.scan_keys("labios:catalog:*")) {
+        if (key.ends_with(":label") || key.ends_with(":completion")) continue;
+        const auto status = redis_.hget(key, "status");
+        if (!status || (*status != "queued" && *status != "parked" &&
+                        *status != "scheduled")) continue;
+        const auto suffix = key.substr(std::string("labios:catalog:").size());
+        try {
+            auto label = get_snapshot(std::stoull(suffix));
+            if (!label) continue;
+            bool due = true;
+            if (const auto retry = redis_.hget(key, "next_retry_at"))
+                due = std::stoull(*retry) <= now;
+            if (label->type == LabelType::Composite) {
+                committed_composite_children.insert(
+                    label->children.begin(), label->children.end());
+            }
+            candidates.push_back({std::move(*label), due,
+                                  redis_.hget(key, "composite_parent").has_value()});
+        } catch (...) {
+            // Malformed catalog records are isolated from the recovery scan.
+        }
+    }
+    std::vector<LabelData> result;
+    for (auto& candidate : candidates) {
+        if (!candidate.due || candidate.legacy_child) continue;
+        if (committed_composite_children.contains(candidate.label.id)) continue;
+        result.push_back(std::move(candidate.label));
+    }
+    return result;
+}
+
+size_t CatalogManager::wake_parked(uint64_t now) {
+    size_t count = 0;
+    for (const auto& key : redis_.scan_keys("labios:catalog:*")) {
+        if (key.ends_with(":label") || key.ends_with(":completion")) continue;
+        const auto status = redis_.hget(key, "status");
+        if (!status || *status != "parked") continue;
+        redis_.hset(key, "next_retry_at", std::to_string(now));
+        ++count;
+    }
+    return count;
+}
+
+void CatalogManager::park(const LabelData& label, std::string_view reason,
+                          uint64_t attempt, uint64_t next_retry_ms,
+                          std::string_view last_error) {
+    const auto key = catalog_key(label.id);
+    const auto snapshot = serialize_label(label);
+    const auto ts = now_ms();
+    const auto parked_since = redis_.hget(key, "parked_since").value_or(ts);
+    const std::vector<transport::RedisConnection::HashField> fields{
+        binary_field("canonical_label", snapshot), text_field("status", "parked"),
+        text_field("parked", "1"), text_field("park_reason", std::string(reason)),
+        text_field("park_attempts", std::to_string(attempt)),
+        text_field("next_retry_at", std::to_string(next_retry_ms)),
+        text_field("parked_since", parked_since), text_field("last_transition_at", ts),
+        text_field("updated_at", ts), text_field("last_error", std::string(last_error))};
+    redis_.hset_fields(key, fields);
+}
+
+void CatalogManager::set_composite_parent(uint64_t child_id, uint64_t composite_id) {
+    redis_.hset(catalog_key(child_id), "composite_parent", std::to_string(composite_id));
+}
+
+uint64_t CatalogManager::park_attempts(uint64_t label_id) {
+    auto value = redis_.hget(catalog_key(label_id), "park_attempts");
+    if (!value) return 0;
+    try { return std::stoull(*value); } catch (...) { return 0; }
+}
+
+DependencyReadiness CatalogManager::dependency_readiness(
+    const LabelData& label) noexcept {
+    for (const auto& dependency : label.dependencies) {
+        try {
+            if (get_status(dependency.label_id) != LabelStatus::Complete)
+                return {false, "BLOCKED_PREDECESSOR"};
+        } catch (...) {
+            return {false, "UNKNOWN_DEPENDENCY"};
+        }
+    }
+    return {};
 }
 
 void CatalogManager::set_status(uint64_t label_id, LabelStatus status) {
@@ -188,8 +366,13 @@ void CatalogManager::schedule_batch(std::span<const ScheduleEntry> entries) {
     for (auto& e : entries) {
         auto key = catalog_key(e.label_id);
         redis_.pipeline_hset(key, "status", "scheduled");
+        redis_.pipeline_hset(key, "parked", "0");
         redis_.pipeline_hset(key, "flags", std::to_string(e.flags));
         redis_.pipeline_hset(key, "worker_id", std::to_string(e.worker_id));
+        // Scheduled records become recoverable if worker delivery/claim does
+        // not advance them before this dispatcher lease expires.
+        redis_.pipeline_hset(key, "next_retry_at", std::to_string(
+            std::stoull(ts) + 10'000ULL));
         redis_.pipeline_hset(key, "updated_at", ts);
     }
 

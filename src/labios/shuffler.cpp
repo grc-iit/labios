@@ -335,7 +335,9 @@ std::vector<Supertask> Shuffler::build_supertasks(
         Supertask st;
         auto& first = group.front();
 
-        st.composite.id = first.id;
+        // A Composite is a new runtime program. Never reuse a child ID: the
+        // catalog and worker deduplication use IDs as operation identity.
+        st.composite.id = generate_label_id(first.app_id);
         st.composite.type = LabelType::Composite;
         st.composite.file_key = first.file_key;
         st.composite.app_id = first.app_id;

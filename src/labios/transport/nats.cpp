@@ -23,6 +23,18 @@ struct StringHash {
 
 } // namespace
 
+void NatsConnection::DurableAck::ack() {
+    if (!message_ || acknowledged_.exchange(true)) return;
+    if (natsMsg_Ack(static_cast<natsMsg*>(message_), nullptr) != NATS_OK) {
+        acknowledged_.store(false);
+        throw std::runtime_error("nats: durable ack failed");
+    }
+}
+
+bool NatsConnection::DurableAck::acknowledged() const noexcept {
+    return acknowledged_.load();
+}
+
 std::vector<std::byte> AsyncReply::wait(std::chrono::milliseconds timeout) {
     std::unique_lock lock(mu);
     cv.wait_for(lock, timeout, [this] { return completed; });
@@ -40,6 +52,7 @@ struct NatsConnection::Impl {
     std::string stream_subject = "labios.>";
     std::mutex cb_mu;
     std::unordered_map<std::string, MessageCallback, StringHash, std::equal_to<>> callbacks;
+    std::vector<std::shared_ptr<void>> durable_holders;
 
     // Async reply infrastructure: a wildcard inbox subscription that
     // routes incoming replies to the correct AsyncReply handle.
@@ -278,11 +291,11 @@ void NatsConnection::publish_durable(
 
 void NatsConnection::subscribe_durable(
     std::string_view subject, std::string_view durable,
-    MessageCallback callback, int max_deliver,
+    DurableCallback callback, int max_deliver,
     std::chrono::milliseconds ack_wait) {
     struct DurableClosure {
         Impl* impl;
-        MessageCallback callback;
+        DurableCallback callback;
     };
     auto closure = std::make_shared<DurableClosure>(
         DurableClosure{impl_.get(), std::move(callback)});
@@ -311,13 +324,11 @@ void NatsConnection::subscribe_durable(
         int len = natsMsg_GetDataLength(msg);
         try {
             const char* reply = natsMsg_GetReply(msg);
+            NatsConnection::DurableAck ack(static_cast<void*>(msg));
             c->callback(std::string_view(subj ? subj : ""),
                 std::span<const std::byte>(reinterpret_cast<const std::byte*>(raw),
                                             static_cast<size_t>(len)),
-                std::string_view(reply ? reply : ""));
-            if (natsMsg_Ack(msg, nullptr) != NATS_OK) {
-                fprintf(stderr, "[nats] durable ack failed\\n");
-            }
+                std::string_view(reply ? reply : ""), ack);
         } catch (const std::exception& e) {
             fprintf(stderr, "[nats] durable callback exception: %s\\n", e.what());
         } catch (...) {
@@ -334,9 +345,7 @@ void NatsConnection::subscribe_durable(
     }
     // Store the closure by using the callback map's lifetime anchor. The
     // subscription is destroyed before the connection, so release is safe.
-    impl_->callbacks["__durable_closure_" + std::string(durable)] =
-        [holder = std::move(closure)](std::string_view, std::span<const std::byte>,
-                                      std::string_view) {};
+    impl_->durable_holders.push_back(std::move(closure));
     impl_->subs.push_back(sub);
 }
 

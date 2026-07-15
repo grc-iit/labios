@@ -362,15 +362,9 @@ int main() {
     registration.energy = cfg.worker_energy;
     registration.tier = worker_tier;
     registration.max_ir_version = labios::kCurrentIrVersion;
-    registration.operations = {"core.read", "core.write", "core.delete", "core.flush", "core.observe", "core.composite"};
-    registration.pipeline_operations = {
-        "builtin://identity", "builtin://compress_rle", "builtin://decompress_rle",
-        "builtin://filter_bytes", "builtin://sum_uint64", "builtin://sort_uint64",
-        "builtin://sample", "builtin://truncate", "builtin://deduplicate",
-        "builtin://median_uint64", "builtin://format_convert"};
-    registration.attachments = {
-        {static_cast<uint8_t>(labios::ResourceFamily::FileRange), "default", "file", labios::LocalityKind::Shared, {}},
-        {static_cast<uint8_t>(labios::ResourceFamily::Relational), "default", "sqlite", labios::LocalityKind::Shared, {}}};
+    const auto loaded_pipeline_operations = sds_repo.list();
+    registration = labios::derive_worker_capabilities(
+        std::move(registration), backends, loaded_pipeline_operations);
     registration.locality_domains = {"worker:" + std::to_string(worker_id)};
     registration.total_capacity_bytes = labios::parse_size(cfg.worker_capacity);
     registration.available_capacity_bytes = registration.total_capacity_bytes;
@@ -380,7 +374,8 @@ int main() {
         [&content_manager, &catalog, &nats, &redis, &worker_mu, &storage_root,
          worker_id, &backends, worker_tier, &sds_repo, &channels, &worker_name](
             std::string_view /*subject*/, std::span<const std::byte> data,
-            std::string_view /*reply_to*/) {
+            std::string_view /*reply_to*/,
+            labios::transport::NatsConnection::DurableAck& ack) {
             labios::CompletionData completion{};
             labios::LabelData label{};
             bool have_label = false;
@@ -400,6 +395,7 @@ int main() {
                 if (auto prior = catalog.get_completion(label.id)) {
                     publish_completion(nats, label.reply_to, *prior);
                     g_active_labels.fetch_sub(1);
+                    ack.ack();
                     return;
                 }
 
@@ -428,16 +424,12 @@ int main() {
                         result.bytes_transferred);
 
                 } else if (label.type == labios::LabelType::Composite) {
-                    std::string pack_key =
-                        "labios:supertask:" + std::to_string(label.id);
-                    auto packed = redis.get_binary(pack_key);
-                    if (packed.empty()) {
+                    auto child_payloads = catalog.get_composite_program(label.id);
+                    if (child_payloads.empty()) {
                         throw std::runtime_error(
                             "supertask children not found for "
                             + std::to_string(label.id));
                     }
-
-                    auto child_payloads = labios::unpack_labels(packed);
                     uint64_t composite_bytes = 0;
 
                     std::cout << "[" << timestamp() << "] worker " << worker_id
@@ -449,6 +441,18 @@ int main() {
                         auto child = labios::deserialize_label(payload);
                         labios::CompletionData child_comp{};
                         child_comp.label_id = child.id;
+
+                        // Composite recovery is per child. A dispatcher or
+                        // worker replay resumes the ordered program without
+                        // repeating an already-terminal external effect.
+                        if (auto prior = catalog.get_completion(child.id)) {
+                            publish_completion(nats, child.reply_to, *prior);
+                            if (prior->status != labios::CompletionStatus::Complete) {
+                                throw std::runtime_error(
+                                    "COMPOSITE_ABORTED: prior child failed");
+                            }
+                            continue;
+                        }
 
                         try {
                             labios::mark_label_executing(
@@ -507,7 +511,6 @@ int main() {
                             worker_name, "child continuation");
                     }
 
-                    redis.del(pack_key);
                     completion.status = labios::CompletionStatus::Complete;
                     labios::mark_label_finished(
                         label, completion.status, {}, composite_bytes);
@@ -524,6 +527,7 @@ int main() {
                         "composite continuation");
                     nats.flush();
                     g_active_labels.fetch_sub(1);
+                    ack.ack();
                     return;
 
                 } else {
@@ -540,6 +544,7 @@ int main() {
                     "continuation");
                 nats.flush();
                 g_active_labels.fetch_sub(1);
+                ack.ack();
 
             } catch (const std::exception& e) {
                 g_active_labels.fetch_sub(1);
@@ -573,8 +578,14 @@ int main() {
                             worker_name, "continuation");
                         nats.flush();
                     } catch (...) {
-                        // Best effort completion notification on error path.
+                        // The catalog is the durable boundary. If it could
+                        // not be written, leave the message unacknowledged.
                     }
+                    try {
+                        if (completion.label_id != 0 && catalog.get_completion(completion.label_id)) {
+                            ack.ack();
+                        }
+                    } catch (...) {}
                 }
             }
         }, cfg.nats_max_deliver,
@@ -587,6 +598,17 @@ int main() {
     nats.publish("labios.worker.register",
                  std::span<const std::byte>(registration_payload));
     nats.flush();
+
+    // Manager-state loss is repaired both periodically and on demand.
+    nats.subscribe("labios.worker.reregister." + std::to_string(cfg.worker_id),
+        [&nats, &registration](std::string_view, std::span<const std::byte>,
+                               std::string_view) {
+            try {
+                auto payload = labios::encode_worker_registration(registration);
+                nats.publish("labios.worker.register", std::span<const std::byte>(payload));
+                nats.flush();
+            } catch (...) {}
+        });
 
     // Subscribe to resume commands from the elastic orchestrator.
     nats.subscribe("labios.worker.resume." + std::to_string(cfg.worker_id),
@@ -654,8 +676,10 @@ int main() {
                     static_cast<long double>(update.total_capacity_bytes) * cap_ratio);
             }
             try {
-                auto payload = labios::encode_worker_resource_update(update);
-                nats.publish("labios.worker.score_update",
+                // Full registration is an idempotent heartbeat and repairs a
+                // manager that restarted without accepting an older epoch.
+                auto payload = labios::encode_worker_registration(update);
+                nats.publish("labios.worker.register",
                              std::span<const std::byte>(payload));
                 nats.flush();
             } catch (...) {}

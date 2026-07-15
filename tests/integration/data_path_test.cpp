@@ -209,6 +209,30 @@ TEST_CASE("Source URI pipeline writes to a different SQLite backend", "[data_pat
                         sizeof(uint64_t)) == 0);
 }
 
+TEST_CASE("Configured external KV backend completes a label", "[data_path][kv]") {
+    auto cfg = test_config();
+    std::unique_ptr<labios::Client> client;
+    try {
+        client = std::make_unique<labios::Client>(cfg);
+    } catch (const std::exception& ex) {
+        SKIP(std::string("Docker Compose services unavailable: ") + ex.what());
+    }
+    for (const auto* service : {"dispatcher", "worker-1", "worker-2", "worker-3"}) {
+        if (!client->session().redis().get("labios:ready:" + std::string(service))) {
+            SKIP(std::string("Docker Compose service is not ready: ") + service);
+        }
+    }
+
+    const auto suffix = std::to_string(
+        std::chrono::steady_clock::now().time_since_epoch().count());
+    const std::string uri = "kv://default/p02-" + suffix;
+    const std::vector<std::byte> expected{
+        std::byte{0x4c}, std::byte{0x41}, std::byte{0x42}, std::byte{0x49}, std::byte{0x4f}, std::byte{0x53}};
+    client->write_to(uri, expected);
+    const auto actual = client->read_from(uri, expected.size());
+    CHECK(actual == expected);
+}
+
 TEST_CASE("Write 10 labels and verify all complete", "[data_path]") {
     auto cfg = test_config();
     auto client = labios::connect(cfg);

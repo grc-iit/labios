@@ -91,16 +91,26 @@ int main() {
                     changed = worker_mgr.deregister_worker_v2(
                         message.worker_id, message.registration_epoch);
                 }
-                if (!changed) std::cerr << "[" << timestamp()
-                    << "] manager: stale or duplicate registry message\n" << std::flush;
+                if (!changed) {
+                    std::cerr << "[" << timestamp()
+                        << "] manager: stale or duplicate registry message\n" << std::flush;
+                    if (message.kind == labios::WorkerRegistryMessage::Kind::ResourceUpdate) {
+                        // Unknown updates are never silently discarded: ask the
+                        // live process to republish its full epoch descriptor.
+                        nats.publish("labios.worker.reregister." +
+                                     std::to_string(message.worker_id), "1");
+                    }
+                }
             } catch (const std::exception& e) {
                 std::cerr << "[" << timestamp() << "] manager: rejected registry message: "
                           << e.what() << "\n" << std::flush;
             }
         } else if (subject == "labios.manager.workers") {
-            auto all = worker_mgr.all_workers();
+            // Rows and generation are one locked capture; readers cannot observe
+            // a generation paired with rows from a different state.
+            auto [all, generation] = worker_mgr.snapshot_workers();
             auto response = labios::encode_worker_snapshot(
-                all, worker_mgr.registry_generation(),
+                all, generation,
                 static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::system_clock::now().time_since_epoch()).count()));
             if (!reply_to.empty()) {

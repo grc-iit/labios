@@ -63,9 +63,14 @@ ResourceRequirement requirement(const ResourceRef& resource) {
     return out;
 }
 
-bool contains(const std::vector<std::string>& values, const std::string& value) {
-    return values.empty() || std::find(values.begin(), values.end(), value) != values.end() ||
-           std::find(values.begin(), values.end(), "*") != values.end();
+bool supports_versioned(const std::vector<std::string>& names,
+                        const std::vector<uint32_t>& versions,
+                        const std::string& name, uint32_t version) {
+    if (names.size() != versions.size()) return false;
+    for (size_t index = 0; index < names.size(); ++index) {
+        if (names[index] == name && versions[index] == version) return true;
+    }
+    return false;
 }
 
 void add_reason(std::vector<FeasibilityReason>& reasons, FeasibilityReason reason) {
@@ -123,14 +128,19 @@ FeasibilityResult evaluate(const SchedulingUnitDescriptor& unit,
         if (worker.max_ir_version < job.ir_version) {
             add_reason(result.reasons, FeasibilityReason::UnsupportedIr);
         }
-        if (!contains(worker.operations, job.operation)) {
+        if (!supports_versioned(worker.operations, worker.operation_versions,
+                                job.operation, job.operation_version)) {
             add_reason(result.reasons, FeasibilityReason::UnsupportedOperation);
         }
         if (static_cast<uint8_t>(worker.tier) < static_cast<uint8_t>(job.minimum_tier)) {
             add_reason(result.reasons, FeasibilityReason::InsufficientTier);
         }
-        for (const auto& operation : job.pipeline_operations) {
-            if (worker.pipeline_operations.empty() || !contains(worker.pipeline_operations, operation)) {
+        for (size_t index = 0; index < job.pipeline_operations.size(); ++index) {
+            const auto version = index < job.pipeline_operation_versions.size()
+                ? job.pipeline_operation_versions[index] : 0U;
+            if (!supports_versioned(worker.pipeline_operations,
+                                    worker.pipeline_operation_versions,
+                                    job.pipeline_operations[index], version)) {
                 add_reason(result.reasons, FeasibilityReason::MissingPipelineOperation);
             }
         }
@@ -212,6 +222,7 @@ std::optional<JobDescriptor> describe_job(const LabelData& label, uint64_t ordin
         job.minimum_tier = WorkerTier::Pipeline;
         for (const auto& stage : label.pipeline.stages) {
             job.pipeline_operations.push_back(stage.operation);
+            job.pipeline_operation_versions.push_back(1);
         }
     }
     if (label.type == LabelType::Delete || label.type == LabelType::Flush ||

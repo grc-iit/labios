@@ -275,6 +275,12 @@ void mark_label_executing(LabelData& label, std::string_view worker_component,
     append_label_hop(label, worker_component, ts);
 }
 
+void bound_decision_history(LabelData& label, size_t max_records) {
+    auto& decisions = label.score_snapshot.decisions;
+    if (decisions.size() > max_records)
+        decisions.erase(decisions.begin(), decisions.end() - max_records);
+}
+
 void mark_label_finished(LabelData& label, CompletionStatus status,
                          std::string_view data_location,
                          uint64_t bytes_transferred,

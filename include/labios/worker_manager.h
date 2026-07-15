@@ -7,6 +7,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace labios {
@@ -40,6 +41,8 @@ public:
     bool update_worker_v2(const WorkerInfo& dynamic_info);
     bool deregister_worker_v2(int worker_id, uint64_t registration_epoch);
     uint64_t registry_generation() const;
+    // Captures rows and generation under one lock for an immutable snapshot.
+    std::pair<std::vector<WorkerInfo>, uint64_t> snapshot_workers() const;
 
     // M4: Elastic worker tracking.
     size_t worker_count();

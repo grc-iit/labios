@@ -3,6 +3,28 @@
 #include <ranges>
 
 namespace labios {
+namespace {
+
+bool same_attachment(const WorkerAttachment& left, const WorkerAttachment& right) {
+    return left.family == right.family && left.backend_id == right.backend_id &&
+           left.scheme == right.scheme && left.locality == right.locality &&
+           left.locality_domain == right.locality_domain;
+}
+
+bool same_static_descriptor(const WorkerInfo& left, const WorkerInfo& right) {
+    return left.speed == right.speed && left.energy == right.energy &&
+           left.tier == right.tier && left.max_ir_version == right.max_ir_version &&
+           left.operations == right.operations &&
+           left.operation_versions == right.operation_versions &&
+           left.pipeline_operations == right.pipeline_operations &&
+           left.pipeline_operation_versions == right.pipeline_operation_versions &&
+           left.locality_domains == right.locality_domains &&
+           left.attachments.size() == right.attachments.size() &&
+           std::equal(left.attachments.begin(), left.attachments.end(),
+                      right.attachments.begin(), same_attachment);
+}
+
+} // namespace
 
 double compute_score(const WorkerInfo& w, const WeightProfile& wp) {
     double avail = w.available ? 1.0 : 0.0;
@@ -138,13 +160,36 @@ bool InMemoryWorkerManager::register_worker_v2(WorkerInfo info) {
     std::lock_guard lock(mu_);
     if (info.id <= 0 || info.registration_epoch == 0) return false;
     const auto found = workers_.find(info.id);
-    if (found != workers_.end() && found->second.registration_epoch >= info.registration_epoch) {
+    if (found != workers_.end() && found->second.registration_epoch > info.registration_epoch) {
         return false;
     }
+    // Equal-epoch full registrations are idempotent recovery heartbeats. They
+    // may refresh dynamic values, but may not mutate static capabilities.
+    if (found != workers_.end() && found->second.registration_epoch == info.registration_epoch) {
+        if (!same_static_descriptor(found->second, info)) return false;
+        const bool changed = found->second.available != info.available ||
+            found->second.total_capacity_bytes != info.total_capacity_bytes ||
+            found->second.available_capacity_bytes != info.available_capacity_bytes ||
+            found->second.load != info.load || found->second.capacity != info.capacity ||
+            found->second.skills != info.skills || found->second.compute != info.compute ||
+            found->second.reasoning != info.reasoning;
+        if (!changed) return false;
+        auto merged = found->second;
+        merged.available = info.available;
+        merged.total_capacity_bytes = info.total_capacity_bytes;
+        merged.available_capacity_bytes = info.available_capacity_bytes;
+        merged.capacity = info.capacity;
+        merged.load = info.load;
+        merged.skills = info.skills;
+        merged.compute = info.compute;
+        merged.reasoning = info.reasoning;
+        info = std::move(merged);
+    }
     info.registry_generation = ++registry_generation_;
-    workers_[info.id] = std::move(info);
-    remove_from_buckets(found == workers_.end() ? info.id : found->first);
-    if (!last_profile_.name.empty()) place_in_bucket(info.id, compute_score(workers_[info.id], last_profile_));
+    const int id = info.id;
+    workers_[id] = std::move(info);
+    remove_from_buckets(id);
+    if (!last_profile_.name.empty()) place_in_bucket(id, compute_score(workers_[id], last_profile_));
     return true;
 }
 
@@ -187,6 +232,14 @@ bool InMemoryWorkerManager::deregister_worker_v2(int worker_id, uint64_t registr
 uint64_t InMemoryWorkerManager::registry_generation() const {
     std::shared_lock lock(mu_);
     return registry_generation_;
+}
+
+std::pair<std::vector<WorkerInfo>, uint64_t> InMemoryWorkerManager::snapshot_workers() const {
+    std::shared_lock lock(mu_);
+    std::vector<WorkerInfo> rows;
+    rows.reserve(workers_.size());
+    for (const auto& [_, worker] : workers_) rows.push_back(worker);
+    return {std::move(rows), registry_generation_};
 }
 
 size_t InMemoryWorkerManager::worker_count() {

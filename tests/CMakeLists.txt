@@ -88,6 +88,14 @@ add_executable(labios-solver-intent-test unit/solver_intent_test.cpp)
 target_link_libraries(labios-solver-intent-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-solver-intent-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-durable-dispatcher-test unit/durable_dispatcher_test.cpp)
+target_link_libraries(labios-durable-dispatcher-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-durable-dispatcher-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
+add_executable(labios-durable-catalog-test integration/durable_catalog_test.cpp)
+target_link_libraries(labios-durable-catalog-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-durable-catalog-test TEST_PREFIX "smoke/" PROPERTIES LABELS "smoke")
+
 add_executable(labios-scheduling-test integration/scheduling_test.cpp)
 target_link_libraries(labios-scheduling-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-scheduling-test TEST_PREFIX "integration/" PROPERTIES LABELS "integration")

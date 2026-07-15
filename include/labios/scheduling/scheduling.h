@@ -30,6 +30,7 @@ struct JobDescriptor {
     uint32_t ir_version = kCurrentIrVersion;
     WorkerTier minimum_tier = WorkerTier::Databot;
     std::vector<std::string> pipeline_operations;
+    std::vector<uint32_t> pipeline_operation_versions;
     std::vector<ResourceRequirement> sources, destinations;
     ByteDemand demand;
     Intent intent = Intent::None;

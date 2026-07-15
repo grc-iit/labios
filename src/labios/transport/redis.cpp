@@ -122,6 +122,34 @@ std::optional<std::string> RedisConnection::hget_locked(std::string_view key, st
     return result;
 }
 
+void RedisConnection::hset_fields_locked(
+    std::string_view key, std::span<const HashField> fields) {
+    if (fields.empty()) return;
+    std::vector<const char*> argv;
+    std::vector<size_t> lengths;
+    argv.reserve(2 + fields.size() * 2);
+    lengths.reserve(argv.capacity());
+    argv.push_back("HSET");
+    lengths.push_back(4);
+    argv.push_back(key.data());
+    lengths.push_back(key.size());
+    for (const auto& field : fields) {
+        argv.push_back(field.name.data());
+        lengths.push_back(field.name.size());
+        argv.push_back(reinterpret_cast<const char*>(field.value.data()));
+        lengths.push_back(field.value.size());
+    }
+    auto* reply = static_cast<redisReply*>(redisCommandArgv(
+        impl_->ctx, static_cast<int>(argv.size()), argv.data(), lengths.data()));
+    if (reply == nullptr || reply->type == REDIS_REPLY_ERROR) {
+        const auto detail = reply && reply->str ? std::string(reply->str, reply->len)
+                                                : std::string(impl_->ctx->errstr);
+        if (reply) freeReplyObject(reply);
+        throw std::runtime_error("redis atomic HSET failed: " + detail);
+    }
+    freeReplyObject(reply);
+}
+
 void RedisConnection::sadd_locked(std::string_view key, std::string_view member) {
     auto* reply = static_cast<redisReply*>(
         redisCommand(impl_->ctx, "SADD %b %b",
@@ -268,6 +296,57 @@ void RedisConnection::hset(std::string_view key, std::string_view field, std::st
 std::optional<std::string> RedisConnection::hget(std::string_view key, std::string_view field) {
     std::lock_guard lock(mu_);
     return hget_locked(key, field);
+}
+
+void RedisConnection::hset_fields(std::string_view key,
+                                  std::span<const HashField> fields) {
+    std::lock_guard lock(mu_);
+    hset_fields_locked(key, fields);
+}
+
+bool RedisConnection::hset_fields_if(
+    std::string_view key, std::string_view guard_field,
+    std::string_view expected, bool allow_missing,
+    std::span<const HashField> fields) {
+    if (fields.empty()) return false;
+    static constexpr std::string_view script =
+        "local v=redis.call('HGET',KEYS[1],ARGV[1]);"
+        "if (v and v~=ARGV[2]) or (not v and ARGV[3]~='1') then return 0 end;"
+        "redis.call('HSET',KEYS[1],unpack(ARGV,4));return 1";
+    std::lock_guard lock(mu_);
+    std::vector<const char*> argv{"EVAL", script.data(), "1", key.data(),
+                                  guard_field.data(), expected.data(),
+                                  allow_missing ? "1" : "0"};
+    std::vector<size_t> lengths{4, script.size(), 1, key.size(),
+                                guard_field.size(), expected.size(), 1};
+    argv.reserve(argv.size() + fields.size() * 2);
+    lengths.reserve(lengths.size() + fields.size() * 2);
+    for (const auto& field : fields) {
+        argv.push_back(field.name.data());
+        lengths.push_back(field.name.size());
+        argv.push_back(reinterpret_cast<const char*>(field.value.data()));
+        lengths.push_back(field.value.size());
+    }
+    auto* reply = static_cast<redisReply*>(redisCommandArgv(
+        impl_->ctx, static_cast<int>(argv.size()), argv.data(), lengths.data()));
+    if (reply == nullptr || reply->type == REDIS_REPLY_ERROR) {
+        const auto detail = reply && reply->str ? std::string(reply->str, reply->len)
+                                                : std::string(impl_->ctx->errstr);
+        if (reply) freeReplyObject(reply);
+        throw std::runtime_error("redis conditional HSET failed: " + detail);
+    }
+    const bool applied = reply->type == REDIS_REPLY_INTEGER && reply->integer == 1;
+    freeReplyObject(reply);
+    return applied;
+}
+
+std::vector<std::byte> RedisConnection::hget_binary(
+    std::string_view key, std::string_view field) {
+    std::lock_guard lock(mu_);
+    auto value = hget_locked(key, field);
+    if (!value) return {};
+    const auto* begin = reinterpret_cast<const std::byte*>(value->data());
+    return {begin, begin + value->size()};
 }
 
 void RedisConnection::sadd(std::string_view key, std::string_view member) {

@@ -13,15 +13,19 @@
 #include <labios/uri.h>
 #include <labios/worker_registry_protocol.h>
 
+#include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <csignal>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <mutex>
 #include <sstream>
 #include <thread>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <limits>
 
@@ -37,6 +41,17 @@ static uint64_t g_registry_generation = 0;
 
 static uint64_t now_us() {
     return labios::label_timestamp_now_us();
+}
+
+static bool latest_start_expired(const labios::LabelData& label, uint64_t now) {
+    if (label.ttl_seconds == 0 || label.created_us == 0) return false;
+    constexpr uint64_t micros_per_second = 1'000'000ULL;
+    if (label.ttl_seconds >
+        (std::numeric_limits<uint64_t>::max() - label.created_us) / micros_per_second) {
+        return false;
+    }
+    return now >= label.created_us +
+        static_cast<uint64_t>(label.ttl_seconds) * micros_per_second;
 }
 
 static labios::ScoreSnapshot snapshot_worker(int worker_id,
@@ -89,6 +104,32 @@ static std::vector<labios::WorkerInfo> query_workers(
     return workers;
 }
 
+static bool registration_may_unpark(
+    const std::vector<labios::WorkerInfo>& before,
+    const std::vector<labios::WorkerInfo>& after) {
+    for (const auto& worker : after) {
+        const auto prior = std::find_if(before.begin(), before.end(),
+            [&](const auto& item) { return item.id == worker.id; });
+        if (prior == before.end() || prior->registration_epoch != worker.registration_epoch)
+            return true;
+        if (!prior->available && worker.available) return true;
+        if (prior->tier != worker.tier || prior->max_ir_version != worker.max_ir_version ||
+            prior->operations != worker.operations ||
+            prior->operation_versions != worker.operation_versions ||
+            prior->pipeline_operations != worker.pipeline_operations ||
+            prior->pipeline_operation_versions != worker.pipeline_operation_versions ||
+            prior->attachments.size() != worker.attachments.size()) return true;
+        for (size_t index = 0; index < worker.attachments.size(); ++index) {
+            const auto& left = prior->attachments[index];
+            const auto& right = worker.attachments[index];
+            if (left.family != right.family || left.backend_id != right.backend_id ||
+                left.scheme != right.scheme || left.locality != right.locality ||
+                left.locality_domain != right.locality_domain) return true;
+        }
+    }
+    return false;
+}
+
 static void signal_handler(int /*sig*/) {
     if (g_batch_thread.joinable()) {
         g_batch_thread.request_stop();
@@ -137,6 +178,9 @@ int main() {
     telemetry.start();
 
     std::vector<labios::LabelData> batch_buffer;
+    // Prevent a recovery scan from duplicating records already owned by this
+    // process; a fresh dispatcher has an empty set and recovers them.
+    std::unordered_set<uint64_t> local_handoff_ids;
     std::mutex batch_mu;
     std::condition_variable batch_cv;
     auto batch_size = static_cast<size_t>(cfg.dispatcher_batch_size);
@@ -151,20 +195,40 @@ int main() {
 
     // Background thread: periodically refresh the cached worker list.
     auto refresh_ms = std::chrono::milliseconds(cfg.scheduler_worker_refresh_ms);
-    g_worker_refresh_thread = std::jthread([&nats, refresh_ms](std::stop_token stoken) {
+    g_worker_refresh_thread = std::jthread(
+        [&nats, &catalog, &batch_cv, refresh_ms](std::stop_token stoken) {
         while (!stoken.stop_requested()) {
             std::this_thread::sleep_for(refresh_ms);
             if (stoken.stop_requested()) break;
+            std::vector<labios::WorkerInfo> previous;
+            {
+                std::lock_guard lock(g_workers_mu);
+                previous = g_cached_workers;
+            }
             auto fresh = query_workers(nats);
-            std::lock_guard lock(g_workers_mu);
-            g_cached_workers = std::move(fresh);
+            const bool wake_relevant = registration_may_unpark(previous, fresh);
+            {
+                std::lock_guard lock(g_workers_mu);
+                g_cached_workers = std::move(fresh);
+            }
+            if (wake_relevant) {
+                try {
+                    const auto now = static_cast<uint64_t>(
+                        std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::system_clock::now().time_since_epoch()).count());
+                    if (catalog.wake_parked(now) != 0) batch_cv.notify_one();
+                } catch (...) {
+                    // Periodic recovery remains available if wake-up fails.
+                }
+            }
         }
     });
 
     // NATS subscription: buffer incoming labels without routing.
     nats.subscribe_durable("labios.labels", "dispatcher",
         [&](std::string_view /*subject*/, std::span<const std::byte> data,
-            std::string_view reply_to) {
+            std::string_view reply_to,
+            labios::transport::NatsConnection::DurableAck& ack) {
             labios::LabelData label;
             try {
                 label = labios::deserialize_label(data);
@@ -178,6 +242,7 @@ int main() {
                     auto payload = labios::serialize_completion(rejection);
                     nats.publish(reply_to, std::span<const std::byte>(payload));
                 }
+                ack.ack();
                 return;
             } catch (const std::exception& ex) {
                 std::cerr << "dispatcher: rejected malformed label: "
@@ -189,15 +254,28 @@ int main() {
                     auto payload = labios::serialize_completion(rejection);
                     nats.publish(reply_to, std::span<const std::byte>(payload));
                 }
+                ack.ack();
                 return;
             }
             label.reply_to = std::string(reply_to);
             labios::mark_label_queued(label, now_us());
+            // This conditional catalog transaction is the durable handoff
+            // boundary: canonical label and queued recovery metadata become
+            // visible atomically before the JetStream message is acknowledged.
+            if (!catalog.durable_handoff(label)) {
+                // Redelivery after scheduling/execution: the later catalog
+                // state wins and must never be regressed to queued.
+                ack.ack();
+                return;
+            }
+            bool inserted = false;
             {
                 std::lock_guard lock(batch_mu);
-                batch_buffer.push_back(std::move(label));
+                inserted = local_handoff_ids.insert(label.id).second;
+                if (inserted) batch_buffer.push_back(std::move(label));
             }
-            batch_cv.notify_one();
+            ack.ack();
+            if (inserted) batch_cv.notify_one();
         }, cfg.nats_max_deliver,
            std::chrono::milliseconds(cfg.nats_ack_wait_ms));
 
@@ -209,6 +287,8 @@ int main() {
         };
 
         while (!stoken.stop_requested()) {
+            std::vector<uint64_t> active_batch_ids;
+            try {
             std::vector<labios::LabelData> batch;
             {
                 std::unique_lock lock(batch_mu);
@@ -220,6 +300,46 @@ int main() {
                 batch = std::move(batch_buffer);
                 batch_buffer.clear();
             }
+            active_batch_ids.reserve(batch.size());
+            for (const auto& label : batch) active_batch_ids.push_back(label.id);
+            // Catalog-backed recovery is the source of truth after a
+            // dispatcher crash. It also supplies bounded parking retries;
+            // no immediate republish loop is used.
+            try {
+                const auto now_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count());
+                auto recovered = catalog.recoverable_labels(now_ms);
+                std::lock_guard lock(batch_mu);
+                for (auto& label : recovered) {
+                    if (local_handoff_ids.insert(label.id).second) {
+                        active_batch_ids.push_back(label.id);
+                        batch.push_back(std::move(label));
+                    }
+                }
+            } catch (const std::exception& ex) {
+                std::cerr << "dispatcher: recovery scan failed: " << ex.what() << "\n";
+            } catch (...) {
+                std::cerr << "dispatcher: recovery scan failed\n";
+            }
+            // TTL expiry is an explicit terminal transition, never a parking
+            // attempt limit or silent drop.
+            const auto expiry_now = now_us();
+            std::erase_if(batch, [&](const labios::LabelData& label) {
+                if (!latest_start_expired(label, expiry_now)) return false;
+                labios::CompletionData expired;
+                expired.label_id = label.id;
+                expired.status = labios::CompletionStatus::Error;
+                expired.error = "EXPIRED: latest-start deadline passed";
+                catalog.set_completion(expired);
+                if (!label.reply_to.empty()) {
+                    const auto payload = labios::serialize_completion(expired);
+                    nats.publish(label.reply_to, std::span<const std::byte>(payload));
+                }
+                std::lock_guard lock(batch_mu);
+                local_handoff_ids.erase(label.id);
+                return true;
+            });
+
             // Report queue depth to manager for elastic scaling and observability.
             // Format: "total,with_pipeline,observe_count" for tier-aware decisions.
             try {
@@ -257,6 +377,7 @@ int main() {
                                               : labios::CompletionStatus::Error;
                     comp.error = obs.error;
                     comp.data_key = data_key;
+                    catalog.set_completion(comp);
                     auto buf = labios::serialize_completion(comp);
                     if (!label.reply_to.empty()) {
                         nats.publish(label.reply_to, std::span<const std::byte>(buf));
@@ -264,6 +385,11 @@ int main() {
                     std::cout << "[" << timestamp() << "] dispatcher: observe "
                               << label.id << " -> " << label.source_uri << "\n"
                               << std::flush;
+
+                    {
+                        std::lock_guard lock(batch_mu);
+                        local_handoff_ids.erase(label.id);
+                    }
 
                     // Process continuation for OBSERVE labels.
                     if (label.continuation.kind != labios::ContinuationKind::None) {
@@ -341,6 +467,7 @@ int main() {
                 labios::LabelData representative;
                 std::vector<labios::LabelData> children;
                 bool composite = false;
+                std::string park_reason;
             };
             std::vector<DispatchUnit> units;
             units.reserve(result.direct_route.size() + result.independent.size() +
@@ -351,21 +478,47 @@ int main() {
                 unit.representative = std::move(label);
                 unit.descriptor.unit_id = unit.representative.id;
                 unit.descriptor.ordinal = ordinal;
-                auto job = labios::describe_job(unit.representative, ordinal++);
-                if (job) {
-                    if (preferred_worker > 0) {
-                        const auto domain = "worker:" + std::to_string(preferred_worker);
-                        for (auto& source : job->sources) source.locality_domain = domain;
-                        for (auto& destination : job->destinations) destination.locality_domain = domain;
-                    }
-                    unit.descriptor.members.push_back(std::move(*job));
-                }
                 unit.descriptor.ready = true;
-                for (const auto& dependency : unit.representative.dependencies) {
-                    unit.descriptor.predecessors.push_back(dependency.label_id);
-                    if (catalog.get_status(dependency.label_id) != labios::LabelStatus::Complete) {
-                        unit.descriptor.ready = false;
+                if (unit.representative.type == labios::LabelType::Composite) {
+                    unit.composite = true;
+                    for (auto& payload : catalog.get_composite_program(unit.representative.id)) {
+                        try {
+                            unit.children.push_back(labios::deserialize_label(payload));
+                        } catch (...) {
+                            unit.descriptor.ready = false;
+                            unit.park_reason = "MALFORMED_COMPOSITE_PROGRAM";
+                        }
                     }
+                    if (unit.children.empty()) {
+                        unit.descriptor.ready = false;
+                        unit.park_reason = "MISSING_COMPOSITE_PROGRAM";
+                    }
+                    for (const auto& child : unit.children) {
+                        if (auto job = labios::describe_job(child, ordinal++))
+                            unit.descriptor.members.push_back(std::move(*job));
+                        for (const auto& dependency : child.dependencies)
+                            unit.descriptor.predecessors.push_back(dependency.label_id);
+                        const auto readiness = catalog.dependency_readiness(child);
+                        if (!readiness.ready) {
+                            unit.descriptor.ready = false;
+                            if (unit.park_reason.empty()) unit.park_reason = readiness.reason;
+                        }
+                    }
+                } else {
+                    auto job = labios::describe_job(unit.representative, ordinal++);
+                    if (job) {
+                        if (preferred_worker > 0) {
+                            const auto domain = "worker:" + std::to_string(preferred_worker);
+                            for (auto& source : job->sources) source.locality_domain = domain;
+                            for (auto& destination : job->destinations) destination.locality_domain = domain;
+                        }
+                        unit.descriptor.members.push_back(std::move(*job));
+                    }
+                    for (const auto& dependency : unit.representative.dependencies)
+                        unit.descriptor.predecessors.push_back(dependency.label_id);
+                    const auto readiness = catalog.dependency_readiness(unit.representative);
+                    unit.descriptor.ready = readiness.ready;
+                    unit.park_reason = readiness.reason;
                 }
                 if (unit.descriptor.members.empty()) unit.descriptor.ready = false;
                 for (auto& member : unit.descriptor.members) member.ready = unit.descriptor.ready;
@@ -403,11 +556,12 @@ int main() {
                 for (const auto& child : unit.children) {
                     auto job = labios::describe_job(child, ordinal++);
                     if (job) unit.descriptor.members.push_back(std::move(*job));
-                    for (const auto& dependency : child.dependencies) {
+                    for (const auto& dependency : child.dependencies)
                         unit.descriptor.predecessors.push_back(dependency.label_id);
-                        if (catalog.get_status(dependency.label_id) != labios::LabelStatus::Complete) {
-                            unit.descriptor.ready = false;
-                        }
+                    const auto readiness = catalog.dependency_readiness(child);
+                    if (!readiness.ready) {
+                        unit.descriptor.ready = false;
+                        if (unit.park_reason.empty()) unit.park_reason = readiness.reason;
                     }
                 }
                 for (auto& member : unit.descriptor.members) member.ready = unit.descriptor.ready;
@@ -421,6 +575,29 @@ int main() {
                 scheduling_batch.registry_generation = g_registry_generation;
             }
             for (const auto& unit : units) scheduling_batch.units.push_back(unit.descriptor);
+            // Composite programs are recovery state, not an in-memory
+            // optimization artifact. Persist the complete ordered child set
+            // before placement, including reply metadata and child IDs.
+            for (const auto& unit : units) {
+                if (!unit.composite) continue;
+                std::vector<std::vector<std::byte>> child_payloads;
+                for (const auto& child : unit.children) {
+                    catalog.persist_snapshot(child);
+                    child_payloads.push_back(labios::serialize_label(child));
+                }
+                // The parent snapshot, child IDs, and ordered packed program
+                // are the one atomic Composite commit record. Recovery derives
+                // child suppression from that record, avoiding torn cross-key
+                // parent links.
+                catalog.persist_composite(unit.representative, child_payloads);
+                {
+                    std::lock_guard lock(batch_mu);
+                    local_handoff_ids.insert(unit.representative.id);
+                    for (const auto& child : unit.children)
+                        local_handoff_ids.erase(child.id);
+                }
+                active_batch_ids.push_back(unit.representative.id);
+            }
             const auto prepared = labios::prepare_scheduling_batch(
                 std::move(scheduling_batch), workers);
             auto policy_profile = profile;
@@ -433,7 +610,9 @@ int main() {
                 history.decision_id = (prepared.batch.batch_id << 1U) ^ unit.representative.id;
                 history.batch_id = prepared.batch.batch_id;
                 history.scheduling_unit_id = unit.descriptor.unit_id;
-                history.attempt = static_cast<uint32_t>(unit.representative.score_snapshot.decisions.size() + 1U);
+                history.attempt = static_cast<uint32_t>(
+                    std::min<uint64_t>(catalog.park_attempts(unit.representative.id) + 1,
+                                       std::numeric_limits<uint32_t>::max()));
                 history.registry_generation = prepared.batch.registry_generation;
                 history.job_ordinal = unit.descriptor.ordinal;
                 history.outcome = decision.outcome == labios::PlacementOutcome::Assigned ? "Assigned" : "Parked";
@@ -475,6 +654,7 @@ int main() {
                     decision.deferred_reason = labios::FeasibilityReason::NoFeasibleCurrentPlacement;
                     decision.park_reason = "INVALID_PLAN";
                 }
+                if (!unit.park_reason.empty()) decision.park_reason = unit.park_reason;
                 const auto history = make_history(unit, decision);
                 auto apply = [&](labios::LabelData& label) {
                     if (decision.outcome == labios::PlacementOutcome::Assigned) {
@@ -493,6 +673,9 @@ int main() {
                 apply(unit.representative);
                 for (auto& child : unit.children) apply(child);
                 if (decision.outcome == labios::PlacementOutcome::Assigned) {
+                    catalog.persist_snapshot(unit.representative);
+                    for (const auto& child : unit.children)
+                        catalog.persist_snapshot(child);
                     assigned_units.push_back(index);
                     scheduled.push_back({unit.representative.id, decision.worker_id,
                                          unit.representative.flags});
@@ -500,9 +683,17 @@ int main() {
                         scheduled.push_back({child.id, decision.worker_id, child.flags});
                     }
                 } else {
-                    catalog.set_status(unit.representative.id, labios::LabelStatus::Parked);
-                    auto parked = labios::serialize_label(unit.representative);
-                    nats.publish_durable("labios.labels", parked);
+                    const auto attempt = catalog.park_attempts(unit.representative.id) + 1;
+                    labios::bound_decision_history(unit.representative);
+                    for (auto& child : unit.children) labios::bound_decision_history(child);
+                    const auto now_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()).count());
+                    const auto delay = labios::parking_backoff_ms(attempt);
+                    catalog.park(unit.representative,
+                        history.park_reason.empty() ? "NO_FEASIBLE_CURRENT_PLACEMENT" : history.park_reason,
+                        attempt, now_ms + delay, history.park_reason);
+                    std::lock_guard lock(batch_mu);
+                    local_handoff_ids.erase(unit.representative.id);
                 }
             }
             // Persist every validated residual and lifecycle transition before
@@ -513,17 +704,29 @@ int main() {
                 const auto worker_id = unit.representative.routing.worker_id;
                 if (unit.composite) {
                     std::vector<std::vector<std::byte>> children;
-                    for (const auto& child : unit.children) children.push_back(labios::serialize_label(child));
-                    auto packed = labios::pack_labels(children);
-                    redis.set_binary("labios:supertask:" + std::to_string(unit.representative.id),
-                                     std::span<const std::byte>(packed));
+                    for (const auto& child : unit.children)
+                        children.push_back(labios::serialize_label(child));
+                    catalog.persist_composite(unit.representative, children);
                 }
                 auto payload = labios::serialize_label(unit.representative);
                 nats.publish_durable("labios.worker." + std::to_string(worker_id), payload);
                 telemetry.record_label_dispatched();
+                std::lock_guard lock(batch_mu);
+                local_handoff_ids.erase(unit.representative.id);
             }
             nats.flush();
             nats.flush();
+            } catch (const std::exception& ex) {
+                std::cerr << "dispatcher: batch failure: " << ex.what() << "\n";
+                std::lock_guard lock(batch_mu);
+                for (const auto id : active_batch_ids) local_handoff_ids.erase(id);
+                batch_cv.notify_one();
+            } catch (...) {
+                std::cerr << "dispatcher: unknown batch failure\n";
+                std::lock_guard lock(batch_mu);
+                for (const auto id : active_batch_ids) local_handoff_ids.erase(id);
+                batch_cv.notify_one();
+            }
         }
     });
 

@@ -53,7 +53,9 @@ struct WorkerInfo {
     uint64_t available_capacity_bytes = 0;
     uint32_t max_ir_version = 1;
     std::vector<std::string> operations;
+    std::vector<uint32_t> operation_versions;
     std::vector<std::string> pipeline_operations;
+    std::vector<uint32_t> pipeline_operation_versions;
     std::vector<WorkerAttachment> attachments;
     std::vector<std::string> locality_domains;
 };

@@ -33,7 +33,9 @@ labios::WorkerInfo worker(int id, uint64_t available, labios::WorkerTier tier = 
     result.tier = tier;
     result.max_ir_version = 1;
     result.operations = {"core.write"};
+    result.operation_versions = {1};
     result.pipeline_operations = {"builtin://identity"};
+    result.pipeline_operation_versions = {1};
     result.total_capacity_bytes = available;
     result.available_capacity_bytes = available;
     result.capacity = 1.0;
@@ -55,6 +57,7 @@ labios::SchedulingUnitDescriptor unit(uint64_t id, uint64_t bytes, bool ready = 
     job.ir_version = 1;
     job.minimum_tier = labios::WorkerTier::Pipeline;
     job.pipeline_operations = {"builtin://identity"};
+    job.pipeline_operation_versions = {1};
     job.sources = {resource(static_cast<uint8_t>(labios::ResourceFamily::FileRange), "source")};
     job.destinations = {resource(static_cast<uint8_t>(labios::ResourceFamily::Relational), "destination")};
     job.demand = {bytes, bytes == 0 ? labios::DemandKind::Unknown : labios::DemandKind::Exact};
@@ -104,6 +107,29 @@ TEST_CASE("tier and pipeline capabilities are checked", "[scheduling]") {
                     labios::FeasibilityReason::InsufficientTier) != prepared.matrix.values[0][0].reasons.end());
     CHECK(std::find(prepared.matrix.values[0][1].reasons.begin(), prepared.matrix.values[0][1].reasons.end(),
                     labios::FeasibilityReason::MissingPipelineOperation) != prepared.matrix.values[0][1].reasons.end());
+}
+
+TEST_CASE("empty or mismatched capability versions are infeasible", "[scheduling][worker-registry]") {
+    auto missing_versions = worker(1, 64);
+    missing_versions.operation_versions.clear();
+    auto wrong_operation_version = worker(2, 64);
+    wrong_operation_version.operation_versions = {2};
+    auto wrong_pipeline_version = worker(3, 64);
+    wrong_pipeline_version.pipeline_operation_versions = {2};
+    auto prepared = labios::prepare_scheduling_batch(
+        labios::SchedulingBatch{1, 1, {unit(1, 8)}},
+        {missing_versions, wrong_operation_version, wrong_pipeline_version});
+    CHECK_FALSE(prepared.matrix.values[0][0].feasible);
+    CHECK_FALSE(prepared.matrix.values[0][1].feasible);
+    CHECK_FALSE(prepared.matrix.values[0][2].feasible);
+    CHECK(std::find(prepared.matrix.values[0][0].reasons.begin(),
+                    prepared.matrix.values[0][0].reasons.end(),
+                    labios::FeasibilityReason::UnsupportedOperation) !=
+          prepared.matrix.values[0][0].reasons.end());
+    CHECK(std::find(prepared.matrix.values[0][2].reasons.begin(),
+                    prepared.matrix.values[0][2].reasons.end(),
+                    labios::FeasibilityReason::MissingPipelineOperation) !=
+          prepared.matrix.values[0][2].reasons.end());
 }
 
 TEST_CASE("both pipeline attachments are required", "[scheduling]") {

@@ -1,10 +1,13 @@
 #include <labios/worker_registry_protocol.h>
+#include <labios/backend/registry.h>
 #include <labios/label.h>
 
 #include "worker_registry_generated.h"
 #include <flatbuffers/flatbuffers.h>
 
+#include <algorithm>
 #include <cmath>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -32,7 +35,13 @@ void validate_worker(const WorkerInfo& worker) {
     }
     std::set<std::string> operations(worker.operations.begin(), worker.operations.end());
     std::set<std::string> pipeline(worker.pipeline_operations.begin(), worker.pipeline_operations.end());
-    if (operations.size() != worker.operations.size() || pipeline.size() != worker.pipeline_operations.size()) {
+    if (operations.size() != worker.operations.size() || pipeline.size() != worker.pipeline_operations.size() ||
+        worker.operation_versions.size() != worker.operations.size() ||
+        worker.pipeline_operation_versions.size() != worker.pipeline_operations.size() ||
+        std::any_of(worker.operation_versions.begin(), worker.operation_versions.end(),
+                    [](uint32_t version) { return version == 0; }) ||
+        std::any_of(worker.pipeline_operation_versions.begin(), worker.pipeline_operation_versions.end(),
+                    [](uint32_t version) { return version == 0; })) {
         invalid("INCONSISTENT_CAPABILITY");
     }
     std::set<std::string> attachments;
@@ -54,6 +63,8 @@ flatbuffers::Offset<WorkerDescriptor> make_worker(flatbuffers::FlatBufferBuilder
     validate_worker(worker);
     std::vector<flatbuffers::Offset<flatbuffers::String>> operations;
     std::vector<flatbuffers::Offset<flatbuffers::String>> pipeline;
+    std::vector<uint32_t> operation_versions = worker.operation_versions;
+    std::vector<uint32_t> pipeline_operation_versions = worker.pipeline_operation_versions;
     std::vector<flatbuffers::Offset<flatbuffers::String>> domains;
     for (const auto& operation : worker.operations) operations.push_back(builder.CreateString(operation));
     for (const auto& operation : worker.pipeline_operations) pipeline.push_back(builder.CreateString(operation));
@@ -72,7 +83,9 @@ flatbuffers::Offset<WorkerDescriptor> make_worker(flatbuffers::FlatBufferBuilder
         static_cast<uint8_t>(worker.energy), static_cast<uint8_t>(worker.tier),
         worker.max_ir_version, builder.CreateVector(operations), builder.CreateVector(pipeline),
         builder.CreateVector(attachments), builder.CreateVector(domains), worker.skills,
-        worker.compute, static_cast<uint8_t>(worker.reasoning));
+        worker.compute, static_cast<uint8_t>(worker.reasoning),
+        builder.CreateVector(operation_versions),
+        builder.CreateVector(pipeline_operation_versions));
 }
 
 WorkerInfo read_worker(const WorkerDescriptor* descriptor) {
@@ -96,8 +109,14 @@ WorkerInfo read_worker(const WorkerDescriptor* descriptor) {
     if (const auto* values = descriptor->operations()) {
         for (const auto* value : *values) if (value) worker.operations.emplace_back(value->str());
     }
+    if (const auto* values = descriptor->operation_versions()) {
+        for (auto value : *values) worker.operation_versions.push_back(value);
+    }
     if (const auto* values = descriptor->pipeline_operations()) {
         for (const auto* value : *values) if (value) worker.pipeline_operations.emplace_back(value->str());
+    }
+    if (const auto* values = descriptor->pipeline_operation_versions()) {
+        for (auto value : *values) worker.pipeline_operation_versions.push_back(value);
     }
     if (const auto* values = descriptor->locality_domains()) {
         for (const auto* value : *values) if (value) worker.locality_domains.emplace_back(value->str());
@@ -192,6 +211,34 @@ std::vector<std::byte> encode_worker_snapshot(std::span<const WorkerInfo> worker
                        workers, generation, captured_us);
 }
 
+WorkerInfo derive_worker_capabilities(
+    WorkerInfo base, const BackendRegistry& backends,
+    std::span<const std::string> pipeline_operations) {
+    base.operations = {"core.read", "core.write", "core.composite"};
+    base.operation_versions.assign(base.operations.size(), 1);
+    base.pipeline_operations.clear();
+    base.pipeline_operation_versions.clear();
+    if (base.tier != WorkerTier::Databot) {
+        base.pipeline_operations.assign(pipeline_operations.begin(), pipeline_operations.end());
+        std::sort(base.pipeline_operations.begin(), base.pipeline_operations.end());
+        base.pipeline_operations.erase(
+            std::unique(base.pipeline_operations.begin(), base.pipeline_operations.end()),
+            base.pipeline_operations.end());
+        base.pipeline_operation_versions.assign(base.pipeline_operations.size(), 1);
+    }
+    base.attachments.clear();
+    for (const auto& scheme : backends.schemes()) {
+        std::optional<ResourceFamily> family;
+        if (scheme == "file") family = ResourceFamily::FileRange;
+        else if (scheme == "sqlite") family = ResourceFamily::Relational;
+        else if (scheme == "kv") family = ResourceFamily::KeyValue;
+        if (!family) continue;
+        base.attachments.push_back({static_cast<uint8_t>(*family), "default", scheme,
+                                    LocalityKind::Shared, {}});
+    }
+    return base;
+}
+
 WorkerRegistryMessage decode_worker_message(std::span<const std::byte> bytes) {
     if (bytes.empty()) throw std::runtime_error("MALFORMED_BUFFER");
     flatbuffers::Verifier verifier(reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size());
@@ -256,7 +303,8 @@ WorkerRegistryMessage decode_worker_message(std::span<const std::byte> bytes) {
     }
     case ::labios::WorkerRegistryMessage::Kind::Snapshot: {
         const auto* snapshot = message->payload_as_WorkerRegistrySnapshot();
-        if (!snapshot || snapshot->registry_generation() == 0 || snapshot->captured_us() == 0) {
+        // Generation zero is the valid, verified empty initial snapshot.
+        if (!snapshot || snapshot->captured_us() == 0) {
             throw std::runtime_error("INVALID_RANGE");
         }
         result.registry_generation = snapshot->registry_generation();

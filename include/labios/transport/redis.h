@@ -30,6 +30,16 @@ public:
     void del(std::string_view key);
     void hset(std::string_view key, std::string_view field, std::string_view value);
     [[nodiscard]] std::optional<std::string> hget(std::string_view key, std::string_view field);
+    struct HashField { std::string name; std::vector<std::byte> value; };
+    /// Atomically replace all supplied hash fields with one Redis HSET command.
+    void hset_fields(std::string_view key, std::span<const HashField> fields);
+    /// Atomically applies fields only when guard_field equals expected, or is
+    /// absent when allow_missing is true.
+    bool hset_fields_if(std::string_view key, std::string_view guard_field,
+                        std::string_view expected, bool allow_missing,
+                        std::span<const HashField> fields);
+    [[nodiscard]] std::vector<std::byte> hget_binary(
+        std::string_view key, std::string_view field);
 
     // --- Pipelining ---
     void pipeline_begin();
@@ -90,6 +100,7 @@ private:
     void del_locked(std::string_view key);
     void hset_locked(std::string_view key, std::string_view field, std::string_view value);
     std::optional<std::string> hget_locked(std::string_view key, std::string_view field);
+    void hset_fields_locked(std::string_view key, std::span<const HashField> fields);
     void sadd_locked(std::string_view key, std::string_view member);
     void srem_locked(std::string_view key, std::string_view member);
     std::vector<std::string> smembers_locked(std::string_view key);

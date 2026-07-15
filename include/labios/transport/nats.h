@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <atomic>
 #include <condition_variable>
 #include <cstddef>
 #include <functional>
@@ -52,11 +53,28 @@ public:
     /// again replaces that subject's callback, but other subjects are unaffected.
     void subscribe(std::string_view subject, MessageCallback callback);
 
-    /// Subscribe through a durable JetStream consumer. The callback completes
-    /// before the message is acknowledged; failures therefore cause bounded
-    /// server-side redelivery.
+    /// Explicit durable handoff boundary. The message is not acknowledged
+    /// when the callback returns; the callback must call ack() only after its
+    /// durable state transition has committed. An unacknowledged message is
+    /// redelivered by JetStream.
+    class DurableAck {
+    public:
+        void ack();
+        [[nodiscard]] bool acknowledged() const noexcept;
+    private:
+        friend class NatsConnection;
+        explicit DurableAck(void* message) : message_(message) {}
+        void* message_ = nullptr;
+        std::atomic<bool> acknowledged_{false};
+    };
+
+    using DurableCallback = std::function<void(std::string_view subject,
+                                                std::span<const std::byte> data,
+                                                std::string_view reply_to,
+                                                DurableAck& ack)>;
+
     void subscribe_durable(std::string_view subject, std::string_view durable,
-                           MessageCallback callback,
+                           DurableCallback callback,
                            int max_deliver = 5,
                            std::chrono::milliseconds ack_wait = std::chrono::seconds(10));
 

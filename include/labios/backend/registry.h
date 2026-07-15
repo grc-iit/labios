@@ -6,6 +6,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 namespace labios {
 
@@ -52,6 +53,8 @@ public:
 
     AnyBackend* resolve(std::string_view scheme) const;
     bool has_scheme(std::string_view scheme) const;
+    /// Schemes are the constructed external backends, never LABIOS plumbing.
+    std::vector<std::string> schemes() const;
 
 private:
     std::unordered_map<std::string, std::unique_ptr<AnyBackend>> backends_;

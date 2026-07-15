@@ -238,6 +238,42 @@ TEST_CASE("top_n_workers ranks Agentic workers first under agentic profile", "[w
     CHECK(top[0].id == 2);
 }
 
+TEST_CASE("Registry v2 heartbeat recovers manager state and stale removal is epoch-safe", "[worker_manager]") {
+    labios::WorkerInfo original;
+    original.id = 41;
+    original.registration_epoch = 100;
+    REQUIRE(labios::InMemoryWorkerManager{}.worker_count() == 0);
+
+    labios::InMemoryWorkerManager manager;
+    original.operations = {"core.read"};
+    original.operation_versions = {1};
+    REQUIRE(manager.register_worker_v2(original));
+    auto changed_static_same_epoch = original;
+    changed_static_same_epoch.operations = {"core.write"};
+    changed_static_same_epoch.available = false;
+    CHECK_FALSE(manager.register_worker_v2(changed_static_same_epoch));
+    REQUIRE(manager.all_workers().front().operations == original.operations);
+
+    auto heartbeat = original;
+    heartbeat.available = false;
+    REQUIRE(manager.register_worker_v2(heartbeat));
+    CHECK_FALSE(manager.all_workers().front().available);
+
+    labios::WorkerInfo replacement = original;
+    replacement.registration_epoch = 101;
+    REQUIRE(manager.register_worker_v2(replacement));
+    CHECK_FALSE(manager.deregister_worker_v2(original.id, original.registration_epoch));
+    REQUIRE(manager.worker_count() == 1);
+
+    // A new manager models manager state loss; the periodic full registration
+    // is idempotent and repopulates the live worker.
+    labios::InMemoryWorkerManager restarted;
+    CHECK(restarted.register_worker_v2(replacement));
+    CHECK(restarted.worker_count() == 1);
+    CHECK_FALSE(restarted.deregister_worker_v2(replacement.id, 100));
+    CHECK(restarted.worker_count() == 1);
+}
+
 TEST_CASE("WorkerInfo tier defaults to Databot", "[worker_manager]") {
     labios::WorkerInfo w{1, true, 0.5, 0.0, 3, 2};
     CHECK(w.tier == labios::WorkerTier::Databot);

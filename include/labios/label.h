@@ -300,6 +300,10 @@ void mark_label_scheduled(LabelData& label, uint32_t worker_id,
                           uint64_t timestamp_us = 0);
 void mark_label_executing(LabelData& label, std::string_view worker_component,
                           uint64_t timestamp_us = 0);
+/// Retain the newest runtime decision records without allowing retry history
+/// to grow with parking cycles. Attempt accounting remains catalog-owned.
+void bound_decision_history(LabelData& label, size_t max_records = 32);
+
 void mark_label_finished(LabelData& label, CompletionStatus status,
                          std::string_view data_location = {},
                          uint64_t bytes_transferred = 0,
