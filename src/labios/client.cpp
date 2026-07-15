@@ -151,8 +151,10 @@ PendingIO Client::publish(const LabelData& label,
         mark_label_created(mutable_label);
     }
     validate_label_admission(mutable_label);
+    auto [reply_to, async] = nats.create_reply_inbox();
+    mutable_label.reply_to = std::move(reply_to);
     auto serialized = serialize_label(mutable_label);
-    auto async = nats.publish_request_async("labios.labels", serialized);
+    nats.publish_durable("labios.labels", serialized);
     nats.flush();
 
     PendingLabel pl;

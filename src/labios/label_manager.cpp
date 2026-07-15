@@ -48,12 +48,14 @@ std::vector<PendingLabel> LabelManager::publish_write(
         normalize_label_resources(label);
         mark_label_created(label);
         validate_label_admission(label);
+        auto [reply_to, async] = nats_.create_reply_inbox();
+        label.reply_to = std::move(reply_to);
         auto serialized = serialize_label(label);
 
         content_.stage(label.id, chunk);
         catalog_.create(label);
 
-        auto async = nats_.publish_request_async("labios.labels", serialized);
+        nats_.publish_durable("labios.labels", serialized);
         pending.push_back({label.id, {}, std::move(async)});
 
         pos += chunk_size;
@@ -87,11 +89,13 @@ std::vector<PendingLabel> LabelManager::publish_read(
         normalize_label_resources(label);
         mark_label_created(label);
         validate_label_admission(label);
+        auto [reply_to, async] = nats_.create_reply_inbox();
+        label.reply_to = std::move(reply_to);
         auto serialized = serialize_label(label);
 
         catalog_.create(label);
 
-        auto async = nats_.publish_request_async("labios.labels", serialized);
+        nats_.publish_durable("labios.labels", serialized);
         pending.push_back({label.id, {}, std::move(async)});
 
         pos += chunk_size;

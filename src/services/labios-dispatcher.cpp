@@ -303,7 +303,9 @@ int main() {
                 ack.ack();
                 return;
             }
-            label.reply_to = std::string(reply_to);
+            // JetStream uses the transport reply subject for consumer ACKs.
+            // The producer completion inbox is sealed into the label payload
+            // before durable publication and must not be overwritten here.
             labios::mark_label_queued(label, now_us());
             // This conditional catalog transaction is the durable handoff
             // boundary: canonical label and queued recovery metadata become
