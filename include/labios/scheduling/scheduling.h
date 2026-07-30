@@ -50,7 +50,8 @@ enum class FeasibilityReason {
     None, Invalid, Unavailable, UnsupportedIr, UnsupportedOperation,
     InsufficientTier, MissingPipelineOperation, MissingBackendAttachment,
     HardLocalityMismatch, InsufficientSingleJobCapacity, ExhaustedBatchCapacity,
-    NoWorkers, NoAvailableWorker, NoFeasibleCurrentPlacement
+    BlockedDependency, NoWorkers, NoAvailableWorker,
+    NoFeasibleCurrentPlacement
 };
 const char* feasibility_reason_name(FeasibilityReason);
 struct FeasibilityResult {
@@ -68,6 +69,13 @@ struct PlacementDecision {
     std::string park_reason;
     std::string evidence;
     std::vector<CandidateEvaluation> candidates;
+    uint32_t policy_version = 1;
+    std::string tie_break;
+    StructuredPolicyKind structured_policy_kind = StructuredPolicyKind::None;
+    RoundRobinPolicyEvidence round_robin;
+    RandomPolicyEvidence random;
+    ConstraintPolicyEvidence constraint;
+    MinMaxPolicyEvidence minmax;
 };
 struct PlacementPlan { std::vector<PlacementDecision> decisions; };
 
@@ -76,5 +84,16 @@ PreparedSchedulingBatch prepare_scheduling_batch(SchedulingBatch, std::vector<Wo
 bool validate_plan(const PreparedSchedulingBatch&, const PlacementPlan&);
 PlacementPlan solve_prepared(const PreparedSchedulingBatch&, std::string_view policy, const WeightProfile& = {});
 void append_decision_history(LabelData&, const SchedulingDecisionSnapshot&);
+SchedulingDecisionSnapshot make_decision_snapshot(
+    const PreparedSchedulingBatch&, size_t unit_index,
+    const PlacementDecision&, uint32_t attempt, std::string_view policy,
+    const WeightProfile& profile = {});
+void apply_scheduling_decision(LabelData&, const SchedulingDecisionSnapshot&,
+                               const PlacementDecision&, const WorkerInfo*,
+                               std::string_view policy, uint64_t dispatched_us);
+PreparedSchedulingBatch reconstruct_prepared_scheduling_batch(
+    const std::vector<SchedulingDecisionSnapshot>&);
+WeightProfile reconstruct_weight_profile(
+    const SchedulingDecisionSnapshot&);
 
 } // namespace labios

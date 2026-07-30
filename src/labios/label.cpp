@@ -524,10 +524,302 @@ static std::pair<const std::byte*, size_t> serialize_label_core(
                 b.add_available_capacity_before(c.available_capacity_before); b.add_available_capacity_after(c.available_capacity_after);
                 b.add_locality_match(c.locality_match); if (sv.o) b.add_score_components(sv);
                 b.add_final_objective(c.final_objective); b.add_policy_rank(c.policy_rank); b.add_selected(c.selected);
+                b.add_trace_sample_count(c.trace_sample_count);
+                b.add_trace_service_anchor(c.trace_service_anchor);
+                b.add_trace_queue_anchor(c.trace_queue_anchor);
+                b.add_trace_throughput_anchor(c.trace_throughput_anchor);
                 candidates.push_back(b.Finish());
             }
             auto cv = candidates.empty() ? flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<schema::CandidateEvaluation>>>{0} : fbb.CreateVector(candidates);
             auto outcome=maybe_string(fbb,d.outcome), park=maybe_string(fbb,d.park_reason), policy=maybe_string(fbb,d.policy_name), evidence=maybe_string(fbb,d.policy_evidence);
+            auto tie_break = maybe_string(fbb, d.tie_break);
+            schema::StructuredPolicyEvidence structured_type =
+                schema::StructuredPolicyEvidence_NONE;
+            flatbuffers::Offset<void> structured;
+            switch (d.structured_policy_kind) {
+            case StructuredPolicyKind::RoundRobin: {
+                auto value = schema::CreateRoundRobinEvidence(
+                    fbb, d.round_robin.cursor_worker_id_before,
+                    d.round_robin.selected_scan_rank);
+                structured_type =
+                    schema::StructuredPolicyEvidence_RoundRobinEvidence;
+                structured = value.Union();
+                break;
+            }
+            case StructuredPolicyKind::Random: {
+                auto value = schema::CreateRandomEvidence(
+                    fbb, d.random.batch_seed, d.random.raw_draw,
+                    d.random.candidate_count, d.random.selected_index);
+                structured_type = schema::StructuredPolicyEvidence_RandomEvidence;
+                structured = value.Union();
+                break;
+            }
+            case StructuredPolicyKind::Constraint: {
+                auto profile_name =
+                    maybe_string(fbb, d.constraint.profile_name);
+                auto value = schema::CreateConstraintEvidence(
+                    fbb, profile_name, d.constraint.profile_version);
+                structured_type =
+                    schema::StructuredPolicyEvidence_ConstraintEvidence;
+                structured = value.Union();
+                break;
+            }
+            case StructuredPolicyKind::MinMax: {
+                std::vector<flatbuffers::Offset<schema::MinMaxWorkerEvidence>>
+                    worker_rows;
+                worker_rows.reserve(d.minmax.workers.size());
+                for (const auto& row : d.minmax.workers) {
+                    worker_rows.push_back(schema::CreateMinMaxWorkerEvidence(
+                        fbb, row.worker_id, row.profit, row.target_share,
+                        row.target_amount, row.consumption_before,
+                        row.consumption_after, row.spill_rank));
+                }
+                auto worker_vector = worker_rows.empty()
+                    ? flatbuffers::Offset<flatbuffers::Vector<
+                          flatbuffers::Offset<schema::MinMaxWorkerEvidence>>>{0}
+                    : fbb.CreateVector(worker_rows);
+                auto profile_name = maybe_string(fbb, d.minmax.profile_name);
+                auto value = schema::CreateMinMaxEvidence(
+                    fbb,
+                    static_cast<schema::SchedulingDemandBasis>(
+                        d.minmax.demand_basis),
+                    d.minmax.total_demand, d.minmax.final_batch_objective,
+                    worker_vector, profile_name, d.minmax.profile_version,
+                    d.minmax.cold_exploration);
+                structured_type = schema::StructuredPolicyEvidence_MinMaxEvidence;
+                structured = value.Union();
+                break;
+            }
+            case StructuredPolicyKind::None:
+                break;
+            }
+            auto string_vector = [&](const std::vector<std::string>& values) {
+                std::vector<flatbuffers::Offset<flatbuffers::String>> offsets;
+                offsets.reserve(values.size());
+                for (const auto& value : values)
+                    offsets.push_back(fbb.CreateString(value));
+                return offsets.empty()
+                    ? flatbuffers::Offset<flatbuffers::Vector<
+                          flatbuffers::Offset<flatbuffers::String>>>{0}
+                    : fbb.CreateVector(offsets);
+            };
+            auto replay_resources = [&](const auto& values) {
+                std::vector<flatbuffers::Offset<
+                    schema::ReplayResourceRequirement>> offsets;
+                offsets.reserve(values.size());
+                for (const auto& value : values) {
+                    offsets.push_back(
+                        schema::CreateReplayResourceRequirement(
+                            fbb, value.family,
+                            maybe_string(fbb, value.backend_id),
+                            maybe_string(fbb, value.scheme),
+                            maybe_string(fbb, value.identity),
+                            maybe_string(fbb, value.locality_domain),
+                            value.hard_locality));
+                }
+                return offsets.empty()
+                    ? flatbuffers::Offset<flatbuffers::Vector<
+                          flatbuffers::Offset<
+                              schema::ReplayResourceRequirement>>>{0}
+                    : fbb.CreateVector(offsets);
+            };
+            flatbuffers::Offset<schema::ReplaySchedulingUnit> replay_unit;
+            if (d.replay_unit.unit_id != 0 ||
+                !d.replay_unit.members.empty()) {
+                std::vector<flatbuffers::Offset<schema::ReplayJobDescriptor>>
+                    members;
+                members.reserve(d.replay_unit.members.size());
+                for (const auto& job : d.replay_unit.members) {
+                    auto pipeline_operations =
+                        string_vector(job.pipeline_operations);
+                    auto pipeline_versions =
+                        job.pipeline_operation_versions.empty()
+                        ? flatbuffers::Offset<
+                              flatbuffers::Vector<uint32_t>>{0}
+                        : fbb.CreateVector(
+                              job.pipeline_operation_versions);
+                    auto sources = replay_resources(job.sources);
+                    auto destinations =
+                        replay_resources(job.destinations);
+                    auto operation = maybe_string(fbb, job.operation);
+                    schema::ReplayJobDescriptorBuilder job_builder(fbb);
+                    job_builder.add_unit_id(job.unit_id);
+                    job_builder.add_label_id(job.label_id);
+                    job_builder.add_ordinal(job.ordinal);
+                    job_builder.add_label_type(
+                        static_cast<schema::LabelType>(job.type));
+                    job_builder.add_operation(operation);
+                    job_builder.add_operation_version(
+                        job.operation_version);
+                    job_builder.add_ir_version(job.ir_version);
+                    job_builder.add_minimum_tier(job.minimum_tier);
+                    if (pipeline_operations.o)
+                        job_builder.add_pipeline_operations(
+                            pipeline_operations);
+                    if (pipeline_versions.o)
+                        job_builder.add_pipeline_operation_versions(
+                            pipeline_versions);
+                    if (sources.o) job_builder.add_sources(sources);
+                    if (destinations.o)
+                        job_builder.add_destinations(destinations);
+                    job_builder.add_demand_bytes(job.demand_bytes);
+                    job_builder.add_demand_kind(
+                        static_cast<schema::SchedulingDemandKind>(
+                            job.demand_kind));
+                    job_builder.add_intent(
+                        static_cast<schema::Intent>(job.intent));
+                    job_builder.add_priority(job.priority);
+                    job_builder.add_ready(job.ready);
+                    members.push_back(job_builder.Finish());
+                }
+                auto member_vector = members.empty()
+                    ? flatbuffers::Offset<flatbuffers::Vector<
+                          flatbuffers::Offset<
+                              schema::ReplayJobDescriptor>>>{0}
+                    : fbb.CreateVector(members);
+                auto predecessors = d.replay_unit.predecessors.empty()
+                    ? flatbuffers::Offset<
+                          flatbuffers::Vector<uint64_t>>{0}
+                    : fbb.CreateVector(d.replay_unit.predecessors);
+                replay_unit = schema::CreateReplaySchedulingUnit(
+                    fbb, d.replay_unit.unit_id,
+                    d.replay_unit.ordinal, member_vector,
+                    d.replay_unit.ready, predecessors);
+            }
+            std::vector<flatbuffers::Offset<schema::ReplayWorkerSnapshot>>
+                replay_worker_rows;
+            replay_worker_rows.reserve(d.replay_workers.size());
+            for (const auto& worker : d.replay_workers) {
+                std::vector<flatbuffers::Offset<
+                    schema::ReplayWorkerAttachment>> attachments;
+                for (const auto& attachment : worker.attachments) {
+                    attachments.push_back(
+                        schema::CreateReplayWorkerAttachment(
+                            fbb, attachment.family,
+                            maybe_string(fbb, attachment.backend_id),
+                            maybe_string(fbb, attachment.scheme),
+                            attachment.locality_kind,
+                            maybe_string(fbb,
+                                         attachment.locality_domain)));
+                }
+                std::vector<flatbuffers::Offset<
+                    schema::ReplayTraceScheme>> trace_schemes;
+                for (const auto& trace : worker.trace_scheme_throughput) {
+                    trace_schemes.push_back(
+                        schema::CreateReplayTraceScheme(
+                            fbb, maybe_string(fbb, trace.scheme),
+                            trace.throughput));
+                }
+                auto attachment_vector = attachments.empty()
+                    ? flatbuffers::Offset<flatbuffers::Vector<
+                          flatbuffers::Offset<
+                              schema::ReplayWorkerAttachment>>>{0}
+                    : fbb.CreateVector(attachments);
+                auto trace_vector = trace_schemes.empty()
+                    ? flatbuffers::Offset<flatbuffers::Vector<
+                          flatbuffers::Offset<
+                              schema::ReplayTraceScheme>>>{0}
+                    : fbb.CreateVector(trace_schemes);
+                const auto operations =
+                    string_vector(worker.operations);
+                const auto operation_versions =
+                    worker.operation_versions.empty()
+                    ? flatbuffers::Offset<
+                          flatbuffers::Vector<uint32_t>>{0}
+                    : fbb.CreateVector(worker.operation_versions);
+                const auto pipeline_operations =
+                    string_vector(worker.pipeline_operations);
+                const auto pipeline_versions =
+                    worker.pipeline_operation_versions.empty()
+                    ? flatbuffers::Offset<
+                          flatbuffers::Vector<uint32_t>>{0}
+                    : fbb.CreateVector(
+                          worker.pipeline_operation_versions);
+                const auto locality_domains =
+                    string_vector(worker.locality_domains);
+                schema::ReplayWorkerSnapshotBuilder worker_builder(fbb);
+                worker_builder.add_worker_id(worker.worker_id);
+                worker_builder.add_available(worker.available);
+                worker_builder.add_capacity(worker.capacity);
+                worker_builder.add_load(worker.load);
+                worker_builder.add_speed(worker.speed);
+                worker_builder.add_energy(worker.energy);
+                worker_builder.add_tier(worker.tier);
+                worker_builder.add_skills(worker.skills);
+                worker_builder.add_compute(worker.compute);
+                worker_builder.add_reasoning(worker.reasoning);
+                worker_builder.add_registration_epoch(
+                    worker.registration_epoch);
+                worker_builder.add_total_capacity_bytes(
+                    worker.total_capacity_bytes);
+                worker_builder.add_available_capacity_bytes(
+                    worker.available_capacity_bytes);
+                worker_builder.add_max_ir_version(
+                    worker.max_ir_version);
+                if (operations.o)
+                    worker_builder.add_operations(operations);
+                if (operation_versions.o)
+                    worker_builder.add_operation_versions(
+                        operation_versions);
+                if (pipeline_operations.o)
+                    worker_builder.add_pipeline_operations(
+                        pipeline_operations);
+                if (pipeline_versions.o)
+                    worker_builder.add_pipeline_operation_versions(
+                        pipeline_versions);
+                if (attachment_vector.o)
+                    worker_builder.add_attachments(attachment_vector);
+                if (locality_domains.o)
+                    worker_builder.add_locality_domains(
+                        locality_domains);
+                worker_builder.add_trace_samples(worker.trace_samples);
+                worker_builder.add_trace_service_us(
+                    worker.trace_service_us);
+                worker_builder.add_trace_queue_depth(
+                    worker.trace_queue_depth);
+                worker_builder.add_trace_throughput_bytes_per_sec(
+                    worker.trace_throughput_bytes_per_sec);
+                if (trace_vector.o)
+                    worker_builder.add_trace_scheme_throughput(
+                        trace_vector);
+                replay_worker_rows.push_back(worker_builder.Finish());
+            }
+            const auto replay_workers = replay_worker_rows.empty()
+                ? flatbuffers::Offset<flatbuffers::Vector<
+                      flatbuffers::Offset<
+                          schema::ReplayWorkerSnapshot>>>{0}
+                : fbb.CreateVector(replay_worker_rows);
+            flatbuffers::Offset<schema::ReplayWeightProfile>
+                replay_profile;
+            if (!d.replay_profile.name.empty() ||
+                d.replay_profile.availability != 0.0 ||
+                d.replay_profile.capacity != 0.0 ||
+                d.replay_profile.load != 0.0 ||
+                d.replay_profile.speed != 0.0 ||
+                d.replay_profile.energy != 0.0 ||
+                d.replay_profile.tier != 0.0 ||
+                d.replay_profile.skills != 0.0 ||
+                d.replay_profile.compute != 0.0 ||
+                d.replay_profile.reasoning != 0.0 ||
+                d.replay_profile.trace_service != 0.0 ||
+                d.replay_profile.trace_queue != 0.0 ||
+                d.replay_profile.trace_throughput != 0.0) {
+                replay_profile = schema::CreateReplayWeightProfile(
+                    fbb, maybe_string(fbb, d.replay_profile.name),
+                    d.replay_profile.availability,
+                    d.replay_profile.capacity,
+                    d.replay_profile.load, d.replay_profile.speed,
+                    d.replay_profile.energy, d.replay_profile.tier,
+                    d.replay_profile.skills,
+                    d.replay_profile.compute,
+                    d.replay_profile.reasoning,
+                    d.replay_profile.trace_service,
+                    d.replay_profile.trace_queue,
+                    d.replay_profile.trace_throughput,
+                    d.replay_profile.trace_cold_start,
+                    d.replay_profile.trace_queue_anchor,
+                    d.replay_profile.trace_min_samples);
+            }
             schema::SchedulingDecisionSnapshotBuilder b(fbb);
             b.add_decision_id(d.decision_id); b.add_batch_id(d.batch_id); b.add_scheduling_unit_id(d.scheduling_unit_id);
             b.add_attempt(d.attempt); b.add_registry_generation(d.registry_generation); b.add_job_ordinal(d.job_ordinal);
@@ -539,6 +831,15 @@ static std::pair<const std::byte*, size_t> serialize_label_core(
             if (cv.o) b.add_candidates(cv);
             if (policy.o) b.add_policy_name(policy);
             if (evidence.o) b.add_policy_evidence(evidence);
+            b.add_policy_version(d.policy_version);
+            if (tie_break.o) b.add_tie_break(tie_break);
+            if (structured_type != schema::StructuredPolicyEvidence_NONE) {
+                b.add_structured_policy_type(structured_type);
+                b.add_structured_policy(structured);
+            }
+            if (replay_unit.o) b.add_replay_unit(replay_unit);
+            if (replay_workers.o) b.add_replay_workers(replay_workers);
+            if (replay_profile.o) b.add_replay_profile(replay_profile);
             decisions.push_back(b.Finish());
         }
         decisions_off = fbb.CreateVector(decisions);
@@ -832,13 +1133,260 @@ LabelData deserialize_label(std::span<const std::byte> buf) {
                 fb_read_string(x.outcome,d->outcome()); x.chosen_worker_id=d->chosen_worker_id(); fb_read_string(x.park_reason,d->park_reason());
                 x.reservation_bytes=d->reservation_bytes(); x.complete_size_known=d->complete_size_known();
                 fb_read_string(x.policy_name,d->policy_name()); fb_read_string(x.policy_evidence,d->policy_evidence());
+                x.policy_version = d->policy_version();
+                fb_read_string(x.tie_break, d->tie_break());
                 if(auto* cs=d->candidates()) for(auto* c:*cs) {
                     CandidateEvaluation y; y.worker_id=c->worker_id(); y.feasible=c->feasible();
                     y.available_capacity_before=c->available_capacity_before(); y.available_capacity_after=c->available_capacity_after();
                     y.locality_match=c->locality_match(); y.final_objective=c->final_objective(); y.policy_rank=c->policy_rank(); y.selected=c->selected();
+                    y.trace_sample_count = c->trace_sample_count();
+                    y.trace_service_anchor = c->trace_service_anchor();
+                    y.trace_queue_anchor = c->trace_queue_anchor();
+                    y.trace_throughput_anchor = c->trace_throughput_anchor();
                     if(auto* rs=c->reason_codes()) for(auto* r:*rs) y.reason_codes.emplace_back(r->str());
                     if(auto* ss2=c->score_components()) for(auto* q:*ss2) { ScoreComponent z; fb_read_string(z.metric,q->metric()); z.raw_value=q->raw_value(); z.normalized_value=q->normalized_value(); z.weight=q->weight(); z.contribution=q->contribution(); y.score_components.push_back(std::move(z)); }
                     x.candidates.push_back(std::move(y));
+                }
+                switch (d->structured_policy_type()) {
+                case schema::StructuredPolicyEvidence_RoundRobinEvidence:
+                    if (const auto* value =
+                            d->structured_policy_as_RoundRobinEvidence()) {
+                        x.structured_policy_kind =
+                            StructuredPolicyKind::RoundRobin;
+                        x.round_robin.cursor_worker_id_before =
+                            value->cursor_worker_id_before();
+                        x.round_robin.selected_scan_rank =
+                            value->selected_scan_rank();
+                    }
+                    break;
+                case schema::StructuredPolicyEvidence_RandomEvidence:
+                    if (const auto* value =
+                            d->structured_policy_as_RandomEvidence()) {
+                        x.structured_policy_kind = StructuredPolicyKind::Random;
+                        x.random.batch_seed = value->batch_seed();
+                        x.random.raw_draw = value->raw_draw();
+                        x.random.candidate_count = value->candidate_count();
+                        x.random.selected_index = value->selected_index();
+                    }
+                    break;
+                case schema::StructuredPolicyEvidence_ConstraintEvidence:
+                    if (const auto* value =
+                            d->structured_policy_as_ConstraintEvidence()) {
+                        x.structured_policy_kind =
+                            StructuredPolicyKind::Constraint;
+                        fb_read_string(x.constraint.profile_name,
+                                       value->profile_name());
+                        x.constraint.profile_version =
+                            value->profile_version();
+                    }
+                    break;
+                case schema::StructuredPolicyEvidence_MinMaxEvidence:
+                    if (const auto* value =
+                            d->structured_policy_as_MinMaxEvidence()) {
+                        x.structured_policy_kind = StructuredPolicyKind::MinMax;
+                        x.minmax.demand_basis =
+                            static_cast<SchedulingDemandBasis>(
+                                value->demand_basis());
+                        x.minmax.total_demand = value->total_demand();
+                        x.minmax.final_batch_objective =
+                            value->final_batch_objective();
+                        fb_read_string(x.minmax.profile_name,
+                                       value->profile_name());
+                        x.minmax.profile_version = value->profile_version();
+                        x.minmax.cold_exploration =
+                            value->cold_exploration();
+                        if (const auto* rows = value->worker_evidence()) {
+                            for (const auto* row : *rows) {
+                                x.minmax.workers.push_back({
+                                    row->worker_id(), row->profit(),
+                                    row->target_share(), row->target_amount(),
+                                    row->consumption_before(),
+                                    row->consumption_after(),
+                                    row->spill_rank()});
+                            }
+                        }
+                    }
+                    break;
+                case schema::StructuredPolicyEvidence_NONE:
+                    break;
+                }
+                if (const auto* unit = d->replay_unit()) {
+                    x.replay_unit.unit_id = unit->unit_id();
+                    x.replay_unit.ordinal = unit->ordinal();
+                    x.replay_unit.ready = unit->ready();
+                    if (const auto* predecessors = unit->predecessors()) {
+                        x.replay_unit.predecessors.assign(
+                            predecessors->begin(), predecessors->end());
+                    }
+                    if (const auto* members = unit->members()) {
+                        for (const auto* member : *members) {
+                            ReplayJobDescriptor job;
+                            job.unit_id = member->unit_id();
+                            job.label_id = member->label_id();
+                            job.ordinal = member->ordinal();
+                            job.type = static_cast<LabelType>(
+                                member->label_type());
+                            fb_read_string(job.operation,
+                                           member->operation());
+                            job.operation_version =
+                                member->operation_version();
+                            job.ir_version = member->ir_version();
+                            job.minimum_tier = member->minimum_tier();
+                            if (const auto* values =
+                                    member->pipeline_operations()) {
+                                for (const auto* value : *values)
+                                    job.pipeline_operations.push_back(
+                                        value->str());
+                            }
+                            if (const auto* values =
+                                    member->pipeline_operation_versions()) {
+                                job.pipeline_operation_versions.assign(
+                                    values->begin(), values->end());
+                            }
+                            auto read_resources = [](const auto* values,
+                                                     auto& target) {
+                                if (values == nullptr) return;
+                                for (const auto* value : *values) {
+                                    ReplayResourceRequirement resource;
+                                    resource.family = value->family();
+                                    if (value->backend_id())
+                                        resource.backend_id =
+                                            value->backend_id()->str();
+                                    if (value->scheme())
+                                        resource.scheme =
+                                            value->scheme()->str();
+                                    if (value->identity())
+                                        resource.identity =
+                                            value->identity()->str();
+                                    if (value->locality_domain())
+                                        resource.locality_domain =
+                                            value->locality_domain()->str();
+                                    resource.hard_locality =
+                                        value->hard_locality();
+                                    target.push_back(std::move(resource));
+                                }
+                            };
+                            read_resources(member->sources(), job.sources);
+                            read_resources(member->destinations(),
+                                           job.destinations);
+                            job.demand_bytes = member->demand_bytes();
+                            job.demand_kind = static_cast<uint8_t>(
+                                member->demand_kind());
+                            job.intent =
+                                static_cast<Intent>(member->intent());
+                            job.priority = member->priority();
+                            job.ready = member->ready();
+                            x.replay_unit.members.push_back(std::move(job));
+                        }
+                    }
+                }
+                if (const auto* workers = d->replay_workers()) {
+                    for (const auto* worker : *workers) {
+                        ReplayWorkerSnapshot value;
+                        value.worker_id = worker->worker_id();
+                        value.available = worker->available();
+                        value.capacity = worker->capacity();
+                        value.load = worker->load();
+                        value.speed = worker->speed();
+                        value.energy = worker->energy();
+                        value.tier = worker->tier();
+                        value.skills = worker->skills();
+                        value.compute = worker->compute();
+                        value.reasoning = worker->reasoning();
+                        value.registration_epoch =
+                            worker->registration_epoch();
+                        value.total_capacity_bytes =
+                            worker->total_capacity_bytes();
+                        value.available_capacity_bytes =
+                            worker->available_capacity_bytes();
+                        value.max_ir_version = worker->max_ir_version();
+                        auto read_strings = [](const auto* values,
+                                               auto& target) {
+                            if (values == nullptr) return;
+                            for (const auto* item : *values)
+                                target.push_back(item->str());
+                        };
+                        read_strings(worker->operations(),
+                                     value.operations);
+                        if (const auto* versions =
+                                worker->operation_versions()) {
+                            value.operation_versions.assign(
+                                versions->begin(), versions->end());
+                        }
+                        read_strings(worker->pipeline_operations(),
+                                     value.pipeline_operations);
+                        if (const auto* versions =
+                                worker->pipeline_operation_versions()) {
+                            value.pipeline_operation_versions.assign(
+                                versions->begin(), versions->end());
+                        }
+                        read_strings(worker->locality_domains(),
+                                     value.locality_domains);
+                        if (const auto* attachments =
+                                worker->attachments()) {
+                            for (const auto* attachment : *attachments) {
+                                ReplayWorkerAttachment row;
+                                row.family = attachment->family();
+                                if (attachment->backend_id())
+                                    row.backend_id =
+                                        attachment->backend_id()->str();
+                                if (attachment->scheme())
+                                    row.scheme =
+                                        attachment->scheme()->str();
+                                row.locality_kind =
+                                    attachment->locality_kind();
+                                if (attachment->locality_domain())
+                                    row.locality_domain =
+                                        attachment->locality_domain()->str();
+                                value.attachments.push_back(std::move(row));
+                            }
+                        }
+                        value.trace_samples = worker->trace_samples();
+                        value.trace_service_us =
+                            worker->trace_service_us();
+                        value.trace_queue_depth =
+                            worker->trace_queue_depth();
+                        value.trace_throughput_bytes_per_sec =
+                            worker->trace_throughput_bytes_per_sec();
+                        if (const auto* traces =
+                                worker->trace_scheme_throughput()) {
+                            for (const auto* trace : *traces) {
+                                ReplayTraceScheme row;
+                                if (trace->scheme())
+                                    row.scheme = trace->scheme()->str();
+                                row.throughput = trace->throughput();
+                                value.trace_scheme_throughput.push_back(
+                                    std::move(row));
+                            }
+                        }
+                        x.replay_workers.push_back(std::move(value));
+                    }
+                }
+                if (const auto* profile = d->replay_profile()) {
+                    fb_read_string(x.replay_profile.name,
+                                   profile->name());
+                    x.replay_profile.availability =
+                        profile->availability();
+                    x.replay_profile.capacity = profile->capacity();
+                    x.replay_profile.load = profile->load();
+                    x.replay_profile.speed = profile->speed();
+                    x.replay_profile.energy = profile->energy();
+                    x.replay_profile.tier = profile->tier();
+                    x.replay_profile.skills = profile->skills();
+                    x.replay_profile.compute = profile->compute();
+                    x.replay_profile.reasoning = profile->reasoning();
+                    x.replay_profile.trace_service =
+                        profile->trace_service();
+                    x.replay_profile.trace_queue =
+                        profile->trace_queue();
+                    x.replay_profile.trace_throughput =
+                        profile->trace_throughput();
+                    x.replay_profile.trace_cold_start =
+                        profile->trace_cold_start();
+                    x.replay_profile.trace_queue_anchor =
+                        profile->trace_queue_anchor();
+                    x.replay_profile.trace_min_samples =
+                        profile->trace_min_samples();
                 }
                 out.score_snapshot.decisions.push_back(std::move(x));
             }

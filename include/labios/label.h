@@ -163,6 +163,158 @@ struct CandidateEvaluation {
     double final_objective = 0.0;
     uint32_t policy_rank = 0;
     bool selected = false;
+    uint64_t trace_sample_count = 0;
+    double trace_service_anchor = 0.0;
+    double trace_queue_anchor = 0.0;
+    double trace_throughput_anchor = 0.0;
+};
+
+enum class SchedulingDemandBasis : uint8_t {
+    Unknown = 0,
+    ReservationBytes = 1,
+    UnitCount = 2,
+};
+
+enum class StructuredPolicyKind : uint8_t {
+    None = 0,
+    RoundRobin = 1,
+    Random = 2,
+    Constraint = 3,
+    MinMax = 4,
+};
+
+struct RoundRobinPolicyEvidence {
+    int cursor_worker_id_before = -1;
+    uint32_t selected_scan_rank = 0;
+};
+
+struct RandomPolicyEvidence {
+    uint64_t batch_seed = 0;
+    uint64_t raw_draw = 0;
+    uint32_t candidate_count = 0;
+    uint32_t selected_index = 0;
+};
+
+struct ConstraintPolicyEvidence {
+    std::string profile_name;
+    uint32_t profile_version = 1;
+};
+
+struct MinMaxWorkerEvidence {
+    int worker_id = 0;
+    double profit = 0.0;
+    double target_share = 0.0;
+    double target_amount = 0.0;
+    double consumption_before = 0.0;
+    double consumption_after = 0.0;
+    uint32_t spill_rank = 0;
+};
+
+struct MinMaxPolicyEvidence {
+    SchedulingDemandBasis demand_basis = SchedulingDemandBasis::Unknown;
+    uint64_t total_demand = 0;
+    double final_batch_objective = 0.0;
+    std::vector<MinMaxWorkerEvidence> workers;
+    std::string profile_name;
+    uint32_t profile_version = 1;
+    bool cold_exploration = false;
+};
+
+struct ReplayResourceRequirement {
+    uint8_t family = 0;
+    std::string backend_id;
+    std::string scheme;
+    std::string identity;
+    std::string locality_domain;
+    bool hard_locality = false;
+};
+
+struct ReplayJobDescriptor {
+    uint64_t unit_id = 0;
+    uint64_t label_id = 0;
+    uint64_t ordinal = 0;
+    LabelType type = LabelType::Write;
+    std::string operation;
+    uint32_t operation_version = 1;
+    uint32_t ir_version = kCurrentIrVersion;
+    uint8_t minimum_tier = 0;
+    std::vector<std::string> pipeline_operations;
+    std::vector<uint32_t> pipeline_operation_versions;
+    std::vector<ReplayResourceRequirement> sources;
+    std::vector<ReplayResourceRequirement> destinations;
+    uint64_t demand_bytes = 0;
+    uint8_t demand_kind = 2;
+    Intent intent = Intent::None;
+    uint8_t priority = 0;
+    bool ready = true;
+};
+
+struct ReplaySchedulingUnit {
+    uint64_t unit_id = 0;
+    uint64_t ordinal = 0;
+    std::vector<ReplayJobDescriptor> members;
+    bool ready = true;
+    std::vector<uint64_t> predecessors;
+};
+
+struct ReplayWorkerAttachment {
+    uint8_t family = 0;
+    std::string backend_id;
+    std::string scheme;
+    uint8_t locality_kind = 0;
+    std::string locality_domain;
+};
+
+struct ReplayTraceScheme {
+    std::string scheme;
+    double throughput = 0.0;
+};
+
+struct ReplayWorkerSnapshot {
+    int worker_id = 0;
+    bool available = true;
+    double capacity = 1.0;
+    double load = 0.0;
+    int speed = 1;
+    int energy = 1;
+    uint8_t tier = 0;
+    double skills = 0.0;
+    double compute = 1.0;
+    int reasoning = 0;
+    uint64_t registration_epoch = 1;
+    uint64_t total_capacity_bytes = 0;
+    uint64_t available_capacity_bytes = 0;
+    uint32_t max_ir_version = 1;
+    std::vector<std::string> operations;
+    std::vector<uint32_t> operation_versions;
+    std::vector<std::string> pipeline_operations;
+    std::vector<uint32_t> pipeline_operation_versions;
+    std::vector<ReplayWorkerAttachment> attachments;
+    std::vector<std::string> locality_domains;
+    uint64_t trace_samples = 0;
+    double trace_service_us = 0.0;
+    double trace_queue_depth = 0.0;
+    double trace_throughput_bytes_per_sec = 0.0;
+    std::vector<ReplayTraceScheme> trace_scheme_throughput;
+};
+
+struct ReplayWeightProfile {
+    std::string name;
+    double availability = 0.0;
+    double capacity = 0.0;
+    double load = 0.0;
+    double speed = 0.0;
+    double energy = 0.0;
+    double tier = 0.0;
+    double skills = 0.0;
+    double compute = 0.0;
+    double reasoning = 0.0;
+    double trace_service = 0.0;
+    double trace_queue = 0.0;
+    double trace_throughput = 0.0;
+    double trace_cold_start = 0.5;
+    double trace_queue_anchor = 1.0;
+    uint64_t trace_min_samples = 1;
 };
 
 struct SchedulingDecisionSnapshot {
@@ -180,6 +332,16 @@ struct SchedulingDecisionSnapshot {
     std::vector<CandidateEvaluation> candidates;
     std::string policy_name;
     std::string policy_evidence;
+    uint32_t policy_version = 1;
+    std::string tie_break;
+    StructuredPolicyKind structured_policy_kind = StructuredPolicyKind::None;
+    RoundRobinPolicyEvidence round_robin;
+    RandomPolicyEvidence random;
+    ConstraintPolicyEvidence constraint;
+    MinMaxPolicyEvidence minmax;
+    ReplaySchedulingUnit replay_unit;
+    std::vector<ReplayWorkerSnapshot> replay_workers;
+    ReplayWeightProfile replay_profile;
 };
 
 struct ScoreSnapshot {

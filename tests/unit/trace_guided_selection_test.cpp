@@ -65,6 +65,13 @@ TEST_CASE("trace-guided Constraint uses completed-label service and throughput",
     const auto& selected = plan.decisions.front().candidates[1];
     CHECK(selected.selected);
     CHECK(selected.score_components.size() == 12);
+    CHECK(selected.trace_sample_count == 8);
+    CHECK(selected.trace_service_anchor == 100.0);
+    CHECK(selected.trace_queue_anchor == profile.trace_queue_anchor);
+    CHECK(selected.trace_throughput_anchor == 100'000.0);
+    CHECK(plan.decisions.front().structured_policy_kind ==
+          labios::StructuredPolicyKind::Constraint);
+    CHECK(plan.decisions.front().constraint.profile_name == "trace_guided");
     CHECK(plan.decisions.front().evidence.find("trace=enabled") != std::string::npos);
 }
 
@@ -101,6 +108,20 @@ TEST_CASE("trace-guided MinMax records trace objective evidence", "[scheduling][
 
     REQUIRE(plan.decisions.size() == 1);
     CHECK(plan.decisions.front().worker_id == 2);
+    CHECK(plan.decisions.front().structured_policy_kind ==
+          labios::StructuredPolicyKind::MinMax);
+    CHECK(plan.decisions.front().minmax.profile_name == "trace_guided");
+    CHECK(plan.decisions.front().candidates[1].trace_sample_count == 4);
+    CHECK(plan.decisions.front().candidates[1].trace_service_anchor == 100.0);
+    CHECK(plan.decisions.front().candidates[1].trace_throughput_anchor ==
+          100'000.0);
+    REQUIRE(plan.decisions.front().candidates[1].score_components.size() == 3);
+    CHECK(plan.decisions.front().candidates[1].score_components[0].raw_value ==
+          100.0);
+    CHECK(plan.decisions.front().candidates[1].score_components[0]
+              .normalized_value == 1.0);
+    CHECK(plan.decisions.front().candidates[1].score_components[2].raw_value ==
+          100'000.0);
     CHECK(plan.decisions.front().evidence.find("trace=enabled") != std::string::npos);
 }
 
@@ -146,4 +167,7 @@ TEST_CASE("trace-guided MinMax explores workers below the sample threshold",
 
     REQUIRE(plan.decisions.size() == 1);
     CHECK(plan.decisions.front().worker_id == 2);
+    CHECK(plan.decisions.front().minmax.cold_exploration);
+    CHECK(plan.decisions.front().tie_break.find(
+              "bounded-cold-exploration") != std::string::npos);
 }

@@ -1,8 +1,9 @@
 #include <labios/solver/random.h>
 #include <catch2/catch_test_macros.hpp>
+#include <algorithm>
 #include <set>
 
-TEST_CASE("Random distributes to all workers including suspended", "[solver]") {
+TEST_CASE("Random excludes unavailable workers", "[solver]") {
     labios::RandomSolver solver;
     std::vector<labios::WorkerInfo> workers = {
         {1, true}, {2, false}, {3, true}
@@ -13,8 +14,6 @@ TEST_CASE("Random distributes to all workers including suspended", "[solver]") {
 
     auto result = solver.assign(std::move(labels), workers);
 
-    // Paper says: "distribute labels to all workers randomly regardless of
-    // their state (i.e., active or suspended)."
     std::set<int> assigned_workers;
     size_t total = 0;
     for (auto& [wid, payloads] : result) {
@@ -22,8 +21,9 @@ TEST_CASE("Random distributes to all workers including suspended", "[solver]") {
         total += payloads.size();
     }
     CHECK(total == 30);
-    // With 30 labels and 3 workers, probability of missing one is < 0.001.
-    CHECK(assigned_workers.size() == 3);
+    CHECK_FALSE(assigned_workers.contains(2));
+    CHECK(std::all_of(assigned_workers.begin(), assigned_workers.end(),
+                      [](int id) { return id == 1 || id == 3; }));
 }
 
 TEST_CASE("Random with no workers returns empty", "[solver]") {

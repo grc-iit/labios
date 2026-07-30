@@ -89,6 +89,159 @@ table ScoreComponent {
   contribution: double;
 }
 
+enum SchedulingDemandBasis : ubyte {
+  Unknown = 0,
+  ReservationBytes = 1,
+  UnitCount = 2
+}
+
+table RoundRobinEvidence {
+  cursor_worker_id_before: int;
+  selected_scan_rank: uint;
+}
+
+table RandomEvidence {
+  batch_seed: ulong;
+  raw_draw: ulong;
+  candidate_count: uint;
+  selected_index: uint;
+}
+
+table ConstraintEvidence {
+  profile_name: string;
+  profile_version: uint;
+}
+
+table MinMaxWorkerEvidence {
+  worker_id: int;
+  profit: double;
+  target_share: double;
+  target_amount: double;
+  consumption_before: double;
+  consumption_after: double;
+  spill_rank: uint;
+}
+
+table MinMaxEvidence {
+  demand_basis: SchedulingDemandBasis;
+  total_demand: ulong;
+  final_batch_objective: double;
+  worker_evidence: [MinMaxWorkerEvidence];
+  profile_name: string;
+  profile_version: uint;
+  cold_exploration: bool;
+}
+
+union StructuredPolicyEvidence {
+  RoundRobinEvidence,
+  RandomEvidence,
+  ConstraintEvidence,
+  MinMaxEvidence
+}
+
+enum SchedulingDemandKind : ubyte {
+  Exact = 0,
+  LowerBound = 1,
+  Unknown = 2
+}
+
+table ReplayResourceRequirement {
+  family: ubyte;
+  backend_id: string;
+  scheme: string;
+  identity: string;
+  locality_domain: string;
+  hard_locality: bool;
+}
+
+table ReplayJobDescriptor {
+  unit_id: ulong;
+  label_id: ulong;
+  ordinal: ulong;
+  label_type: LabelType;
+  operation: string;
+  operation_version: uint;
+  ir_version: uint;
+  minimum_tier: ubyte;
+  pipeline_operations: [string];
+  pipeline_operation_versions: [uint];
+  sources: [ReplayResourceRequirement];
+  destinations: [ReplayResourceRequirement];
+  demand_bytes: ulong;
+  demand_kind: SchedulingDemandKind;
+  intent: Intent;
+  priority: ubyte;
+  ready: bool;
+}
+
+table ReplaySchedulingUnit {
+  unit_id: ulong;
+  ordinal: ulong;
+  members: [ReplayJobDescriptor];
+  ready: bool;
+  predecessors: [ulong];
+}
+
+table ReplayWorkerAttachment {
+  family: ubyte;
+  backend_id: string;
+  scheme: string;
+  locality_kind: ubyte;
+  locality_domain: string;
+}
+
+table ReplayTraceScheme {
+  scheme: string;
+  throughput: double;
+}
+
+table ReplayWorkerSnapshot {
+  worker_id: int;
+  available: bool;
+  capacity: double;
+  load: double;
+  speed: int;
+  energy: int;
+  tier: ubyte;
+  skills: double;
+  compute: double;
+  reasoning: int;
+  registration_epoch: ulong;
+  total_capacity_bytes: ulong;
+  available_capacity_bytes: ulong;
+  max_ir_version: uint;
+  operations: [string];
+  operation_versions: [uint];
+  pipeline_operations: [string];
+  pipeline_operation_versions: [uint];
+  attachments: [ReplayWorkerAttachment];
+  locality_domains: [string];
+  trace_samples: ulong;
+  trace_service_us: double;
+  trace_queue_depth: double;
+  trace_throughput_bytes_per_sec: double;
+  trace_scheme_throughput: [ReplayTraceScheme];
+}
+
+table ReplayWeightProfile {
+  name: string;
+  availability: double;
+  capacity: double;
+  load: double;
+  speed: double;
+  energy: double;
+  tier: double;
+  skills: double;
+  compute: double;
+  reasoning: double;
+  trace_service: double;
+  trace_queue: double;
+  trace_throughput: double;
+  trace_cold_start: double;
+  trace_queue_anchor: double;
+  trace_min_samples: ulong;
+}
+
 table CandidateEvaluation {
   worker_id: int;
   feasible: bool;
@@ -100,6 +253,10 @@ table CandidateEvaluation {
   final_objective: double;
   policy_rank: uint;
   selected: bool;
+  trace_sample_count: ulong;
+  trace_service_anchor: double;
+  trace_queue_anchor: double;
+  trace_throughput_anchor: double;
 }
 
 table SchedulingDecisionSnapshot {
@@ -117,6 +274,12 @@ table SchedulingDecisionSnapshot {
   candidates: [CandidateEvaluation];
   policy_name: string;
   policy_evidence: string;
+  policy_version: uint;
+  tie_break: string;
+  structured_policy: StructuredPolicyEvidence;
+  replay_unit: ReplaySchedulingUnit;
+  replay_workers: [ReplayWorkerSnapshot];
+  replay_profile: ReplayWeightProfile;
 }
 
 table ScoreSnapshot {

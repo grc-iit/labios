@@ -54,23 +54,6 @@ static bool latest_start_expired(const labios::LabelData& label, uint64_t now) {
         static_cast<uint64_t>(label.ttl_seconds) * micros_per_second;
 }
 
-static labios::ScoreSnapshot snapshot_worker(int worker_id,
-    const std::vector<labios::WorkerInfo>& workers) {
-    for (auto& w : workers) {
-        if (w.id == worker_id) {
-            labios::ScoreSnapshot snapshot;
-            snapshot.availability = w.available ? 1.0 : 0.0;
-            snapshot.capacity = w.capacity;
-            snapshot.load = w.load;
-            snapshot.speed = static_cast<double>(w.speed);
-            snapshot.energy = static_cast<double>(w.energy);
-            snapshot.tier = static_cast<double>(static_cast<int>(w.tier));
-            return snapshot;
-        }
-    }
-    return {};
-}
-
 static std::string trace_scheme_for_label(const labios::LabelData& label) {
     try {
         if (!label.dest_uri.empty()) return labios::parse_uri(label.dest_uri).scheme;
@@ -661,41 +644,6 @@ int main() {
             auto plan = labios::solve_prepared(prepared, cfg.scheduler_policy, policy_profile);
             const bool valid_plan = labios::validate_plan(prepared, plan);
 
-            auto make_history = [&](const DispatchUnit& unit,
-                                    const labios::PlacementDecision& decision) {
-                labios::SchedulingDecisionSnapshot history;
-                history.decision_id = (prepared.batch.batch_id << 1U) ^ unit.representative.id;
-                history.batch_id = prepared.batch.batch_id;
-                history.scheduling_unit_id = unit.descriptor.unit_id;
-                history.attempt = static_cast<uint32_t>(
-                    std::min<uint64_t>(catalog.park_attempts(unit.representative.id) + 1,
-                                       std::numeric_limits<uint32_t>::max()));
-                history.registry_generation = prepared.batch.registry_generation;
-                history.job_ordinal = unit.descriptor.ordinal;
-                history.outcome = decision.outcome == labios::PlacementOutcome::Assigned ? "Assigned" : "Parked";
-                history.chosen_worker_id = decision.worker_id;
-                history.park_reason = decision.outcome == labios::PlacementOutcome::Assigned
-                    ? std::string{} : (decision.park_reason.empty()
-                        ? labios::feasibility_reason_name(decision.deferred_reason) : decision.park_reason);
-                bool known = true;
-                uint64_t bytes = 0;
-                for (const auto& member : unit.descriptor.members) {
-                    if (member.demand.kind == labios::DemandKind::Unknown) known = false;
-                    if (std::numeric_limits<uint64_t>::max() - bytes < member.demand.bytes) {
-                        known = false;
-                        bytes = 0;
-                        break;
-                    }
-                    bytes += member.demand.bytes;
-                }
-                history.reservation_bytes = bytes;
-                history.complete_size_known = known;
-                history.candidates = decision.candidates;
-                history.policy_name = cfg.scheduler_policy;
-                history.policy_evidence = decision.evidence;
-                return history;
-            };
-
             std::vector<labios::ScheduleEntry> scheduled;
             std::vector<size_t> assigned_units;
             std::cout << "[" << timestamp() << "] dispatcher: policy="
@@ -710,22 +658,37 @@ int main() {
                     decision.worker_id = -1;
                     decision.deferred_reason = labios::FeasibilityReason::NoFeasibleCurrentPlacement;
                     decision.park_reason = "INVALID_PLAN";
+                    decision.tie_break =
+                        "invalid-plan:" + decision.tie_break;
+                    for (auto& candidate : decision.candidates) {
+                        candidate.selected = false;
+                        candidate.available_capacity_after =
+                            candidate.available_capacity_before;
+                    }
+                    decision.minmax.final_batch_objective = 0.0;
+                    for (auto& row : decision.minmax.workers) {
+                        row.consumption_after = row.consumption_before;
+                        row.spill_rank = 0;
+                    }
                 }
                 if (!unit.park_reason.empty()) decision.park_reason = unit.park_reason;
-                const auto history = make_history(unit, decision);
+                const auto attempt = static_cast<uint32_t>(
+                    std::min<uint64_t>(
+                        catalog.park_attempts(unit.representative.id) + 1,
+                        std::numeric_limits<uint32_t>::max()));
+                const auto history = labios::make_decision_snapshot(
+                    prepared, index, decision, attempt,
+                    cfg.scheduler_policy, policy_profile);
                 auto apply = [&](labios::LabelData& label) {
-                    if (decision.outcome == labios::PlacementOutcome::Assigned) {
-                        auto snapshot = snapshot_worker(decision.worker_id, workers);
-                        snapshot.decisions = label.score_snapshot.decisions;
-                        snapshot.decision_version = 1;
-                        snapshot.decisions.push_back(history);
-                        labios::mark_label_scheduled(label, static_cast<uint32_t>(decision.worker_id),
-                                                     cfg.scheduler_policy, snapshot, now_us());
-                    } else {
-                        label.score_snapshot.decision_version = 1;
-                        label.score_snapshot.decisions.push_back(history);
-                        label.status = labios::StatusCode::Queued;
-                    }
+                    const auto worker = std::find_if(
+                        workers.begin(), workers.end(),
+                        [&](const labios::WorkerInfo& candidate) {
+                            return candidate.id == decision.worker_id;
+                        });
+                    labios::apply_scheduling_decision(
+                        label, history, decision,
+                        worker == workers.end() ? nullptr : &*worker,
+                        cfg.scheduler_policy, now_us());
                 };
                 apply(unit.representative);
                 for (auto& child : unit.children) apply(child);
