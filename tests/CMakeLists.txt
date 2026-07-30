@@ -92,6 +92,10 @@ add_executable(labios-trace-guided-selection-test unit/trace_guided_selection_te
 target_link_libraries(labios-trace-guided-selection-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-trace-guided-selection-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-trace-accounting-test unit/trace_accounting_test.cpp)
+target_link_libraries(labios-trace-accounting-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-trace-accounting-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
 add_executable(labios-durable-dispatcher-test unit/durable_dispatcher_test.cpp)
 target_link_libraries(labios-durable-dispatcher-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-durable-dispatcher-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")

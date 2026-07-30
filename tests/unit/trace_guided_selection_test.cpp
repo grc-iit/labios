@@ -52,8 +52,11 @@ TEST_CASE("trace-guided Constraint uses completed-label service and throughput",
 
     auto prepared = labios::prepare_scheduling_batch(
         std::move(batch), {fast_static, trace_fast});
-    const labios::WeightProfile profile{
+    auto profile = labios::WeightProfile{
         "trace_guided", 0.05, 0.15, 0.10, 0.15, 0.05, 0.0};
+    profile.trace_service = 0.45;
+    profile.trace_queue = 0.20;
+    profile.trace_throughput = 0.35;
     const auto plan = labios::solve_prepared(prepared, "constraint", profile);
 
     REQUIRE(plan.decisions.size() == 1);
@@ -90,10 +93,57 @@ TEST_CASE("trace-guided MinMax records trace objective evidence", "[scheduling][
         workers[i].trace_scheme_throughput["file"] = i == 0 ? 10'000.0 : 100'000.0;
     }
     const auto prepared = labios::prepare_scheduling_batch(std::move(batch), workers);
-    const auto plan = labios::solve_prepared(
-        prepared, "minmax", labios::WeightProfile{"trace_guided"});
+    auto profile = labios::WeightProfile{"trace_guided"};
+    profile.trace_service = 0.3;
+    profile.trace_queue = 0.1;
+    profile.trace_throughput = 0.2;
+    const auto plan = labios::solve_prepared(prepared, "minmax", profile);
 
     REQUIRE(plan.decisions.size() == 1);
     CHECK(plan.decisions.front().worker_id == 2);
     CHECK(plan.decisions.front().evidence.find("trace=enabled") != std::string::npos);
+}
+
+TEST_CASE("trace-guided MinMax explores workers below the sample threshold",
+          "[scheduling][solver][trace]") {
+    labios::SchedulingBatch batch;
+    batch.batch_id = 44;
+    labios::SchedulingUnitDescriptor unit;
+    unit.unit_id = 9;
+    unit.members.push_back({.unit_id = 9, .label_id = 9,
+                            .operation = "core.write",
+                            .destinations = {{static_cast<uint8_t>(
+                                                  labios::ResourceFamily::FileRange),
+                                              "default", "file", "/trace/out",
+                                              {}, false}},
+                            .demand = {1024, labios::DemandKind::Exact}});
+    batch.units.push_back(unit);
+
+    std::vector<labios::WorkerInfo> workers(2);
+    for (int i = 0; i < 2; ++i) {
+        workers[i].id = i + 1;
+        workers[i].speed = 5;
+        workers[i].total_capacity_bytes = 1 << 20;
+        workers[i].available_capacity_bytes = 1 << 20;
+        workers[i].operations = {"core.write"};
+        workers[i].operation_versions = {1};
+        workers[i].attachments = {{static_cast<uint8_t>(
+                                        labios::ResourceFamily::FileRange),
+                                    "default", "file"}};
+    }
+    workers[0].trace_samples = 3;
+    workers[0].trace_service_us = 1.0;
+    workers[0].trace_scheme_throughput["file"] = 1'000'000'000.0;
+
+    const auto prepared =
+        labios::prepare_scheduling_batch(std::move(batch), workers);
+    auto profile = labios::WeightProfile{"trace_guided"};
+    profile.trace_service = 0.45;
+    profile.trace_queue = 0.20;
+    profile.trace_throughput = 0.35;
+    profile.trace_min_samples = 3;
+    const auto plan = labios::solve_prepared(prepared, "minmax", profile);
+
+    REQUIRE(plan.decisions.size() == 1);
+    CHECK(plan.decisions.front().worker_id == 2);
 }

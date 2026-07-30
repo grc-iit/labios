@@ -59,6 +59,11 @@ ObserveResult workers_scores(const std::vector<WorkerInfo>& workers) {
             << ",\"load\":" << w.load
             << ",\"speed\":" << w.speed
             << ",\"energy\":" << w.energy
+            << ",\"trace_samples\":" << w.trace_samples
+            << ",\"trace_service_us\":" << w.trace_service_us
+            << ",\"trace_queue_depth\":" << w.trace_queue_depth
+            << ",\"trace_throughput_bytes_per_sec\":"
+            << w.trace_throughput_bytes_per_sec
             << "}";
     }
     oss << "]}";
@@ -166,6 +171,7 @@ ObserveResult config_current(const Config& cfg) {
         << json_number("batch_size", static_cast<uint64_t>(cfg.dispatcher_batch_size)) << ","
         << json_number("batch_timeout_ms", static_cast<uint64_t>(cfg.dispatcher_batch_timeout_ms)) << ","
         << json_string("scheduler_policy", cfg.scheduler_policy) << ","
+        << json_string("scheduler_profile", cfg.scheduler_profile_path) << ","
         << json_bool("aggregation_enabled", cfg.dispatcher_aggregation_enabled)
         << "}";
     return {true, {}, oss.str()};

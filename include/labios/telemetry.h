@@ -7,6 +7,7 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -30,13 +31,26 @@ struct TraceFeatures {
     std::unordered_map<std::string, double> scheme_throughput_bytes_per_sec;
 };
 
+struct TraceAttempt {
+    uint64_t label_id = 0;
+    uint32_t attempt = 0;
+    int worker_id = 0;
+    std::string scheme;
+    uint64_t bytes = 0;
+    uint8_t priority = 0;
+    std::chrono::steady_clock::time_point dispatched_at;
+};
+
 /// Publishes continuous telemetry metrics to NATS subject "labios.telemetry".
 /// Agents subscribe to this stream for real-time system monitoring.
 class TelemetryPublisher {
 public:
     TelemetryPublisher(transport::NatsConnection& nats,
                         WorkerSnapshot worker_fn,
-                        std::chrono::milliseconds interval = std::chrono::seconds(2));
+                        std::chrono::milliseconds interval = std::chrono::seconds(2),
+                        WeightProfile trace_profile = {});
+    /// Hermetic accounting constructor. start() is invalid without a transport.
+    explicit TelemetryPublisher(WeightProfile trace_profile);
     ~TelemetryPublisher();
 
     TelemetryPublisher(const TelemetryPublisher&) = delete;
@@ -61,6 +75,22 @@ public:
                                 uint64_t bytes, std::chrono::microseconds latency,
                                 uint8_t priority = 0);
 
+    /// Attempt-scoped accounting used by the dispatcher. Duplicate dispatches
+    /// and completions are idempotent. Failed/cancelled completions drain
+    /// in-flight state without entering successful service/throughput EWMAs.
+    bool record_attempt_dispatched(TraceAttempt attempt);
+    bool record_attempt_completed(uint64_t label_id, uint32_t attempt,
+                                  bool successful,
+                                  std::chrono::steady_clock::time_point completed_at =
+                                      std::chrono::steady_clock::now());
+    bool record_attempt_completed(
+        uint64_t label_id, bool successful,
+        std::chrono::steady_clock::time_point completed_at =
+            std::chrono::steady_clock::now());
+    size_t expire_attempts(
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now());
+    uint64_t inflight_for_worker(int worker_id) const;
+
     /// Applies the latest trace snapshot to a scheduling worker snapshot.
     void enrich_workers(std::vector<WorkerInfo>& workers) const;
 
@@ -68,7 +98,7 @@ public:
     void record_scaling_event();
 
 private:
-    transport::NatsConnection& nats_;
+    transport::NatsConnection* nats_;
     WorkerSnapshot worker_fn_;
     std::chrono::milliseconds interval_;
     std::jthread thread_;
@@ -88,6 +118,8 @@ private:
     mutable std::mutex trace_mu_;
     std::unordered_map<int, TraceFeatures> trace_features_;
     std::unordered_map<int, uint64_t> inflight_by_worker_;
+    std::unordered_map<std::string, TraceAttempt> attempts_;
+    WeightProfile trace_profile_;
 
     void publish_loop(std::stop_token stoken);
 };

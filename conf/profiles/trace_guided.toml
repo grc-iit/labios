@@ -12,3 +12,14 @@ tier = 0.0
 skills = 0.0
 compute = 0.0
 reasoning = 0.0
+
+[trace]
+service_weight = 0.45
+queue_weight = 0.20
+throughput_weight = 0.35
+ewma_alpha = 0.20
+cold_start_value = 1.0
+queue_anchor = 8.0
+size_normalization_bytes = 1048576.0
+min_samples = 3
+attempt_ttl_ms = 30000

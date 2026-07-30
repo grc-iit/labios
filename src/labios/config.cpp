@@ -5,8 +5,10 @@
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
+#include <stdexcept>
 #include <string>
 
 namespace labios {
@@ -219,7 +221,9 @@ bool Config::set(const std::string& key, const std::string& value) {
 WeightProfile load_weight_profile(const std::filesystem::path& path) {
     WeightProfile wp;
     wp.name = path.stem().string();
-    if (!std::filesystem::exists(path)) return wp;
+    if (!std::filesystem::exists(path)) {
+        throw std::runtime_error("scheduler profile does not exist: " + path.string());
+    }
 
     auto tbl = toml::parse_file(path.string());
     wp.availability = tbl["weights"]["availability"].value_or(0.0);
@@ -231,6 +235,31 @@ WeightProfile load_weight_profile(const std::filesystem::path& path) {
     wp.skills       = tbl["weights"]["skills"].value_or(0.0);
     wp.compute      = tbl["weights"]["compute"].value_or(0.0);
     wp.reasoning    = tbl["weights"]["reasoning"].value_or(0.0);
+    wp.trace_service = tbl["trace"]["service_weight"].value_or(0.0);
+    wp.trace_queue = tbl["trace"]["queue_weight"].value_or(0.0);
+    wp.trace_throughput = tbl["trace"]["throughput_weight"].value_or(0.0);
+    wp.trace_alpha = tbl["trace"]["ewma_alpha"].value_or(0.2);
+    wp.trace_cold_start = tbl["trace"]["cold_start_value"].value_or(0.5);
+    wp.trace_queue_anchor = tbl["trace"]["queue_anchor"].value_or(1.0);
+    wp.trace_size_normalization_bytes =
+        tbl["trace"]["size_normalization_bytes"].value_or(1'048'576.0);
+    wp.trace_min_samples = tbl["trace"]["min_samples"].value_or<uint64_t>(1);
+    wp.trace_attempt_ttl_ms =
+        tbl["trace"]["attempt_ttl_ms"].value_or<uint64_t>(30'000);
+    const auto finite = [](double value) { return std::isfinite(value); };
+    if (!finite(wp.trace_service) || !finite(wp.trace_queue) ||
+        !finite(wp.trace_throughput) || !finite(wp.trace_alpha) ||
+        !finite(wp.trace_cold_start) || !finite(wp.trace_queue_anchor) ||
+        !finite(wp.trace_size_normalization_bytes) ||
+        wp.trace_service < 0.0 || wp.trace_queue < 0.0 ||
+        wp.trace_throughput < 0.0 || wp.trace_alpha <= 0.0 ||
+        wp.trace_alpha > 1.0 || wp.trace_cold_start < 0.0 ||
+        wp.trace_cold_start > 1.0 || wp.trace_queue_anchor <= 0.0 ||
+        wp.trace_size_normalization_bytes <= 0.0 ||
+        wp.trace_min_samples == 0 || wp.trace_attempt_ttl_ms == 0) {
+        throw std::runtime_error("invalid trace parameters in scheduler profile: " +
+                                 path.string());
+    }
     return wp;
 }
 

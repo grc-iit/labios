@@ -62,6 +62,29 @@ struct NatsConnection::Impl {
     std::mutex reply_mu;
     std::unordered_map<std::string, std::shared_ptr<AsyncReply>> pending_replies;
 
+    static bool subject_matches(std::string_view pattern,
+                                std::string_view subject) {
+        while (true) {
+            const auto pattern_dot = pattern.find('.');
+            const auto subject_dot = subject.find('.');
+            const auto pattern_token = pattern.substr(0, pattern_dot);
+            const auto subject_token = subject.substr(0, subject_dot);
+
+            if (pattern_token == ">") return !subject.empty();
+            if (pattern_token != "*" && pattern_token != subject_token) {
+                return false;
+            }
+
+            const bool pattern_done = pattern_dot == std::string_view::npos;
+            const bool subject_done = subject_dot == std::string_view::npos;
+            if (pattern_done || subject_done) {
+                return pattern_done && subject_done;
+            }
+            pattern.remove_prefix(pattern_dot + 1);
+            subject.remove_prefix(subject_dot + 1);
+        }
+    }
+
     ~Impl() {
         if (inbox_sub != nullptr) {
             natsSubscription_Drain(inbox_sub);
@@ -177,6 +200,13 @@ struct NatsConnection::Impl {
             auto it = self->callbacks.find(subject_sv);
             if (it != self->callbacks.end()) {
                 cb = it->second;
+            } else {
+                for (const auto& [pattern, candidate] : self->callbacks) {
+                    if (subject_matches(pattern, subject_sv)) {
+                        cb = candidate;
+                        break;
+                    }
+                }
             }
         }
 

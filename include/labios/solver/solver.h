@@ -82,6 +82,18 @@ struct WeightProfile {
     double skills = 0.0;
     double compute = 0.0;
     double reasoning = 0.0;
+
+    // Trace-method parameters. A profile is informed only when at least one
+    // trace weight is nonzero; its name is never used as a feature switch.
+    double trace_service = 0.0;
+    double trace_queue = 0.0;
+    double trace_throughput = 0.0;
+    double trace_alpha = 0.2;
+    double trace_cold_start = 0.5;
+    double trace_queue_anchor = 1.0;
+    double trace_size_normalization_bytes = 1'048'576.0;
+    uint64_t trace_min_samples = 1;
+    uint64_t trace_attempt_ttl_ms = 30'000;
 };
 
 using AssignmentMap = std::unordered_map<int, std::vector<std::vector<std::byte>>>;

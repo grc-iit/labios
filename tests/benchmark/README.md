@@ -56,43 +56,40 @@ pipeline. Every label is completion-waited and the destination is read back for
 verification. The CSV records submission latency separately from completion
 latency for every repetition.
 
-The predeclared baseline is **Round Robin** on the same three-worker Compose
-topology. The informed arm is **MinMax with `conf/profiles/trace_guided.toml`**.
+The predeclared arms use the same three-worker Compose topology:
+
+1. **baseline** — Round Robin, with no weight profile;
+2. **ablation** — MinMax with `conf/profiles/trace_ablation.toml`, whose static
+   weights match the informed profile but whose trace weights are zero; and
+3. **informed** — MinMax with `conf/profiles/trace_guided.toml`.
+
 The dispatcher enriches each scheduling snapshot with completed-label trace
 features: dispatch-to-completion service proxy, in-flight queue-depth EWMA, and
-per-scheme throughput EWMA. Constraint and MinMax include those features only
-when the profile name is `trace_guided`; cold-start choices use neutral trace
-values. The resulting `score_snapshot` decision history records the trace
-components and selected worker. No worker is provisioned or decommissioned.
+per-scheme throughput EWMA. Failed, cancelled, zero-byte, duplicate,
+out-of-order, and expired attempts cannot enter successful service or
+throughput EWMAs. Trace use is controlled by the profile's trace weights, not
+its filename. Alpha, cold-start value, queue anchor, size normalization,
+minimum samples, and attempt TTL are all TOML parameters. MinMax deterministically
+explores candidates below the minimum-sample threshold before using informed
+scores. No worker is provisioned or decommissioned.
 
-Build and run one arm as follows, using the same fixed `LABIOS_BENCH_RUN_ID`
-for both arms and fresh service state between arms:
+Run the reduced method-readiness check with:
 
 ```sh
-cmake --preset dev
-cmake --build build/dev --target labios-bench_trace_guided_selection -j"$(nproc)"
-docker compose down -v
-docker compose up -d
-LABIOS_BENCH_LIVE=1 LABIOS_BENCH_ARM=baseline \\
-  LABIOS_BENCH_RUN_ID=p10-fixed-seed LABIOS_BENCH_REPETITIONS=5 \\
-  LABIOS_BENCH_OUTPUT=p10-baseline.csv \\
-  ./build/dev/tests/labios-bench_trace_guided_selection "[!benchmark]"
-docker compose down -v
-
-LABIOS_SCHEDULER_POLICY=minmax LABIOS_SCHEDULER_PROFILE=conf/profiles/trace_guided.toml \\
-  docker compose up -d
-LABIOS_BENCH_LIVE=1 LABIOS_BENCH_ARM=informed \\
-  LABIOS_BENCH_RUN_ID=p10-fixed-seed LABIOS_BENCH_REPETITIONS=5 \\
-  LABIOS_BENCH_OUTPUT=p10-informed.csv \\
-  ./build/dev/tests/labios-bench_trace_guided_selection "[!benchmark]"
-docker compose down -v
+tests/benchmark/run_trace_guided_dry_run.sh
 ```
 
-The two CSV files are the performance artifact. Report median and p95 of
+The script rebuilds the profile-specific images and recreates volumes for every
+arm. The benchmark verifies the active policy/profile through public
+observability before running. The informed arm also requires nonzero trace
+samples on at least two workers and a maximum observed service proxy at least
+20% above the minimum; failure of either calibration gate invalidates the run.
+Passing this reduced one-repetition check establishes method readiness only.
+
+Prompt 08 produces the three CSV performance artifacts. Report median and p95 of
 `completion_us` (and the corresponding submission distributions) per profile;
 exclude any row whose `verified` column is not `1`. No result is reported in
-this repository yet because Docker Compose was unavailable on the verification
-host. Therefore P10 has no speedup or negative-result claim.
+this section: the reduced dry run is not a speedup or negative-result claim.
 
 ## Methodology and interpretation
 

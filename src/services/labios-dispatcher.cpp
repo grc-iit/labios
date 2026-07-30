@@ -184,7 +184,7 @@ int main() {
         [&]() -> std::vector<labios::WorkerInfo> {
             std::lock_guard lock(g_workers_mu);
             return g_cached_workers;
-        });
+        }, std::chrono::seconds(2), profile);
     telemetry.start();
 
     std::vector<labios::LabelData> batch_buffer;
@@ -196,15 +196,6 @@ int main() {
     auto batch_size = static_cast<size_t>(cfg.dispatcher_batch_size);
     auto batch_timeout = std::chrono::milliseconds(cfg.dispatcher_batch_timeout_ms);
 
-    struct DispatchTraceContext {
-        int worker_id = 0;
-        uint64_t dispatched_us = 0;
-        uint64_t bytes = 0;
-        std::string scheme;
-    };
-    std::mutex trace_context_mu;
-    std::unordered_map<uint64_t, DispatchTraceContext> trace_contexts;
-
     // Observe client completion replies without changing their delivery. This
     // gives telemetry a completed-label trace while the client remains the
     // completion authority. The interval is a conservative dispatch-to-reply
@@ -214,19 +205,9 @@ int main() {
                                    std::string_view /*reply_to*/) {
         try {
             const auto completion = labios::deserialize_completion(data);
-            DispatchTraceContext context;
-            {
-                std::lock_guard lock(trace_context_mu);
-                const auto it = trace_contexts.find(completion.label_id);
-                if (it == trace_contexts.end()) return;
-                context = it->second;
-                trace_contexts.erase(it);
-            }
-            const auto elapsed = now_us() > context.dispatched_us
-                ? now_us() - context.dispatched_us : 1ULL;
-            telemetry.record_label_completed(
-                context.worker_id, context.scheme, context.bytes,
-                std::chrono::microseconds(elapsed));
+            telemetry.record_attempt_completed(
+                completion.label_id,
+                completion.status == labios::CompletionStatus::Complete);
         } catch (...) {
             // Completion observation is best effort and must not affect delivery.
         }
@@ -413,6 +394,7 @@ int main() {
                     std::lock_guard lock(g_workers_mu);
                     obs_workers = g_cached_workers;
                 }
+                telemetry.enrich_workers(obs_workers);
                 std::erase_if(batch, [&](labios::LabelData& label) {
                     if (label.type != labios::LabelType::Observe) return false;
                     auto uri = labios::parse_uri(label.source_uri);
@@ -801,14 +783,13 @@ int main() {
                     catalog.persist_composite(unit.representative, children);
                 }
                 auto record_trace = [&](const labios::LabelData& label) {
-                    const auto dispatched = label.dispatched_us == 0 ? now_us() : label.dispatched_us;
-                    {
-                        std::lock_guard lock(trace_context_mu);
-                        trace_contexts[label.id] = {
-                            static_cast<int>(worker_id), dispatched, label.data_size,
-                            trace_scheme_for_label(label)};
-                    }
-                    telemetry.record_label_dispatched(worker_id, label.priority);
+                    const auto attempt = label.score_snapshot.decisions.empty()
+                        ? 1U
+                        : label.score_snapshot.decisions.back().attempt;
+                    telemetry.record_attempt_dispatched({
+                        label.id, attempt, static_cast<int>(worker_id),
+                        trace_scheme_for_label(label), label.data_size,
+                        label.priority, std::chrono::steady_clock::now()});
                 };
                 record_trace(unit.representative);
                 for (const auto& child : unit.children) record_trace(child);
@@ -817,6 +798,7 @@ int main() {
                 std::lock_guard lock(batch_mu);
                 local_handoff_ids.erase(unit.representative.id);
             }
+            telemetry.expire_attempts();
             nats.flush();
             nats.flush();
             } catch (const std::exception& ex) {

@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
+#include <limits>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -133,6 +135,18 @@ void write_sample(std::ofstream& output, const Sample& sample) {
            << (sample.verified ? 1 : 0) << '\n';
 }
 
+std::vector<double> trace_services(std::string_view json) {
+    std::vector<double> values;
+    const std::regex pattern("\"trace_service_us\":([0-9]+(?:\\.[0-9]+)?)");
+    const std::string text(json);
+    for (auto it = std::sregex_iterator(text.begin(), text.end(), pattern);
+         it != std::sregex_iterator(); ++it) {
+        const auto value = std::stod((*it)[1].str());
+        if (value > 0.0) values.push_back(value);
+    }
+    return values;
+}
+
 } // namespace
 
 TEST_CASE("P10 trace-guided live selection experiment", "[bench][live][trace][!benchmark]") {
@@ -144,9 +158,25 @@ TEST_CASE("P10 trace-guided live selection experiment", "[bench][live][trace][!b
     const auto run_id = env_or("LABIOS_BENCH_RUN_ID", "p10-fixed-seed");
     const auto output_path = env_or("LABIOS_BENCH_OUTPUT", "p10-trace-guided.csv");
     const int repetitions = std::max(1, std::stoi(env_or("LABIOS_BENCH_REPETITIONS", "5")));
-    REQUIRE((arm == "baseline" || arm == "informed"));
+    REQUIRE((arm == "baseline" || arm == "ablation" || arm == "informed"));
 
     auto client = labios::connect(benchmark_config());
+    const auto active_policy =
+        env_or("LABIOS_BENCH_ACTIVE_POLICY", "unset");
+    const auto active_profile =
+        env_or("LABIOS_BENCH_ACTIVE_PROFILE", "unset");
+    const auto config_probe = client.observe("config/current");
+    REQUIRE(config_probe.find("\"scheduler_policy\":\"" + active_policy + "\"") !=
+            std::string::npos);
+    if (arm == "baseline") {
+        REQUIRE(active_policy == "round-robin");
+        REQUIRE(active_profile == "none");
+    } else {
+        REQUIRE(active_policy == "minmax");
+        REQUIRE(active_profile ==
+                (arm == "ablation" ? "trace_ablation" : "trace_guided"));
+        REQUIRE(config_probe.find(active_profile + ".toml") != std::string::npos);
+    }
     std::ofstream output(output_path, std::ios::app);
     REQUIRE(output.good());
     if (output.tellp() == 0) {
@@ -164,5 +194,17 @@ TEST_CASE("P10 trace-guided live selection experiment", "[bench][live][trace][!b
         REQUIRE(small.verified);
         REQUIRE(large.verified);
         REQUIRE(mixed.verified);
+    }
+
+    const auto trace_probe = client.observe("workers/scores");
+    if (arm == "informed") {
+        REQUIRE(std::regex_search(
+            trace_probe, std::regex("\"trace_samples\":[1-9][0-9]*")));
+        const auto services = trace_services(trace_probe);
+        REQUIRE(services.size() >= 2);
+        const auto [minimum, maximum] =
+            std::minmax_element(services.begin(), services.end());
+        INFO("calibration services: min=" << *minimum << " max=" << *maximum);
+        REQUIRE(*maximum >= *minimum * 1.20);
     }
 }

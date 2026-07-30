@@ -9,12 +9,21 @@ namespace labios {
 
 TelemetryPublisher::TelemetryPublisher(transport::NatsConnection& nats,
                                          WorkerSnapshot worker_fn,
-                                         std::chrono::milliseconds interval)
-    : nats_(nats), worker_fn_(std::move(worker_fn)), interval_(interval) {}
+                                         std::chrono::milliseconds interval,
+                                         WeightProfile trace_profile)
+    : nats_(&nats), worker_fn_(std::move(worker_fn)), interval_(interval),
+      trace_profile_(std::move(trace_profile)) {}
+
+TelemetryPublisher::TelemetryPublisher(WeightProfile trace_profile)
+    : nats_(nullptr), interval_(std::chrono::seconds(2)),
+      trace_profile_(std::move(trace_profile)) {}
 
 TelemetryPublisher::~TelemetryPublisher() { stop(); }
 
 void TelemetryPublisher::start() {
+    if (nats_ == nullptr) {
+        throw std::logic_error("telemetry publisher has no transport");
+    }
     thread_ = std::jthread([this](std::stop_token stoken) {
         publish_loop(stoken);
     });
@@ -96,6 +105,123 @@ void TelemetryPublisher::record_label_completed(
     }
 }
 
+namespace {
+std::string attempt_key(uint64_t label_id, uint32_t attempt) {
+    return std::to_string(label_id) + ":" + std::to_string(attempt);
+}
+}
+
+bool TelemetryPublisher::record_attempt_dispatched(TraceAttempt attempt) {
+    std::lock_guard lock(trace_mu_);
+    const auto key = attempt_key(attempt.label_id, attempt.attempt);
+    if (attempts_.contains(key)) return false;
+    attempts_.emplace(key, attempt);
+    const auto inflight = ++inflight_by_worker_[attempt.worker_id];
+    auto& trace = trace_features_[attempt.worker_id];
+    const auto observed = static_cast<double>(inflight);
+    trace.queue_depth_ewma = trace.queue_depth_ewma == 0.0
+        ? observed
+        : trace_profile_.trace_alpha * observed +
+          (1.0 - trace_profile_.trace_alpha) * trace.queue_depth_ewma;
+    record_label_dispatched(attempt.priority);
+    return true;
+}
+
+bool TelemetryPublisher::record_attempt_completed(
+    uint64_t label_id, uint32_t attempt, bool successful,
+    std::chrono::steady_clock::time_point completed_at) {
+    TraceAttempt context;
+    {
+        std::lock_guard lock(trace_mu_);
+        const auto key = attempt_key(label_id, attempt);
+        const auto it = attempts_.find(key);
+        if (it == attempts_.end()) return false;
+        context = it->second;
+        attempts_.erase(it);
+        auto& inflight = inflight_by_worker_[context.worker_id];
+        if (inflight > 0) --inflight;
+        auto& trace = trace_features_[context.worker_id];
+        const auto queue = static_cast<double>(inflight);
+        trace.queue_depth_ewma = trace_profile_.trace_alpha * queue +
+            (1.0 - trace_profile_.trace_alpha) * trace.queue_depth_ewma;
+        if (successful && context.bytes != 0) {
+            const auto latency = std::max<int64_t>(
+                1, std::chrono::duration_cast<std::chrono::microseconds>(
+                       completed_at - context.dispatched_at).count());
+            const auto normalized_service =
+                static_cast<double>(latency) *
+                trace_profile_.trace_size_normalization_bytes /
+                static_cast<double>(context.bytes);
+            const auto throughput =
+                static_cast<double>(context.bytes) * 1'000'000.0 /
+                static_cast<double>(latency);
+            ++trace.samples;
+            const auto update = [&](double prior, double value) {
+                return trace.samples == 1 ? value :
+                    trace_profile_.trace_alpha * value +
+                    (1.0 - trace_profile_.trace_alpha) * prior;
+            };
+            trace.service_us_ewma =
+                update(trace.service_us_ewma, normalized_service);
+            trace.throughput_bytes_per_sec_ewma =
+                update(trace.throughput_bytes_per_sec_ewma, throughput);
+            if (!context.scheme.empty()) {
+                auto& rate =
+                    trace.scheme_throughput_bytes_per_sec[context.scheme];
+                rate = update(rate, throughput);
+            }
+            record_label_completed(std::chrono::microseconds(latency),
+                                   context.priority);
+        }
+    }
+    return true;
+}
+
+bool TelemetryPublisher::record_attempt_completed(
+    uint64_t label_id, bool successful,
+    std::chrono::steady_clock::time_point completed_at) {
+    uint32_t latest = 0;
+    bool found = false;
+    {
+        std::lock_guard lock(trace_mu_);
+        for (const auto& [key, attempt] : attempts_) {
+            (void)key;
+            if (attempt.label_id == label_id &&
+                (!found || attempt.attempt > latest)) {
+                latest = attempt.attempt;
+                found = true;
+            }
+        }
+    }
+    return found &&
+        record_attempt_completed(label_id, latest, successful, completed_at);
+}
+
+size_t TelemetryPublisher::expire_attempts(
+    std::chrono::steady_clock::time_point now) {
+    std::lock_guard lock(trace_mu_);
+    const auto ttl =
+        std::chrono::milliseconds(trace_profile_.trace_attempt_ttl_ms);
+    size_t expired = 0;
+    for (auto it = attempts_.begin(); it != attempts_.end();) {
+        if (now - it->second.dispatched_at < ttl) {
+            ++it;
+            continue;
+        }
+        auto& inflight = inflight_by_worker_[it->second.worker_id];
+        if (inflight > 0) --inflight;
+        it = attempts_.erase(it);
+        ++expired;
+    }
+    return expired;
+}
+
+uint64_t TelemetryPublisher::inflight_for_worker(int worker_id) const {
+    std::lock_guard lock(trace_mu_);
+    const auto it = inflight_by_worker_.find(worker_id);
+    return it == inflight_by_worker_.end() ? 0 : it->second;
+}
+
 void TelemetryPublisher::enrich_workers(std::vector<WorkerInfo>& workers) const {
     std::lock_guard lock(trace_mu_);
     for (auto& worker : workers) {
@@ -153,7 +279,7 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
         uint64_t p95 = percentile(samples, 0.95);
         uint64_t p99 = percentile(samples, 0.99);
 
-        auto workers = worker_fn_();
+        auto workers = worker_fn_ ? worker_fn_() : std::vector<WorkerInfo>{};
         enrich_workers(workers);
 
         auto tp = std::chrono::system_clock::now();
@@ -202,8 +328,8 @@ void TelemetryPublisher::publish_loop(std::stop_token stoken) {
         oss << "]}";
 
         try {
-            nats_.publish("labios.telemetry", oss.str());
-            nats_.flush();
+            nats_->publish("labios.telemetry", oss.str());
+            nats_->flush();
         } catch (...) {
             // Best-effort telemetry. Failures are non-fatal.
         }

@@ -81,6 +81,7 @@ COPY --from=builder /src/build/release/tests/labios-data-path-test /usr/local/bi
 COPY --from=builder /src/build/release/tests/labios-catalog-manager-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-intercept-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-benchmark-test /usr/local/bin/
+COPY --from=builder /src/build/release/tests/labios-bench_trace_guided_selection /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-scheduling-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-live-correctness-driver /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-elastic-flood-test /usr/local/bin/

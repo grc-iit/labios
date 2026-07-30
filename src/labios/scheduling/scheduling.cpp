@@ -182,9 +182,9 @@ double profit(const WorkerInfo& worker, uint64_t remaining) {
            (1.0 - std::clamp(worker.load, 0.0, 1.0)) / energy;
 }
 
-bool trace_guided(std::string_view policy_profile) {
-    return policy_profile == "trace_guided" ||
-           policy_profile.starts_with("trace_guided/");
+bool trace_guided(const WeightProfile& profile) {
+    return profile.trace_service != 0.0 || profile.trace_queue != 0.0 ||
+           profile.trace_throughput != 0.0;
 }
 
 std::string trace_scheme(const SchedulingUnitDescriptor& unit) {
@@ -388,26 +388,38 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
         } else if (policy == "constraint") {
             const auto job_profile = unit.members.empty() ? profile
                 : profile_for_intent(profile, unit.members.front().intent);
-            const bool informed = trace_guided(job_profile.name);
+            const bool informed = trace_guided(job_profile);
             const auto scheme = trace_scheme(unit);
             double fastest_trace = std::numeric_limits<double>::max();
             double highest_throughput = 0.0;
             for (const auto worker_index : feasible) {
                 const auto& worker = prepared.workers[worker_index];
-                if (worker.trace_samples != 0 && worker.trace_service_us > 0.0)
+                if (worker.trace_samples >= job_profile.trace_min_samples &&
+                    worker.trace_service_us > 0.0)
                     fastest_trace = std::min(fastest_trace, worker.trace_service_us);
                 highest_throughput = std::max(highest_throughput,
                                                scheme_throughput(worker, scheme));
             }
             const bool has_service_trace = fastest_trace != std::numeric_limits<double>::max();
             auto trace_values = [&](const WorkerInfo& worker) {
-                const auto service = informed && has_service_trace &&
+                const auto sampled =
+                    worker.trace_samples >= job_profile.trace_min_samples;
+                const auto service = informed && sampled && has_service_trace &&
                                      worker.trace_service_us > 0.0
-                    ? std::clamp(fastest_trace / worker.trace_service_us, 0.0, 1.0) : 0.5;
-                const auto queue = informed
-                    ? 1.0 - std::clamp(worker.trace_queue_depth / 100.0, 0.0, 1.0) : 0.5;
-                const auto throughput = informed && highest_throughput > 0.0
-                    ? std::clamp(scheme_throughput(worker, scheme) / highest_throughput, 0.0, 1.0) : 0.5;
+                    ? std::clamp(fastest_trace / worker.trace_service_us, 0.0, 1.0)
+                    : job_profile.trace_cold_start;
+                const auto queue = informed && sampled
+                    ? 1.0 - std::clamp(
+                          worker.trace_queue_depth /
+                              job_profile.trace_queue_anchor,
+                          0.0, 1.0)
+                    : job_profile.trace_cold_start;
+                const auto throughput =
+                    informed && sampled && highest_throughput > 0.0
+                    ? std::clamp(scheme_throughput(worker, scheme) /
+                                     highest_throughput,
+                                 0.0, 1.0)
+                    : job_profile.trace_cold_start;
                 return std::array<double, 3>{service, queue, throughput};
             };
             auto score = [&](size_t worker_index) {
@@ -424,7 +436,9 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                        (static_cast<double>(static_cast<uint8_t>(worker.tier)) / 2.0) +
                        job_profile.skills * worker.skills + job_profile.compute * worker.compute +
                        job_profile.reasoning * (static_cast<double>(worker.reasoning) / 5.0) +
-                       (informed ? 0.45 * traces[0] + 0.20 * traces[1] + 0.35 * traces[2] : 0.0);
+                       job_profile.trace_service * traces[0] +
+                       job_profile.trace_queue * traces[1] +
+                       job_profile.trace_throughput * traces[2];
             };
             selected = *std::max_element(feasible.begin(), feasible.end(), [&](size_t left, size_t right) {
                 const auto left_score = score(left);
@@ -435,7 +449,11 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
             std::ostringstream evidence;
             evidence << "profile=" << (job_profile.name.empty() ? "default" : job_profile.name)
                      << ";version=1;trace=" << (informed ? "enabled" : "disabled")
-                     << ";scheme=" << scheme;
+                     << ";scheme=" << scheme
+                     << ";trace_weights=" << job_profile.trace_service << ","
+                     << job_profile.trace_queue << ","
+                     << job_profile.trace_throughput
+                     << ";trace_min_samples=" << job_profile.trace_min_samples;
             decision.evidence = evidence.str();
             for (auto& candidate : decision.candidates) {
                 const auto worker_it = std::find_if(prepared.workers.begin(), prepared.workers.end(),
@@ -454,9 +472,9 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                     {"skills", worker.skills, job_profile.skills},
                     {"compute", worker.compute, job_profile.compute},
                     {"reasoning", static_cast<double>(worker.reasoning) / 5.0, job_profile.reasoning},
-                    {"trace_service_time", traces[0], informed ? 0.45 : 0.0},
-                    {"trace_queue_depth", traces[1], informed ? 0.20 : 0.0},
-                    {"trace_throughput", traces[2], informed ? 0.35 : 0.0}
+                    {"trace_service_time", traces[0], job_profile.trace_service},
+                    {"trace_queue_depth", traces[1], job_profile.trace_queue},
+                    {"trace_throughput", traces[2], job_profile.trace_throughput}
                 }};
                 double objective = 0.0;
                 for (const auto& [name, normalized, weight] : metrics) {
@@ -467,13 +485,14 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                 candidate.final_objective = objective;
             }
         } else if (policy == "minmax") {
-            const bool informed = trace_guided(profile.name);
+            const bool informed = trace_guided(profile);
             const auto scheme = trace_scheme(unit);
             double fastest_trace = std::numeric_limits<double>::max();
             double highest_throughput = 0.0;
             for (const auto worker_index : feasible) {
                 const auto& worker = prepared.workers[worker_index];
-                if (worker.trace_samples != 0 && worker.trace_service_us > 0.0)
+                if (worker.trace_samples >= profile.trace_min_samples &&
+                    worker.trace_service_us > 0.0)
                     fastest_trace = std::min(fastest_trace, worker.trace_service_us);
                 highest_throughput = std::max(highest_throughput,
                                                scheme_throughput(worker, scheme));
@@ -481,15 +500,37 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
             auto objective = [&](size_t worker_index) {
                 const auto& worker = prepared.workers[worker_index];
                 const auto base = profit(worker, remaining[worker_index]);
-                if (!informed || fastest_trace == std::numeric_limits<double>::max()) return base;
-                const auto service = worker.trace_service_us > 0.0
-                    ? fastest_trace / worker.trace_service_us : 0.5;
-                const auto queue = 1.0 - std::clamp(worker.trace_queue_depth / 100.0, 0.0, 1.0);
-                const auto throughput = highest_throughput > 0.0
-                    ? scheme_throughput(worker, scheme) / highest_throughput : 0.5;
-                return base * (0.4 + 0.3 * service + 0.1 * queue + 0.2 * throughput);
+                if (!informed) return base;
+                const auto sampled =
+                    worker.trace_samples >= profile.trace_min_samples;
+                const auto service = sampled &&
+                                             fastest_trace !=
+                                                 std::numeric_limits<double>::max() &&
+                                             worker.trace_service_us > 0.0
+                    ? std::clamp(fastest_trace / worker.trace_service_us, 0.0, 1.0)
+                    : profile.trace_cold_start;
+                const auto queue = sampled
+                    ? 1.0 - std::clamp(
+                          worker.trace_queue_depth / profile.trace_queue_anchor,
+                          0.0, 1.0)
+                    : profile.trace_cold_start;
+                const auto throughput = sampled && highest_throughput > 0.0
+                    ? std::clamp(scheme_throughput(worker, scheme) /
+                                     highest_throughput,
+                                 0.0, 1.0)
+                    : profile.trace_cold_start;
+                return base * (1.0 + profile.trace_service * service +
+                               profile.trace_queue * queue +
+                               profile.trace_throughput * throughput);
             };
             selected = *std::max_element(feasible.begin(), feasible.end(), [&](size_t left, size_t right) {
+                const auto left_sampled =
+                    prepared.workers[left].trace_samples >= profile.trace_min_samples;
+                const auto right_sampled =
+                    prepared.workers[right].trace_samples >= profile.trace_min_samples;
+                if (informed && left_sampled != right_sampled) {
+                    return left_sampled;
+                }
                 const auto left_profit = objective(left);
                 const auto right_profit = objective(right);
                 if (left_profit != right_profit) return left_profit < right_profit;
@@ -499,7 +540,11 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
             evidence << "basis=" << (known ? "bytes" : "unit-count")
                      << ";spill_rank=0;objective=" << objective(selected)
                      << ";trace=" << (informed ? "enabled" : "disabled")
-                     << ";scheme=" << scheme;
+                     << ";scheme=" << scheme
+                     << ";profile=" << profile.name
+                     << ";trace_weights=" << profile.trace_service << ","
+                     << profile.trace_queue << ","
+                     << profile.trace_throughput;
             decision.evidence = evidence.str();
             for (auto& candidate : decision.candidates) {
                 const auto worker_it = std::find_if(prepared.workers.begin(), prepared.workers.end(),
@@ -507,19 +552,41 @@ PlacementPlan solve_prepared(const PreparedSchedulingBatch& prepared,
                 if (worker_it != prepared.workers.end()) {
                     candidate.final_objective =
                         objective(static_cast<size_t>(worker_it - prepared.workers.begin()));
-                    if (informed && fastest_trace != std::numeric_limits<double>::max()) {
+                    if (informed) {
                         const auto& worker = *worker_it;
-                        const auto service = worker.trace_service_us > 0.0
-                            ? std::clamp(fastest_trace / worker.trace_service_us, 0.0, 1.0) : 0.5;
-                        const auto queue = 1.0 - std::clamp(worker.trace_queue_depth / 100.0, 0.0, 1.0);
-                        const auto throughput = highest_throughput > 0.0
-                            ? std::clamp(scheme_throughput(worker, scheme) / highest_throughput, 0.0, 1.0) : 0.5;
+                        const auto sampled =
+                            worker.trace_samples >= profile.trace_min_samples;
+                        const auto service = sampled &&
+                                                     fastest_trace !=
+                                                         std::numeric_limits<double>::max() &&
+                                                     worker.trace_service_us > 0.0
+                            ? std::clamp(fastest_trace / worker.trace_service_us,
+                                         0.0, 1.0)
+                            : profile.trace_cold_start;
+                        const auto queue = sampled
+                            ? 1.0 - std::clamp(
+                                  worker.trace_queue_depth /
+                                      profile.trace_queue_anchor,
+                                  0.0, 1.0)
+                            : profile.trace_cold_start;
+                        const auto throughput =
+                            sampled && highest_throughput > 0.0
+                            ? std::clamp(
+                                  scheme_throughput(worker, scheme) /
+                                      highest_throughput,
+                                  0.0, 1.0)
+                            : profile.trace_cold_start;
                         candidate.score_components.push_back(
-                            {"trace_service_time", service, service, 0.3, service * 0.3});
+                            {"trace_service_time", service, service,
+                             profile.trace_service,
+                             service * profile.trace_service});
                         candidate.score_components.push_back(
-                            {"trace_queue_depth", queue, queue, 0.1, queue * 0.1});
+                            {"trace_queue_depth", queue, queue,
+                             profile.trace_queue, queue * profile.trace_queue});
                         candidate.score_components.push_back(
-                            {"trace_throughput", throughput, throughput, 0.2, throughput * 0.2});
+                            {"trace_throughput", throughput, throughput,
+                             profile.trace_throughput,
+                             throughput * profile.trace_throughput});
                     }
                 }
             }
