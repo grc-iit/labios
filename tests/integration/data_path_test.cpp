@@ -124,6 +124,33 @@ TEST_CASE("Write to 3 different files distributes across workers", "[data_path]"
     }
 }
 
+TEST_CASE("Shared file and SQLite data is visible across round-robin workers", "[data_path][deployment]") {
+    auto cfg = test_config();
+    cfg.scheduler_policy = "round-robin";
+    auto client = labios::connect(cfg);
+
+    constexpr int operation_count = 24;
+    constexpr size_t payload_size = 2048;
+    std::vector<std::string> uris;
+    std::vector<std::vector<std::byte>> expected;
+    uris.reserve(operation_count);
+    expected.reserve(operation_count);
+
+    for (int i = 0; i < operation_count; ++i) {
+        const auto uri = i % 2 == 0
+            ? "file:///test/shared_rr_" + std::to_string(i) + ".bin"
+            : "sqlite:///test/shared_rr_" + std::to_string(i);
+        std::vector<std::byte> payload(payload_size, static_cast<std::byte>(i));
+        client.write_to(uri, payload);
+        uris.push_back(uri);
+        expected.push_back(std::move(payload));
+    }
+
+    for (int i = 0; i < operation_count; ++i) {
+        CHECK(client.read_from(uris[i], payload_size) == expected[i]);
+    }
+}
+
 TEST_CASE("Read routes to the holding worker", "[data_path]") {
     auto cfg = test_config();
     auto client = labios::connect(cfg);
@@ -174,35 +201,13 @@ TEST_CASE("Source URI pipeline writes to a different SQLite backend", "[data_pat
     pipeline.stages.push_back({"builtin://truncate",
                                std::to_string(2 * sizeof(uint64_t)), 0, -1});
 
-    // Compose models each worker's file/SQLite backend with its own volume.
-    // Retry the label until scheduling selects the worker holding this source;
-    // every attempt still completes through the normal completion path.
-    bool pipeline_complete = false;
-    std::string last_pipeline_error;
-    for (int attempt = 0; attempt < 6 && !pipeline_complete; ++attempt) {
-        auto pending = client->execute_pipeline(
-            source_uri, destination_uri, pipeline);
-        try {
-            client->wait(pending);
-            pipeline_complete = true;
-        } catch (const std::exception& ex) {
-            last_pipeline_error = ex.what();
-        }
-    }
-    INFO("last pipeline error: " << last_pipeline_error);
-    REQUIRE(pipeline_complete);
+    // The single-host reference deployment gives every worker the same
+    // Shared attachment, so source and destination are visible on every turn.
+    auto pending = client->execute_pipeline(source_uri, destination_uri, pipeline);
+    client->wait(pending);
 
-    std::vector<std::byte> transformed;
-    std::string last_read_error;
-    for (int attempt = 0; attempt < 6 && transformed.empty(); ++attempt) {
-        try {
-            transformed = client->read_from(
-                destination_uri, 2 * sizeof(uint64_t));
-        } catch (const std::exception& ex) {
-            last_read_error = ex.what();
-        }
-    }
-    INFO("last destination read error: " << last_read_error);
+    auto transformed = client->read_from(
+        destination_uri, 2 * sizeof(uint64_t));
     REQUIRE(transformed.size() == 2 * sizeof(uint64_t));
     REQUIRE(std::memcmp(transformed.data(), values + 1, sizeof(uint64_t)) == 0);
     REQUIRE(std::memcmp(transformed.data() + sizeof(uint64_t), values + 3,

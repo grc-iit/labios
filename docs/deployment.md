@@ -1,266 +1,164 @@
 # LABIOS Deployment Guide
 
-This guide covers the Docker Compose topology, scaling workers, environment
-variable overrides, and multi-node deployment.
+## Supported classification
 
-## Docker Compose Topology
+The repository ships one supported deployment shape: a **single-host reference
+deployment** using Docker Compose. It is intended for development, correctness
+testing, and demonstrations. Production hardening, Kubernetes manifests,
+leader election, and a verified multi-node topology are future work.
 
-The default `docker-compose.yml` starts 10 services:
+## Default topology
 
-```
-┌─────────┐     ┌──────────┐     ┌─────────┐
-│  NATS   │     │ Dragonfly│     │ Redis-KV│
-│ :4222   │     │  :6379   │     │  :6380  │
-│ core NATS│    │ warehouse│     │ kv://   │
-└────┬────┘     └────┬─────┘     └────┬────┘
-     │               │                │
-     └───────┬───────┘                │
-             │                        │
-     ┌───────v───────┐                │
-     │  Dispatcher   │                │
-     │  shuffler +   │                │
-     │  scheduler    │                │
-     └───────┬───────┘                │
-             │                        │
-     ┌───────v───────┐                │
-     │   Manager     │                │
-     │  worker reg   │                │
-     │  elastic ctrl │                │
-     └───┬───┬───┬───┘                │
-         │   │   │                    │
-    ┌────v┐ ┌v──┐ ┌v────┐            │
-    │W-1  │ │W-2│ │W-3  │────────────┘
-    │fast │ │mid│ │bulk │
-    └─────┘ └───┘ └─────┘
-
-    ┌─────────┐  ┌─────────┐
-    │  Test   │  │  MCP    │
-    │ runner  │  │ server  │
-    └─────────┘  └─────────┘
+```text
+localhost
+  NATS JetStream ─┬─ dispatcher ─┬─ worker-1 ─┐
+  DragonflyDB ────┤              ├─ worker-2 ─┼─ shared worker-data volume
+  Redis fixture ──┘              └─ worker-3 ─┘
+                         manager       MCP prototype
 ```
 
-### Service Descriptions
+| Service | Purpose | Host port |
+|---|---|---|
+| `nats` | Durable label transport and control-plane messaging | `127.0.0.1:4222`; monitoring `:8222` |
+| `redis` | Internal DragonflyDB warehouse and catalog plumbing | `127.0.0.1:6379` |
+| `redis-kv` | Development fixture representing a user's external `kv://` backend | `127.0.0.1:6380` |
+| `manager` | Worker registry | none |
+| `dispatcher` | Label admission, shuffling, and scheduling | none |
+| `worker-1`…`worker-3` | Tier-1 file, SQLite, and configured KV execution | none |
+| `mcp` | Current MCP prototype; see its documented runtime-bypass limitations | none |
+| `test` | One-shot test/demo image, enabled only when explicitly run | none |
 
-| Service | Image | Ports | Purpose |
-|---------|-------|-------|---------|
-| nats | nats:2.10-alpine | 4222 (client), 8222 (monitoring) | Message broker. All labels flow through NATS subjects. The server runs with `--jetstream`, but the runtime currently uses core NATS pub/sub (no stream persistence). |
-| redis | docker.dragonflydb/dragonfly | 6379 | Internal warehouse and metadata store (DragonflyDB). Stages data in transit, tracks label status. This is internal plumbing, not a user-facing backend. |
-| redis-kv | redis:7-alpine | 6380 | External KV backend for `kv://` URIs. Simulates user infrastructure for development. |
-| dispatcher | labios-dispatcher | internal | Processes label batches: OBSERVE handler, shuffler (aggregation, dependency detection), scheduler (4 policies), continuation processor, telemetry publisher. |
-| worker-1 | labios-worker | internal | Speed-optimized: speed=5, energy=1, capacity=10GB. |
-| worker-2 | labios-worker | internal | Balanced: speed=3, energy=3, capacity=50GB. |
-| worker-3 | labios-worker | internal | Capacity-optimized: speed=1, energy=5, capacity=200GB. |
-| manager | labios-manager | internal | Worker Manager: bucket-sorted registry, score computation, elastic scaling decisions. |
-| test | labios-test | internal | Runs smoke and integration tests. Exits after completion. |
-| mcp | labios-mcp | internal | MCP server for coding agent integration. Connects via Docker stdio. |
+The internal DragonflyDB warehouse is not a user storage backend. The separate
+`redis-kv` container is only a local simulation of user infrastructure.
 
-### Starting and Stopping
+## Start, inspect, and stop
 
 ```bash
-docker compose up -d              # Start everything
-docker compose ps                 # Check health status
-docker compose logs dispatcher    # View dispatcher logs
-docker compose down               # Stop (keep volumes)
-docker compose down -v            # Stop and remove data volumes
+docker compose config --quiet
+docker compose up -d --build --wait
+docker compose ps
+docker compose exec dispatcher labios-demo
+docker compose down
 ```
 
-### Health Checks
+Delete all persisted reference data and any one-shot profile containers with
+`docker compose --profile test down -v --remove-orphans`.
 
-Every service has a Docker health check:
+### Health and restart behavior
+
+NATS, DragonflyDB, the Redis fixture, manager, dispatcher, workers, and MCP have
+health checks. Daemons use `restart: unless-stopped`; the `test` profile is a
+non-daemon and uses `restart: no`. C++ services do not become ready until their
+startup connections and subscriptions have succeeded.
 
 ```bash
-# NATS
-curl -sf http://localhost:8222/healthz
-
-# DragonflyDB
+curl -fsS http://127.0.0.1:8222/healthz
 docker compose exec redis redis-cli ping
-
-# Workers (check NATS subscription)
-docker compose logs worker-1 | grep "subscribed"
-
-# MCP server
-docker compose exec mcp python -c "import labios_mcp; print('ok')"
+docker compose logs --tail=50 dispatcher manager
+docker compose logs --tail=50 worker-1 worker-2 worker-3
 ```
 
-## Scaling Workers
+## Persistence
 
-### Adding Workers to Docker Compose
+Named volumes survive `docker compose restart` and `docker compose down`:
 
-Add a new service block to `docker-compose.yml`:
+| Volume | Contents |
+|---|---|
+| `nats-data` | JetStream stream and consumer state |
+| `dragonfly-data` | DragonflyDB snapshots containing warehouse/catalog state |
+| `redis-kv-data` | Append-only state for the external Redis development fixture |
+| `worker-data` | File backend objects and the shared SQLite database |
+
+NATS uses `/data` as its JetStream store. DragonflyDB uses `/data` and writes a
+snapshot during graceful shutdown. Use the configured grace periods; do not
+force-kill plumbing services and infer durability from that.
+
+A simple restart check is:
+
+```bash
+docker compose exec redis redis-cli set labios:deployment:probe durable
+docker compose restart nats redis
+docker compose restart manager dispatcher worker-1 worker-2 worker-3 mcp
+docker compose up -d --wait
+docker compose exec redis redis-cli get labios:deployment:probe
+curl -fsS "http://127.0.0.1:8222/jsz?streams=true"
+```
+
+The dependent daemons are restarted because the current C++ connections do not
+provide a verified transparent plumbing-reconnect guarantee. The key should be
+`durable`, and the NATS response should include the `LABIOS_LABELS` stream after
+labels have been submitted.
+
+## Shared worker storage
+
+Every default worker mounts the same `worker-data` volume at `/labios/data`.
+This matches the worker registry's `Shared` file and SQLite attachment: an
+operation scheduled on any worker can see data written by another worker. The
+SQLite database is `/labios/data/labios.db`.
+
+The golden-path demo and the `[deployment]` data-path test issue at least 20
+round-robin operations over both backends and verify read-back:
+
+```bash
+docker compose run --rm --build test labios-data-path-test "[deployment]"
+```
+
+### Node-local storage is not the default
+
+Giving each worker a different volume changes the topology to node-local
+storage. Such workers must advertise distinct locality domains, and placement
+must enforce hard source/destination locality. The repository does not ship or
+validate that topology by default. Merely replacing `worker-data` with per-worker
+volumes would contradict the current `Shared` attachment and can produce
+not-found reads; do not do it.
+
+## Manual worker changes
+
+Worker IDs are numeric (`Config::worker_id` is an integer). A manually added
+single-host worker must use a unique positive integer and mount the same shared
+volume, for example:
 
 ```yaml
 worker-4:
-  build:
-    context: .
-    target: worker
-  command: ["labios-worker"]
+  build: { context: ., target: worker }
   environment:
     LABIOS_NATS_URL: nats://nats:4222
     LABIOS_REDIS_HOST: redis
-    LABIOS_WORKER_ID: worker-4
-    LABIOS_WORKER_SPEED: 8
-    LABIOS_WORKER_ENERGY: 2
-    LABIOS_WORKER_CAPACITY: 500GB
-    LABIOS_WORKER_TIER: 1
+    LABIOS_WORKER_ID: "4"
+    LABIOS_WORKER_TIER: "1"
+    LABIOS_WORKER_SPEED: "2"
+    LABIOS_WORKER_ENERGY: "2"
+    LABIOS_WORKER_CAPACITY: 50GB
+    LABIOS_WORKER_IDLE_TIMEOUT_MS: "86400000"
   volumes:
-    - worker-4-data:/labios/data
-  depends_on:
-    nats: { condition: service_healthy }
-    redis: { condition: service_healthy }
+    - worker-data:/labios/data
 ```
 
-Workers self-register with the Manager via NATS on startup. No dispatcher
-configuration changes needed.
+It also needs the same healthy-service dependencies as the existing workers.
+The elasticity code is a disabled research prototype; automatic provisioning
+is not part of the supported reference deployment.
 
-### Elastic Scaling
+## Security limitations
 
-When elastic scaling is enabled, the Manager automatically commissions and
-decommissions workers based on queue depth and energy budget:
+The Compose file deliberately remains easy to run locally, but its defaults are
+unsafe for production:
 
-```toml
-[elastic]
-enabled = true
-docker_socket = "/var/run/docker.sock"
-check_interval_s = 10
+- NATS has no account authentication, authorization, or TLS.
+- DragonflyDB and the external Redis fixture have no password, ACL, or TLS.
+- Monitoring and data-plane ports are exposed on localhost.
+- Images and dependencies are not configured here for production secret or
+  certificate rotation.
+- The MCP prototype has known direct-access/runtime-bypass limitations.
 
-[elastic.per_tier]
-tier_0_min = 1
-tier_0_max = 10
-tier_1_min = 0
-tier_1_max = 5
-tier_2_min = 0
-tier_2_max = 3
-```
+Binding to localhost reduces accidental network exposure but is not production
+hardening. A production design must add authentication, authorization, TLS,
+secret management, backups, monitoring, and recovery testing before exposing
+any endpoint.
 
-The Manager uses the Docker Engine API to launch and stop worker containers.
-Commission happens when queue depth exceeds a threshold. Decommission happens
-when workers are idle beyond the suspend timeout.
+## Multi-node and Kubernetes status
 
-## Environment Variables
-
-All configuration can be overridden via environment variables. These take
-precedence over the TOML config file.
-
-### Connection
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LABIOS_NATS_URL` | `nats://localhost:4222` | NATS server URL |
-| `LABIOS_REDIS_HOST` | `localhost` | DragonflyDB host |
-| `LABIOS_REDIS_PORT` | `6379` | DragonflyDB port |
-
-### Worker Identity
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LABIOS_WORKER_ID` | `worker-1` | Unique worker identifier |
-| `LABIOS_WORKER_SPEED` | `1` | Processing speed score (1-10) |
-| `LABIOS_WORKER_ENERGY` | `1` | Energy consumption score (1-10, lower is greener) |
-| `LABIOS_WORKER_CAPACITY` | `10GB` | Available storage capacity |
-| `LABIOS_WORKER_TIER` | `0` | Worker tier: 0=Databot, 1=Pipeline, 2=Agentic |
-
-### Dispatcher
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LABIOS_BATCH_SIZE` | `100` | Labels per batch before scheduling |
-| `LABIOS_BATCH_TIMEOUT_MS` | `50` | Max wait time before flushing an incomplete batch |
-| `LABIOS_SCHEDULER_POLICY` | `round-robin` | Scheduling policy: round-robin, random, constraint, minmax |
-| `LABIOS_SCHEDULER_PROFILE` | (none) | Path to weight profile TOML for constraint/minmax policies |
-| `LABIOS_AGGREGATION_ENABLED` | `true` | Enable shuffler aggregation of adjacent writes |
-| `LABIOS_REPLY_TIMEOUT_MS` | `5000` | Timeout waiting for worker reply |
-
-### Label and Cache
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LABIOS_LABEL_MIN_SIZE` | `64KB` | Minimum label data granularity |
-| `LABIOS_LABEL_MAX_SIZE` | `1MB` | Maximum label data granularity |
-| `LABIOS_CACHE_FLUSH_MS` | `1000` | Small-I/O cache flush interval |
-| `LABIOS_CACHE_READ_POLICY` | `miss` | Cache read policy: `miss` (read-through on miss) or `always` (always cache) |
-
-### POSIX Intercept
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LABIOS_INTERCEPT_PREFIX` | `/labios` | Path prefix for intercepted I/O (others pass through) |
-| `LABIOS_INTERCEPT_RETRY` | `3` | Connection retry count before falling back to real FS |
-
-## Multi-Node Deployment
-
-LABIOS components communicate exclusively through NATS and DragonflyDB. Any
-component can run on any host as long as it can reach these two services.
-
-### Example: 3-Node Cluster
-
-```
-Node 1 (control):  NATS, DragonflyDB, Dispatcher, Manager
-Node 2 (compute):  Worker-1, Worker-2, Worker-3
-Node 3 (compute):  Worker-4, Worker-5, Worker-6
-```
-
-On Node 1, start NATS and DragonflyDB. On Nodes 2 and 3, start workers with
-`LABIOS_NATS_URL=nats://node1:4222` and `LABIOS_REDIS_HOST=node1`.
-
-### Kubernetes
-
-LABIOS does not yet ship Helm charts but the architecture maps directly to K8s:
-
-- NATS: use the [nats-operator](https://github.com/nats-io/nats-operator) or NATS Helm chart
-- DragonflyDB: use the [Dragonfly operator](https://github.com/dragonflydb/dragonfly-operator)
-- Dispatcher: single-replica Deployment
-- Manager: single-replica Deployment (single process; leader election is not yet implemented, so run one replica)
-- Workers: StatefulSet with per-pod PVCs for data volumes
-- MCP server: sidecar in the agent pod or standalone Deployment
-
-## Volumes and Data Layout
-
-Each worker mounts a persistent volume at `/labios/data`. Files written through
-`file://` URIs land here. The PosixBackend maps URI paths to subdirectories
-under this mount.
-
-```
-/labios/data/
-├── hello.dat         # from file:///data/hello.dat
-├── output/
-│   └── results.bin   # from file:///data/output/results.bin
-└── .labios/
-    └── sqlite/       # SQLite backend databases
-```
-
-The warehouse (DragonflyDB) stores data in transit under `labios:data:{id}`
-keys. This is ephemeral staging, not permanent storage. The catalog stores
-metadata under `labios:catalog:*` keys.
-
-## Monitoring
-
-### NATS Monitoring
-
-NATS exposes HTTP monitoring on port 8222:
-
-```bash
-curl http://localhost:8222/connz    # Active connections
-curl http://localhost:8222/subsz    # Subscriptions
-curl http://localhost:8222/jsz      # JetStream stats
-```
-
-### DragonflyDB Monitoring
-
-```bash
-docker compose exec redis redis-cli info memory
-docker compose exec redis redis-cli info stats
-docker compose exec redis redis-cli dbsize
-```
-
-### LABIOS Telemetry
-
-The dispatcher publishes telemetry to NATS subject `labios.telemetry`. Use
-the observability API to query runtime metrics:
-
-```python
-import labios
-client = labios.connect_to("nats://localhost:4222", "localhost", 6379)
-print(client.observe("observe://system/metrics"))
-print(client.observe("observe://system/queue_depth"))
-print(client.observe("observe://system/worker_scores"))
-```
+No multi-node Compose, Kubernetes, Helm, or operator deployment is currently
+shipped or validated. Multi-node work additionally requires truthful locality,
+shared/external storage choices, durable plumbing design, authentication/TLS,
+and high-availability decisions. Treat it as future work, not as a deployment
+mode implied by the component architecture.

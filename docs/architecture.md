@@ -4,7 +4,7 @@ LABIOS is the first agent I/O runtime. It converts all I/O into self-describing
 labels that flow through a distributed pipeline of shufflers, schedulers, and
 workers. Each component enriches the label as it passes through. The label is the
 information highway, the state machine, and the audit trail. US Patent
-11,630,834 B2. NSF Award #2313154. HPDC'19 Best Paper Nominee.
+11,630,834 B2. NSF Award #2313154. HPDC'19 Karsten Schwan Best Paper Award.
 
 This document describes the intended architecture. Some elements below are
 component-level or planned rather than verified end to end. Known deviations of
@@ -232,8 +232,8 @@ client.workspace_grant("shared-context", other_agent_id);
 ### Layer 8: Observability
 
 ```cpp
-std::string json = client.observe("observe://workers/scores");
-std::string health = client.observe("observe://system/health");
+std::string json = client.observe("workers/scores");
+std::string health = client.observe("system/health");
 ```
 
 Seven query endpoints: `queue/depth`, `workers/scores`, `workers/count`,
@@ -705,27 +705,19 @@ detect dependencies without touching the filesystem.
 
 ### Docker Compose (Default)
 
+```bash
+docker compose up -d --build --wait
+docker compose exec dispatcher labios-demo
+docker compose --profile test down -v --remove-orphans
 ```
-docker compose up -d       # Full system on localhost
-docker compose down -v     # Teardown with volume cleanup
-```
 
-Eight services, all health-checked:
-
-| Service      | Image                                          | Ports          | Role                      |
-|--------------|------------------------------------------------|----------------|---------------------------|
-| nats         | nats:2.10-alpine                               | 4222, 8222     | Message broker (JetStream enabled; runtime uses core NATS) |
-| redis        | docker.dragonflydb.io/dragonflydb/dragonfly    | 6379           | Warehouse + metadata      |
-| dispatcher   | labios-dispatcher (built)                      | internal       | Label routing             |
-| worker-1     | labios-worker (built)                          | internal       | speed=5, energy=1, 10GB   |
-| worker-2     | labios-worker (built)                          | internal       | speed=3, energy=3, 50GB   |
-| worker-3     | labios-worker (built)                          | internal       | speed=1, energy=5, 200GB  |
-| manager      | labios-manager (built)                         | internal       | Worker registry           |
-| test         | labios-test (built)                            | internal       | Smoke + integration tests |
-
-Each worker has an isolated data volume (`/labios/data`). The multi-stage
-Dockerfile builds all binaries in a single builder stage, then copies each
-service binary into a minimal Debian runtime image.
+The default is a single-host reference deployment. It includes durable NATS
+JetStream and DragonflyDB plumbing, a separate external Redis fixture, manager,
+dispatcher, three workers, the MCP prototype, and a profiled one-shot test
+image. Every worker mounts one shared data volume because its file and SQLite
+registry attachments are `Shared`. See [deployment.md](deployment.md) for the
+authoritative topology, health checks, persistence, security limitations, and
+the unsupported status of node-local/multi-node deployment.
 
 ### Native Build
 

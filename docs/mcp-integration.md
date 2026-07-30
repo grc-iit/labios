@@ -85,15 +85,15 @@ Supported queries:
 | Query | Returns |
 |-------|---------|
 | `system/health` | NATS and Redis connection status, worker count |
-| `system/queue_depth` | Labels waiting in the dispatch queue |
-| `system/worker_scores` | Current scores for all registered workers |
-| `system/channels` | Active channel names and subscriber counts |
-| `system/workspaces` | Active workspace names and key counts |
-| `system/config` | Current runtime configuration |
+| `queue/depth` | Labels waiting in the dispatch queue |
+| `workers/scores` | Current scores for all registered workers |
+| `channels/list` | Active channel names and subscriber counts |
+| `workspaces/list` | Active workspace names and key counts |
+| `config/current` | Current runtime configuration |
 
 Example:
 ```json
-labios_observe(query="system/worker_scores")
+labios_observe(query="workers/scores")
 → {
     "workers": [
         {"id": "worker-1", "speed": 5, "energy": 1, "score": 0.82},

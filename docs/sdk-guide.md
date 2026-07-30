@@ -285,43 +285,30 @@ Query the runtime state without side effects. The `observe()` method creates
 an OBSERVE-type label that the dispatcher handles inline (no shuffling or
 scheduling).
 
+`Client::observe()` adds the `observe://` scheme; pass only a registered route:
+
 ```cpp
-// System health
-auto health = client.observe("observe://system/health");
-
-// Queue depth
-auto depth = client.observe("observe://system/queue_depth");
-
-// Worker scores
-auto scores = client.observe("observe://system/worker_scores");
-
-// Active channels
-auto channels = client.observe("observe://system/channels");
-
-// Active workspaces
-auto workspaces = client.observe("observe://system/workspaces");
-
-// Current configuration
-auto config = client.observe("observe://system/config");
-
-// Data location for a file
-auto loc = client.observe("observe://data/location?path=/data/output.bin");
-
-// Telemetry snapshot
-auto metrics = client.observe("observe://system/metrics");
+auto health = client.observe("system/health");
+auto depth = client.observe("queue/depth");
+auto scores = client.observe("workers/scores");
+auto count = client.observe("workers/count");
+auto channels = client.observe("channels/list");
+auto workspaces = client.observe("workspaces/list");
+auto config = client.observe("config/current");
+auto loc = client.observe("data/location?path=/data/output.bin");
 ```
 
 ```python
-health = client.observe("observe://system/health")
-scores = client.observe("observe://system/worker_scores")
+health = client.observe("system/health")
+scores = client.observe("workers/scores")
 ```
 
 Returns a JSON string with the query results.
 
-## Runtime Configuration
+## Local Client Configuration
 
-Modify runtime parameters without restarting. Changes take effect on the next
-label batch.
+`Client::set_config()` changes only the current client's process-local `Config`.
+It does not reconfigure the dispatcher, workers, manager, or other clients.
 
 ```cpp
 client.set_config("batch_size", "200");

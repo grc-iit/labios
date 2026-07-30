@@ -1,227 +1,192 @@
 # LABIOS Configuration Reference
 
-LABIOS loads configuration from a TOML file, then applies environment variable
-overrides. Runtime parameters can also be changed dynamically via the
-`config.set()` API.
+LABIOS constructs a process-local `Config` from compiled defaults, an optional
+TOML file, and implemented environment overrides (environment wins). Each
+service reads `LABIOS_CONFIG_PATH` to choose its TOML file.
 
-Precedence (highest to lowest):
-1. `client.set_config()` at runtime
-2. Environment variables (`LABIOS_*`)
-3. TOML config file (`conf/labios.toml`)
-4. Compiled defaults
+`Client::set_config()` changes only that client's in-process `Config` object. It
+does **not** update dispatcher, manager, worker, or other client configuration,
+and it is not a distributed control-plane API. Restart a service with a TOML or
+environment change to configure that service.
 
-## TOML Configuration File
+## Reference TOML shape
 
-The default config file is `conf/labios.toml`. Pass a custom path when
-connecting:
-
-```cpp
-auto cfg = labios::load_config("/path/to/custom.toml");
-```
-
-```python
-client = labios.connect("/path/to/custom.toml")
-```
-
-### Complete TOML Reference
+The checked-in defaults are in `conf/labios.toml`. These are the keys currently
+read by `load_config`:
 
 ```toml
-# ─── Connection ──────────────────────────────────────────────
 [nats]
-url = "nats://localhost:4222"          # NATS server URL
-max_deliver = 5                         # bounded JetStream redeliveries
-ack_wait_ms = 10000                     # acknowledgement deadline
+url = "nats://localhost:4222"
+max_deliver = 5
+ack_wait_ms = 10000
 
 [redis]
-host = "localhost"                      # DragonflyDB host
-port = 6379                             # DragonflyDB port
+host = "localhost"
+port = 6379
 
-# ─── Worker Identity ────────────────────────────────────────
 [worker]
-id = "worker-1"                         # Unique worker ID
-speed = 1                               # Processing speed score (1-10)
-energy = 1                              # Energy consumption (1-10, lower = greener)
-capacity = "10GB"                       # Available storage capacity
+id = 0                    # integer, not a name such as "worker-4"
+speed = 1
+energy = 1
+tier = 0                  # 0 Databot, 1 Pipeline, 2 Agentic metadata
+capacity = "1GB"
 
-[worker.tier]
-level = 0                               # 0=Databot, 1=Pipeline, 2=Agentic
+[manager]
+max_worker_capacity = "1024GB"
 
-# ─── Label Granularity ──────────────────────────────────────
+[client]
+reply_timeout_ms = 30000
+
 [label]
-min_size = "64KB"                       # Minimum label data chunk
-max_size = "1MB"                        # Maximum label data chunk
+min_size = "64KB"
+max_size = "1MB"
 
-# ─── Small-I/O Cache ────────────────────────────────────────
 [cache]
-flush_interval_ms = 1000               # Timer-based flush interval
-read_policy = "miss"                    # "miss" = read-through on miss
-                                        # "always" = cache every read result
+flush_interval_ms = 500
+default_read_policy = "read-through"
 
-# ─── POSIX Intercept ────────────────────────────────────────
 [intercept]
-prefix = "/labios"                      # Paths under this prefix get intercepted
-retry_count = 3                         # Connection retries before FS fallback
+prefixes = ["/labios"]
 
-# ─── Dispatcher ──────────────────────────────────────────────
 [dispatcher]
-batch_size = 100                        # Labels per scheduling batch
-batch_timeout_ms = 50                   # Max wait before flushing partial batch
-aggregation_enabled = true              # Enable write aggregation in shuffler
-reply_timeout_ms = 5000                 # Timeout waiting for worker reply
+batch_size = 100
+batch_timeout_ms = 50
+aggregation_enabled = true
+dep_granularity = "per-file"
 
-# ─── Scheduler ───────────────────────────────────────────────
 [scheduler]
-policy = "round-robin"                  # round-robin | random | constraint | minmax
-profile_path = ""                       # Path to weight profile TOML (constraint/minmax)
+policy = "round-robin"    # round-robin | random | constraint | minmax
+profile_path = ""
+worker_refresh_ms = 5000
 
-# ─── Elastic Scaling ────────────────────────────────────────
 [elastic]
-enabled = false                         # Enable auto-scaling
-docker_socket = "/var/run/docker.sock"  # Docker Engine API socket
-check_interval_s = 10                   # How often to evaluate scaling decisions
-idle_suspend_timeout_s = 60             # Idle time before suspending a worker
-energy_budget = 0                       # Max total energy score (0 = unlimited)
-
-[elastic.per_tier]
-tier_0_min = 1                          # Minimum Databot workers
-tier_0_max = 10                         # Maximum Databot workers
-tier_1_min = 0                          # Minimum Pipeline workers
-tier_1_max = 5                          # Maximum Pipeline workers
-tier_2_min = 0                          # Minimum Agentic workers
-tier_2_max = 3                          # Maximum Agentic workers
+enabled = false
+min_workers = 1
+max_workers = 10
+pressure_threshold = 5
+worker_idle_timeout_ms = 30000
+decommission_timeout_ms = 60000
+commission_cooldown_ms = 5000
+eval_interval_ms = 2000
+docker_socket = "/var/run/docker.sock"
+docker_image = ""
+docker_network = ""
+elastic_worker_speed = 3
+elastic_worker_energy = 3
+elastic_worker_capacity = "50GB"
+min_databot_workers = 1
+max_databot_workers = 10
+min_pipeline_workers = 0
+max_pipeline_workers = 5
+min_agentic_workers = 0
+max_agentic_workers = 2
 ```
 
-### Size Strings
+The elasticity implementation is disabled in the supported reference
+deployment and remains a research prototype.
 
-Size fields accept human-readable strings: `64KB`, `1MB`, `2GB`, `10TB`. The
-parser is case-insensitive. Plain integers are treated as bytes.
+Size strings accept `B`, `KB`, `MB`, and `GB` suffixes, case-insensitively.
+Plain numbers are bytes. (`TB` is not currently parsed as a special suffix.)
 
-## Weight Profiles
+## Implemented environment overrides
 
-Weight profiles control how the constraint and MinMax schedulers score workers.
-Four profiles ship with LABIOS in `conf/profiles/`:
+Only the names below are read by the current configuration loader; there is no
+generic dots-to-underscores mapping.
 
-### `low_latency.toml`
+| Area | Environment variables |
+|---|---|
+| Config file | `LABIOS_CONFIG_PATH` |
+| NATS | `LABIOS_NATS_URL`, `LABIOS_NATS_MAX_DELIVER`, `LABIOS_NATS_ACK_WAIT_MS` |
+| DragonflyDB | `LABIOS_REDIS_HOST`, `LABIOS_REDIS_PORT` |
+| Worker | `LABIOS_WORKER_ID`, `LABIOS_WORKER_SPEED`, `LABIOS_WORKER_ENERGY`, `LABIOS_WORKER_TIER`, `LABIOS_WORKER_CAPACITY`, `LABIOS_WORKER_IDLE_TIMEOUT_MS` |
+| Manager | `LABIOS_MAX_WORKER_CAPACITY` |
+| Label/cache | `LABIOS_LABEL_MIN_SIZE`, `LABIOS_LABEL_MAX_SIZE`, `LABIOS_CACHE_FLUSH_MS`, `LABIOS_CACHE_READ_POLICY` |
+| POSIX intercept | `LABIOS_INTERCEPT_PREFIXES` (comma-separated) |
+| Client | `LABIOS_REPLY_TIMEOUT_MS` |
+| Dispatcher | `LABIOS_DISPATCHER_BATCH_SIZE`, `LABIOS_DISPATCHER_BATCH_TIMEOUT_MS`, `LABIOS_DISPATCHER_AGGREGATION`, `LABIOS_DISPATCHER_DEP_GRANULARITY` |
+| Scheduler | `LABIOS_SCHEDULER_POLICY`, `LABIOS_SCHEDULER_PROFILE`, `LABIOS_SCHEDULER_WORKER_REFRESH_MS` |
+| Elastic prototype | `LABIOS_ELASTIC_ENABLED`, `LABIOS_ELASTIC_MIN_WORKERS`, `LABIOS_ELASTIC_MAX_WORKERS`, `LABIOS_DOCKER_SOCKET`, `LABIOS_DOCKER_IMAGE`, `LABIOS_DOCKER_NETWORK`, `LABIOS_ELASTIC_WORKER_SPEED`, `LABIOS_ELASTIC_WORKER_ENERGY`, `LABIOS_ELASTIC_WORKER_CAPACITY` |
 
-Prioritizes availability and low queue load for latency-sensitive workloads.
+The optional external user-Redis adapter is selected by worker-service
+variables `LABIOS_KV_HOST` and `LABIOS_KV_PORT`. These are backend construction
+settings, not fields in `Config`, and must never point at LABIOS's internal
+DragonflyDB warehouse.
 
-```toml
-[weights]
-availability = 0.50
-load = 0.35
-speed = 0.15
+Boolean dispatcher aggregation accepts `true` or `1`; elastic enabled accepts
+`true` or `1`. Invalid integer environment values fall back to the prior value.
+
+## Weight profiles
+
+`conf/profiles/` contains `low_latency.toml`, `high_bandwidth.toml`,
+`energy_savings.toml`, and `agentic.toml`. The current C++ loader consumes these
+weights:
+
+- `availability`
+- `capacity`
+- `load`
+- `speed`
+- `energy`
+- `tier`
+
+A profile may contain research fields such as `skills`, `compute`, or
+`reasoning`, but the current `WeightProfile` loader does not apply them. Set a
+profile for a service before startup, for example:
+
+```bash
+LABIOS_SCHEDULER_POLICY=constraint \
+LABIOS_SCHEDULER_PROFILE=/etc/labios/profiles/low_latency.toml \
+docker compose up -d --build --wait
 ```
 
-### `high_bandwidth.toml`
+## Local runtime setters
 
-Prioritizes raw processing speed for throughput-bound workloads.
+The following keys are accepted by `Config::set`, and therefore by
+`Client::set_config`:
 
-```toml
-[weights]
-capacity = 0.15
-load = 0.15
-speed = 0.70
-```
+- `batch_size`
+- `batch_timeout_ms`
+- `scheduler_policy`
+- `aggregation_enabled`
+- `reply_timeout_ms`
+- `cache_flush_interval_ms`
+- `cache_read_policy`
 
-### `energy_savings.toml`
-
-Prioritizes energy efficiency for green computing and cost reduction.
-
-```toml
-[weights]
-capacity = 0.15
-load = 0.20
-speed = 0.15
-energy = 0.50
-```
-
-### `agentic.toml`
-
-Balanced profile for agent workloads with tier, skills, and reasoning weights.
-
-```toml
-[weights]
-availability = 0.30
-capacity = 0.10
-load = 0.10
-speed = 0.10
-tier = 0.20
-skills = 0.10
-reasoning = 0.10
-```
-
-### Custom Profiles
-
-Create a new TOML file with a `[weights]` section. All weight values must
-sum to 1.0. Available weight dimensions:
-
-| Weight | Description |
-|--------|-------------|
-| `availability` | Worker is online and accepting labels |
-| `capacity` | Free storage space relative to total |
-| `load` | Inverse of current queue depth |
-| `speed` | Processing speed score |
-| `energy` | Inverse energy consumption (lower energy = higher score) |
-| `tier` | Worker tier match (Databot, Pipeline, Agentic) |
-| `skills` | Worker skill coverage for agentic operations |
-| `reasoning` | Worker reasoning capability score |
-| `compute` | Raw compute capacity |
-
-## Runtime Configuration
-
-The `config.set()` API changes parameters without restarting. Changes apply
-to the next label batch processed by the dispatcher.
-
-Settable parameters:
-
-| Key | Type | Description |
-|-----|------|-------------|
-| `batch_size` | integer | Labels per scheduling batch |
-| `batch_timeout_ms` | integer | Batch flush timeout |
-| `scheduler_policy` | string | Scheduling policy name |
-| `aggregation_enabled` | bool | Shuffler aggregation toggle |
-| `reply_timeout_ms` | integer | Worker reply timeout |
-| `cache_flush_interval_ms` | integer | Cache flush timer |
-| `cache_read_policy` | string | Cache read behavior |
+Example:
 
 ```cpp
-client.set_config("scheduler_policy", "constraint");
-client.set_config("batch_size", "200");
+bool changed = client.set_config("reply_timeout_ms", "45000");
 ```
 
-```python
-client.set_config("scheduler_policy", "constraint")
+This changes local client state only. In particular, setting
+`scheduler_policy` on a client does not reconfigure the independently running
+dispatcher.
+
+## Observe query routes
+
+`Client::observe()` prepends the `observe://` scheme. Pass the route without the
+scheme:
+
+```cpp
+auto health = client.observe("system/health");
+auto depth = client.observe("queue/depth");
+auto scores = client.observe("workers/scores");
+auto count = client.observe("workers/count");
+auto channels = client.observe("channels/list");
+auto workspaces = client.observe("workspaces/list");
+auto config = client.observe("config/current");
+auto location = client.observe("data/location");
 ```
 
-## Environment Variable Reference
+These are the registered route names. Forms such as
+`observe://system/queue_depth`, passed to `Client::observe`, are incorrect
+because the client would prepend a second scheme and the route itself does not
+match.
 
-Every config field has a corresponding environment variable. Variables use the
-`LABIOS_` prefix with underscores replacing dots.
+## Completion timeout semantics
 
-| TOML Path | Environment Variable | Default |
-|-----------|---------------------|---------|
-| `nats.url` | `LABIOS_NATS_URL` | `nats://localhost:4222` |
-| `nats.max_deliver` | `LABIOS_NATS_MAX_DELIVER` | `5` |
-| `nats.ack_wait_ms` | `LABIOS_NATS_ACK_WAIT_MS` | `10000` |
-| `redis.host` | `LABIOS_REDIS_HOST` | `localhost` |
-| `redis.port` | `LABIOS_REDIS_PORT` | `6379` |
-| `worker.id` | `LABIOS_WORKER_ID` | `worker-1` |
-| `worker.speed` | `LABIOS_WORKER_SPEED` | `1` |
-| `worker.energy` | `LABIOS_WORKER_ENERGY` | `1` |
-| `worker.capacity` | `LABIOS_WORKER_CAPACITY` | `10GB` |
-| `worker.tier.level` | `LABIOS_WORKER_TIER` | `0` |
-| `label.min_size` | `LABIOS_LABEL_MIN_SIZE` | `64KB` |
-| `label.max_size` | `LABIOS_LABEL_MAX_SIZE` | `1MB` |
-| `cache.flush_interval_ms` | `LABIOS_CACHE_FLUSH_MS` | `1000` |
-| `cache.read_policy` | `LABIOS_CACHE_READ_POLICY` | `miss` |
-| `intercept.prefix` | `LABIOS_INTERCEPT_PREFIX` | `/labios` |
-| `intercept.retry_count` | `LABIOS_INTERCEPT_RETRY` | `3` |
-| `dispatcher.batch_size` | `LABIOS_BATCH_SIZE` | `100` |
-| `dispatcher.batch_timeout_ms` | `LABIOS_BATCH_TIMEOUT_MS` | `50` |
-| `dispatcher.aggregation_enabled` | `LABIOS_AGGREGATION_ENABLED` | `true` |
-| `dispatcher.reply_timeout_ms` | `LABIOS_REPLY_TIMEOUT_MS` | `5000` |
-| `scheduler.policy` | `LABIOS_SCHEDULER_POLICY` | `round-robin` |
-| `scheduler.profile_path` | `LABIOS_SCHEDULER_PROFILE` | (none) |
-| `elastic.enabled` | `LABIOS_ELASTIC_ENABLED` | `false` |
-| `elastic.docker_socket` | `LABIOS_ELASTIC_DOCKER_SOCKET` | `/var/run/docker.sock` |
-| `elastic.check_interval_s` | `LABIOS_ELASTIC_CHECK_INTERVAL_S` | `10` |
+`reply_timeout_ms` bounds synchronous reply waiting. `CompletionState::Timeout`
+is distinct from failure and cancellation. C++ synchronous `write`, `read`, and
+`wait` surface a typed `CompletionError` whose `state()` is `Timeout` and whose
+message explains that the label remains active. Call `test()` or `wait_for()` to
+observe it later, or call `cancel(label_id)` explicitly while cancellation is
+still legal. A timeout never implies cancellation or rollback.

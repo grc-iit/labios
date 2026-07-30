@@ -2,62 +2,54 @@
 #include <labios/config.h>
 
 #include <algorithm>
-#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
-#include <numeric>
 #include <string>
 #include <vector>
 
 int main() {
-    const char* config_path = std::getenv("LABIOS_CONFIG_PATH");
-    auto cfg = labios::load_config(config_path ? config_path : "conf/labios.toml");
-    auto client = labios::connect(cfg);
+    try {
+        const char* config_path = std::getenv("LABIOS_CONFIG_PATH");
+        auto cfg = labios::load_config(config_path ? config_path : "conf/labios.toml");
+        auto client = labios::connect(cfg);
 
-    constexpr uint64_t label_size = 1024 * 1024;
-    constexpr int num_labels = 100;
-    constexpr uint64_t total_size = label_size * num_labels;
+        // More than twenty independent round-robin writes exercise both
+        // shared worker backends. Read-back may be scheduled to any worker.
+        constexpr int operation_count = 24;
+        constexpr size_t payload_size = 4096;
+        std::vector<std::vector<std::byte>> expected;
+        std::vector<std::string> uris;
+        expected.reserve(operation_count);
+        uris.reserve(operation_count);
 
-    std::vector<std::byte> label_data(label_size);
-    std::iota(reinterpret_cast<uint8_t*>(label_data.data()),
-              reinterpret_cast<uint8_t*>(label_data.data()) + label_size,
-              static_cast<uint8_t>(0));
-
-    // WRITE
-    auto write_start = std::chrono::steady_clock::now();
-    for (int i = 0; i < num_labels; ++i) {
-        std::string path = "/demo/chunk_" + std::to_string(i) + ".bin";
-        client.write(path, label_data);
-    }
-    auto write_end = std::chrono::steady_clock::now();
-    double write_sec = std::chrono::duration<double>(write_end - write_start).count();
-    double write_mbps = (static_cast<double>(total_size) / (1024.0 * 1024.0)) / write_sec;
-
-    std::cout << "Written: " << (total_size / (1024 * 1024)) << "MB ("
-              << num_labels << " labels) in " << write_sec << "s ("
-              << write_mbps << " MB/s)\n";
-
-    // READ + verify
-    auto read_start = std::chrono::steady_clock::now();
-    bool verify_ok = true;
-    for (int i = 0; i < num_labels; ++i) {
-        std::string path = "/demo/chunk_" + std::to_string(i) + ".bin";
-        auto result = client.read(path, 0, label_size);
-        if (result.size() != label_size ||
-            !std::equal(result.begin(), result.end(), label_data.begin())) {
-            verify_ok = false;
-            std::cerr << "Mismatch at chunk " << i << "\n";
+        for (int i = 0; i < operation_count; ++i) {
+            std::vector<std::byte> payload(payload_size, static_cast<std::byte>(i));
+            const auto uri = i % 2 == 0
+                ? "file:///demo/golden-" + std::to_string(i) + ".bin"
+                : "sqlite:///demo/golden-" + std::to_string(i);
+            client.write_to(uri, payload);
+            uris.push_back(uri);
+            expected.push_back(std::move(payload));
         }
+
+        for (int i = 0; i < operation_count; ++i) {
+            const auto actual = client.read_from(uris[i], payload_size);
+            if (actual != expected[i]) {
+                std::cerr << "LABIOS demo: read-back mismatch for " << uris[i] << '\n';
+                return 1;
+            }
+        }
+
+        std::cout << "LABIOS demo: verified " << operation_count
+                  << " writes and read-backs across shared file and SQLite backends\n";
+        return 0;
+    } catch (const labios::CompletionError& ex) {
+        std::cerr << "LABIOS demo: completion error for label " << ex.label_id()
+                  << ": " << ex.what() << '\n';
+        return 1;
+    } catch (const std::exception& ex) {
+        std::cerr << "LABIOS demo: " << ex.what() << '\n';
+        return 1;
     }
-    auto read_end = std::chrono::steady_clock::now();
-    double read_sec = std::chrono::duration<double>(read_end - read_start).count();
-    double read_mbps = (static_cast<double>(total_size) / (1024.0 * 1024.0)) / read_sec;
-
-    std::cout << "Read:    " << (total_size / (1024 * 1024)) << "MB ("
-              << num_labels << " labels) in " << read_sec << "s ("
-              << read_mbps << " MB/s)\n";
-    std::cout << "Verify:  " << (verify_ok ? "OK (all bytes match)" : "FAILED") << "\n";
-
-    return verify_ok ? 0 : 1;
 }

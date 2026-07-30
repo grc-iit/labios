@@ -8,7 +8,7 @@ Contributions are welcome from team members and collaborators.
 ```bash
 git clone https://github.com/grc-iit/labios.git
 cd labios
-docker compose up -d        # Full stack in under 5 minutes
+docker compose up -d --build --wait
 ```
 
 See [docs/getting-started.md](docs/getting-started.md) for the full walkthrough.
@@ -17,8 +17,8 @@ See [docs/getting-started.md](docs/getting-started.md) for the full walkthrough.
 
 ```bash
 # Docker (recommended)
-docker compose exec test bash
-./run_tests.sh
+docker compose run --rm --build test
+docker compose run --rm --build test labios-data-path-test "[deployment]"
 
 # Native
 cmake --preset dev

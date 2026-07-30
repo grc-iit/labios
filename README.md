@@ -4,7 +4,7 @@ LABIOS converts all I/O into self-describing labels that flow through a distribu
 runtime of shufflers, schedulers, and workers. Each component enriches the label
 as it passes. Labels are the information highway of the system.
 
-**US Patent 11,630,834 B2 | NSF Award #2313154 | HPDC'19 Best Paper Nominee**
+**US Patent 11,630,834 B2 | NSF Award #2313154 | HPDC'19 Karsten Schwan Best Paper Award**
 
 ## What Is It
 
