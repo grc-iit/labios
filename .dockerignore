@@ -4,3 +4,5 @@ build/
 .planning/
 .claude/
 docs/
+tests/benchmark/artifacts/
+**/__pycache__/

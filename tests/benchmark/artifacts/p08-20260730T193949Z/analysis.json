@@ -1,0 +1,263 @@
+{
+  "invalid_reason": "sequential stateful repetitions are not independent; service/queue columns are scheduling EWMAs and untimed verification trains traces",
+  "method": {
+    "alpha": 0.05,
+    "bootstrap": "10000 independent resamples, seed 2101",
+    "effect": "Cliff's delta",
+    "multiplicity": "Holm correction across three profiles",
+    "primary_unit": "per-repetition median completion_us",
+    "test": "two-sided Mann-Whitney U with tie correction and continuity correction"
+  },
+  "profiles": {
+    "large-sequential": {
+      "primary_comparison": {
+        "classification": "null-or-inconclusive",
+        "cliffs_delta_informed_vs_ablation": -0.115,
+        "median_difference_us_ci95": [
+          -107433.5,
+          69229.75
+        ],
+        "median_ratio_ci95": [
+          0.7122099823419565,
+          1.2453522026084296
+        ],
+        "observed_median_difference_us": -20468.0,
+        "observed_median_ratio": 0.936648495564265,
+        "p_holm": 0.7179711101080105,
+        "p_unadjusted": 0.5427717015170069,
+        "u": 177.0
+      },
+      "raw_label_distributions": {
+        "ablation": {
+          "completion_us": {
+            "mean_us": 337472.7125,
+            "median_us": 320781.5,
+            "n": 80,
+            "p95_us": 535856
+          },
+          "submission_us": {
+            "mean_us": 5100.225,
+            "median_us": 4835.5,
+            "n": 80,
+            "p95_us": 7048
+          }
+        },
+        "baseline": {
+          "completion_us": {
+            "mean_us": 342832.55,
+            "median_us": 342138.5,
+            "n": 80,
+            "p95_us": 541263
+          },
+          "submission_us": {
+            "mean_us": 5915.1375,
+            "median_us": 5187.5,
+            "n": 80,
+            "p95_us": 10067
+          }
+        },
+        "informed": {
+          "completion_us": {
+            "mean_us": 313731.6375,
+            "median_us": 298529.5,
+            "n": 80,
+            "p95_us": 464523
+          },
+          "submission_us": {
+            "mean_us": 4918.6125,
+            "median_us": 4707.0,
+            "n": 80,
+            "p95_us": 6404
+          }
+        }
+      },
+      "repetition_distributions": {
+        "ablation": {
+          "mean_us": 338056.95,
+          "median_us": 323086.25,
+          "n": 20,
+          "p95_us": 533054.0
+        },
+        "baseline": {
+          "mean_us": 328077.15,
+          "median_us": 334781.75,
+          "n": 20,
+          "p95_us": 481008.5
+        },
+        "informed": {
+          "mean_us": 314037.975,
+          "median_us": 302618.25,
+          "n": 20,
+          "p95_us": 457531.0
+        }
+      }
+    },
+    "mixed-pipeline": {
+      "primary_comparison": {
+        "classification": "null-or-inconclusive",
+        "cliffs_delta_informed_vs_ablation": -0.22,
+        "median_difference_us_ci95": [
+          -138774.0,
+          52252.0
+        ],
+        "median_ratio_ci95": [
+          0.6701422142884572,
+          1.1961197525731315
+        ],
+        "observed_median_difference_us": -77093.5,
+        "observed_median_ratio": 0.7973618014503915,
+        "p_holm": 0.7179711101080105,
+        "p_unadjusted": 0.23932370336933684,
+        "u": 156.0
+      },
+      "raw_label_distributions": {
+        "ablation": {
+          "completion_us": {
+            "mean_us": 350453.25,
+            "median_us": 380449.0,
+            "n": 20,
+            "p95_us": 493239
+          },
+          "submission_us": {
+            "mean_us": 1090.35,
+            "median_us": 1046.5,
+            "n": 20,
+            "p95_us": 1293
+          }
+        },
+        "baseline": {
+          "completion_us": {
+            "mean_us": 335553.05,
+            "median_us": 340071.0,
+            "n": 20,
+            "p95_us": 498068
+          },
+          "submission_us": {
+            "mean_us": 1097.15,
+            "median_us": 1048.0,
+            "n": 20,
+            "p95_us": 1372
+          }
+        },
+        "informed": {
+          "completion_us": {
+            "mean_us": 313761.7,
+            "median_us": 303355.5,
+            "n": 20,
+            "p95_us": 468725
+          },
+          "submission_us": {
+            "mean_us": 1013.7,
+            "median_us": 1004.5,
+            "n": 20,
+            "p95_us": 1211
+          }
+        }
+      },
+      "repetition_distributions": {
+        "ablation": {
+          "mean_us": 350453.25,
+          "median_us": 380449.0,
+          "n": 20,
+          "p95_us": 493239
+        },
+        "baseline": {
+          "mean_us": 335553.05,
+          "median_us": 340071.0,
+          "n": 20,
+          "p95_us": 498068
+        },
+        "informed": {
+          "mean_us": 313761.7,
+          "median_us": 303355.5,
+          "n": 20,
+          "p95_us": 468725
+        }
+      }
+    },
+    "small-hot-metadata": {
+      "primary_comparison": {
+        "classification": "null-or-inconclusive",
+        "cliffs_delta_informed_vs_ablation": -0.21,
+        "median_difference_us_ci95": [
+          -128624.0,
+          52083.75
+        ],
+        "median_ratio_ci95": [
+          0.7226963546411097,
+          1.1577887605974555
+        ],
+        "observed_median_difference_us": -48450.25,
+        "observed_median_ratio": 0.8749288492093711,
+        "p_holm": 0.7179711101080105,
+        "p_unadjusted": 0.26161646787857734,
+        "u": 158.0
+      },
+      "raw_label_distributions": {
+        "ablation": {
+          "completion_us": {
+            "mean_us": 395472.21875,
+            "median_us": 387733.5,
+            "n": 320,
+            "p95_us": 575021
+          },
+          "submission_us": {
+            "mean_us": 1394.96875,
+            "median_us": 1302.0,
+            "n": 320,
+            "p95_us": 1844
+          }
+        },
+        "baseline": {
+          "completion_us": {
+            "mean_us": 433525.94375,
+            "median_us": 431089.5,
+            "n": 320,
+            "p95_us": 710405
+          },
+          "submission_us": {
+            "mean_us": 1440.29375,
+            "median_us": 1362.0,
+            "n": 320,
+            "p95_us": 1829
+          }
+        },
+        "informed": {
+          "completion_us": {
+            "mean_us": 359495.8375,
+            "median_us": 349056.0,
+            "n": 320,
+            "p95_us": 486623
+          },
+          "submission_us": {
+            "mean_us": 1345.153125,
+            "median_us": 1272.5,
+            "n": 320,
+            "p95_us": 1797
+          }
+        }
+      },
+      "repetition_distributions": {
+        "ablation": {
+          "mean_us": 392949.475,
+          "median_us": 387381.5,
+          "n": 20,
+          "p95_us": 564986.5
+        },
+        "baseline": {
+          "mean_us": 397854.25,
+          "median_us": 390005.5,
+          "n": 20,
+          "p95_us": 556056.5
+        },
+        "informed": {
+          "mean_us": 356418.875,
+          "median_us": 338931.25,
+          "n": 20,
+          "p95_us": 469162.0
+        }
+      }
+    }
+  },
+  "valid": false
+}

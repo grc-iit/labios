@@ -1,0 +1,622 @@
+ Container labios-redis-kv-1 Running 
+ Container labios-nats-1 Running 
+ Container labios-redis-1 Running 
+ Container labios-dispatcher-1 Running 
+ Container labios-worker-2-1 Running 
+ Container labios-worker-3-1 Running 
+ Container labios-worker-1-1 Running 
+ Container labios-manager-1 Running 
+ Image labios-test Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 526B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 4.03kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/debian:bookworm-slim
+#3 DONE 0.3s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 91B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [builder 1/5] FROM docker.io/library/debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818
+#6 resolve docker.io/library/debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818 0.1s done
+#6 DONE 0.1s
+
+#5 [internal] load build context
+#5 transferring context: 20.43kB 0.0s done
+#5 DONE 0.1s
+
+#7 [builder 2/5] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     cmake     git     ca-certificates     pkg-config     libssl-dev     && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [builder 3/5] COPY . /src
+#8 DONE 0.2s
+
+#9 [builder 4/5] WORKDIR /src
+#9 DONE 0.1s
+
+#10 [builder 5/5] RUN cmake --preset release     && cmake --build build/release -j"$(nproc)"
+#10 0.409 Preset CMake variables:
+#10 0.409 
+#10 0.409   CMAKE_BUILD_TYPE="Release"
+#10 0.409   CMAKE_INTERPROCEDURAL_OPTIMIZATION="ON"
+#10 0.409 
+#10 0.483 -- The C compiler identification is GNU 12.2.0
+#10 0.563 -- The CXX compiler identification is GNU 12.2.0
+#10 0.578 -- Detecting C compiler ABI info
+#10 0.688 -- Detecting C compiler ABI info - done
+#10 0.696 -- Check for working C compiler: /usr/bin/cc - skipped
+#10 0.696 -- Detecting C compile features
+#10 0.698 -- Detecting C compile features - done
+#10 0.702 -- Detecting CXX compiler ABI info
+#10 0.831 -- Detecting CXX compiler ABI info - done
+#10 0.841 -- Check for working CXX compiler: /usr/bin/c++ - skipped
+#10 0.841 -- Detecting CXX compile features
+#10 0.843 -- Detecting CXX compile features - done
+#10 3.234 -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.20")  
+#10 4.020 Detected version: 1.2.0
+#10 5.096 -- Proceeding with version: 24.3.25.0
+#10 5.097 -- Looking for strtof_l
+#10 5.235 -- Looking for strtof_l - found
+#10 5.235 -- Looking for strtoull_l
+#10 5.377 -- Looking for strtoull_l - found
+#10 5.377 -- Looking for realpath
+#10 5.514 -- Looking for realpath - found
+#10 5.514 -- CMAKE_CXX_FLAGS: 
+#10 5.912 -- Python3 not found, skipping Python bindings
+#10 7.239 -- Performing Test HAVE_FLAG__ffile_prefix_map__src_build_release__deps_catch2_src__
+#10 7.375 -- Performing Test HAVE_FLAG__ffile_prefix_map__src_build_release__deps_catch2_src__ - Success
+#10 7.414 -- Configuring done
+#10 7.473 CMake Warning (dev) at build/release/_deps/hiredis-src/CMakeLists.txt:46 (ADD_LIBRARY):
+#10 7.473   Policy CMP0069 is not set: INTERPROCEDURAL_OPTIMIZATION is enforced when
+#10 7.473   enabled.  Run "cmake --help-policy CMP0069" for policy details.  Use the
+#10 7.473   cmake_policy command to set the policy and suppress this warning.
+#10 7.473 
+#10 7.473   INTERPROCEDURAL_OPTIMIZATION property will be ignored for target 'hiredis'.
+#10 7.473 This warning is for project developers.  Use -Wno-dev to suppress it.
+#10 7.473 
+#10 7.869 -- Generating done
+#10 7.887 -- Build files have been written to: /src/build/release
+#10 7.993 [  0%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatbuffers.dir/src/idl_gen_text.cpp.o
+#10 8.000 [  0%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatbuffers.dir/src/idl_parser.cpp.o
+#10 8.000 [  0%] Building C object _deps/hiredis-build/CMakeFiles/hiredis.dir/async.c.o
+#10 8.000 [  0%] Building C object CMakeFiles/sqlite3_lib.dir/_deps/sqlite3-src/sqlite3.c.o
+#10 8.000 [  0%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/buf.c.o
+#10 8.000 [  0%] Building C object _deps/hiredis-build/CMakeFiles/hiredis.dir/net.c.o
+#10 8.000 [  1%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatbuffers.dir/src/reflection.cpp.o
+#10 8.003 [  3%] Building C object _deps/hiredis-build/CMakeFiles/hiredis.dir/read.c.o
+#10 8.003 [  3%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/asynccb.c.o
+#10 8.004 [  4%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/crypto.c.o
+#10 8.005 [  4%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/comsock.c.o
+#10 8.006 [  4%] Building C object _deps/hiredis-build/CMakeFiles/hiredis.dir/sds.c.o
+#10 8.013 [  4%] Building C object _deps/hiredis-build/CMakeFiles/hiredis.dir/hiredis.c.o
+#10 8.013 [  4%] Building C object _deps/hiredis-build/CMakeFiles/hiredis.dir/sockcompat.c.o
+#10 8.031 [  4%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/benchmark/catch_chronometer.cpp.o
+#10 8.042 [  4%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_analyse.cpp.o
+#10 8.042 [  5%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_run_for_at_least.cpp.o
+#10 8.042 [  5%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_parser.cpp.o
+#10 8.042 [  5%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_benchmark_function.cpp.o
+#10 8.049 [  6%] Building C object _deps/hiredis-build/CMakeFiles/hiredis.dir/alloc.c.o
+#10 8.064 [  6%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_stats.cpp.o
+#10 8.066 [  6%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatbuffers.dir/src/util.cpp.o
+#10 8.068 [  6%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/dispatch.c.o
+#10 8.115 [  6%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/conn.c.o
+#10 8.252 [  7%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_text.cpp.o
+#10 8.254 [  7%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/hash.c.o
+#10 8.357 [  8%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/js.c.o
+#10 8.363 [  8%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/jsm.c.o
+#10 8.374 [  8%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/reflection.cpp.o
+#10 8.382 [  8%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/util.cpp.o
+#10 8.396 [  8%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/kv.c.o
+#10 8.488 [  8%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/generators/catch_generator_exception.cpp.o
+#10 8.512 [  8%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_binary.cpp.o
+#10 8.567 [  9%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_cpp.cpp.o
+#10 8.617 [  9%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_csharp.cpp.o
+#10 8.679 [  9%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/micro.c.o
+#10 8.698 [  9%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/generators/catch_generators.cpp.o
+#10 8.745 [  9%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_dart.cpp.o
+#10 8.756 [ 10%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/generators/catch_generators_random.cpp.o
+#10 8.770 [ 10%] Linking C static library libhiredis.a
+#10 8.832 [ 10%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_automake.cpp.o
+#10 8.850 [ 10%] Built target hiredis
+#10 8.873 [ 10%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_kotlin.cpp.o
+#10 8.896 [ 11%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/micro_client.c.o
+#10 8.896 [ 11%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/micro_endpoint.c.o
+#10 9.004 [ 11%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/micro_error.c.o
+#10 9.045 [ 11%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/micro_monitoring.c.o
+#10 9.082 [ 11%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_common_base.cpp.o
+#10 9.093 [ 11%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_compact.cpp.o
+#10 9.162 [ 12%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/micro_request.c.o
+#10 9.168 [ 13%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_console.cpp.o
+#10 9.294 [ 14%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_kotlin_kmp.cpp.o
+#10 9.349 [ 14%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_go.cpp.o
+#10 9.373 [ 14%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_cumulative_base.cpp.o
+#10 9.394 [ 14%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/msg.c.o
+#10 9.542 [ 14%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_java.cpp.o
+#10 9.764 [ 14%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/nats.c.o
+#10 9.827 [ 14%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_event_listener.cpp.o
+#10 9.955 [ 15%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_ts.cpp.o
+#10 10.01 [ 15%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/natstime.c.o
+#10 10.04 [ 16%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_helpers.cpp.o
+#10 10.06 [ 17%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/nkeys.c.o
+#10 10.10 [ 17%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_json.cpp.o
+#10 10.23 [ 17%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_php.cpp.o
+#10 10.26 [ 17%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/nuid.c.o
+#10 10.27 [ 17%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/opts.c.o
+#10 10.44 [ 17%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_junit.cpp.o
+#10 10.50 [ 18%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/parser.c.o
+#10 10.58 [ 18%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_python.cpp.o
+#10 10.64 [ 18%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_multi.cpp.o
+#10 10.70 [ 19%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_registrars.cpp.o
+#10 10.75 [ 19%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/pub.c.o
+#10 10.77 [ 19%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_lobster.cpp.o
+#10 11.02 [ 19%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/srvpool.c.o
+#10 11.12 [ 19%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_sonarqube.cpp.o
+#10 11.19 [ 20%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_rust.cpp.o
+#10 11.28 [ 20%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/stats.c.o
+#10 11.45 [ 20%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_streaming_base.cpp.o
+#10 11.48 [ 20%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_fbs.cpp.o
+#10 11.54 [ 21%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/status.c.o
+#10 11.59 [ 21%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_tap.cpp.o
+#10 11.70 [ 22%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_teamcity.cpp.o
+#10 11.71 [ 22%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_xml.cpp.o
+#10 11.76 [ 22%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/sub.c.o
+#10 11.79 [ 22%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_grpc.cpp.o
+#10 11.90 [ 22%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/timer.c.o
+#10 12.06 [ 22%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_json_schema.cpp.o
+#10 12.09 [ 22%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/url.c.o
+#10 12.32 [ 23%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/util.c.o
+#10 12.38 [ 23%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_capture.cpp.o
+#10 12.45 [ 24%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/idl_gen_swift.cpp.o
+#10 12.58 [ 24%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/glib/glib.c.o
+#10 12.73 [ 24%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/glib/glib_async_cb.c.o
+#10 12.73 [ 25%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/glib/glib_dispatch_pool.c.o
+#10 12.85 [ 25%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/glib/glib_gc.c.o
+#10 12.86 [ 26%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_config.cpp.o
+#10 12.90 [ 26%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_exception.cpp.o
+#10 12.93 [ 26%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/glib/glib_last_error.c.o
+#10 12.95 [ 26%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/file_name_saving_file_manager.cpp.o
+#10 13.07 [ 26%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_generatortracker.cpp.o
+#10 13.08 [ 26%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/glib/glib_ssl.c.o
+#10 13.16 [ 27%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/glib/glib_timer.c.o
+#10 13.22 [ 27%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/file_binary_writer.cpp.o
+#10 13.25 [ 27%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_registry_hub.cpp.o
+#10 13.30 [ 28%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/file_writer.cpp.o
+#10 13.37 [ 28%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/unix/cond.c.o
+#10 13.39 [ 28%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/flatc.cpp.o
+#10 13.49 [ 28%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/unix/mutex.c.o
+#10 13.49 [ 28%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/flatc_main.cpp.o
+#10 13.53 [ 29%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_reporter.cpp.o
+#10 13.59 [ 29%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_reporter_factory.cpp.o
+#10 13.62 [ 29%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_testcase.cpp.o
+#10 13.63 [ 29%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/unix/sock.c.o
+#10 13.67 [ 29%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/binary_annotator.cpp.o
+#10 13.73 [ 30%] Building C object _deps/cnats-build/src/CMakeFiles/nats_static.dir/unix/thread.c.o
+#10 13.87 [ 30%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_approx.cpp.o
+#10 13.90 [ 31%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_assertion_result.cpp.o
+#10 13.90 [ 31%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_config.cpp.o
+#10 14.00 [ 31%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_get_random_seed.cpp.o
+#10 14.02 [ 31%] Linking C static library ../../../lib/libnats_static.a
+#10 14.16 [ 31%] Built target nats_static
+#10 14.17 [ 32%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_message.cpp.o
+#10 14.18 [ 33%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/annotated_binary_text_gen.cpp.o
+#10 14.27 [ 33%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_registry_hub.cpp.o
+#10 14.47 [ 33%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/bfbs_gen_lua.cpp.o
+#10 14.52 [ 33%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_session.cpp.o
+#10 14.57 [ 33%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/bfbs_gen_nim.cpp.o
+#10 14.58 [ 33%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_tag_alias_autoregistrar.cpp.o
+#10 14.65 [ 34%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_test_case_info.cpp.o
+#10 14.74 [ 34%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/src/code_generators.cpp.o
+#10 14.78 [ 34%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_test_spec.cpp.o
+#10 14.82 [ 34%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_timer.cpp.o
+#10 14.87 [ 35%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/grpc/src/compiler/cpp_generator.cc.o
+#10 14.91 [ 35%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_tostring.cpp.o
+#10 14.95 [ 36%] Linking C static library libsqlite3_lib.a
+#10 14.95 [ 36%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/grpc/src/compiler/go_generator.cc.o
+#10 15.02 [ 36%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/grpc/src/compiler/java_generator.cc.o
+#10 15.09 [ 36%] Built target sqlite3_lib
+#10 15.10 [ 37%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_totals.cpp.o
+#10 15.11 [ 38%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/grpc/src/compiler/python_generator.cc.o
+#10 15.16 [ 38%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_translate_exception.cpp.o
+#10 15.27 [ 38%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/catch_version.cpp.o
+#10 15.27 [ 38%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/grpc/src/compiler/swift_generator.cc.o
+#10 15.28 [ 38%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_assertion_handler.cpp.o
+#10 15.49 [ 38%] Building CXX object _deps/flatbuffers-build/CMakeFiles/flatc.dir/grpc/src/compiler/ts_generator.cc.o
+#10 15.54 [ 39%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_case_insensitive_comparisons.cpp.o
+#10 15.63 [ 39%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_clara.cpp.o
+#10 15.81 [ 39%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_commandline.cpp.o
+#10 15.88 [ 40%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_console_colour.cpp.o
+#10 16.03 [ 40%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_context.cpp.o
+#10 16.12 [ 40%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_debug_console.cpp.o
+#10 16.13 [ 40%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_debugger.cpp.o
+#10 16.14 [ 41%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_decomposer.cpp.o
+#10 16.25 [ 41%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_enforce.cpp.o
+#10 16.28 [ 41%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_enum_values_registry.cpp.o
+#10 16.45 [ 41%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_errno_guard.cpp.o
+#10 16.51 [ 42%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_exception_translator_registry.cpp.o
+#10 16.60 [ 42%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_fatal_condition_handler.cpp.o
+#10 16.63 [ 42%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_floating_point_helpers.cpp.o
+#10 16.69 [ 43%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_getenv.cpp.o
+#10 16.74 [ 43%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_istream.cpp.o
+#10 16.75 [ 43%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_jsonwriter.cpp.o
+#10 16.75 [ 43%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_lazy_expr.cpp.o
+#10 16.82 [ 44%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_leak_detector.cpp.o
+#10 16.83 [ 44%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_list.cpp.o
+#10 16.87 [ 44%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_message_info.cpp.o
+#10 16.88 [ 45%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_parse_numbers.cpp.o
+#10 16.88 [ 45%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_output_redirect.cpp.o
+#10 16.92 [ 45%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_polyfills.cpp.o
+#10 16.92 [ 45%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_random_number_generator.cpp.o
+#10 16.93 [ 46%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_random_seed_generation.cpp.o
+#10 16.98 [ 46%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_reporter_registry.cpp.o
+#10 17.09 [ 46%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_reporter_spec_parser.cpp.o
+#10 17.21 [ 46%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_reusable_string_stream.cpp.o
+#10 17.21 [ 47%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_run_context.cpp.o
+#10 17.23 [ 47%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_section.cpp.o
+#10 17.25 [ 47%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_singletons.cpp.o
+#10 17.29 [ 47%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_source_line_info.cpp.o
+#10 17.30 [ 48%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_startup_exception_registry.cpp.o
+#10 17.38 [ 48%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_stdstreams.cpp.o
+#10 17.39 [ 48%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_string_manip.cpp.o
+#10 17.45 [ 48%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_stringref.cpp.o
+#10 17.52 [ 49%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_tag_alias_registry.cpp.o
+#10 17.52 [ 49%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_info_hasher.cpp.o
+#10 17.52 [ 49%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_registry_impl.cpp.o
+#10 17.55 [ 50%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_tracker.cpp.o
+#10 17.56 [ 50%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_failure_exception.cpp.o
+#10 17.57 [ 50%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_registry.cpp.o
+#10 17.61 [ 50%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_spec_parser.cpp.o
+#10 17.63 [ 51%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_textflow.cpp.o
+#10 17.76 [ 51%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_uncaught_exceptions.cpp.o
+#10 17.85 [ 51%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_xmlwriter.cpp.o
+#10 17.85 [ 51%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/internal/catch_wildcard_pattern.cpp.o
+#10 17.86 [ 51%] Linking CXX static library libflatbuffers.a
+#10 17.92 [ 52%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers.cpp.o
+#10 17.95 [ 52%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_container_properties.cpp.o
+#10 18.00 [ 52%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_exception.cpp.o
+#10 18.02 [ 53%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_floating_point.cpp.o
+#10 18.02 [ 53%] Built target flatbuffers
+#10 18.03 [ 53%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_predicate.cpp.o
+#10 18.04 [ 53%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_quantifiers.cpp.o
+#10 18.09 [ 53%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_string.cpp.o
+#10 18.15 [ 54%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_templated.cpp.o
+#10 18.23 [ 54%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2.dir/catch2/matchers/internal/catch_matchers_impl.cpp.o
+#10 18.68 [ 54%] Linking CXX executable flatc
+#10 21.00 [ 54%] Linking CXX static library libCatch2.a
+#10 21.22 [ 54%] Built target Catch2
+#10 21.25 [ 54%] Building CXX object _deps/catch2-build/src/CMakeFiles/Catch2WithMain.dir/catch2/internal/catch_main.cpp.o
+#10 22.28 [ 55%] Linking CXX static library libCatch2Main.a
+#10 22.44 [ 55%] Built target Catch2WithMain
+#10 22.53 [ 56%] Building CXX object tests/CMakeFiles/labios-intercept-test.dir/integration/intercept_test.cpp.o
+#10 24.22 [ 56%] Linking CXX executable labios-intercept-test
+#10 25.79 In function 'copy',
+#10 25.79     inlined from '_S_copy' at /usr/include/c++/12/bits/basic_string.h:423:21,
+#10 25.79     inlined from '_M_replace' at /usr/include/c++/12/bits/basic_string.tcc:532:22,
+#10 25.79     inlined from 'replace' at /usr/include/c++/12/bits/basic_string.h:2171:19,
+#10 25.79     inlined from 'insert' at /usr/include/c++/12/bits/basic_string.h:1928:22,
+#10 25.79     inlined from 'operator+' at /usr/include/c++/12/bits/basic_string.h:3541:36,
+#10 25.79     inlined from 'TableObjectBuilderBody' at /src/build/release/_deps/flatbuffers-src/src/idl_gen_dart.cpp:1097:65,
+#10 25.79     inlined from 'GenObjectBuilderImplementation' at /src/build/release/_deps/flatbuffers-src/src/idl_gen_dart.cpp:1046:37:
+#10 25.79 /usr/include/c++/12/bits/char_traits.h:431:56: warning: 'memcpy' specified bound between 9223372036854775809 and 18446744073709551615 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+#10 25.79   431 |         return static_cast<char_type*>(__builtin_memcpy(__s1, __s2, __n));
+#10 25.79       |                                                        ^
+#10 28.54 [ 56%] Built target labios-intercept-test
+#10 29.03 [ 56%] Built target flatc
+#10 29.06 [ 56%] Generating FlatBuffers headers
+#10 29.09 [ 56%] Built target labios_fbs_generated
+#10 29.12 [ 57%] Building CXX object src/labios/CMakeFiles/labios.dir/c_api.cpp.o
+#10 29.12 [ 57%] Building CXX object src/labios/CMakeFiles/labios.dir/channel.cpp.o
+#10 29.12 [ 57%] Building CXX object src/labios/CMakeFiles/labios.dir/catalog_manager.cpp.o
+#10 29.13 [ 57%] Building CXX object src/labios/CMakeFiles/labios.dir/config.cpp.o
+#10 29.13 [ 58%] Building CXX object src/labios/CMakeFiles/labios.dir/label_manager.cpp.o
+#10 29.13 [ 58%] Building CXX object src/labios/CMakeFiles/labios.dir/content_manager.cpp.o
+#10 29.14 [ 58%] Building CXX object src/labios/CMakeFiles/labios.dir/shuffler.cpp.o
+#10 29.14 [ 59%] Building CXX object src/labios/CMakeFiles/labios.dir/client.cpp.o
+#10 29.14 [ 59%] Building CXX object src/labios/CMakeFiles/labios.dir/solver/minmax.cpp.o
+#10 29.14 [ 59%] Building CXX object src/labios/CMakeFiles/labios.dir/continuation.cpp.o
+#10 29.14 [ 60%] Building CXX object src/labios/CMakeFiles/labios.dir/solver/round_robin.cpp.o
+#10 29.14 [ 60%] Building CXX object src/labios/CMakeFiles/labios.dir/session.cpp.o
+#10 29.14 [ 60%] Building CXX object src/labios/CMakeFiles/labios.dir/solver/random.cpp.o
+#10 29.14 [ 60%] Building CXX object src/labios/CMakeFiles/labios.dir/label.cpp.o
+#10 29.17 [ 61%] Building CXX object src/labios/CMakeFiles/labios.dir/solver/constraint.cpp.o
+#10 29.19 [ 61%] Building CXX object src/labios/CMakeFiles/labios.dir/transport/redis.cpp.o
+#10 29.19 [ 61%] Building CXX object src/labios/CMakeFiles/labios.dir/transport/nats.cpp.o
+#10 29.22 [ 61%] Building CXX object src/labios/CMakeFiles/labios.dir/workspace.cpp.o
+#10 29.23 [ 61%] Building CXX object src/labios/CMakeFiles/labios.dir/elastic/decision_engine.cpp.o
+#10 29.23 [ 61%] Building CXX object src/labios/CMakeFiles/labios.dir/adapter/fd_table.cpp.o
+#10 29.25 [ 62%] Building CXX object src/labios/CMakeFiles/labios.dir/worker_manager.cpp.o
+#10 29.25 [ 62%] Building CXX object src/labios/CMakeFiles/labios.dir/elastic/docker_client.cpp.o
+#10 29.25 [ 62%] Building CXX object src/labios/CMakeFiles/labios.dir/uri.cpp.o
+#10 29.26 [ 63%] Building CXX object src/labios/CMakeFiles/labios.dir/adapter/posix_adapter.cpp.o
+#10 29.92 [ 63%] Building CXX object src/labios/CMakeFiles/labios.dir/backend/posix_backend.cpp.o
+#10 30.25 [ 64%] Building CXX object src/labios/CMakeFiles/labios.dir/backend/kv_backend.cpp.o
+#10 30.30 [ 64%] Building CXX object src/labios/CMakeFiles/labios.dir/backend/sqlite_backend.cpp.o
+#10 30.41 [ 64%] Building CXX object src/labios/CMakeFiles/labios.dir/backend/registry.cpp.o
+#10 30.42 [ 64%] Building CXX object src/labios/CMakeFiles/labios.dir/sds/types.cpp.o
+#10 30.58 [ 65%] Building CXX object src/labios/CMakeFiles/labios.dir/sds/builtins.cpp.o
+#10 30.62 [ 65%] Building CXX object src/labios/CMakeFiles/labios.dir/sds/executor.cpp.o
+#10 30.79 [ 65%] Building CXX object src/labios/CMakeFiles/labios.dir/sds/program_repo.cpp.o
+#10 30.86 [ 65%] Building CXX object src/labios/CMakeFiles/labios.dir/observability.cpp.o
+#10 31.15 [ 66%] Building CXX object src/labios/CMakeFiles/labios.dir/telemetry.cpp.o
+#10 31.18 [ 66%] Building CXX object src/labios/CMakeFiles/labios.dir/worker_registry_protocol.cpp.o
+#10 31.27 [ 66%] Building CXX object src/labios/CMakeFiles/labios.dir/scheduling/scheduling.cpp.o
+#10 33.72 [ 66%] Linking CXX static library liblabios.a
+#10 33.90 [ 66%] Built target labios
+#10 33.95 [ 66%] Building CXX object src/services/CMakeFiles/labios-dispatcher.dir/labios-dispatcher.cpp.o
+#10 33.96 [ 66%] Building CXX object CMakeFiles/labios_intercept.dir/src/drivers/posix_intercept.cpp.o
+#10 33.96 [ 66%] Building CXX object tests/CMakeFiles/labios-label-test.dir/unit/label_test.cpp.o
+#10 33.97 [ 67%] Building CXX object tests/CMakeFiles/labios-data-path-test.dir/integration/data_path_test.cpp.o
+#10 33.97 [ 68%] Building CXX object src/services/CMakeFiles/labios-worker.dir/labios-worker.cpp.o
+#10 33.97 [ 68%] Building CXX object src/services/CMakeFiles/labios-demo.dir/labios-demo.cpp.o
+#10 33.97 [ 68%] Building CXX object tests/CMakeFiles/labios-label-manager-test.dir/unit/label_manager_test.cpp.o
+#10 33.97 [ 68%] Building CXX object tests/CMakeFiles/labios-catalog-manager-test.dir/unit/catalog_manager_test.cpp.o
+#10 33.97 [ 68%] Building CXX object src/services/CMakeFiles/labios-manager.dir/labios-manager.cpp.o
+#10 33.97 [ 69%] Building CXX object tests/CMakeFiles/labios-content-manager-test.dir/unit/content_manager_test.cpp.o
+#10 33.98 [ 69%] Building CXX object tests/CMakeFiles/labios-smoke-test.dir/integration/smoke_test.cpp.o
+#10 33.98 [ 69%] Building CXX object tests/CMakeFiles/labios-config-test.dir/unit/config_test.cpp.o
+#10 33.98 [ 69%] Building CXX object tests/CMakeFiles/labios-solver-test.dir/unit/solver_test.cpp.o
+#10 34.03 [ 69%] Building CXX object tests/CMakeFiles/labios-benchmark-test.dir/integration/benchmark_test.cpp.o
+#10 34.05 [ 70%] Building CXX object tests/CMakeFiles/labios-shuffler-test.dir/unit/shuffler_test.cpp.o
+#10 34.05 [ 70%] Building CXX object tests/CMakeFiles/labios-solver-random-test.dir/unit/solver_random_test.cpp.o
+#10 34.06 [ 70%] Building CXX object tests/CMakeFiles/labios-fd-table-test.dir/unit/fd_table_test.cpp.o
+#10 34.08 [ 71%] Building CXX object tests/CMakeFiles/labios-worker-registry-protocol-test.dir/unit/worker_registry_protocol_test.cpp.o
+#10 34.12 [ 71%] Building CXX object tests/CMakeFiles/labios-solver-constraint-test.dir/unit/solver_constraint_test.cpp.o
+#10 34.13 [ 71%] Building CXX object tests/CMakeFiles/labios-scheduling-feasibility-test.dir/unit/scheduling_feasibility_test.cpp.o
+#10 34.15 [ 71%] Building CXX object tests/CMakeFiles/labios-worker-manager-test.dir/unit/worker_manager_test.cpp.o
+#10 34.16 [ 71%] Building CXX object tests/CMakeFiles/labios-solver-minmax-test.dir/unit/solver_minmax_test.cpp.o
+#10 34.17 [ 71%] Building CXX object tests/CMakeFiles/labios-trace-guided-selection-test.dir/unit/trace_guided_selection_test.cpp.o
+#10 34.18 [ 71%] Building CXX object tests/CMakeFiles/labios-solver-intent-test.dir/unit/solver_intent_test.cpp.o
+#10 35.47 [ 72%] Linking CXX executable labios-solver-minmax-test
+#10 35.47 [ 72%] Linking CXX executable labios-solver-intent-test
+#10 35.52 [ 72%] Linking CXX executable labios-solver-test
+#10 35.55 [ 72%] Linking CXX executable labios-fd-table-test
+#10 35.65 [ 72%] Linking CXX executable labios-solver-constraint-test
+#10 35.88 [ 72%] Linking CXX executable labios-config-test
+#10 35.88 [ 72%] Linking CXX executable labios-content-manager-test
+#10 35.95 [ 73%] Linking CXX executable labios-label-manager-test
+#10 35.97 [ 74%] Linking CXX executable labios-solver-random-test
+#10 36.08 [ 74%] Linking CXX executable labios-worker-manager-test
+#10 36.18 [ 75%] Linking CXX executable labios-demo
+#10 36.19 [ 75%] Linking CXX executable labios-catalog-manager-test
+#10 36.31 [ 76%] Linking CXX executable labios-smoke-test
+#10 36.34 [ 76%] Linking CXX executable labios-benchmark-test
+#10 36.35 [ 76%] Linking CXX executable labios-trace-guided-selection-test
+#10 36.53 [ 76%] Linking CXX shared library lib/liblabios_intercept.so
+#10 36.79 [ 76%] Linking CXX executable labios-shuffler-test
+#10 37.02 [ 76%] Linking CXX executable labios-data-path-test
+#10 37.08 [ 76%] Linking CXX executable labios-worker-registry-protocol-test
+#10 37.33 [ 76%] Linking CXX executable labios-manager
+#10 43.31 [ 76%] Linking CXX executable labios-worker
+#10 45.54 [ 76%] Linking CXX executable labios-scheduling-feasibility-test
+#10 47.49 [ 76%] Linking CXX executable labios-label-test
+#10 49.91 [ 76%] Built target labios-solver-intent-test
+#10 49.94 [ 76%] Built target labios-fd-table-test
+#10 50.04 [ 76%] Building CXX object tests/CMakeFiles/labios-trace-accounting-test.dir/unit/trace_accounting_test.cpp.o
+#10 50.08 [ 76%] Building CXX object tests/CMakeFiles/labios-durable-dispatcher-test.dir/unit/durable_dispatcher_test.cpp.o
+#10 51.25 [ 76%] Built target labios-solver-constraint-test
+#10 51.54 [ 76%] Building CXX object tests/CMakeFiles/labios-durable-catalog-test.dir/integration/durable_catalog_test.cpp.o
+#10 54.50 [ 76%] Built target labios-content-manager-test
+#10 54.51 [ 76%] Linking CXX executable labios-dispatcher
+#10 54.71 [ 77%] Building CXX object tests/CMakeFiles/labios-scheduling-test.dir/integration/scheduling_test.cpp.o
+#10 54.78 [ 77%] Built target labios-worker-manager-test
+#10 55.06 [ 77%] Building CXX object tests/CMakeFiles/labios-live-correctness-driver.dir/integration/live_correctness_driver.cpp.o
+#10 55.76 [ 77%] Built target labios-shuffler-test
+#10 55.89 [ 77%] Building CXX object tests/CMakeFiles/labios-elastic-decision-test.dir/unit/elastic_decision_test.cpp.o
+#10 56.09 [ 77%] Built target labios-solver-random-test
+#10 56.22 [ 77%] Building CXX object tests/CMakeFiles/labios-docker-client-test.dir/unit/docker_client_test.cpp.o
+#10 56.33 [ 77%] Built target labios-solver-minmax-test
+#10 56.53 [ 77%] Building CXX object tests/CMakeFiles/labios-elastic-orchestrator-test.dir/unit/elastic_orchestrator_test.cpp.o
+#10 58.68 [ 77%] Built target labios-solver-test
+#10 58.80 [ 78%] Building CXX object tests/CMakeFiles/labios-elastic-tiered-test.dir/unit/elastic_tiered_test.cpp.o
+#10 61.21 [ 78%] Linking CXX executable labios-elastic-decision-test
+#10 61.26 [ 78%] Linking CXX executable labios-elastic-orchestrator-test
+#10 61.60 [ 78%] Built target labios-config-test
+#10 60.91 [ 78%] Built target labios-catalog-manager-test
+#10 61.03 [ 79%] Linking CXX executable labios-trace-accounting-test
+#10 61.09 [ 80%] Building CXX object tests/CMakeFiles/labios-client-async-test.dir/unit/client_async_test.cpp.o
+#10 61.24 [ 80%] Building CXX object tests/CMakeFiles/labios-client-api-test.dir/unit/client_api_test.cpp.o
+#10 61.30 [ 81%] Linking CXX executable labios-durable-dispatcher-test
+#10 62.00 [ 81%] Built target labios-manager
+#10 62.23 [ 81%] Building C object tests/CMakeFiles/labios-c-api-link-test.dir/unit/c_api_link_test.c.o
+#10 62.34 [ 82%] Linking CXX executable labios-c-api-link-test
+#10 63.27 [ 82%] Built target labios-demo
+#10 63.32 [ 83%] Linking CXX executable labios-docker-client-test
+#10 63.36 [ 84%] Building CXX object tests/CMakeFiles/labios-elastic-flood-test.dir/integration/elastic_flood_test.cpp.o
+#10 63.82 [ 84%] Built target labios-c-api-link-test
+#10 63.87 [ 84%] Building CXX object tests/CMakeFiles/labios-kernel-cm1-test.dir/integration/kernel_cm1_test.cpp.o
+#10 63.94 [ 84%] Built target labios-benchmark-test
+#10 64.02 [ 85%] Building CXX object tests/CMakeFiles/labios-kernel-hacc-test.dir/integration/kernel_hacc_test.cpp.o
+#10 64.21 [ 85%] Built target labios-smoke-test
+#10 64.27 [ 85%] Building CXX object tests/CMakeFiles/labios-kernel-montage-test.dir/integration/kernel_montage_test.cpp.o
+#10 65.05 [ 85%] Built target labios-label-manager-test
+#10 65.15 [ 85%] Building CXX object tests/CMakeFiles/labios-kernel-kmeans-test.dir/integration/kernel_kmeans_test.cpp.o
+#10 66.97 [ 85%] Built target labios_intercept
+#10 67.12 [ 85%] Building CXX object tests/CMakeFiles/labios-uri-test.dir/unit/uri_test.cpp.o
+#10 67.49 [ 86%] Linking CXX executable labios-live-correctness-driver
+#10 67.52 [ 86%] Linking CXX executable labios-client-async-test
+#10 67.77 [ 86%] Linking CXX executable labios-elastic-tiered-test
+#10 68.42 /src/tests/integration/kernel_cm1_test.cpp: In function 'void simulate_compute(int)':
+#10 68.42 /src/tests/integration/kernel_cm1_test.cpp:44:42: warning: compound assignment with 'volatile'-qualified left operand is deprecated [-Wvolatile]
+#10 68.42    44 |         for (int i = 0; i < 1000; ++i) x *= 1.000001;
+#10 68.42       |                                        ~~^~~~~~~~~~~
+#10 68.82 [ 86%] Built target labios-data-path-test
+#10 68.97 [ 87%] Building CXX object tests/CMakeFiles/labios-backend-test.dir/unit/backend_test.cpp.o
+#10 70.08 [ 87%] Linking CXX executable labios-scheduling-test
+#10 70.38 [ 87%] Linking CXX executable labios-kernel-hacc-test
+#10 70.48 [ 87%] Linking CXX executable labios-durable-catalog-test
+#10 70.62 [ 87%] Built target labios-trace-guided-selection-test
+#10 70.67 [ 87%] Building CXX object tests/CMakeFiles/labios-sds-test.dir/unit/sds_test.cpp.o
+#10 70.83 [ 87%] Linking CXX executable labios-kernel-montage-test
+#10 70.98 [ 87%] Linking CXX executable labios-client-api-test
+#10 72.37 [ 87%] Linking CXX executable labios-kernel-cm1-test
+#10 72.46 [ 87%] Built target labios-label-test
+#10 72.56 [ 87%] Building CXX object tests/CMakeFiles/labios-channel-test.dir/unit/channel_test.cpp.o
+#10 73.03 [ 87%] Linking CXX executable labios-elastic-flood-test
+#10 73.82 [ 87%] Built target labios-worker
+#10 73.93 [ 87%] Linking CXX executable labios-uri-test
+#10 73.97 [ 87%] Building CXX object tests/CMakeFiles/labios-continuation-test.dir/unit/continuation_test.cpp.o
+#10 74.43 [ 87%] Built target labios-dispatcher
+#10 74.59 [ 88%] Building CXX object tests/CMakeFiles/labios-transport-test.dir/unit/transport_test.cpp.o
+#10 76.82 [ 88%] Built target labios-docker-client-test
+#10 77.08 [ 88%] Building CXX object tests/CMakeFiles/labios-workspace-test.dir/unit/workspace_test.cpp.o
+#10 78.18 [ 88%] Built target labios-elastic-orchestrator-test
+#10 78.38 [ 89%] Building CXX object tests/CMakeFiles/labios-observability-test.dir/unit/observability_test.cpp.o
+#10 78.51 [ 89%] Built target labios-durable-dispatcher-test
+#10 78.74 [ 89%] Building CXX object tests/CMakeFiles/labios-bench_coding_agent_io.dir/benchmark/bench_coding_agent_io.cpp.o
+#10 79.09 [ 89%] Built target labios-elastic-decision-test
+#10 79.32 [ 90%] Building CXX object tests/CMakeFiles/labios-bench_rag_pipeline.dir/benchmark/bench_rag_pipeline.cpp.o
+#10 81.08 [ 91%] Linking CXX executable labios-kernel-kmeans-test
+#10 82.19 [ 91%] Built target labios-trace-accounting-test
+#10 82.42 [ 92%] Building CXX object tests/CMakeFiles/labios-bench_science_pipeline.dir/benchmark/bench_science_pipeline.cpp.o
+#10 82.44 [ 92%] Built target labios-worker-registry-protocol-test
+#10 82.56 [ 92%] Building CXX object tests/CMakeFiles/labios-bench_checkpoint_storm.dir/benchmark/bench_checkpoint_storm.cpp.o
+#10 82.78 [ 92%] Linking CXX executable labios-backend-test
+#10 82.93 [ 92%] Linking CXX executable labios-sds-test
+#10 83.00 [ 92%] Linking CXX executable labios-transport-test
+#10 83.00 [ 93%] Linking CXX executable labios-channel-test
+#10 83.04 [ 93%] Linking CXX executable labios-observability-test
+#10 83.44 [ 93%] Built target labios-scheduling-feasibility-test
+#10 83.51 [ 93%] Built target labios-elastic-tiered-test
+#10 83.53 [ 93%] Building CXX object tests/CMakeFiles/labios-bench_multi_agent_collab.dir/benchmark/bench_multi_agent_collab.cpp.o
+#10 83.64 [ 93%] Building CXX object tests/CMakeFiles/labios-bench_cross_backend_etl.dir/benchmark/bench_cross_backend_etl.cpp.o
+#10 84.79 [ 93%] Built target labios-live-correctness-driver
+#10 84.86 [ 93%] Building CXX object tests/CMakeFiles/labios-bench_agentic_worker.dir/benchmark/bench_agentic_worker.cpp.o
+#10 85.02 [ 93%] Built target labios-client-async-test
+#10 85.14 [ 93%] Building CXX object tests/CMakeFiles/labios-bench_scale_adaptation.dir/benchmark/bench_scale_adaptation.cpp.o
+#10 85.84 [ 93%] Linking CXX executable labios-bench_rag_pipeline
+#10 86.32 [ 94%] Linking CXX executable labios-workspace-test
+#10 86.66 [ 94%] Built target labios-scheduling-test
+#10 86.74 [ 95%] Linking CXX executable labios-bench_coding_agent_io
+#10 86.83 [ 95%] Building CXX object tests/CMakeFiles/labios-bench_sequential_scan.dir/benchmark/bench_sequential_scan.cpp.o
+#10 86.86 [ 95%] Linking CXX executable labios-continuation-test
+#10 88.35 [ 95%] Linking CXX executable labios-bench_scale_adaptation
+#10 88.56 [ 95%] Built target labios-durable-catalog-test
+#10 88.76 [ 95%] Building CXX object tests/CMakeFiles/labios-bench_small_io.dir/benchmark/bench_small_io.cpp.o
+#10 90.05 [ 95%] Built target labios-kernel-montage-test
+#10 89.39 [ 96%] Building CXX object tests/CMakeFiles/labios-bench_session_recall.dir/benchmark/bench_session_recall.cpp.o
+#10 89.60 [ 96%] Built target labios-client-api-test
+#10 89.75 [ 96%] Building CXX object tests/CMakeFiles/labios-bench_write_conflict.dir/benchmark/bench_write_conflict.cpp.o
+#10 91.01 [ 96%] Built target labios-uri-test
+#10 91.13 [ 96%] Building CXX object tests/CMakeFiles/labios-bench_large_file_pipeline.dir/benchmark/bench_large_file_pipeline.cpp.o
+#10 91.47 [ 96%] Built target labios-kernel-hacc-test
+#10 91.67 [ 96%] Building CXX object tests/CMakeFiles/labios-bench_trace_guided_selection.dir/benchmark/bench_trace_guided_selection.cpp.o
+#10 91.87 [ 96%] Linking CXX executable labios-bench_science_pipeline
+#10 92.62 [ 96%] Built target labios-elastic-flood-test
+#10 94.11 [ 96%] Built target labios-kernel-cm1-test
+#10 94.12 [ 97%] Linking CXX executable labios-bench_agentic_worker
+#10 94.64 [ 97%] Linking CXX executable labios-bench_checkpoint_storm
+#10 94.75 [ 97%] Linking CXX executable labios-bench_multi_agent_collab
+#10 97.47 [ 97%] Linking CXX executable labios-bench_cross_backend_etl
+#10 99.16 [ 97%] Linking CXX executable labios-bench_sequential_scan
+#10 100.1 [ 97%] Built target labios-transport-test
+#10 101.3 [ 97%] Linking CXX executable labios-bench_session_recall
+#10 101.6 [ 97%] Built target labios-kernel-kmeans-test
+#10 102.0 [ 98%] Linking CXX executable labios-bench_small_io
+#10 102.3 [ 98%] Built target labios-sds-test
+#10 102.4 [ 98%] Built target labios-observability-test
+#10 102.9 [ 98%] Built target labios-workspace-test
+#10 103.2 [ 98%] Built target labios-bench_rag_pipeline
+#10 103.5 [ 98%] Built target labios-channel-test
+#10 103.5 [ 98%] Built target labios-bench_scale_adaptation
+#10 104.4 [ 99%] Linking CXX executable labios-bench_large_file_pipeline
+#10 105.6 [ 99%] Built target labios-bench_agentic_worker
+#10 105.6 [ 99%] Built target labios-continuation-test
+#10 105.7 [ 99%] Built target labios-bench_coding_agent_io
+#10 106.8 [ 99%] Built target labios-bench_science_pipeline
+#10 107.1 [ 99%] Built target labios-bench_cross_backend_etl
+#10 107.1 [100%] Linking CXX executable labios-bench_write_conflict
+#10 107.2 [100%] Built target labios-bench_multi_agent_collab
+#10 107.5 [100%] Built target labios-bench_sequential_scan
+#10 107.6 [100%] Built target labios-bench_session_recall
+#10 107.8 [100%] Built target labios-bench_checkpoint_storm
+#10 108.6 [100%] Built target labios-bench_small_io
+#10 108.7 [100%] Built target labios-backend-test
+#10 109.8 [100%] Built target labios-bench_large_file_pipeline
+#10 109.8 [100%] Linking CXX executable labios-bench_trace_guided_selection
+#10 110.5 [100%] Built target labios-bench_write_conflict
+#10 113.7 [100%] Built target labios-bench_trace_guided_selection
+#10 DONE 113.8s
+
+#11 [test 13/19] COPY --from=builder /src/build/release/tests/labios-kernel-hacc-test /usr/local/bin/
+#11 CACHED
+
+#12 [test  8/19] COPY --from=builder /src/build/release/tests/labios-bench_trace_guided_selection /usr/local/bin/
+#12 CACHED
+
+#13 [test 11/19] COPY --from=builder /src/build/release/tests/labios-elastic-flood-test /usr/local/bin/
+#13 CACHED
+
+#14 [test  3/19] COPY --from=builder /src/build/release/tests/labios-smoke-test /usr/local/bin/
+#14 CACHED
+
+#15 [test  5/19] COPY --from=builder /src/build/release/tests/labios-catalog-manager-test /usr/local/bin/
+#15 CACHED
+
+#16 [test  7/19] COPY --from=builder /src/build/release/tests/labios-benchmark-test /usr/local/bin/
+#16 CACHED
+
+#17 [test  4/19] COPY --from=builder /src/build/release/tests/labios-data-path-test /usr/local/bin/
+#17 CACHED
+
+#18 [test 10/19] COPY --from=builder /src/build/release/tests/labios-live-correctness-driver /usr/local/bin/
+#18 CACHED
+
+#19 [test 16/19] COPY --from=builder /src/build/release/src/services/labios-demo /usr/local/bin/
+#19 CACHED
+
+#20 [test  2/19] RUN apt-get update && apt-get install -y --no-install-recommends     libssl3     && rm -rf /var/lib/apt/lists/*
+#20 CACHED
+
+#21 [test  6/19] COPY --from=builder /src/build/release/tests/labios-intercept-test /usr/local/bin/
+#21 CACHED
+
+#22 [test  9/19] COPY --from=builder /src/build/release/tests/labios-scheduling-test /usr/local/bin/
+#22 CACHED
+
+#23 [test 17/19] COPY --from=builder /src/build/release/lib/liblabios_intercept.so /usr/local/lib/
+#23 CACHED
+
+#24 [test 15/19] COPY --from=builder /src/build/release/tests/labios-kernel-kmeans-test /usr/local/bin/
+#24 CACHED
+
+#25 [test 12/19] COPY --from=builder /src/build/release/tests/labios-kernel-cm1-test /usr/local/bin/
+#25 CACHED
+
+#26 [test 14/19] COPY --from=builder /src/build/release/tests/labios-kernel-montage-test /usr/local/bin/
+#26 CACHED
+
+#27 [test 18/19] COPY --from=builder /src/conf/ /etc/labios/
+#27 CACHED
+
+#28 [test 19/19] RUN ldconfig
+#28 CACHED
+
+#29 exporting to image
+#29 exporting layers 0.0s done
+#29 exporting manifest sha256:b7d217452d09e1cc917a6bdc01fc2266384d1b8128b5448ad18125c462074a80 done
+#29 exporting config sha256:a3496483cae3afaaf6db201b0a2f6e115743d93b55ac6adf0d2597e339d04199 0.0s done
+#29 exporting attestation manifest sha256:15336775771b29ef5d064b90cd63180ae408d1a15f37b7aa633e41b085b9954d
+#29 exporting attestation manifest sha256:15336775771b29ef5d064b90cd63180ae408d1a15f37b7aa633e41b085b9954d 0.1s done
+#29 exporting manifest list sha256:d6764bb15ac29b3e994b4284e63068eaba09cd83cc0d01e117b93672d42bc168 0.0s done
+#29 naming to docker.io/library/labios-test:latest
+#29 naming to docker.io/library/labios-test:latest done
+#29 unpacking to docker.io/library/labios-test:latest 0.0s done
+#29 DONE 0.4s
+
+#30 resolving provenance for metadata file
+#30 DONE 0.0s
+ Image labios-test Built 
+ Container labios-p08-p08-20260730T193204Z-baseline Creating 
+ Container labios-p08-p08-20260730T193204Z-baseline Created 
+Filters: [!benchmark]
+Randomness seeded to: 3428285407
+===============================================================================
+All tests passed (2690 assertions in 1 test case)
+

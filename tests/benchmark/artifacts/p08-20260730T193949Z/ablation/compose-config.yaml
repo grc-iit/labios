@@ -1,0 +1,389 @@
+name: labios
+services:
+  dispatcher:
+    build:
+      context: /home/akougkas/projects/labios
+      dockerfile: Dockerfile
+      target: dispatcher
+    depends_on:
+      manager:
+        condition: service_healthy
+        required: true
+      nats:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      LABIOS_DISPATCHER_BATCH_TIMEOUT_MS: "100"
+      LABIOS_NATS_URL: nats://nats:4222
+      LABIOS_REDIS_HOST: redis
+      LABIOS_SCHEDULER_POLICY: minmax
+      LABIOS_SCHEDULER_PROFILE: /etc/labios/profiles/trace_ablation.toml
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -f /tmp/labios-ready && kill -0 1
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 5s
+    networks:
+      default: null
+    restart: unless-stopped
+    stop_grace_period: 20s
+  manager:
+    build:
+      context: /home/akougkas/projects/labios
+      dockerfile: Dockerfile
+      target: manager
+    depends_on:
+      nats:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      LABIOS_NATS_URL: nats://nats:4222
+      LABIOS_REDIS_HOST: redis
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -f /tmp/labios-ready && kill -0 1
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 5s
+    networks:
+      default: null
+    restart: unless-stopped
+    stop_grace_period: 15s
+  mcp:
+    build:
+      context: /home/akougkas/projects/labios/mcp
+      dockerfile: Dockerfile
+    depends_on:
+      dispatcher:
+        condition: service_healthy
+        required: true
+      nats:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    environment:
+      LABIOS_NATS_URL: nats://nats:4222
+      LABIOS_REDIS_HOST: redis
+      LABIOS_REDIS_PORT: "6379"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import socket; a=socket.create_connection(('redis',6379),2); a.close(); b=socket.create_connection(('nats',4222),2); b.close()
+      timeout: 5s
+      interval: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      default: null
+    restart: unless-stopped
+    stdin_open: true
+    stop_grace_period: 10s
+    volumes:
+      - type: volume
+        source: worker-data
+        target: /labios/data
+        read_only: true
+        volume: {}
+  nats:
+    command:
+      - --jetstream
+      - --store_dir=/data
+      - --http_port=8222
+    healthcheck:
+      test:
+        - CMD
+        - sh
+        - -c
+        - wget -qO- http://localhost:8222/healthz | grep -q ok
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 3s
+    image: nats:2.10-alpine
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 4222
+        published: "4222"
+        protocol: tcp
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 8222
+        published: "8222"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 15s
+    volumes:
+      - type: volume
+        source: nats-data
+        target: /data
+        volume: {}
+  redis:
+    command:
+      - --logtostderr
+      - --dir=/data
+      - --dbfilename=labios
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 3s
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 6379
+        published: "6379"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 30s
+    volumes:
+      - type: volume
+        source: dragonfly-data
+        target: /data
+        volume: {}
+  redis-kv:
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 3s
+    image: redis:7-alpine
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        host_ip: 127.0.0.1
+        target: 6379
+        published: "6380"
+        protocol: tcp
+    restart: unless-stopped
+    stop_grace_period: 15s
+    volumes:
+      - type: volume
+        source: redis-kv-data
+        target: /data
+        volume: {}
+  test:
+    profiles:
+      - test
+    build:
+      context: /home/akougkas/projects/labios
+      dockerfile: Dockerfile
+      target: test
+    depends_on:
+      dispatcher:
+        condition: service_healthy
+        required: true
+      manager:
+        condition: service_healthy
+        required: true
+      worker-1:
+        condition: service_healthy
+        required: true
+      worker-2:
+        condition: service_healthy
+        required: true
+      worker-3:
+        condition: service_healthy
+        required: true
+    environment:
+      LABIOS_KV_HOST: redis-kv
+      LABIOS_KV_PORT: "6379"
+      LABIOS_NATS_URL: nats://nats:4222
+      LABIOS_REDIS_HOST: redis
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - command -v labios-smoke-test >/dev/null && command -v labios-demo >/dev/null
+      timeout: 2s
+      interval: 2s
+      retries: 3
+      start_period: 1s
+    networks:
+      default: null
+    restart: "no"
+  worker-1:
+    build:
+      context: /home/akougkas/projects/labios
+      dockerfile: Dockerfile
+      target: worker
+    depends_on:
+      manager:
+        condition: service_healthy
+        required: true
+      nats:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      redis-kv:
+        condition: service_healthy
+        required: true
+    environment:
+      LABIOS_KV_HOST: redis-kv
+      LABIOS_KV_PORT: "6379"
+      LABIOS_NATS_URL: nats://nats:4222
+      LABIOS_REDIS_HOST: redis
+      LABIOS_TEST_EXECUTION_DELAY_MS: "0"
+      LABIOS_WORKER_CAPACITY: 10GB
+      LABIOS_WORKER_ENERGY: "1"
+      LABIOS_WORKER_ID: "1"
+      LABIOS_WORKER_IDLE_TIMEOUT_MS: "86400000"
+      LABIOS_WORKER_SPEED: "5"
+      LABIOS_WORKER_TIER: "1"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -f /tmp/labios-ready && kill -0 1
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 5s
+    networks:
+      default: null
+    restart: unless-stopped
+    stop_grace_period: 20s
+    volumes:
+      - type: volume
+        source: worker-data
+        target: /labios/data
+        volume: {}
+  worker-2:
+    build:
+      context: /home/akougkas/projects/labios
+      dockerfile: Dockerfile
+      target: worker
+    depends_on:
+      manager:
+        condition: service_healthy
+        required: true
+      nats:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      redis-kv:
+        condition: service_healthy
+        required: true
+    environment:
+      LABIOS_KV_HOST: redis-kv
+      LABIOS_KV_PORT: "6379"
+      LABIOS_NATS_URL: nats://nats:4222
+      LABIOS_REDIS_HOST: redis
+      LABIOS_TEST_EXECUTION_DELAY_MS: "20"
+      LABIOS_WORKER_CAPACITY: 50GB
+      LABIOS_WORKER_ENERGY: "3"
+      LABIOS_WORKER_ID: "2"
+      LABIOS_WORKER_IDLE_TIMEOUT_MS: "86400000"
+      LABIOS_WORKER_SPEED: "3"
+      LABIOS_WORKER_TIER: "1"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -f /tmp/labios-ready && kill -0 1
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 5s
+    networks:
+      default: null
+    restart: unless-stopped
+    stop_grace_period: 20s
+    volumes:
+      - type: volume
+        source: worker-data
+        target: /labios/data
+        volume: {}
+  worker-3:
+    build:
+      context: /home/akougkas/projects/labios
+      dockerfile: Dockerfile
+      target: worker
+    depends_on:
+      manager:
+        condition: service_healthy
+        required: true
+      nats:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+      redis-kv:
+        condition: service_healthy
+        required: true
+    environment:
+      LABIOS_KV_HOST: redis-kv
+      LABIOS_KV_PORT: "6379"
+      LABIOS_NATS_URL: nats://nats:4222
+      LABIOS_REDIS_HOST: redis
+      LABIOS_TEST_EXECUTION_DELAY_MS: "60"
+      LABIOS_WORKER_CAPACITY: 200GB
+      LABIOS_WORKER_ENERGY: "5"
+      LABIOS_WORKER_ID: "3"
+      LABIOS_WORKER_IDLE_TIMEOUT_MS: "86400000"
+      LABIOS_WORKER_SPEED: "1"
+      LABIOS_WORKER_TIER: "1"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -f /tmp/labios-ready && kill -0 1
+      timeout: 2s
+      interval: 2s
+      retries: 15
+      start_period: 5s
+    networks:
+      default: null
+    restart: unless-stopped
+    stop_grace_period: 20s
+    volumes:
+      - type: volume
+        source: worker-data
+        target: /labios/data
+        volume: {}
+networks:
+  default:
+    name: labios_default
+volumes:
+  dragonfly-data:
+    name: labios_dragonfly-data
+  nats-data:
+    name: labios_nats-data
+  redis-kv-data:
+    name: labios_redis-kv-data
+  worker-data:
+    name: labios_worker-data

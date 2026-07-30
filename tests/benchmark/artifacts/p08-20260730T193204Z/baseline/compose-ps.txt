@@ -1,0 +1,9 @@
+NAME                  IMAGE                                         COMMAND                  SERVICE      CREATED          STATUS                    PORTS
+labios-dispatcher-1   labios-dispatcher                             "labios-dispatcher"      dispatcher   22 seconds ago   Up 7 seconds (healthy)    
+labios-manager-1      labios-manager                                "labios-manager"         manager      22 seconds ago   Up 13 seconds (healthy)   
+labios-nats-1         nats:2.10-alpine                              "docker-entrypoint.s…"   nats         22 seconds ago   Up 21 seconds (healthy)   127.0.0.1:4222->4222/tcp, 127.0.0.1:8222->8222/tcp
+labios-redis-1        docker.dragonflydb.io/dragonflydb/dragonfly   "/usr/bin/tini -- en…"   redis        22 seconds ago   Up 21 seconds (healthy)   127.0.0.1:6379->6379/tcp
+labios-redis-kv-1     redis:7-alpine                                "docker-entrypoint.s…"   redis-kv     22 seconds ago   Up 21 seconds (healthy)   127.0.0.1:6380->6379/tcp
+labios-worker-1-1     labios-worker-1                               "labios-worker"          worker-1     22 seconds ago   Up 7 seconds (healthy)    
+labios-worker-2-1     labios-worker-2                               "labios-worker"          worker-2     22 seconds ago   Up 7 seconds (healthy)    
+labios-worker-3-1     labios-worker-3                               "labios-worker"          worker-3     22 seconds ago   Up 7 seconds (healthy)    

@@ -1,0 +1,122 @@
+ Container labios-redis-kv-1 Running 
+ Container labios-nats-1 Running 
+ Container labios-redis-1 Running 
+ Container labios-dispatcher-1 Running 
+ Container labios-worker-2-1 Running 
+ Container labios-worker-3-1 Running 
+ Container labios-worker-1-1 Running 
+ Container labios-manager-1 Running 
+ Image labios-test Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 526B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 4.03kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/debian:bookworm-slim
+#3 DONE 0.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 134B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [builder 1/5] FROM docker.io/library/debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818
+#6 resolve docker.io/library/debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818 0.1s done
+#6 DONE 0.1s
+
+#5 [internal] load build context
+#5 transferring context: 11.68kB 0.0s done
+#5 DONE 0.1s
+
+#7 [builder 3/5] COPY . /src
+#7 CACHED
+
+#8 [builder 4/5] WORKDIR /src
+#8 CACHED
+
+#9 [builder 2/5] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     cmake     git     ca-certificates     pkg-config     libssl-dev     && rm -rf /var/lib/apt/lists/*
+#9 CACHED
+
+#10 [builder 5/5] RUN cmake --preset release     && cmake --build build/release -j"$(nproc)"
+#10 CACHED
+
+#11 [test  3/19] COPY --from=builder /src/build/release/tests/labios-smoke-test /usr/local/bin/
+#11 CACHED
+
+#12 [test 12/19] COPY --from=builder /src/build/release/tests/labios-kernel-cm1-test /usr/local/bin/
+#12 CACHED
+
+#13 [test 17/19] COPY --from=builder /src/build/release/lib/liblabios_intercept.so /usr/local/lib/
+#13 CACHED
+
+#14 [test  9/19] COPY --from=builder /src/build/release/tests/labios-scheduling-test /usr/local/bin/
+#14 CACHED
+
+#15 [test  7/19] COPY --from=builder /src/build/release/tests/labios-benchmark-test /usr/local/bin/
+#15 CACHED
+
+#16 [test 14/19] COPY --from=builder /src/build/release/tests/labios-kernel-montage-test /usr/local/bin/
+#16 CACHED
+
+#17 [test 13/19] COPY --from=builder /src/build/release/tests/labios-kernel-hacc-test /usr/local/bin/
+#17 CACHED
+
+#18 [test 15/19] COPY --from=builder /src/build/release/tests/labios-kernel-kmeans-test /usr/local/bin/
+#18 CACHED
+
+#19 [test  8/19] COPY --from=builder /src/build/release/tests/labios-bench_trace_guided_selection /usr/local/bin/
+#19 CACHED
+
+#20 [test 10/19] COPY --from=builder /src/build/release/tests/labios-live-correctness-driver /usr/local/bin/
+#20 CACHED
+
+#21 [test  4/19] COPY --from=builder /src/build/release/tests/labios-data-path-test /usr/local/bin/
+#21 CACHED
+
+#22 [test 18/19] COPY --from=builder /src/conf/ /etc/labios/
+#22 CACHED
+
+#23 [test  2/19] RUN apt-get update && apt-get install -y --no-install-recommends     libssl3     && rm -rf /var/lib/apt/lists/*
+#23 CACHED
+
+#24 [test  5/19] COPY --from=builder /src/build/release/tests/labios-catalog-manager-test /usr/local/bin/
+#24 CACHED
+
+#25 [test 16/19] COPY --from=builder /src/build/release/src/services/labios-demo /usr/local/bin/
+#25 CACHED
+
+#26 [test  6/19] COPY --from=builder /src/build/release/tests/labios-intercept-test /usr/local/bin/
+#26 CACHED
+
+#27 [test 11/19] COPY --from=builder /src/build/release/tests/labios-elastic-flood-test /usr/local/bin/
+#27 CACHED
+
+#28 [test 19/19] RUN ldconfig
+#28 CACHED
+
+#29 exporting to image
+#29 exporting layers 0.0s done
+#29 exporting manifest sha256:b7d217452d09e1cc917a6bdc01fc2266384d1b8128b5448ad18125c462074a80 done
+#29 exporting config sha256:a3496483cae3afaaf6db201b0a2f6e115743d93b55ac6adf0d2597e339d04199 done
+#29 exporting attestation manifest sha256:30c0d8ccd4587f448e2c80c47a8949e3bfedb390d77ec0fee0d459a3c802ae51 0.1s done
+#29 exporting manifest list sha256:4f73f804042c50fa87988c12d21950661d9bec94c0aa4a492b3ea4554fccd20c
+#29 exporting manifest list sha256:4f73f804042c50fa87988c12d21950661d9bec94c0aa4a492b3ea4554fccd20c 0.0s done
+#29 naming to docker.io/library/labios-test:latest done
+#29 unpacking to docker.io/library/labios-test:latest 0.0s done
+#29 DONE 0.4s
+
+#30 resolving provenance for metadata file
+#30 DONE 0.0s
+ Image labios-test Built 
+ Container labios-p08-p08-20260730T193949Z-baseline Creating 
+ Container labios-p08-p08-20260730T193949Z-baseline Created 
+Filters: [!benchmark]
+Randomness seeded to: 588315299
+===============================================================================
+All tests passed (2690 assertions in 1 test case)
+

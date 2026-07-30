@@ -86,10 +86,66 @@ samples on at least two workers and a maximum observed service proxy at least
 20% above the minimum; failure of either calibration gate invalidates the run.
 Passing this reduced one-repetition check establishes method readiness only.
 
-Prompt 08 produces the three CSV performance artifacts. Report median and p95 of
-`completion_us` (and the corresponding submission distributions) per profile;
-exclude any row whose `verified` column is not `1`. No result is reported in
-this section: the reduced dry run is not a speedup or negative-result claim.
+The rejected Prompt 08 attempt used
+`run_trace_guided_full_experiment.sh`. It performs one untimed warmup and 20
+timed repetitions per profile and arm. Each arm begins after `compose down -v`
+and is rebuilt from the same tracked source. The three workers use fixed
+execution-delay fixtures of 0, 20, and 60 ms; these are calibration controls,
+not production-performance settings. Arm order is shuffled once with seed
+2101. Within every arm, all six profile orders are rotated deterministically
+across repetitions. Resources are unique per repetition. State is fresh at arm
+start and intentionally accumulates within an arm so completion-derived trace
+state can mature; there is no hidden cache flush between repetitions.
+
+The measured interval for each label begins immediately after its public
+asynchronous submission returns and ends when `Client::wait_any` observes its
+terminal completion. Public submission call latency is recorded separately.
+Read-back verification happens after the measured completion interval. Every
+raw row contains label and resource identity, bytes, selected worker, trace
+inputs captured at scheduling, park retries, terminal state, failure text, and
+expected/observed digests. Any missing, failed, or unverified row invalidates
+the arm. The informed arm additionally requires successful trace samples from
+at least two workers and a maximum/minimum service-proxy separation of at least
+1.20.
+
+Raw per-label median, nearest-rank p95, and mean distributions are descriptive.
+The attempted analysis incorrectly treated the median completion latency within
+each of the 20 stateful repetitions as an independent inferential unit. The
+predeclared primary comparison was informed
+versus static-weight-matched ablation for each profile: a two-sided
+Mann–Whitney U test with tie and continuity corrections, Holm correction over
+the three profiles at alpha 0.05, Cliff's delta, and a deterministic
+10,000-resample bootstrap 95% interval for the median difference and ratio
+(seed 2101). Baseline is contextual. A profile is favorable only when the
+Holm-adjusted test is significant, the observed ratio is below one, and the
+ratio interval is wholly below one; the symmetric condition is adverse.
+Everything else would have been null or inconclusive. Those calculations are
+invalid for this run because the repetition-independence assumption failed.
+
+The rejected harness is gated against accidental use. It can be reproduced for
+diagnostic inspection only with:
+
+```sh
+LABIOS_ALLOW_INVALID_P08_DIAGNOSTIC=1 \
+  tests/benchmark/run_trace_guided_full_experiment.sh
+```
+
+The script records the base commit, tracked-diff hash, host and container
+versions, rendered topology, profile files, raw CSVs, calibration snapshots,
+logs, checksums, machine-readable analysis, and a concise result table beneath
+`tests/benchmark/artifacts/`. A valid run's compact evidence bundle is reviewed
+and tracked with Prompt 08; transient container layers remain untracked.
+
+The attempted `p08-20260730T193949Z` run produced 1,260/1,260 verified measured
+completions and passed the informed calibration gate, but it is **invalid as a
+performance experiment**. Repetitions accumulated state within one arm and
+showed strong serial dependence; untimed setup/read-back labels trained trace
+state; the service/queue columns captured scheduling EWMAs rather than actual
+per-label observations; and source provenance omitted then-untracked method
+files. `INVALID.md` records the audit. The generated numerical analysis is
+retained only to diagnose the rejected method and must not be cited as a null,
+negative, or favorable performance result. Prompt 08 and WS3's performance exit
+remain open. The reduced dry run remains method-readiness evidence only.
 
 ## Methodology and interpretation
 

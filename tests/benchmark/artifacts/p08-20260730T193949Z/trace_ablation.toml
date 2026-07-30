@@ -1,0 +1,21 @@
+[weights]
+availability = 0.05
+capacity = 0.15
+load = 0.10
+speed = 0.15
+energy = 0.05
+tier = 0.0
+skills = 0.0
+compute = 0.0
+reasoning = 0.0
+
+[trace]
+service_weight = 0.0
+queue_weight = 0.0
+throughput_weight = 0.0
+ewma_alpha = 0.20
+cold_start_value = 0.50
+queue_anchor = 8.0
+size_normalization_bytes = 1048576.0
+min_samples = 3
+attempt_ttl_ms = 30000
