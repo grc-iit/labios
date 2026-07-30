@@ -11,7 +11,10 @@
 #include <memory>
 #include <mutex>
 #include <span>
+#include <stdexcept>
+#include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace labios {
@@ -23,6 +26,22 @@ struct PendingLabel {
 };
 
 enum class CompletionState : uint8_t { Pending, Complete, Failed, Cancelled, Parked, Timeout };
+
+/// Typed failure from a synchronous completion wait. A Timeout means only that
+/// this wait ended; the label remains active until it completes or is explicitly
+/// cancelled.
+class CompletionError : public std::runtime_error {
+public:
+    CompletionError(CompletionState state, uint64_t label_id, std::string message)
+        : std::runtime_error(std::move(message)), state_(state), label_id_(label_id) {}
+
+    CompletionState state() const noexcept { return state_; }
+    uint64_t label_id() const noexcept { return label_id_; }
+
+private:
+    CompletionState state_;
+    uint64_t label_id_;
+};
 
 struct CompletionResult {
     uint64_t label_id = 0;

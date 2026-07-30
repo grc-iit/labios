@@ -524,6 +524,22 @@ int main() {
             units.reserve(result.direct_route.size() + result.independent.size() +
                           result.supertasks.size());
             uint64_t ordinal = 0;
+            auto composite_readiness = [&](
+                const labios::LabelData& child,
+                const std::unordered_set<uint64_t>& internal_ids) {
+                for (const auto& dependency : child.dependencies) {
+                    if (internal_ids.contains(dependency.label_id)) continue;
+                    try {
+                        if (catalog.get_status(dependency.label_id) !=
+                            labios::LabelStatus::Complete) {
+                            return labios::DependencyReadiness{false, "BLOCKED_PREDECESSOR"};
+                        }
+                    } catch (...) {
+                        return labios::DependencyReadiness{false, "UNKNOWN_DEPENDENCY"};
+                    }
+                }
+                return labios::DependencyReadiness{};
+            };
             auto add_label_unit = [&](labios::LabelData label, int preferred_worker = 0) {
                 DispatchUnit unit;
                 unit.representative = std::move(label);
@@ -544,12 +560,16 @@ int main() {
                         unit.descriptor.ready = false;
                         unit.park_reason = "MISSING_COMPOSITE_PROGRAM";
                     }
+                    std::unordered_set<uint64_t> internal_ids;
+                    for (const auto& child : unit.children) internal_ids.insert(child.id);
                     for (const auto& child : unit.children) {
                         if (auto job = labios::describe_job(child, ordinal++))
                             unit.descriptor.members.push_back(std::move(*job));
-                        for (const auto& dependency : child.dependencies)
-                            unit.descriptor.predecessors.push_back(dependency.label_id);
-                        const auto readiness = catalog.dependency_readiness(child);
+                        for (const auto& dependency : child.dependencies) {
+                            if (!internal_ids.contains(dependency.label_id))
+                                unit.descriptor.predecessors.push_back(dependency.label_id);
+                        }
+                        const auto readiness = composite_readiness(child, internal_ids);
                         if (!readiness.ready) {
                             unit.descriptor.ready = false;
                             if (unit.park_reason.empty()) unit.park_reason = readiness.reason;
@@ -604,12 +624,16 @@ int main() {
                 unit.descriptor.unit_id = unit.representative.id;
                 unit.descriptor.ordinal = ordinal;
                 unit.descriptor.ready = true;
+                std::unordered_set<uint64_t> internal_ids;
+                for (const auto& child : unit.children) internal_ids.insert(child.id);
                 for (const auto& child : unit.children) {
                     auto job = labios::describe_job(child, ordinal++);
                     if (job) unit.descriptor.members.push_back(std::move(*job));
-                    for (const auto& dependency : child.dependencies)
-                        unit.descriptor.predecessors.push_back(dependency.label_id);
-                    const auto readiness = catalog.dependency_readiness(child);
+                    for (const auto& dependency : child.dependencies) {
+                        if (!internal_ids.contains(dependency.label_id))
+                            unit.descriptor.predecessors.push_back(dependency.label_id);
+                    }
+                    const auto readiness = composite_readiness(child, internal_ids);
                     if (!readiness.ready) {
                         unit.descriptor.ready = false;
                         if (unit.park_reason.empty()) unit.park_reason = readiness.reason;
@@ -740,18 +764,35 @@ int main() {
                     const auto now_ms = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch()).count());
                     const auto delay = labios::parking_backoff_ms(attempt);
-                    catalog.park(unit.representative,
-                        history.park_reason.empty() ? "NO_FEASIBLE_CURRENT_PLACEMENT" : history.park_reason,
-                        attempt, now_ms + delay, history.park_reason);
+                    const auto park_reason = history.park_reason.empty()
+                        ? "NO_FEASIBLE_CURRENT_PLACEMENT" : history.park_reason;
+                    catalog.park(unit.representative, park_reason,
+                                 attempt, now_ms + delay, history.park_reason);
+                    // Composite/supertask children remain independently
+                    // observable through the public completion API. Project the
+                    // unit's legal deferral onto each child instead of leaving
+                    // them misleadingly Queued while the parent is Parked.
+                    for (const auto& child : unit.children) {
+                        catalog.park(child, park_reason, attempt,
+                                     now_ms + delay, history.park_reason);
+                    }
                     std::lock_guard lock(batch_mu);
                     local_handoff_ids.erase(unit.representative.id);
                 }
             }
             // Persist every validated residual and lifecycle transition before
             // publishing any worker delivery.
-            catalog.schedule_batch(scheduled);
+            const auto scheduled_ids = catalog.schedule_batch(scheduled);
             for (const auto index : assigned_units) {
                 auto& unit = units[index];
+                if (std::find(scheduled_ids.begin(), scheduled_ids.end(),
+                              unit.representative.id) == scheduled_ids.end()) {
+                    // Cancellation or another terminal transition won after
+                    // planning. Never publish stale pre-execution work.
+                    std::lock_guard lock(batch_mu);
+                    local_handoff_ids.erase(unit.representative.id);
+                    continue;
+                }
                 const auto worker_id = unit.representative.routing.worker_id;
                 if (unit.composite) {
                     std::vector<std::vector<std::byte>> children;

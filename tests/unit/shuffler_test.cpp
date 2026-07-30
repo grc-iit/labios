@@ -65,6 +65,31 @@ TEST_CASE("Aggregation merges consecutive offsets", "[shuffler]") {
     CHECK(fp->length == 3072);
 }
 
+TEST_CASE("URI writes with empty compatibility keys stay distinct", "[shuffler][typed-resource]") {
+    labios::Shuffler s(labios::ShufflerConfig{});
+    std::vector<labios::LabelData> batch(3);
+    for (size_t index = 0; index < batch.size(); ++index) {
+        auto& label = batch[index];
+        label.id = index + 1;
+        label.type = labios::LabelType::Write;
+        label.operation = "core.write";
+        label.dest_uri = "file:///typed/" + std::to_string(index) + ".bin";
+        label.data_size = index == 1 ? 0 : 1024;
+        label.has_destination_resource = true;
+        label.destination_resource.family = labios::ResourceFamily::FileRange;
+        label.destination_resource.path = "/typed/" + std::to_string(index) + ".bin";
+    }
+
+    auto result = s.shuffle(std::move(batch), no_location);
+    REQUIRE(result.independent.size() == 3);
+    CHECK(result.supertasks.empty());
+    CHECK(result.independent[0].id == 1);
+    CHECK(result.independent[1].id == 2);
+    CHECK(result.independent[2].id == 3);
+    CHECK(result.independent[0].children.empty());
+    CHECK(result.independent[1].dependencies.empty());
+}
+
 TEST_CASE("Aggregation disabled passes labels through", "[shuffler]") {
     labios::ShufflerConfig cfg;
     cfg.aggregation_enabled = false;

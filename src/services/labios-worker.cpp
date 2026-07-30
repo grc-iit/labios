@@ -390,19 +390,47 @@ int main() {
                 have_label = true;
                 completion.label_id = label.id;
 
-                // Terminal completion is the stable idempotency record for
-                // JetStream redelivery; never repeat an external effect.
+                // Serialize claim/dedupe with live callbacks. A redelivery
+                // after process death may reclaim only the direct staged core
+                // Write shape whose identical bytes and destination operation
+                // make replay idempotent in the currently registered adapters.
+                // Other uncertain Executing operations are never reclaimed.
+                std::lock_guard lock(worker_mu);
                 if (auto prior = catalog.get_completion(label.id)) {
                     publish_completion(nats, label.reply_to, *prior);
                     g_active_labels.fetch_sub(1);
                     ack.ack();
                     return;
                 }
-
-                std::lock_guard lock(worker_mu);
+                const bool replay_safe =
+                    label.type == labios::LabelType::Write &&
+                    label.has_input_binding &&
+                    label.input_binding.provenance ==
+                        labios::BindingProvenance::DirectProducer &&
+                    !label.has_source_resource && label.source_uri.empty() &&
+                    label.pipeline.stages.empty();
+                if (!catalog.claim_execution(label.id, replay_safe)) {
+                    // A pre-execution cancellation or terminal transition won.
+                    // Leave an incomplete cancellation unacknowledged so its
+                    // durable completion can be replayed on redelivery.
+                    if (auto prior = catalog.get_completion(label.id)) {
+                        publish_completion(nats, label.reply_to, *prior);
+                        ack.ack();
+                    }
+                    g_active_labels.fetch_sub(1);
+                    return;
+                }
                 labios::mark_label_executing(label, worker_name, now_us());
-                catalog.set_status(label.id, labios::LabelStatus::Executing);
                 catalog.set_flags(label.id, label.flags);
+
+                // Deterministic live-test fixture: widen only the reproduced
+                // Scheduled/Executing failure window. Unset in normal runs.
+                if (const char* delay = std::getenv("LABIOS_TEST_EXECUTION_DELAY_MS")) {
+                    const auto delay_ms = std::max(0, std::atoi(delay));
+                    if (delay_ms != 0) {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
+                    }
+                }
 
                 if (label.type == labios::LabelType::Write) {
                     auto result = execute_write(

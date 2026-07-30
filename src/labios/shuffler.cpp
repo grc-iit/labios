@@ -107,20 +107,25 @@ std::vector<LabelData> Shuffler::aggregate(
         return std::move(labels);
     }
 
-    // Group by file_key, preserving insertion order per group.
+    // Group only legacy FilePath writes with a real identity. URI/typed
+    // resources do not have equivalent range semantics in this pass; grouping
+    // their empty compatibility file_key would conflate unrelated resources.
     std::unordered_map<std::string, std::vector<LabelData>> groups;
     std::vector<std::string> group_order;
+    std::vector<LabelData> output;
+    output.reserve(labels.size());
 
     for (auto& l : labels) {
+        if (l.file_key.empty() || !std::holds_alternative<FilePath>(l.destination)) {
+            output.push_back(std::move(l));
+            continue;
+        }
         auto [it, inserted] = groups.try_emplace(l.file_key);
         if (inserted) {
             group_order.push_back(l.file_key);
         }
         it->second.push_back(std::move(l));
     }
-
-    std::vector<LabelData> output;
-    output.reserve(labels.size());
 
     for (auto& key : group_order) {
         auto& group = groups[key];
@@ -235,7 +240,11 @@ void Shuffler::detect_dependencies(std::vector<LabelData>& labels) {
     // Group labels by granularity key.
     std::unordered_map<std::string, std::vector<size_t>> groups;
     for (size_t i = 0; i < labels.size(); ++i) {
-        groups[group_key(labels[i], config_.dep_granularity)].push_back(i);
+        const auto key = group_key(labels[i], config_.dep_granularity);
+        // Empty compatibility keys are common for URI/typed resources and are
+        // not proof of aliasing. Their explicit declared dependencies remain.
+        if (key.empty()) continue;
+        groups[key].push_back(i);
     }
 
     for (auto& [key, indices] : groups) {

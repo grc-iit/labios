@@ -261,18 +261,43 @@ void CatalogManager::set_status(uint64_t label_id, LabelStatus status) {
 }
 
 bool CatalogManager::cancel_if_pre_execution(uint64_t label_id) {
-    // The atomic cross-process compare-and-set is supplied by P07's durable
-    // catalog coordinator.  This local transaction is deliberately
-    // conservative: never claim cancellation once execution is observable.
-    auto status = get_status(label_id);
-    if (status != LabelStatus::Queued && status != LabelStatus::Parked) return false;
-    set_status(label_id, LabelStatus::Cancelled);
+    const auto key = catalog_key(label_id);
+    const auto ts = now_ms();
+    const std::vector<transport::RedisConnection::HashField> fields{
+        text_field("status", "cancelled"), text_field("parked", "0"),
+        text_field("updated_at", ts), text_field("last_transition_at", ts)};
+    bool won = false;
+    for (const auto expected : {"queued", "parked", "scheduled"}) {
+        if (redis_.hset_fields_if(key, "status", expected, false, fields)) {
+            won = true;
+            break;
+        }
+    }
+    if (!won) return false;
+
     CompletionData completion;
     completion.label_id = label_id;
     completion.status = CompletionStatus::Error;
     completion.error = "CANCELED: cancelled before execution";
-    set_completion(completion);
+    redis_.set_binary(key + ":completion", serialize_completion(completion));
     return true;
+}
+
+bool CatalogManager::claim_execution(uint64_t label_id, bool allow_idempotent_reclaim) {
+    const auto key = catalog_key(label_id);
+    const auto ts = now_ms();
+    const std::vector<transport::RedisConnection::HashField> fields{
+        text_field("status", "executing"), text_field("parked", "0"),
+        text_field("updated_at", ts), text_field("last_transition_at", ts)};
+    if (redis_.hset_fields_if(key, "status", "scheduled", false, fields)) {
+        return true;
+    }
+    if (!allow_idempotent_reclaim) return false;
+    // The caller has proved that an identical replay is safe. Live callbacks
+    // are serialized by the worker and consult the terminal completion record
+    // before requesting this reclaim.
+    return redis_.hset_fields_if(
+        key, "status", "executing", false, fields);
 }
 
 void CatalogManager::set_completion(const CompletionData& completion) {
@@ -357,26 +382,29 @@ std::optional<int> CatalogManager::get_worker(uint64_t label_id) {
     }
 }
 
-void CatalogManager::schedule_batch(std::span<const ScheduleEntry> entries) {
-    if (entries.empty()) return;
-
-    auto ts = now_ms();
-    redis_.pipeline_begin();
-
-    for (auto& e : entries) {
-        auto key = catalog_key(e.label_id);
-        redis_.pipeline_hset(key, "status", "scheduled");
-        redis_.pipeline_hset(key, "parked", "0");
-        redis_.pipeline_hset(key, "flags", std::to_string(e.flags));
-        redis_.pipeline_hset(key, "worker_id", std::to_string(e.worker_id));
-        // Scheduled records become recoverable if worker delivery/claim does
-        // not advance them before this dispatcher lease expires.
-        redis_.pipeline_hset(key, "next_retry_at", std::to_string(
-            std::stoull(ts) + 10'000ULL));
-        redis_.pipeline_hset(key, "updated_at", ts);
+std::vector<uint64_t> CatalogManager::schedule_batch(
+    std::span<const ScheduleEntry> entries) {
+    std::vector<uint64_t> scheduled;
+    scheduled.reserve(entries.size());
+    const auto ts = now_ms();
+    for (const auto& entry : entries) {
+        const auto key = catalog_key(entry.label_id);
+        const std::vector<transport::RedisConnection::HashField> fields{
+            text_field("status", "scheduled"), text_field("parked", "0"),
+            text_field("flags", std::to_string(entry.flags)),
+            text_field("worker_id", std::to_string(entry.worker_id)),
+            text_field("next_retry_at", std::to_string(std::stoull(ts) + 10'000ULL)),
+            text_field("updated_at", ts), text_field("last_transition_at", ts)};
+        bool won = false;
+        for (const auto expected : {"queued", "parked", "scheduled"}) {
+            if (redis_.hset_fields_if(key, "status", expected, false, fields)) {
+                won = true;
+                break;
+            }
+        }
+        if (won) scheduled.push_back(entry.label_id);
     }
-
-    redis_.pipeline_exec();
+    return scheduled;
 }
 
 std::string CatalogManager::location_key(std::string_view filepath) {

@@ -66,6 +66,9 @@ public:
     void set_status(uint64_t label_id, LabelStatus status);
     /// Compare-and-set used by the pre-execution cancellation boundary.
     bool cancel_if_pre_execution(uint64_t label_id);
+    /// Atomically wins Scheduled -> Executing. An Executing record is reclaimed
+    /// only when the caller has proved this exact operation safe to replay.
+    bool claim_execution(uint64_t label_id, bool allow_idempotent_reclaim = false);
     LabelStatus get_status(uint64_t label_id);
     void set_completion(const CompletionData& completion);
     std::optional<CompletionData> get_completion(uint64_t label_id);
@@ -75,7 +78,9 @@ public:
     std::optional<std::string> get_error(uint64_t label_id);
     void set_worker(uint64_t label_id, int worker_id);
     std::optional<int> get_worker(uint64_t label_id);
-    void schedule_batch(std::span<const ScheduleEntry> entries);
+    /// Conditionally schedules records that are still pre-execution. Returns
+    /// the IDs whose transition won, so stale dispatcher work is not delivered.
+    std::vector<uint64_t> schedule_batch(std::span<const ScheduleEntry> entries);
 
     /// Track which worker holds data for a given filepath (whole-file, legacy).
     void set_location(std::string_view filepath, int worker_id);

@@ -3,6 +3,7 @@
 #include <labios/transport/redis.h>
 #include <cstdlib>
 #include <fcntl.h>
+#include <array>
 
 static std::string redis_host() {
     const char* h = std::getenv("LABIOS_REDIS_HOST");
@@ -104,6 +105,40 @@ TEST_CASE("Catalog stores label flags as attributes", "[catalog_manager]") {
                       labios::LabelFlags::Queued | labios::LabelFlags::Scheduled);
     REQUIRE(catalog.get_flags(label.id)
             == (labios::LabelFlags::Queued | labios::LabelFlags::Scheduled));
+}
+
+TEST_CASE("Cancellation and worker claim linearize at the catalog status", "[catalog_manager][completion]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::CatalogManager catalog(redis);
+    constexpr uint64_t cancelled_id = 9'200'000'001ULL;
+    constexpr uint64_t claimed_id = 9'200'000'002ULL;
+    redis.del("labios:catalog:" + std::to_string(cancelled_id));
+    redis.del("labios:catalog:" + std::to_string(cancelled_id) + ":completion");
+    redis.del("labios:catalog:" + std::to_string(claimed_id));
+
+    labios::LabelData cancelled;
+    cancelled.id = cancelled_id;
+    cancelled.type = labios::LabelType::Write;
+    catalog.admit(cancelled);
+    const std::array<labios::ScheduleEntry, 1> first{{{cancelled_id, 1, 0}}};
+    REQUIRE(catalog.schedule_batch(first) == std::vector<uint64_t>{cancelled_id});
+    REQUIRE(catalog.cancel_if_pre_execution(cancelled_id));
+    CHECK_FALSE(catalog.claim_execution(cancelled_id));
+    CHECK(catalog.schedule_batch(first).empty());
+    REQUIRE(catalog.get_completion(cancelled_id));
+    CHECK(catalog.get_status(cancelled_id) == labios::LabelStatus::Cancelled);
+
+    labios::LabelData claimed;
+    claimed.id = claimed_id;
+    claimed.type = labios::LabelType::Write;
+    catalog.admit(claimed);
+    const std::array<labios::ScheduleEntry, 1> second{{{claimed_id, 1, 0}}};
+    REQUIRE(catalog.schedule_batch(second) == std::vector<uint64_t>{claimed_id});
+    REQUIRE(catalog.claim_execution(claimed_id));
+    CHECK_FALSE(catalog.cancel_if_pre_execution(claimed_id));
+    // Reclaim is forbidden unless the caller proves the operation idempotent.
+    CHECK_FALSE(catalog.claim_execution(claimed_id));
+    CHECK(catalog.claim_execution(claimed_id, true));
 }
 
 TEST_CASE("Per-offset location maps different ranges to different workers", "[catalog_manager]") {

@@ -194,10 +194,21 @@ bool LabelManager::cancel(uint64_t label_id) {
 
 WaitResult LabelManager::wait(std::span<PendingLabel> pending,
                               std::chrono::milliseconds timeout) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
     std::vector<uint64_t> ids;
     ids.reserve(pending.size());
     for (auto& p : pending) {
-        resolve_reply(p, std::min<int64_t>(timeout.count(), reply_timeout_ms_));
+        const auto remaining = std::max(
+            std::chrono::milliseconds(0),
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                deadline - std::chrono::steady_clock::now()));
+        try {
+            resolve_reply(p, static_cast<int>(std::min<int64_t>(
+                remaining.count(), reply_timeout_ms_)));
+        } catch (const transport::AsyncReplyTimeout&) {
+            // A reply timeout is an observation, not cancellation. The catalog
+            // may still contain a terminal completion, so inspect it below.
+        }
         if (!p.reply_data.empty()) {
             try {
                 catalog_.set_completion(deserialize_completion(p.reply_data));
@@ -206,7 +217,11 @@ WaitResult LabelManager::wait(std::span<PendingLabel> pending,
         }
         ids.push_back(p.label_id);
     }
-    return wait_all(ids, timeout);
+    const auto remaining = std::max(
+        std::chrono::milliseconds(0),
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            deadline - std::chrono::steady_clock::now()));
+    return wait_all(ids, remaining);
 }
 
 std::vector<std::byte> LabelManager::wait_read(
@@ -214,7 +229,14 @@ std::vector<std::byte> LabelManager::wait_read(
 
     std::vector<std::byte> result;
     for (auto& p : pending) {
-        resolve_reply(p, reply_timeout_ms_);
+        try {
+            resolve_reply(p, reply_timeout_ms_);
+        } catch (const transport::AsyncReplyTimeout&) {
+            throw CompletionError(
+                CompletionState::Timeout, p.label_id,
+                "timed out waiting for read label " + std::to_string(p.label_id) +
+                "; the operation remains active (call test()/wait_for() or cancel() explicitly)");
+        }
         if (p.reply_data.empty()) continue;
         CompletionData comp;
         try {
@@ -227,8 +249,11 @@ std::vector<std::byte> LabelManager::wait_read(
             continue;
         }
         if (comp.status == CompletionStatus::Error) {
-            throw std::runtime_error("read label " + std::to_string(p.label_id)
-                                     + " failed: " + comp.error);
+            const auto state = comp.error.rfind("CANCELED:", 0) == 0
+                ? CompletionState::Cancelled : CompletionState::Failed;
+            throw CompletionError(state, p.label_id,
+                                  "read label " + std::to_string(p.label_id) +
+                                  " failed: " + comp.error);
         }
         auto key = comp.data_key.empty()
             ? ContentManager::data_key(p.label_id)

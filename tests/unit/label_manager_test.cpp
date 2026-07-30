@@ -109,7 +109,7 @@ TEST_CASE("publish_read with zero size returns no labels and empty result", "[la
     REQUIRE(result.empty());
 }
 
-TEST_CASE("wait propagates async reply timeout", "[label_manager]") {
+TEST_CASE("wait returns typed timeout without cancelling the label", "[label_manager]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::transport::NatsConnection nats(nats_url());
     labios::ContentManager cm(redis, 4096, 0, labios::ReadPolicy::ReadThrough);
@@ -121,6 +121,18 @@ TEST_CASE("wait propagates async reply timeout", "[label_manager]") {
     pending.async_reply = std::make_shared<labios::transport::AsyncReply>();
 
     std::array<labios::PendingLabel, 1> entries{pending};
-    REQUIRE_THROWS(lm.wait(entries));
-    REQUIRE_THROWS(lm.wait_read(entries));
+    const auto waited = lm.wait(entries, std::chrono::milliseconds(1));
+    REQUIRE(waited.state == labios::CompletionState::Timeout);
+    REQUIRE(waited.results.size() == 1);
+    CHECK(waited.results.front().state == labios::CompletionState::Timeout);
+    CHECK_FALSE(waited.results.front().terminal());
+
+    try {
+        (void)lm.wait_read(entries);
+        FAIL("expected typed read timeout");
+    } catch (const labios::CompletionError& ex) {
+        CHECK(ex.state() == labios::CompletionState::Timeout);
+        CHECK(ex.label_id() == 123);
+        CHECK(std::string(ex.what()).find("remains active") != std::string::npos);
+    }
 }

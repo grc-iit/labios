@@ -104,6 +104,11 @@ add_executable(labios-scheduling-test integration/scheduling_test.cpp)
 target_link_libraries(labios-scheduling-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-scheduling-test TEST_PREFIX "integration/" PROPERTIES LABELS "integration")
 
+# Command-oriented fixture used by the failure-injection Compose harness. It is
+# intentionally not registered with CTest because the harness owns service kills.
+add_executable(labios-live-correctness-driver integration/live_correctness_driver.cpp)
+target_link_libraries(labios-live-correctness-driver PRIVATE labios)
+
 add_executable(labios-elastic-decision-test unit/elastic_decision_test.cpp)
 target_link_libraries(labios-elastic-decision-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-elastic-decision-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")

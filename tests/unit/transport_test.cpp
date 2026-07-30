@@ -7,7 +7,8 @@
 
 TEST_CASE("AsyncReply wait times out when no reply arrives", "[transport][nats]") {
     labios::transport::AsyncReply reply;
-    REQUIRE_THROWS(reply.wait(std::chrono::milliseconds(1)));
+    REQUIRE_THROWS_AS(reply.wait(std::chrono::milliseconds(1)),
+                      labios::transport::AsyncReplyTimeout);
 }
 
 TEST_CASE("AsyncReply wait returns buffered data after completion", "[transport][nats]") {

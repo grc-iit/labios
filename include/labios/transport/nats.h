@@ -8,12 +8,18 @@
 #include <memory>
 #include <mutex>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 namespace labios::transport {
+
+class AsyncReplyTimeout : public std::runtime_error {
+public:
+    AsyncReplyTimeout() : std::runtime_error("nats: async reply timed out") {}
+};
 
 /// A deferred reply handle returned by publish_request_async().
 /// Call wait() to block until the reply arrives.

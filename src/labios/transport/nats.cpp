@@ -39,7 +39,7 @@ std::vector<std::byte> AsyncReply::wait(std::chrono::milliseconds timeout) {
     std::unique_lock lock(mu);
     cv.wait_for(lock, timeout, [this] { return completed; });
     if (!completed) {
-        throw std::runtime_error("nats: async reply timed out");
+        throw AsyncReplyTimeout();
     }
     return std::move(data);
 }

@@ -24,8 +24,8 @@ void Client::write(std::string_view filepath, std::span<const std::byte> data,
     auto& label_mgr = session_->label_manager();
     auto& catalog_mgr = session_->catalog_manager();
 
-    auto pending = label_mgr.publish_write(filepath, offset, data);
-    label_mgr.wait(pending);
+    PendingIO pending{label_mgr.publish_write(filepath, offset, data)};
+    wait(pending);
     catalog_mgr.track_write(filepath, offset, data.size());
 }
 
@@ -60,13 +60,27 @@ CompletionResult Client::test(const PendingIO& status) {
 }
 
 void Client::wait(PendingIO& status) {
-    auto result = wait_for(status, std::chrono::milliseconds(30000));
+    auto result = wait_for(
+        status, std::chrono::milliseconds(session_->config().reply_timeout_ms));
     for (const auto& item : result.results) {
+        if (item.state == CompletionState::Timeout) {
+            throw CompletionError(
+                CompletionState::Timeout, item.label_id,
+                "timed out waiting for label " + std::to_string(item.label_id) +
+                "; the operation remains active (call test()/wait_for() or cancel() explicitly)");
+        }
         if (item.state == CompletionState::Failed ||
             item.state == CompletionState::Cancelled) {
-            throw std::runtime_error("label " + std::to_string(item.label_id) +
-                                     " failed: " + item.error);
+            throw CompletionError(item.state, item.label_id,
+                                  "label " + std::to_string(item.label_id) +
+                                  " failed: " + item.error);
         }
+    }
+    if (result.state == CompletionState::Timeout) {
+        throw CompletionError(
+            CompletionState::Timeout, 0,
+            "timed out waiting for labels; operations remain active "
+            "(call test()/wait_for() or cancel() explicitly)");
     }
 }
 
