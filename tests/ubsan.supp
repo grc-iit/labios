@@ -1,0 +1,4 @@
+# cnats passes a null pointer to zero-byte memcpy-like operations. Suppress only
+# those third-party source files; no LABIOS source is suppressed.
+nonnull-attribute:glib_dispatch_pool.c
+nonnull-attribute:msg.c

@@ -342,6 +342,7 @@ int main() {
                 expired.label_id = label.id;
                 expired.status = labios::CompletionStatus::Error;
                 expired.error = "EXPIRED: latest-start deadline passed";
+                expired.completed_us = expiry_now;
                 catalog.set_completion(expired);
                 if (!label.reply_to.empty()) {
                     const auto payload = labios::serialize_completion(expired);
@@ -390,6 +391,7 @@ int main() {
                                               : labios::CompletionStatus::Error;
                     comp.error = obs.error;
                     comp.data_key = data_key;
+                    comp.completed_us = now_us();
                     catalog.set_completion(comp);
                     auto buf = labios::serialize_completion(comp);
                     if (!label.reply_to.empty()) {

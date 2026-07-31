@@ -211,25 +211,25 @@ ChannelRegistry::ChannelRegistry(transport::RedisConnection& redis,
                                  transport::NatsConnection& nats)
     : redis_(redis), nats_(nats) {}
 
-Channel* ChannelRegistry::create(std::string_view name, uint32_t ttl_seconds) {
+std::shared_ptr<Channel> ChannelRegistry::create(std::string_view name,
+                                                  uint32_t ttl_seconds) {
     std::lock_guard lock(mu_);
     auto key = std::string(name);
     if (channels_.find(key) != channels_.end()) {
-        return nullptr;
+        return {};
     }
-    auto ch = std::make_unique<Channel>(key, redis_, nats_, ttl_seconds);
-    auto* ptr = ch.get();
-    channels_[key] = std::move(ch);
-    return ptr;
+    auto channel = std::make_shared<Channel>(key, redis_, nats_, ttl_seconds);
+    channels_[key] = channel;
+    return channel;
 }
 
-Channel* ChannelRegistry::get(std::string_view name) {
+std::shared_ptr<Channel> ChannelRegistry::get(std::string_view name) {
     std::shared_lock lock(mu_);
     auto it = channels_.find(name);
     if (it == channels_.end()) {
-        return nullptr;
+        return {};
     }
-    return it->second.get();
+    return it->second;
 }
 
 void ChannelRegistry::remove(std::string_view name) {

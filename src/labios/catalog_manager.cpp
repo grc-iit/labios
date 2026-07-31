@@ -36,6 +36,7 @@ transport::RedisConnection::HashField binary_field(
 
 std::string to_string(LabelStatus status) {
     switch (status) {
+        case LabelStatus::Submitted: return "submitted";
         case LabelStatus::Queued:    return "queued";
         case LabelStatus::Parked:    return "parked";
         case LabelStatus::Scheduled: return "scheduled";
@@ -55,6 +56,7 @@ uint64_t parking_backoff_ms(uint64_t attempt) noexcept {
 }
 
 LabelStatus label_status_from_string(std::string_view s) {
+    if (s == "submitted") return LabelStatus::Submitted;
     if (s == "queued")    return LabelStatus::Queued;
     if (s == "parked")    return LabelStatus::Parked;
     if (s == "scheduled") return LabelStatus::Scheduled;
@@ -83,7 +85,19 @@ void CatalogManager::create(uint64_t label_id, uint32_t app_id,
 }
 
 void CatalogManager::create(const LabelData& label) {
-    admit(label);
+    const auto key = catalog_key(label.id);
+    const auto ts = now_ms();
+    const auto snapshot = serialize_label(label);
+    const std::vector<transport::RedisConnection::HashField> fields{
+        text_field("status", "submitted"), text_field("parked", "0"),
+        text_field("app_id", std::to_string(label.app_id)),
+        text_field("type", std::to_string(static_cast<int>(label.type))),
+        text_field("flags", std::to_string(label.flags)),
+        text_field("priority", std::to_string(label.priority)),
+        text_field("operation", label.operation), text_field("created_at", ts),
+        text_field("updated_at", ts), text_field("last_transition_at", ts),
+        binary_field("canonical_label", snapshot)};
+    redis_.hset_fields(key, fields);
 }
 
 void CatalogManager::admit(const LabelData& label) {
@@ -115,6 +129,9 @@ bool CatalogManager::durable_handoff(const LabelData& label) {
         text_field("operation", label.operation), text_field("updated_at", ts),
         text_field("last_transition_at", ts),
         binary_field("canonical_label", snapshot)};
+    if (redis_.hset_fields_if(key, "status", "submitted", false, fields)) {
+        return true;
+    }
     return redis_.hset_fields_if(key, "status", "queued", true, fields);
 }
 
@@ -241,6 +258,22 @@ uint64_t CatalogManager::park_attempts(uint64_t label_id) {
     try { return std::stoull(*value); } catch (...) { return 0; }
 }
 
+std::optional<ParkingInfo> CatalogManager::get_parking_info(uint64_t label_id) {
+    const auto key = catalog_key(label_id);
+    const auto reason = redis_.hget(key, "park_reason");
+    if (!reason) return std::nullopt;
+    ParkingInfo info;
+    info.reason = *reason;
+    try {
+        info.attempts = std::stoull(redis_.hget(key, "park_attempts").value_or("0"));
+        info.next_retry_at_ms =
+            std::stoull(redis_.hget(key, "next_retry_at").value_or("0"));
+    } catch (...) {
+        return std::nullopt;
+    }
+    return info;
+}
+
 DependencyReadiness CatalogManager::dependency_readiness(
     const LabelData& label) noexcept {
     for (const auto& dependency : label.dependencies) {
@@ -267,7 +300,7 @@ bool CatalogManager::cancel_if_pre_execution(uint64_t label_id) {
         text_field("status", "cancelled"), text_field("parked", "0"),
         text_field("updated_at", ts), text_field("last_transition_at", ts)};
     bool won = false;
-    for (const auto expected : {"queued", "parked", "scheduled"}) {
+    for (const auto expected : {"submitted", "queued", "parked", "scheduled"}) {
         if (redis_.hset_fields_if(key, "status", expected, false, fields)) {
             won = true;
             break;
@@ -279,6 +312,7 @@ bool CatalogManager::cancel_if_pre_execution(uint64_t label_id) {
     completion.label_id = label_id;
     completion.status = CompletionStatus::Error;
     completion.error = "CANCELED: cancelled before execution";
+    completion.completed_us = label_timestamp_now_us();
     redis_.set_binary(key + ":completion", serialize_completion(completion));
     return true;
 }

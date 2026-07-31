@@ -13,12 +13,18 @@
 namespace labios {
 
 enum class LabelStatus : uint8_t {
-    Queued, Parked, Scheduled, Executing, Complete, Error, Cancelled
+    Submitted, Queued, Parked, Scheduled, Executing, Complete, Error, Cancelled
 };
 
 struct DependencyReadiness {
     bool ready = true;
     std::string reason;
+};
+
+struct ParkingInfo {
+    std::string reason;
+    uint64_t attempts = 0;
+    uint64_t next_retry_at_ms = 0;
 };
 
 struct ScheduleEntry {
@@ -41,14 +47,17 @@ class CatalogManager {
 public:
     explicit CatalogManager(transport::RedisConnection& redis);
 
+    /// Record a provisional client-side submission. It is not recoverable or
+    /// completion-guaranteed until dispatcher admission wins durable_handoff().
     void create(uint64_t label_id, uint32_t app_id, LabelType type);
     void create(const LabelData& label);
     /// Persist the canonical label snapshot before transport handoff.
     /// Atomic admission transition: canonical snapshot and queued recovery
     /// metadata become visible in one catalog hash update.
     void admit(const LabelData& label);
-    /// Commit dispatcher ingress only while the record is new/queued. Returns
-    /// false when a redelivery observes a later lifecycle state.
+    /// Atomically admit and queue dispatcher ingress while the record is
+    /// submitted, absent, or already queued. Returns false when a redelivery
+    /// observes a later lifecycle state.
     bool durable_handoff(const LabelData& label);
     void persist_snapshot(const LabelData& label);
     std::optional<LabelData> get_snapshot(uint64_t label_id);
@@ -61,6 +70,7 @@ public:
               uint64_t attempt, uint64_t next_retry_ms,
               std::string_view last_error = {});
     uint64_t park_attempts(uint64_t label_id);
+    std::optional<ParkingInfo> get_parking_info(uint64_t label_id);
     DependencyReadiness dependency_readiness(const LabelData& label) noexcept;
     void set_composite_parent(uint64_t child_id, uint64_t composite_id);
     void set_status(uint64_t label_id, LabelStatus status);

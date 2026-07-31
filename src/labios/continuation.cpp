@@ -151,7 +151,7 @@ std::optional<LabelData> process_continuation(
         return std::nullopt;
 
     case ContinuationKind::Notify: {
-        auto* ch = channels.get(cont.target_channel);
+        auto ch = channels.get(cont.target_channel);
         if (!ch) {
             ch = channels.create(cont.target_channel);
         }

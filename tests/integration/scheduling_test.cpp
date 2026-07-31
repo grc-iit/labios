@@ -72,14 +72,14 @@ TEST_CASE("Worker error path still fires notify continuation", "[scheduling]") {
     auto client = labios::connect(cfg);
 
     auto channel_name = unique_channel_name();
-    auto* ch = client.create_channel(channel_name, 30);
-    REQUIRE(ch != nullptr);
+    auto ch = client.create_channel(channel_name, 30);
+    REQUIRE(static_cast<bool>(ch));
 
     std::atomic<int> received{0};
     std::mutex comp_mu;
     labios::CompletionData observed{};
 
-    ch->subscribe([&](const labios::ChannelMessage& msg) {
+    ch.subscribe([&](const labios::ChannelMessage& msg) {
         auto completion = labios::deserialize_completion(msg.data);
         std::lock_guard lock(comp_mu);
         observed = std::move(completion);

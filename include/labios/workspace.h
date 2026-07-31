@@ -98,16 +98,17 @@ class WorkspaceRegistry {
 public:
     explicit WorkspaceRegistry(transport::RedisConnection& redis);
 
-    Workspace* create(std::string_view name, uint32_t owner_app_id,
-                      uint32_t ttl_seconds = 0);
-    Workspace* get(std::string_view name);
+    std::shared_ptr<Workspace> create(std::string_view name,
+                                      uint32_t owner_app_id,
+                                      uint32_t ttl_seconds = 0);
+    std::shared_ptr<Workspace> get(std::string_view name);
     void remove(std::string_view name);
     std::vector<std::string> list() const;
 
 private:
     transport::RedisConnection& redis_;
     mutable std::shared_mutex mu_;
-    std::unordered_map<std::string, std::unique_ptr<Workspace>,
+    std::unordered_map<std::string, std::shared_ptr<Workspace>,
                        TransparentStringHash, std::equal_to<>> workspaces_;
 };
 

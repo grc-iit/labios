@@ -17,6 +17,7 @@ enable_testing()
 
 add_subdirectory(src/labios)
 add_subdirectory(src/services)
+add_subdirectory(examples)
 
 # POSIX intercept shared library (LD_PRELOAD)
 add_library(labios_intercept SHARED src/drivers/posix_intercept.cpp)

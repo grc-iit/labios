@@ -64,14 +64,28 @@ ssize_t POSIXAdapter::do_write(FileState* state, int fd, const void* buf,
             for (auto& region : flush_regions) {
                 auto pending = label_mgr.publish_write(
                     region.filepath, region.offset, region.data);
-                if (state->sync_mode) label_mgr.wait(pending);
+                if (state->sync_mode) {
+                    const auto waited = label_mgr.wait_all(
+                        pending, std::chrono::milliseconds(cfg.reply_timeout_ms));
+                    if (waited.state != CompletionState::Complete) {
+                        throw CompletionError(waited.state, 0,
+                                              "synchronous POSIX write did not complete");
+                    }
+                }
                 catalog_mgr.track_write(region.filepath, region.offset,
                                          region.data.size());
             }
         } else {
             auto pending = label_mgr.publish_write(
                 state->filepath, static_cast<uint64_t>(off), data);
-            if (state->sync_mode) label_mgr.wait(pending);
+            if (state->sync_mode) {
+                const auto waited = label_mgr.wait_all(
+                    pending, std::chrono::milliseconds(cfg.reply_timeout_ms));
+                if (waited.state != CompletionState::Complete) {
+                    throw CompletionError(waited.state, 0,
+                                          "synchronous POSIX write did not complete");
+                }
+            }
             catalog_mgr.track_write(state->filepath,
                                      static_cast<uint64_t>(off), count);
         }
@@ -185,7 +199,11 @@ void POSIXAdapter::flush_and_publish(int fd) {
     for (auto& region : regions) {
         auto pending = session_.label_manager().publish_write(
             region.filepath, region.offset, region.data);
-        session_.label_manager().wait(pending);
+        const auto waited = session_.label_manager().wait_all(
+            pending, std::chrono::milliseconds(session_.config().reply_timeout_ms));
+        if (waited.state != CompletionState::Complete) {
+            throw CompletionError(waited.state, 0, "POSIX flush did not complete");
+        }
         session_.catalog_manager().track_write(
             region.filepath, region.offset, region.data.size());
     }

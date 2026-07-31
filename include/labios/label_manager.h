@@ -14,18 +14,24 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace labios {
 
-struct PendingLabel {
-    uint64_t label_id = 0;
-    std::vector<std::byte> reply_data;
-    std::shared_ptr<transport::AsyncReply> async_reply;
+enum class CompletionState : uint8_t {
+    Pending, Complete, Failed, Cancelled, Parked, Timeout, Unknown
 };
 
-enum class CompletionState : uint8_t { Pending, Complete, Failed, Cancelled, Parked, Timeout };
+enum class CancellationState : uint8_t {
+    Cancelled, TooLate, Terminal, Unknown
+};
+
+enum class LifecycleState : uint8_t {
+    Submitted, Admitted, Queued, Parked, Shuffled, Scheduled, Executing,
+    Completed, Failed, Cancelled, Unknown
+};
 
 /// Typed failure from a synchronous completion wait. A Timeout means only that
 /// this wait ended; the label remains active until it completes or is explicitly
@@ -46,6 +52,7 @@ private:
 struct CompletionResult {
     uint64_t label_id = 0;
     CompletionState state = CompletionState::Pending;
+    std::string category;
     std::string error;
     std::string data_key;
     uint32_t observation_version = 0;
@@ -57,6 +64,10 @@ struct CompletionResult {
     uint64_t completed_us = 0;
     uint64_t queue_delay_us = 0;
     uint64_t service_time_us = 0;
+    std::string park_reason;
+    uint64_t park_attempts = 0;
+    uint64_t next_retry_at_ms = 0;
+    LifecycleState lifecycle = LifecycleState::Unknown;
 
     bool has_execution_observation() const {
         return observation_version == 1;
@@ -74,6 +85,12 @@ struct WaitResult {
     std::vector<CompletionResult> results;
 };
 
+struct CancellationResult {
+    uint64_t label_id = 0;
+    CancellationState state = CancellationState::Unknown;
+    CompletionResult completion;
+};
+
 class LabelManager {
 public:
     LabelManager(ContentManager& content, CatalogManager& catalog,
@@ -81,15 +98,16 @@ public:
                  uint64_t max_label_size, uint32_t app_id,
                  int reply_timeout_ms = 30000);
 
-    std::vector<PendingLabel> publish_write(
+    std::vector<uint64_t> publish_write(
         std::string_view filepath, uint64_t offset,
         std::span<const std::byte> data);
 
-    std::vector<PendingLabel> publish_read(
+    std::vector<uint64_t> publish_read(
         std::string_view filepath, uint64_t offset, uint64_t size);
 
-    WaitResult wait(std::span<PendingLabel> pending,
-                    std::chrono::milliseconds timeout = std::chrono::milliseconds(30000));
+    WaitResult wait(std::span<const uint64_t> label_ids,
+                    std::chrono::milliseconds timeout =
+                        std::chrono::milliseconds(30000));
     CompletionResult test(uint64_t label_id);
     CompletionResult wait_one(uint64_t label_id,
                               std::chrono::milliseconds timeout);
@@ -97,9 +115,16 @@ public:
                         std::chrono::milliseconds timeout);
     WaitResult wait_all(std::span<const uint64_t> label_ids,
                         std::chrono::milliseconds timeout);
-    bool cancel(uint64_t label_id);
+    CancellationResult cancel(uint64_t label_id);
 
-    std::vector<std::byte> wait_read(std::span<PendingLabel> pending);
+    std::vector<std::byte> wait_read(
+        std::span<const uint64_t> label_ids,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(30000));
+
+    /// Register a transport notification hint. Access is synchronized and the
+    /// persisted catalog remains authoritative.
+    void register_reply(uint64_t label_id,
+                        std::shared_ptr<transport::AsyncReply> reply);
 
     uint64_t label_count(uint64_t data_size) const;
 
@@ -112,6 +137,10 @@ private:
     int reply_timeout_ms_;
     mutable std::mutex completion_mu_;
     std::condition_variable completion_cv_;
+    mutable std::mutex replies_mu_;
+    std::unordered_map<uint64_t, std::shared_ptr<transport::AsyncReply>> replies_;
+
+    void drain_reply(uint64_t label_id);
 };
 
 } // namespace labios

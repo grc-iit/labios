@@ -43,6 +43,7 @@ const char* state_name(labios::CompletionState state) {
     case labios::CompletionState::Cancelled: return "cancelled";
     case labios::CompletionState::Parked: return "parked";
     case labios::CompletionState::Timeout: return "timeout";
+    case labios::CompletionState::Unknown: return "unknown";
     }
     return "unknown";
 }
@@ -54,8 +55,8 @@ std::vector<std::byte> payload(size_t size, unsigned value) {
 uint64_t submit_write(labios::Client& client, std::string_view uri,
                       size_t size, unsigned value) {
     auto pending = client.async_write_to(uri, payload(size, value));
-    if (pending.pending.size() != 1) throw std::runtime_error("expected one write label");
-    return pending.pending.front().label_id;
+    if (pending.label_ids().size() != 1) throw std::runtime_error("expected one write label");
+    return pending.label_id();
 }
 
 labios::LabelData staged_child(labios::Client& client, std::string uri,
@@ -88,7 +89,7 @@ uint64_t submit_composite(labios::Client& client, std::string_view prefix) {
     client.session().catalog_manager().persist_composite(parent, program);
     auto pending = client.publish(parent);
     std::cout << "CHILD_IDS=" << first.id << ',' << second.id << '\n';
-    return pending.pending.front().label_id;
+    return pending.label_id();
 }
 
 void print_wait(labios::Client& client, std::span<const uint64_t> label_ids,
@@ -125,7 +126,7 @@ int main(int argc, char** argv) try {
         pipeline.stages.push_back({"builtin://sort_uint64", "", -1, 1});
         pipeline.stages.push_back({"builtin://truncate", std::to_string(2 * sizeof(uint64_t)), 0, -1});
         auto pending = client.execute_pipeline(source, destination, pipeline);
-        const auto id = pending.pending.front().label_id;
+        const auto id = pending.label_id();
         client.wait(pending);
         const auto actual = client.read_from(destination, 2 * sizeof(uint64_t));
         if (actual.size() != 2 * sizeof(uint64_t) ||
@@ -140,7 +141,7 @@ int main(int argc, char** argv) try {
     } else if (command == "submit-read") {
         if (argc != 4) throw std::runtime_error("submit-read URI SIZE");
         auto pending = client.async_read_from(argv[2], std::stoull(argv[3]));
-        std::cout << "ID=" << pending.pending.front().label_id << '\n';
+        std::cout << "ID=" << pending.label_id() << '\n';
     } else if (command == "submit-batch") {
         if (argc != 6) throw std::runtime_error("submit-batch URI_PREFIX COUNT SIZE BYTE");
         const auto count = std::stoi(argv[3]);
@@ -164,7 +165,7 @@ int main(int argc, char** argv) try {
         if (!snapshot) throw std::runtime_error("prepared snapshot missing");
         client.session().catalog_manager().set_status(id, labios::LabelStatus::Queued);
         const auto pending = client.publish(*snapshot);
-        std::cout << "ID=" << pending.pending.front().label_id << '\n';
+        std::cout << "ID=" << pending.label_id() << '\n';
     } else if (command == "submit-dependent") {
         if (argc != 6) throw std::runtime_error("submit-dependent URI PREDECESSOR SIZE BYTE");
         labios::LabelParams params;
@@ -174,13 +175,13 @@ int main(int argc, char** argv) try {
         auto label = client.create_label(params);
         label.data_size = std::stoull(argv[4]);
         auto pending = client.publish(label, payload(label.data_size, std::stoul(argv[5])));
-        std::cout << "ID=" << pending.pending.front().label_id << '\n';
+        std::cout << "ID=" << pending.label_id() << '\n';
     } else if (command == "submit-pipeline") {
         if (argc != 4) throw std::runtime_error("submit-pipeline SOURCE DESTINATION");
         labios::sds::Pipeline pipeline;
         pipeline.stages.push_back({"builtin://identity", "", -1, 1});
         auto pending = client.execute_pipeline(argv[2], argv[3], pipeline);
-        std::cout << "ID=" << pending.pending.front().label_id << '\n';
+        std::cout << "ID=" << pending.label_id() << '\n';
     } else if (command == "submit-composite") {
         if (argc != 3) throw std::runtime_error("submit-composite URI_PREFIX");
         const auto id = submit_composite(client, argv[2]);
@@ -193,8 +194,8 @@ int main(int argc, char** argv) try {
                    argc >= 4 ? argv[3] : "complete");
     } else if (command == "state") {
         if (argc != 3) throw std::runtime_error("state ID");
-        labios::PendingIO pending{{{std::stoull(argv[2]), {}, {}}}};
-        const auto result = client.test(pending);
+        const std::array<uint64_t, 1> one{std::stoull(argv[2])};
+        const auto result = client.operation(one).test();
         std::cout << "STATE=" << state_name(result.state) << "\nERROR=" << result.error << '\n';
     } else if (command == "cancel") {
         if (argc != 3) throw std::runtime_error("cancel ID");

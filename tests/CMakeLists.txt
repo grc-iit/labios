@@ -137,11 +137,26 @@ add_executable(labios-client-api-test unit/client_api_test.cpp)
 target_link_libraries(labios-client-api-test PRIVATE labios Catch2::Catch2WithMain)
 catch_discover_tests(labios-client-api-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
 
+add_executable(labios-api-lifetime-test unit/api_lifetime_test.cpp)
+target_link_libraries(labios-api-lifetime-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-api-lifetime-test TEST_PREFIX "unit/" PROPERTIES LABELS "unit")
+
 add_executable(labios-c-api-link-test unit/c_api_link_test.c)
 target_link_libraries(labios-c-api-link-test PRIVATE labios)
 set_target_properties(labios-c-api-link-test PROPERTIES LINKER_LANGUAGE CXX)
 add_test(NAME unit/c-api-link-test COMMAND labios-c-api-link-test)
 set_tests_properties(unit/c-api-link-test PROPERTIES LABELS "unit")
+
+add_test(
+    NAME unit/native-documentation-snippets
+    COMMAND /usr/bin/python3 ${CMAKE_CURRENT_SOURCE_DIR}/compile_doc_snippets.py
+            ${PROJECT_SOURCE_DIR} ${CMAKE_CXX_COMPILER} ${CMAKE_C_COMPILER})
+set_tests_properties(unit/native-documentation-snippets PROPERTIES LABELS "unit")
+
+add_executable(labios-c-api-lifetime-test integration/c_api_lifetime_test.cpp)
+target_link_libraries(labios-c-api-lifetime-test PRIVATE labios Catch2::Catch2WithMain)
+catch_discover_tests(labios-c-api-lifetime-test TEST_PREFIX "smoke/"
+                     PROPERTIES LABELS "smoke" TIMEOUT 60)
 
 add_executable(labios-elastic-flood-test integration/elastic_flood_test.cpp)
 target_link_libraries(labios-elastic-flood-test PRIVATE labios)

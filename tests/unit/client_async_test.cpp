@@ -2,9 +2,10 @@
 #include <labios/label.h>
 #include <catch2/catch_test_macros.hpp>
 
-TEST_CASE("PendingIO is default constructible", "[client]") {
-    labios::PendingIO status;
-    CHECK(status.pending.empty());
+TEST_CASE("Operation is default constructible and invalid", "[client]") {
+    labios::Operation operation;
+    CHECK_FALSE(operation.valid());
+    CHECK(operation.empty());
 }
 
 TEST_CASE("LabelParams builds with designated initializers", "[client]") {

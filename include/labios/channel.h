@@ -90,11 +90,12 @@ public:
     ChannelRegistry(transport::RedisConnection& redis,
                     transport::NatsConnection& nats);
 
-    /// Create a new channel. Returns nullptr if name already exists.
-    Channel* create(std::string_view name, uint32_t ttl_seconds = 0);
+    /// Create a new channel. Returns empty if name already exists.
+    std::shared_ptr<Channel> create(std::string_view name,
+                                    uint32_t ttl_seconds = 0);
 
-    /// Get an existing channel by name. Returns nullptr if not found.
-    Channel* get(std::string_view name);
+    /// Get an existing process-local channel by name.
+    std::shared_ptr<Channel> get(std::string_view name);
 
     /// Remove a destroyed channel from the registry.
     void remove(std::string_view name);
@@ -106,7 +107,7 @@ private:
     transport::RedisConnection& redis_;
     transport::NatsConnection& nats_;
     mutable std::shared_mutex mu_;
-    std::unordered_map<std::string, std::unique_ptr<Channel>,
+    std::unordered_map<std::string, std::shared_ptr<Channel>,
                        TransparentStringHash, std::equal_to<>> channels_;
 };
 

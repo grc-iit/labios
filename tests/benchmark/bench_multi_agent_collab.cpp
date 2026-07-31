@@ -48,7 +48,7 @@ TEST_CASE("Workspace component: ACL and data roundtrip", "[bench][workspace][com
     labios::transport::RedisConnection redis(host ? host : "localhost", 6379);
     labios::WorkspaceRegistry registry(redis);
 
-    auto* ws = registry.create("bench_collab_test", /*owner=*/1);
+    auto ws = registry.create("bench_collab_test", /*owner=*/1);
     REQUIRE(ws != nullptr);
     REQUIRE(ws->has_access(1));
 
@@ -84,7 +84,7 @@ TEST_CASE("Workspace component benchmarks", "[bench][workspace][component][!benc
     labios::transport::RedisConnection redis(host ? host : "localhost", 6379);
     labios::WorkspaceRegistry registry(redis);
 
-    auto* ws = registry.create("bench_collab_perf", /*owner=*/1);
+    auto ws = registry.create("bench_collab_perf", /*owner=*/1);
     REQUIRE(ws != nullptr);
 
     for (uint32_t agent = 2; agent <= 10; ++agent) {

@@ -37,6 +37,9 @@ std::string Workspace::index_key() const {
 }
 
 void Workspace::check_access(uint32_t app_id) const {
+    if (destroyed_.load(std::memory_order_acquire)) {
+        throw std::runtime_error("workspace '" + name_ + "': destroyed");
+    }
     if (acl_.find(app_id) == acl_.end()) {
         throw std::runtime_error("workspace '" + name_
                                  + "': access denied for app_id "
@@ -46,17 +49,26 @@ void Workspace::check_access(uint32_t app_id) const {
 
 void Workspace::grant_access(uint32_t app_id) {
     std::lock_guard lock(mu_);
+    if (destroyed_.load(std::memory_order_acquire)) {
+        throw std::runtime_error("workspace '" + name_ + "': destroyed");
+    }
     acl_.insert(app_id);
 }
 
 void Workspace::revoke_access(uint32_t app_id) {
     std::lock_guard lock(mu_);
+    if (destroyed_.load(std::memory_order_acquire)) {
+        throw std::runtime_error("workspace '" + name_ + "': destroyed");
+    }
     if (app_id == owner_app_id_) return;  // Cannot revoke owner
     acl_.erase(app_id);
 }
 
 bool Workspace::has_access(uint32_t app_id) const {
     std::shared_lock lock(mu_);
+    if (destroyed_.load(std::memory_order_acquire)) {
+        throw std::runtime_error("workspace '" + name_ + "': destroyed");
+    }
     return acl_.count(app_id) != 0;
 }
 
@@ -207,27 +219,26 @@ void Workspace::destroy() {
 WorkspaceRegistry::WorkspaceRegistry(transport::RedisConnection& redis)
     : redis_(redis) {}
 
-Workspace* WorkspaceRegistry::create(std::string_view name,
-                                      uint32_t owner_app_id,
-                                      uint32_t ttl_seconds) {
+std::shared_ptr<Workspace> WorkspaceRegistry::create(
+    std::string_view name, uint32_t owner_app_id, uint32_t ttl_seconds) {
     std::lock_guard lock(mu_);
     auto key = std::string(name);
     if (workspaces_.find(key) != workspaces_.end()) {
-        return nullptr;
+        return {};
     }
-    auto ws = std::make_unique<Workspace>(key, owner_app_id, redis_, ttl_seconds);
-    auto* ptr = ws.get();
-    workspaces_[key] = std::move(ws);
-    return ptr;
+    auto workspace = std::make_shared<Workspace>(
+        key, owner_app_id, redis_, ttl_seconds);
+    workspaces_[key] = workspace;
+    return workspace;
 }
 
-Workspace* WorkspaceRegistry::get(std::string_view name) {
+std::shared_ptr<Workspace> WorkspaceRegistry::get(std::string_view name) {
     std::shared_lock lock(mu_);
     auto it = workspaces_.find(name);
     if (it == workspaces_.end()) {
-        return nullptr;
+        return {};
     }
-    return it->second.get();
+    return it->second;
 }
 
 void WorkspaceRegistry::remove(std::string_view name) {

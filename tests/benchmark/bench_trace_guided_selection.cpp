@@ -114,6 +114,7 @@ std::string completion_state(labios::CompletionState state) {
     case labios::CompletionState::Cancelled: return "cancelled";
     case labios::CompletionState::Parked: return "parked";
     case labios::CompletionState::Timeout: return "timeout";
+    case labios::CompletionState::Unknown: return "unknown";
     }
     return "unknown";
 }
@@ -184,10 +185,10 @@ Submitted submit_write(labios::Client& client, const Row& prototype,
     const auto start = Clock::now();
     auto pending = client.async_write_to(uri, data);
     const auto submitted_at = Clock::now();
-    REQUIRE(pending.pending.size() == 1);
+    REQUIRE(pending.label_ids().size() == 1);
     auto row = prototype;
     row.resource = uri;
-    row.label_id = pending.pending.front().label_id;
+    row.label_id = pending.label_id();
     row.bytes = data.size();
     row.submission_us = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::microseconds>(
@@ -267,9 +268,9 @@ std::vector<Row> mixed_pipeline(labios::Client& client,
     auto pending = client.execute_pipeline(
         std::string(prefix) + "/pipeline-source", destination, pipeline);
     const auto submitted_at = Clock::now();
-    REQUIRE(pending.pending.size() == 1);
+    REQUIRE(pending.label_ids().size() == 1);
     auto row = prototype;
-    row.label_id = pending.pending.front().label_id;
+    row.label_id = pending.label_id();
     row.resource = destination;
     row.bytes = source.size();
     row.submission_us = static_cast<uint64_t>(
@@ -340,9 +341,9 @@ DeferredWorkload deferred_pipeline(labios::Client& client,
     auto pending = client.execute_pipeline(
         std::string(source_resource), destination, pipeline);
     const auto submitted_at = Clock::now();
-    REQUIRE(pending.pending.size() == 1);
+    REQUIRE(pending.label_ids().size() == 1);
     auto row = prototype;
-    row.label_id = pending.pending.front().label_id;
+    row.label_id = pending.label_id();
     row.resource = destination;
     row.bytes = source.size();
     row.submission_us = static_cast<uint64_t>(

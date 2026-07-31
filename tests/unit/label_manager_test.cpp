@@ -52,9 +52,9 @@ TEST_CASE("publish_write splits 2MB into 2 labels", "[label_manager]") {
 
     auto pending = lm.publish_write("/test/split_2mb.bin", 0, data);
     REQUIRE(pending.size() == 2);
-    REQUIRE(pending[0].label_id != 0);
-    REQUIRE(pending[1].label_id != 0);
-    REQUIRE(pending[0].label_id != pending[1].label_id);
+    REQUIRE(pending[0] != 0);
+    REQUIRE(pending[1] != 0);
+    REQUIRE(pending[0] != pending[1]);
 
     lm.wait(pending);
 }
@@ -116,23 +116,80 @@ TEST_CASE("wait returns typed timeout without cancelling the label", "[label_man
     labios::CatalogManager catalog(redis);
     labios::LabelManager lm(cm, catalog, nats, 1048576, 1, /*reply_timeout_ms=*/1);
 
-    labios::PendingLabel pending;
-    pending.label_id = 123;
-    pending.async_reply = std::make_shared<labios::transport::AsyncReply>();
-
-    std::array<labios::PendingLabel, 1> entries{pending};
+    catalog.create(123, 1, labios::LabelType::Read);
+    std::array<uint64_t, 1> entries{123};
     const auto waited = lm.wait(entries, std::chrono::milliseconds(1));
     REQUIRE(waited.state == labios::CompletionState::Timeout);
     REQUIRE(waited.results.size() == 1);
-    CHECK(waited.results.front().state == labios::CompletionState::Timeout);
+    CHECK(waited.results.front().state == labios::CompletionState::Pending);
     CHECK_FALSE(waited.results.front().terminal());
 
     try {
-        (void)lm.wait_read(entries);
+        (void)lm.wait_read(entries, std::chrono::milliseconds(1));
         FAIL("expected typed read timeout");
     } catch (const labios::CompletionError& ex) {
         CHECK(ex.state() == labios::CompletionState::Timeout);
         CHECK(ex.label_id() == 123);
         CHECK(std::string(ex.what()).find("remains active") != std::string::npos);
     }
+}
+
+TEST_CASE("test reports the catalog-authoritative lifecycle", "[label_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::ContentManager cm(redis, 4096, 0, labios::ReadPolicy::ReadThrough);
+    labios::CatalogManager catalog(redis);
+    labios::LabelManager lm(cm, catalog, nats, 1048576, 1);
+
+    labios::LabelData label;
+    label.id = labios::generate_label_id(1);
+    label.app_id = 1;
+    label.type = labios::LabelType::Read;
+    labios::mark_label_created(label);
+    catalog.create(label);
+    CHECK(lm.test(label.id).lifecycle == labios::LifecycleState::Submitted);
+
+    catalog.set_status(label.id, labios::LabelStatus::Queued);
+    CHECK(lm.test(label.id).lifecycle == labios::LifecycleState::Queued);
+    labios::mark_label_queued(label);
+    labios::mark_label_shuffled(label);
+    catalog.persist_snapshot(label);
+    CHECK(lm.test(label.id).lifecycle == labios::LifecycleState::Shuffled);
+    catalog.set_status(label.id, labios::LabelStatus::Scheduled);
+    CHECK(lm.test(label.id).lifecycle == labios::LifecycleState::Scheduled);
+    catalog.set_status(label.id, labios::LabelStatus::Executing);
+    CHECK(lm.test(label.id).lifecycle == labios::LifecycleState::Executing);
+
+    labios::CompletionData completion;
+    completion.label_id = label.id;
+    completion.status = labios::CompletionStatus::Complete;
+    catalog.set_completion(completion);
+    const auto completed = lm.test(label.id);
+    CHECK(completed.state == labios::CompletionState::Complete);
+    CHECK(completed.lifecycle == labios::LifecycleState::Completed);
+
+    const auto unknown = lm.test(label.id + 1);
+    CHECK(unknown.state == labios::CompletionState::Unknown);
+    CHECK(unknown.lifecycle == labios::LifecycleState::Unknown);
+}
+
+TEST_CASE("test exposes parked reason and retry metadata", "[label_manager]") {
+    labios::transport::RedisConnection redis(redis_host(), redis_port());
+    labios::transport::NatsConnection nats(nats_url());
+    labios::ContentManager cm(redis, 4096, 0, labios::ReadPolicy::ReadThrough);
+    labios::CatalogManager catalog(redis);
+    labios::LabelManager lm(cm, catalog, nats, 1048576, 1);
+
+    labios::LabelData label;
+    label.id = labios::generate_label_id(1);
+    label.app_id = 1;
+    label.type = labios::LabelType::Read;
+    catalog.create(label);
+    catalog.park(label, "NO_WORKERS", 3, 424242);
+
+    const auto result = lm.test(label.id);
+    CHECK(result.state == labios::CompletionState::Parked);
+    CHECK(result.park_reason == "NO_WORKERS");
+    CHECK(result.park_attempts == 3);
+    CHECK(result.next_retry_at_ms == 424242);
 }

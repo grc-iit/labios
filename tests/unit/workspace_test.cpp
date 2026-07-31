@@ -190,6 +190,9 @@ TEST_CASE("Workspace destroy cleans up all warehouse keys", "[workspace]") {
 
     ws.destroy();
     REQUIRE(ws.is_destroyed());
+    REQUIRE_THROWS(ws.grant_access(2));
+    REQUIRE_THROWS(ws.revoke_access(2));
+    REQUIRE_THROWS(ws.has_access(1));
 
     // All keys cleaned up
     auto keys_after = redis.scan_keys("labios:ws:test-destroy-cleanup:*");
@@ -216,16 +219,16 @@ TEST_CASE("WorkspaceRegistry create, get, list, remove", "[workspace]") {
     labios::transport::RedisConnection redis(redis_host(), redis_port());
     labios::WorkspaceRegistry registry(redis);
 
-    auto* ws1 = registry.create("reg-alpha", 1);
+    auto ws1 = registry.create("reg-alpha", 1);
     REQUIRE(ws1 != nullptr);
     REQUIRE(ws1->name() == "reg-alpha");
     REQUIRE(ws1->owner() == 1);
 
-    auto* ws2 = registry.create("reg-beta", 2, 60);
+    auto ws2 = registry.create("reg-beta", 2, 60);
     REQUIRE(ws2 != nullptr);
 
     // Duplicate name returns nullptr
-    auto* dup = registry.create("reg-alpha", 3);
+    auto dup = registry.create("reg-alpha", 3);
     REQUIRE(dup == nullptr);
 
     // Get by name

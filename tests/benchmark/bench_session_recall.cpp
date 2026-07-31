@@ -130,7 +130,7 @@ TEST_CASE("Session recall: workspace retrieves pre-stored knowledge",
     labios::WorkspaceRegistry registry(redis);
 
     constexpr uint32_t agent_id = 1;
-    auto* ws = registry.create("bench_recall_test", agent_id);
+    auto ws = registry.create("bench_recall_test", agent_id);
     REQUIRE(ws != nullptr);
 
     // Pre-populate workspace (simulating prior session storage)
@@ -158,7 +158,7 @@ TEST_CASE("Session recall: workspace versioning preserves history",
     labios::transport::RedisConnection redis(host ? host : "localhost", 6379);
     labios::WorkspaceRegistry registry(redis);
 
-    auto* ws = registry.create("bench_recall_version", 1);
+    auto ws = registry.create("bench_recall_version", 1);
     REQUIRE(ws != nullptr);
 
     auto v1_data = make_knowledge(100);
@@ -205,7 +205,7 @@ TEST_CASE("Session recall benchmarks", "[bench][session_recall][!benchmark]") {
         labios::transport::RedisConnection redis(host ? host : "localhost", 6379);
         labios::WorkspaceRegistry registry(redis);
 
-        auto* ws = registry.create("bench_recall_perf", 1);
+        auto ws = registry.create("bench_recall_perf", 1);
         for (int i = 0; i < KEY_COUNT; ++i) {
             ws->put("knowledge_" + std::to_string(i), make_knowledge(i), 1);
         }

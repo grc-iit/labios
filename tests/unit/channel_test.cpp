@@ -207,15 +207,15 @@ TEST_CASE("ChannelRegistry create, get, list, remove", "[channel]") {
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry registry(redis, nats);
 
-    auto* ch1 = registry.create("reg-alpha");
+    auto ch1 = registry.create("reg-alpha");
     REQUIRE(ch1 != nullptr);
     REQUIRE(ch1->name() == "reg-alpha");
 
-    auto* ch2 = registry.create("reg-beta", 60);
+    auto ch2 = registry.create("reg-beta", 60);
     REQUIRE(ch2 != nullptr);
 
     // Duplicate name returns nullptr
-    auto* dup = registry.create("reg-alpha");
+    auto dup = registry.create("reg-alpha");
     REQUIRE(dup == nullptr);
 
     // Get by name

@@ -133,7 +133,7 @@ TEST_CASE("ContinuationKind::Notify publishes completion to channel", "[continua
     labios::transport::NatsConnection nats(nats_url());
     labios::ChannelRegistry channels(redis, nats);
 
-    auto* ch = channels.create("test-cont-notify");
+    auto ch = channels.create("test-cont-notify");
     REQUIRE(ch != nullptr);
 
     std::atomic<int> received{0};
@@ -308,7 +308,7 @@ TEST_CASE("Notify auto-creates channel if not found in registry", "[continuation
     auto result = labios::process_continuation(label, comp, channels, nats, redis);
     REQUIRE_FALSE(result.has_value());
 
-    auto* ch = channels.get("auto-created-channel");
+    auto ch = channels.get("auto-created-channel");
     REQUIRE(ch != nullptr);
 
     ch->destroy();
