@@ -118,7 +118,7 @@ for cell in "${cells[@]}"; do
     container_name="${current_project}-benchmark"
     set +e
     COMPOSE_PROJECT_NAME="$current_project" docker compose --profile test run \
-        --no-build -T --no-deps --name "$container_name" \
+        -T --no-deps --name "$container_name" \
         -e LABIOS_BENCH_LIVE=1 \
         -e LABIOS_BENCH_INDEPENDENT=1 \
         -e LABIOS_BENCH_ARM="$arm" \
