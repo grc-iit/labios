@@ -1,12 +1,8 @@
-# LABIOS Native SDK Guide
+# LABIOS SDK Guide
 
-The C++ and C APIs express one Label I/O lifecycle: submit a sealed I/O program,
-retain its owning operation handle, inspect or wait for catalog-backed completion,
-and explicitly release caller-owned C results. Clients never contact workers
-directly.
-
-Python is outside this native API coherence pass and remains a subset described
-by the engineering baseline in `.planning/LABIOS-2.1.md`.
+The C++, Python, and C APIs express one Label I/O lifecycle: submit a sealed I/O
+program, retain its owning operation handle, and inspect or wait for
+catalog-backed completion. Clients never contact workers directly.
 
 ## C++ golden path
 
@@ -157,6 +153,68 @@ It does not reconfigure dispatchers, managers, workers, or other clients.
 const bool changed = client.set_config("reply_timeout_ms", "45000");
 ```
 
+## Python golden path
+
+The executable public-API example is
+[`examples/python/golden.py`](../examples/python/golden.py). In the Compose
+reference topology run:
+
+```bash
+docker compose run --rm --build test \
+  python3 /opt/labios/examples/python/golden.py
+```
+
+It publishes typed and URI labels, runs `file://` source →
+`builtin://identity` → `sqlite://` destination I/O, and compares the exact
+returned bytes without reading a worker volume, DragonflyDB key, or NATS
+subject.
+
+```python
+import labios
+
+client = labios.connect_to()
+params = labios.LabelParams()
+params.type = labios.LabelType.Write
+params.destination_resource = labios.resource_from_uri("file:///sdk/result")
+params.intent = labios.Intent.CHECKPOINT
+params.priority = 200
+operation = client.publish(client.create_label(params), b"Label I/O")
+
+result = operation.wait_for(1)
+if result.state == labios.CompletionState.TIMEOUT:
+    result = operation.wait_all(30_000)  # same reusable owning handle
+```
+
+`Operation` is the native owning Prompt 09 handle; Python does not recreate
+pending state. `test(index)`, `wait_for`, `wait_any`, `wait_all`, `wait`,
+`cancel`, and repeatable `read` are safe on copied references and after the
+originating `Client` is destroyed. Timeout is returned as
+`CompletionState.TIMEOUT` by timed waits and never cancels the label. Blocking
+submission, wait, read, cancellation, Observe, and catalog inspection calls
+release the GIL.
+
+`CompletionResult` exposes state, lifecycle, stable category/detail, parked
+reason/attempt/next-retry fields, worker attempt, and execution timing.
+`Client.inspect_label(id).placement_history` exposes append-only placement
+attempts and candidate evidence through a catalog-owned public API.
+`client.observe("config/current")` returns the active scheduler policy/profile.
+These APIs do not expose internal storage keys or private transport subjects.
+
+Stable exceptions derive from `LabiosError`: client errors include
+`InvalidArgumentError`, `CompletionLookupError`, `SessionShutdownError`,
+`ProtocolError`, and `SubmissionError`; completion/program subclasses include
+`TimeoutError`, `CancelledError`, `MalformedBufferError`,
+`UnsupportedVersionError`, `ValidationError`, `AuthorizationError`,
+`ResourceError`, `PipelineError`, `DependencyError`, `BackendError`,
+`ExpiredError`, and `ExecutionError`. Timed wait results normally report timeout
+as data; blocking convenience calls and reads raise the typed exception.
+
+The package also versions FlatBuffers 24.3.25-generated registry-v2 bindings.
+Use `labios.parse_worker_registry_message(bytes, expected_kind=...)`. It requires
+the `LWR2` identifier, protocol version 2, and consistent payload kind/union,
+and rejects malformed, truncated, duplicate, or version-skewed input. There is
+no CSV fallback. MCP behavior does not consume this parser until Prompt 11.
+
 ## C golden path
 
 The complete compile-tested source is
@@ -235,3 +293,12 @@ lost cancellation race is `LABIOS_ERR_TOO_LATE`, unknown/expired completion is
 - Corrected behavior: unknown IDs are lookup errors, `wait_any` is deterministic,
   `wait_all` preserves pending views on timeout, and cancellation exposes the
   race outcome.
+- Python breaking changes in Prompt 10: `PendingIO` is now an alias of the owning
+  `Operation`; code relying on its former empty shell or undocumented mutable
+  state must migrate. Timed waits return `WaitResult` instead of `None`; native
+  failures use the documented exception hierarchy; bytes reads are repeatable;
+  timeout arguments are integer milliseconds; and label resources use typed
+  `ResourceRef`/`LabelParams` objects.
+- Registry compatibility break: the obsolete C++ offline CSV codec is removed,
+  and Python accepts only verified `LWR2` FlatBuffers v2 messages. Mixed CSV/v2
+  operation and text fallback are unsupported.

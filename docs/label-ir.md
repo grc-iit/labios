@@ -1373,12 +1373,12 @@ message invalid.
 
 There is no text/CSV fallback. Manager, workers, and dispatcher require one
 coordinated runtime cutover in P09; mixed text/v2 operation is unsupported. The
-current Python MCP parser for `labios.manager.workers` is deliberately
-incompatible after this cutover. P13 MUST add Python FlatBuffers support and
-generated registry-v2 bindings before MCP worker-registry, worker-score, or
-worker-count observations are again claimed as supported. The P09-to-P13 gap
-is intentional and MUST be reported as a compatibility gap, not as transparent
-compatibility.
+former Python MCP parser for `labios.manager.workers` is incompatible after
+this cutover. Prompt 10 owns generated Python FlatBuffers bindings and the
+shared verified registry-v2 parser. MCP behavior does not consume that parser
+until Prompt 11, so worker-registry, worker-score, and worker-count MCP behavior
+remains unsupported in the Prompt 10 slice. The prior P09 compatibility gap is
+reported explicitly rather than hidden behind a CSV fallback.
 
 #### 9.7.6 Common feasibility and plan validation
 
@@ -1658,10 +1658,10 @@ registry codec tests, and exact 8 MiB paper trace pass in the native unit lane.
 
 The live mixed-batch scheduling integration path was not run because Docker
 Compose was unavailable on the verification host; no live end-to-end claim is
-made. The Python MCP registry parser remains intentionally incompatible with
-registry v2. P13 must add Python FlatBuffers support and generated bindings
-before MCP worker-registry, worker-score, or worker-count behavior is claimed
-again. Automatic provisioning, elasticity triggers, leader election, new
+made. Prompt 10 supplies Python FlatBuffers support, generated bindings, and a shared
+verified registry-v2 parser. MCP behavior remains unchanged until Prompt 11 and
+therefore does not yet claim worker-registry, worker-score, or worker-count
+support. Automatic provisioning, elasticity triggers, leader election, new
 solver algorithms, and distributed pipeline-stage placement remain out of
 scope.
 

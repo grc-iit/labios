@@ -1,7 +1,7 @@
 # LABIOS 2.1 evidence map
 
 This map records what each LABIOS 2.1 capability is evidenced by through Prompt
-09's public native API coherence slice. It distinguishes implementation artifacts
+10's Python SDK and registry-v2 repair slice. It distinguishes implementation artifacts
 from tests and experiments.
 An implementation path is not, by itself, evidence that the path works end to
 end.
@@ -32,13 +32,13 @@ Evidence classes used below:
 | File and SQLite backends | POSIX and SQLite adapters plus registry | Adapter CRUD, path-containment, zero-length, and registry tests | Demo and `[deployment]` test perform 24 writes/read-backs over shared file and SQLite attachments | `write_to` and `read_from` | Compose golden path | Throughput unproven |
 | Optional external user-Redis backend | `KVBackend`; worker attachment comes from the external-backend registry, not DragonflyDB plumbing | Registry construction tests; KV tests are live/smoke because they require Redis | `Configured external KV backend completes a label` targets the separate Redis fixture | C++ client `kv://` submission | Redis fixture is started in Compose CI, but the KV completion case is not selected there | Throughput and production deployment unproven |
 | Batch scheduling and common feasibility | scheduling layer, dispatcher batch preparation, registry v2 | Section 9.7 scheduling cases, solver cases, exact 8 MiB paper trace, structured deterministic replay, and actual Completion observation derivation | Live scenario 6 covers one mixed batch, dependency deferral, Composite, unknown demand, and 16/24/32 KiB capacity constraints; Prompt 08's attempted run retained 1,260 verified measured completions but failed the independence and measurement contract | Work is submitted through the C++ client; the current benchmark reads actual service/queue observations through public completion results while decision inspection remains catalog-backed | Hermetic cases in unit CI; mixed live batch and experiment are not CI-reachable | Policy performance remains unproven; the source-complete 180-cell independent-replicate method is frozen but has not produced a valid run |
-| Explainable scheduling residual | append-only scheduling decision history in `ScoreSnapshot` | Residual codec and replay cases in scheduling tests | Live scenario 6 records decision snapshots | Public completion does not yet expose the full explanation; catalog inspection does | Hermetic codec/replay only | No performance result |
-| Registry v2 and replacement-safe epochs | `worker_registry.fbs`, manager/worker protocol | Malformed/version/capability/epoch cases | Live scenario 5 restarts the manager, observes reconstruction, restarts a worker, and rejects stale deregistration | Manager request path is runtime-internal; C++ test driver decodes the public control reply | Hermetic codec/state cases in unit CI; manager-loss injection is not CI-reachable | No performance result; Python/MCP registry-v2 support is unproven until prompt 10 |
+| Explainable scheduling residual | append-only scheduling decision history in `ScoreSnapshot` | Residual codec and replay cases in scheduling tests; Python typed placement-history surface | Live scenario 6 records decision snapshots; Python live pytest inspects it | C++/Python `Client::inspect_label` returns the catalog-owned label residual without exposing keys | Hermetic codec/replay and Python CI; live inspection in Compose CI | No performance result |
+| Registry v2 and replacement-safe epochs | `worker_registry.fbs`, manager/worker protocol, generated Python bindings, shared `registry_v2.py` parser | Native and Python malformed/truncated/LWR2/version/kind/union/empty/nonempty/duplicate cases | Live scenario 5 restarts the manager, observes reconstruction, restarts a worker, and rejects stale deregistration | Python parser is packaged for later MCP use; manager request behavior remains runtime-internal | Native and Python hermetic cases run in CI; manager-loss injection is not CI-reachable | No performance result; MCP consumption remains Prompt 11 |
 | Channels and workspaces | Owning `ChannelHandle`/`WorkspaceHandle` over shared process-local registries | Object-level targets remain smoke because they use Redis/NATS; public raw-pointer lifetime hazards are removed by construction | No independent-producer/consumer multi-process proof | C++ handles retain required session/object lifetime and fail predictably when empty/destroyed | Not selected by current CI | Registry identity, ACL, and sequence allocation remain process-local; cross-process semantics are unproven |
 | Observability | dispatcher Observe handler and telemetry | Query formatting/component cases are not hermetic in current classification | Compose smoke demonstrates system health; other endpoints have component/live fixtures | `Client::observe` | Demo/health indirectly in Compose CI; endpoint matrix not directly selected | No performance result |
 | Elasticity | decision engine, Docker client, per-tier orchestrator | Decision and mock-runtime tests in unit CI | No enabled-default, leader-election, or safe live provisioning experiment | Configuration surface exists; disabled by default | Unit CI only | Live elasticity behavior and benefit are unproven |
 | POSIX intercept | `src/drivers/posix_intercept.cpp` and adapter | FD-table cases are hermetic | The intercept binary is built, but its integration executable is unlabeled and not run by CI | LD_PRELOAD surface, restricted to configured LABIOS prefixes | Build-only | Transparent arbitrary-repository POSIX compatibility and performance are unproven |
-| Python SDK | `src/python/labios_module.cpp` | `tests/python/test_labios.py` is separate pytest interface evidence, not part of CTest | No live parity run is retained | Python bindings expose a subset | Current CI installs no Python/pybind11 dependency and does not run pytest | Full C++ parity, FlatBuffers support, registry-v2 bindings, and performance are unproven; prompt 10 owns the gap |
+| Python SDK | pybind11 owning `Operation`, typed labels/resources, package and generated registry bindings | 10 hermetic pytest cases cover imports, enums, resources/labels, exceptions, invalid handles, and registry verification | 4 opt-in Compose pytest cases plus `examples/python/golden.py` cover completion, timeout reuse, cancellation race, Client destruction, repeatable reads, label publication, placement inspection, and exact pipeline bytes | All runtime work uses Client/Operation/Observe/inspect_label; no internal keys or subjects | Hermetic pytest and live Compose pytest/golden are CI-reachable; SDK is packaged in the test image | Python performance and channel/workspace parity are not claimed |
 | MCP tool server | `mcp/labios_mcp` five-tool prototype | `mcp/tests/test_server.py` is mock/interface evidence | No label-ingress live proof; current server directly accesses DragonflyDB and a worker volume | MCP protocol surface exists | Container health only; pytest is not run by CI | Dispatcher/worker traversal and coding-agent benefit are unproven; prompts 11 and 14 own the gaps |
 | Single-host reference deployment | Dockerfile, `docker-compose.yml`, deployment docs | Compose model can be validated without starting services | Fresh topology health, 3-case smoke, 24-operation demo, persistence restart, and shared-visibility validation; 2026-07-30 Step-0 rerun succeeded | Demo and data-path use the public C++ client | `compose-golden-path` executes health, demo, shared visibility, worker distribution, and plumbing restart | This is not production, multi-node, secure, or a transparent reconnect guarantee |
 | Agent frontend family | MCP prototype only | Mock/interface MCP tests | No label-ingress equivalence evidence | MCP surface exists | Health only | Unproven until prompts 10–11 and 14 |
@@ -72,7 +72,7 @@ build-only unless invoked explicitly.
 
 Current CI reaches:
 
-1. the 277-test hermetic lane after this change;
+1. the 277-test native hermetic lane after this change and 10 hermetic Python pytest cases;
 2. Compose model validation and clean image build;
 3. health of NATS, DragonflyDB, the separate external Redis fixture, manager,
    dispatcher, three workers, and MCP container;
@@ -80,10 +80,12 @@ Current CI reaches:
 5. the `[deployment]` shared file/SQLite test;
 6. round-robin evidence in every worker log; and
 7. NATS/Dragonfly persistence across explicit restart followed by daemon
-   restart and another demo.
+   restart and another demo;
+8. four live Python SDK pytest cases in the packaged test image; and
+9. the documented Python golden example with exact pipeline-byte verification.
 
 Current CI does **not** reach the full 96-test smoke lane, the three integration
-tests, kernel cases, benchmarks, the failure-injection harness, Python pytest,
+tests, kernel cases, benchmarks, the failure-injection harness,
 MCP pytest, POSIX-intercept execution, external-KV completion, live elasticity,
 or multi-process coordination. Those remain local/manual evidence or unproven.
 

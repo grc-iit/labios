@@ -82,13 +82,21 @@ docker compose --profile test down -v --remove-orphans
 
 ## Run tests
 
-The test image contains the compiled C++ test programs; it does not contain or
-claim to contain the Python SDK.
+The test image contains the compiled C++ test programs and the executable
+Python SDK package (including FlatBuffers 24.3.25 runtime/bindings).
 
 ```bash
 docker compose run --rm --build test
 docker compose run --rm --build test labios-data-path-test "[deployment]"
+docker compose run --rm --build -e LABIOS_PYTHON_LIVE=1 test \
+  python3 -m pytest -q /opt/labios/tests/python -m live
+docker compose run --rm --build test \
+  python3 /opt/labios/examples/python/golden.py
 ```
+
+The Python golden example uses only public Label I/O APIs and verifies exact
+pipeline output bytes. The daemon images remain minimal service images and do
+not promise an embedded SDK.
 
 For a native build:
 
@@ -99,6 +107,9 @@ ctest --test-dir build/dev --output-on-failure -L unit
 ```
 
 Native integration tests additionally require reachable NATS and DragonflyDB.
+Building the native Python module requires Python development headers; importing
+the package requires `flatbuffers==24.3.25`. The built import root is
+`build/dev/python`.
 
 ## Next steps
 

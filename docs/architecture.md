@@ -884,7 +884,7 @@ deployment model; the architecture does not change.
 | Warehouse       | DragonflyDB (Redis 7 wire-compatible)|
 | Async I/O       | POSIX file I/O (io_uring planned)   |
 | Hashing         | xxHash3                             |
-| Python bindings | pybind11 (planned)                  |
+| Python bindings | pybind11 owning Label I/O SDK      |
 | Testing         | Catch2 (C++) + pytest (Python)      |
 | Config          | TOML                                |
 | Containers      | Docker + Docker Compose             |

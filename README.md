@@ -36,8 +36,9 @@ Clients never talk to workers. The dispatcher is the only bridge.
 
 > **Implementation status:** This README describes the intended system. Several
 > capabilities are component-level or prototype rather than verified end to end
-> (for example, the runtime uses core NATS rather than JetStream, Tier 2 workers
-> are not yet reasoning-capable, and elastic scaling is off by default). See the
+> (for example, Tier 2 workers are not yet reasoning-capable, cross-process
+> channels/workspaces are not implemented, and elastic scaling is off by
+> default). See the
 > internal planning authority `.planning/LABIOS-2.1.md` for the engineering
 > truth baseline and project direction.
 
@@ -45,17 +46,18 @@ Clients never talk to workers. The dispatcher is the only bridge.
 
 ```bash
 git clone https://github.com/akougkas/labios.git && cd labios
-docker compose up -d
+docker compose up -d --build --wait
 ```
 
-Write and read your first label (Python):
+Run the packaged Python Label I/O golden path:
 
-```python
-import labios
-client = labios.connect_to("nats://localhost:4222", "localhost", 6379)
-client.write("/data/hello.dat", b"Hello from LABIOS!", 0)
-print(client.read("/data/hello.dat", 0, 18))
+```bash
+docker compose run --rm --build test \
+  python3 /opt/labios/examples/python/golden.py
 ```
+
+The example uses only public APIs and verifies exact source → pipeline →
+destination bytes.
 
 See [docs/getting-started.md](docs/getting-started.md) for the full 5-minute walkthrough
 with C++, C, and MCP examples.
@@ -79,22 +81,22 @@ with C++, C, and MCP examples.
 
 ## Client APIs
 
-Eight layers of abstraction. The C++ API is the most complete; the Python
-bindings currently expose a subset (sync/async I/O, URI I/O, channel publish,
-workspace put/get/del/grant, and `observe`). Label-level `create_label`/`publish`,
-`write_with_intent`, `execute_pipeline`, channel/workspace *creation*, and
-`set_config` are C++-only today — see `.planning/LABIOS-2.1.md`.
+C++ and Python expose the headline Label I/O lifecycle. Python binds the same
+owning `Operation`, typed resources/labels, label-level publication, URI I/O,
+intent/priority, pipelines, completion/cancellation/lifecycle results, public
+placement history, and Observe queries. C++ additionally exposes the current
+process-local channel/workspace handle APIs and process-local `set_config`.
 
 | Layer | C++ | Python | C |
 |-------|-----|--------|---|
 | Sync I/O | `write()` / `read()` | `write()` / `read()` | `labios_write()` / `labios_read()` |
-| Async I/O | owning `Operation`: `test()` / `wait_for()` / `cancel()` | `async_write()` / `wait()` | owning status: `labios_test()` / `labios_wait_for()` / `labios_cancel()` |
+| Async I/O | owning `Operation`: `test()` / `wait_for()` / `cancel()` | owning `Operation`: `test()` / `wait_for()` / `cancel()` | owning status: `labios_test()` / `labios_wait_for()` / `labios_cancel()` |
 | Label-level | `create_label()` / `publish()` | `create_label()` / `publish()` | |
 | URI-based | `write_to("kv://...")` | `write_to("kv://...")` | |
 | Intent-driven | `write_with_intent()` | `write_with_intent()` | |
 | Channels | `publish_to_channel()` | `publish_to_channel()` | |
 | Workspaces | `workspace_put()` / `workspace_get()` | `workspace_put()` / `workspace_get()` | |
-| Observability | `observe()` | `observe()` | |
+| Observability | `observe()` / `inspect_label()` | `observe()` / `inspect_label()` | |
 
 ## Agent Integration (MCP)
 
@@ -157,7 +159,7 @@ cd mcp && python3 -m pytest tests
 ## Tech Stack
 
 C++20 (`std::jthread`, concepts) | FlatBuffers | NATS 2.10 (server runs with
-JetStream enabled; the runtime currently uses core NATS pub/sub) | DragonflyDB |
+JetStream enabled; labels use durable JetStream delivery) | DragonflyDB |
 POSIX file I/O (io_uring planned) | xxHash3 | pybind11 | Catch2 | Docker Compose |
 CMake 3.25+ | GitHub Actions (ASan, TSan, UBSan)
 

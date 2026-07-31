@@ -215,7 +215,7 @@ Baseline audited at commit `d8e6a4d`; P09 implementation evidence updated 2026-0
 | Completion API | Prompt 09 replaces mutable public `PendingIO` internals with an owning, copyable `Operation` over immutable label IDs and shared session context. Operation observation/wait/cancel/read methods are concurrent-safe, survive originating `Client` destruction, preserve handles after typed nonterminal timeout, deterministically select wait-any, return pending views from timed-out wait-all, expose categorized errors and cancellation race outcomes, and retain read results for repeat retrieval. `PendingIO` remains only a compatibility spelling. The C API now uses registry-validated owning status records, stable error codes/categories, explicit result/buffer/error release functions, and stale/double-release protection. Catalog compare-and-set transitions continue to linearize cancellation, scheduling, and worker claim. |
 | Elasticity | Decision engines and Docker orchestration abstractions exist. Elasticity is disabled by default; leader election is not implemented. |
 | POSIX | The intercept is a useful `/labios` virtual-path prototype, not complete transparent POSIX behavior for arbitrary repositories. |
-| Python | Bindings expose a useful subset of the C++ client, not all documented C++ layers. |
+| Python | Prompt 10 binds the Prompt 09 owning `Operation`, typed labels/resources, label-level and URI submission, intent/priority, pipelines, completion/cancellation/lifecycle results, repeatable reads, placement history, and public Observe queries. Blocking native calls release the GIL. Versioned generated FlatBuffers bindings and one verified `LWR2` registry-v2 parser live in the Python package; MCP behavior remains unchanged until Prompt 11. |
 | MCP | The five-tool prototype accesses DragonflyDB and a worker volume directly. It does not compile MCP I/O into labels or traverse the dispatcher/worker path. |
 | Configuration | `Client::set_config` changes local client configuration, not distributed runtime state. Public configuration docs list only implemented TOML keys and environment overrides. |
 | Serialization safety | Label and Completion deserialization now verifies FlatBuffers buffers before access, rejects malformed/unsupported input with stable categories, and performs deterministic structural/admission checks in the client submission path. |
@@ -398,10 +398,11 @@ Baseline audited at commit `d8e6a4d`; P09 implementation evidence updated 2026-0
   than an ETL claim.
 - The smoke, kernel, and broader integration lanes were not rerun for P09.
   The bounded mixed-batch Compose evidence below now validates the listed WS3
-  correctness cases only; it is not a performance result. Python and MCP pytest
-  suites remain interface/mock-level evidence. The P09-to-P13 MCP registry-v2
-  compatibility gap is intentional: P13 must add Python FlatBuffers support and
-  generated bindings before MCP worker-registry/score/count behavior is claimed.
+  correctness cases only; it is not a performance result. Python hermetic
+  pytest now covers the public SDK shape and registry-v2 parser; Prompt 10 also adds opt-in live Compose pytest and a public-API golden example.
+  Generated Python FlatBuffers support closes the package-level P09 registry-v2
+  gap, but MCP worker-registry/score/count behavior remains unchanged and
+  unsupported until Prompt 11 consumes the shared parser.
 - The HPDC'19 published results (up to 16x CM1 I/O improvement, 6x HACC, 17x
   Montage, 40-60% execution-time reduction) are prior-publication evidence.
   None of them has been reproduced by this repository, and no current document
@@ -1050,11 +1051,12 @@ Approved as one decision bundle:
   before/after, policy objective, and tie-break evidence. The latest successful
   worker mirrors into the legacy scalars; parked/all-zero histories still
   serialize the table.
-- **P08-H — Deliberate MCP compatibility gap:** the existing Python MCP worker
-  parser is incompatible with registry v2. P13 must add Python FlatBuffers
-  support and generated bindings before MCP worker-registry, worker-score, or
-  worker-count behavior is again claimed. The P09-to-P13 gap is explicit, not
-  transparent compatibility.
+- **P08-H — Deliberate MCP compatibility gap:** the former Python MCP worker
+  parser is incompatible with registry v2. Prompt 10 now owns Python
+  FlatBuffers support, generated bindings, and the shared parser (superseding
+  the original P13 assignment); Prompt 11 owns any MCP behavior change.
+  Worker-registry, worker-score, or worker-count MCP behavior remains
+  unclaimed until then. The gap is explicit, not transparent compatibility.
 
 Implementation boundaries and gate:
 
@@ -1084,8 +1086,7 @@ Implementation boundaries and gate:
   hermetic scheduling / solver / registry tests pass. The two Section 6.2 live
   runs add only the recorded one-batch mixed correctness and manager-restart
   evidence on the single-host three-worker topology. The MCP registry-v2
-  compatibility gap remains intentionally deferred to P13; no MCP files were
-  changed.
+  behavior gap remains explicit; Prompt 10 owns the Python parser and generated bindings, while Prompt 11 alone may change MCP behavior.
 - **P10 status:** Hermetic implementation and Prompt 06 method-readiness are
   complete; Prompt 08's performance exit remains blocked. The 2026-07-30
   attempted full run retained correct rows and passed calibration but failed
@@ -1198,6 +1199,30 @@ The compile-tested golden paths are `examples/native/cpp_golden.cpp` and
 signature drift. `CompletionResult::lifecycle` and its C projection expose the
 catalog-authoritative Submitted through terminal/Unknown phase separately from
 wait outcome. Prompt 09 adds no schema field and does not begin Prompt 10.
+
+#### Prompt 10 — Python Label I/O SDK and registry-v2 repair
+
+**Complete (2026-07-31).** Python now binds the owning Prompt 09 `Operation`
+rather than reconstructing asynchronous state. The package exposes typed
+resources and labels, URI and label-level publication, intent/priority,
+source → pipeline → destination programs, completion/lifecycle/cancellation
+results, deterministic waits, timeout reuse, repeatable reads, public placement
+history, and active scheduler configuration. Blocking native operations release
+the GIL, and retained operations keep their native session safe after the
+originating Client is destroyed.
+
+Generated FlatBuffers 24.3.25 Python sources for `worker_registry.fbs` are
+versioned in the package. `parse_worker_registry_message` requires `LWR2`,
+protocol version 2, matching payload kind/union, valid descriptor values, and
+supports empty/nonempty snapshots with no text fallback. This slice removes the
+obsolete C++ offline CSV codec as an intentional compatibility break. It does
+not alter MCP behavior.
+
+The one binding-blocker C++ addition is `Client::inspect_label(label_id)`, a
+catalog-owned public API returning the admitted label and placement residual;
+Python does not address DragonflyDB keys or NATS subjects. The Compose test image
+and CI now carry and execute the SDK, its live pytest, and
+`examples/python/golden.py`.
 
 ## 12. Immediate integration steps
 
