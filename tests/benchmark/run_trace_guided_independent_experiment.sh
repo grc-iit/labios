@@ -71,7 +71,7 @@ cells = list(itertools.product(
 ))
 random.Random(2101).shuffle(cells)
 with open(sys.argv[1], "w", newline="") as target:
-    writer = csv.writer(target)
+    writer = csv.writer(target, lineterminator="\n")
     writer.writerow(("sequence", "arm", "profile", "repetition"))
     for sequence, cell in enumerate(cells):
         writer.writerow((sequence, *cell))
@@ -151,7 +151,7 @@ for cell in "${cells[@]}"; do
         exit "$exit_code"
     fi
 
-    python3 - "$cell_dir/raw.csv" "$arm" "$profile" "$repetition" <<'PY'
+    if ! python3 - "$cell_dir/raw.csv" "$arm" "$profile" "$repetition" <<'PY'
 import csv, sys
 path, arm, profile, repetition = sys.argv[1:]
 rows = list(csv.DictReader(open(path, newline="")))
@@ -165,6 +165,16 @@ assert all(row["verified"] == "1" and row["terminal_state"] == "complete"
            and not row["failure"] and int(row["worker_id"]) >= 0
            and int(row["attempt"]) >= 1 for row in rows)
 PY
+    then
+        COMPOSE_PROJECT_NAME="$current_project" docker compose logs --no-color \
+            >"$cell_dir/services.log" 2>&1 || true
+        printf '%s,%s,%s,%s,%s,%s,failed-validation\n' "$sequence" "$arm" \
+            "$profile" "$repetition" "$replicate_id" "$current_project" \
+            >>"$artifact_root/cells.csv"
+        printf 'cell %s failed raw-row validation\n' "$replicate_id" \
+            >"$artifact_root/INVALID.md"
+        exit 1
+    fi
 
     aggregate="$artifact_root/$arm/$profile/raw.csv"
     mkdir -p "$(dirname "$aggregate")"

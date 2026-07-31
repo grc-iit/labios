@@ -1,0 +1,7 @@
+seed=2101
+replicates_per_profile_arm=20
+training=two fixed cycles of small/large/pipeline after one pipeline-source write
+verification=public reads after all measured decisions in each fresh-state replicate
+primary_unit=per-replicate median completion_us
+primary_comparison=informed versus static-weight-matched ablation
+topology=three equal advertised workers; fixed hidden execution delays 0/20/60 ms
