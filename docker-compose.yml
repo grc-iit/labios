@@ -180,26 +180,21 @@ services:
       start_period: 5s
 
   mcp:
-    build: { context: ./mcp }
+    build: { context: ., dockerfile: mcp/Dockerfile }
     restart: unless-stopped
     stop_grace_period: 10s
     depends_on:
       nats: { condition: service_healthy }
       redis: { condition: service_healthy }
       dispatcher: { condition: service_healthy }
+      worker-1: { condition: service_healthy }
+      worker-2: { condition: service_healthy }
+      worker-3: { condition: service_healthy }
     environment:
       LABIOS_REDIS_HOST: "redis"
       LABIOS_REDIS_PORT: "6379"
       LABIOS_NATS_URL: "nats://nats:4222"
-    volumes:
-      - worker-data:/labios/data:ro
     stdin_open: true
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket; a=socket.create_connection(('redis',6379),2); a.close(); b=socket.create_connection(('nats',4222),2); b.close()"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
 
   # One-shot tooling image. It is intentionally not started by `compose up`.
   test:

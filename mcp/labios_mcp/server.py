@@ -1,177 +1,613 @@
 #!/usr/bin/env python3
-"""LABIOS MCP Server.
+"""Public MCP frontend for LABIOS Label I/O.
 
-Exposes LABIOS runtime operations as MCP tools for coding agents.
-Connects to DragonflyDB (warehouse) and reads/writes the same keys
-the C++ runtime uses. Runs inside Docker Compose on the same network.
+Core tools lower requests through the packaged Python ``Client`` and its owning
+``Operation``.  This module deliberately contains no Redis, NATS, or worker
+volume adapter.
 """
+from __future__ import annotations
+
 import asyncio
-import contextlib
-import glob as globmod
+import base64
+import binascii
+from dataclasses import dataclass
 import json
 import os
-import pathlib
-import random
-import re
-import time
-from typing import Any
+import threading
+from typing import Any, Mapping
 
-try:
-    import nats
-except ImportError:  # pragma: no cover - host unit tests may not install nats-py
-    nats = None
-
-import redis.asyncio as aioredis
+import labios
+from labios import (
+    WorkerRegistrySnapshot,
+    parse_worker_registry_message,
+)
+from labios.registry import PayloadKind
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
 
-REDIS_HOST = os.environ.get("LABIOS_REDIS_HOST", "redis")
-REDIS_PORT = int(os.environ.get("LABIOS_REDIS_PORT", "6379"))
-NATS_URL = os.environ.get("LABIOS_NATS_URL", "nats://nats:4222")
-
 app = Server("labios")
 
-# Lazy-initialized async Redis connection
-_redis: aioredis.Redis | None = None
+_INTENTS = {
+    "none": labios.Intent.NONE,
+    "checkpoint": labios.Intent.CHECKPOINT,
+    "cache": labios.Intent.CACHE,
+    "tool_output": labios.Intent.TOOL_OUTPUT,
+    "final_result": labios.Intent.FINAL_RESULT,
+    "intermediate": labios.Intent.INTERMEDIATE,
+    "shared_state": labios.Intent.SHARED_STATE,
+    "embedding": labios.Intent.EMBEDDING,
+    "model_weight": labios.Intent.MODEL_WEIGHT,
+    "kv_cache": labios.Intent.KV_CACHE,
+    "reasoning_trace": labios.Intent.REASONING_TRACE,
+}
+_REGISTERED_PIPELINE_OPERATIONS = frozenset({
+    "builtin://identity",
+    "builtin://compress_rle",
+    "builtin://decompress_rle",
+    "builtin://filter_bytes",
+    "builtin://sum_uint64",
+    "builtin://sort_uint64",
+    "builtin://sample",
+    "builtin://truncate",
+    "builtin://deduplicate",
+    "builtin://median_uint64",
+    "builtin://format_convert",
+})
+_PUBLIC_OBSERVATIONS = frozenset({
+    "system/health",
+    "queue/depth",
+    "workers/scores",
+    "workers/count",
+    "channels/list",
+    "workspaces/list",
+    "config/current",
+})
+_COMMON_PROPERTIES = {
+    "intent": {
+        "type": "string", "enum": list(_INTENTS), "default": "none",
+        "description": "Sealed Label I/O intent.",
+    },
+    "priority": {
+        "type": "integer", "minimum": 0, "maximum": 255, "default": 0,
+        "description": "Sealed scheduling priority; it is not an ordering edge.",
+    },
+    "ttl_seconds": {
+        "type": "integer", "minimum": 0, "default": 0,
+        "description": "Latest-start TTL carried by the label.",
+    },
+    "timeout_ms": {
+        "type": "integer", "minimum": 0, "default": 30000,
+        "description": "MCP wait deadline. Timeout does not cancel the label.",
+    },
+    "cancel_on_timeout": {
+        "type": "boolean", "default": False,
+        "description": "Request public Operation cancellation only after timeout.",
+    },
+}
 
 
-async def get_redis() -> aioredis.Redis:
-    global _redis
-    if _redis is None:
-        _redis = aioredis.Redis(
-            host=REDIS_HOST, port=REDIS_PORT, decode_responses=False
+class MalformedRequest(ValueError):
+    """An MCP request does not conform to the public tool schema."""
+
+
+def _text(data: Mapping[str, Any]) -> list[TextContent]:
+    return [TextContent(type="text", text=json.dumps(dict(data), sort_keys=True))]
+
+
+def _enum_name(value: object) -> str:
+    return str(getattr(value, "name", value)).lower()
+
+
+def _category(message: str, default: str) -> str:
+    prefix = message.split(":", 1)[0].strip()
+    if prefix and prefix.replace("_", "").isalnum() and prefix.upper() == prefix:
+        return prefix
+    return default
+
+
+def _error(
+    kind: str,
+    category: str,
+    message: str,
+    *,
+    label_id: int | None = None,
+    retryable: bool = False,
+    **extra: Any,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "ok": False,
+        "status": kind,
+        "error": {
+            "kind": kind,
+            "category": category,
+            "message": message,
+            "retryable": retryable,
+        },
+    }
+    if label_id is not None:
+        result["label_id"] = label_id
+    result.update(extra)
+    return result
+
+
+def _require_object(arguments: object) -> dict[str, Any]:
+    if not isinstance(arguments, dict):
+        raise MalformedRequest("arguments must be a JSON object")
+    return arguments
+
+
+def _reject_unknown(args: Mapping[str, Any], allowed: set[str]) -> None:
+    unknown = sorted(set(args) - allowed)
+    if unknown:
+        raise MalformedRequest(f"unknown field(s): {', '.join(unknown)}")
+
+
+def _string(args: Mapping[str, Any], name: str, *, required: bool = False) -> str:
+    if name not in args:
+        if required:
+            raise MalformedRequest(f"missing required field: {name}")
+        return ""
+    value = args[name]
+    if not isinstance(value, str) or (required and not value):
+        raise MalformedRequest(f"{name} must be a non-empty string")
+    return value
+
+
+def _integer(
+    args: Mapping[str, Any], name: str, default: int, minimum: int, maximum: int
+) -> int:
+    value = args.get(name, default)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise MalformedRequest(f"{name} must be an integer")
+    if not minimum <= value <= maximum:
+        raise MalformedRequest(f"{name} must be between {minimum} and {maximum}")
+    return value
+
+
+def _boolean(args: Mapping[str, Any], name: str, default: bool = False) -> bool:
+    value = args.get(name, default)
+    if not isinstance(value, bool):
+        raise MalformedRequest(f"{name} must be a boolean")
+    return value
+
+
+def _common(args: Mapping[str, Any]) -> tuple[object, int, int, int, bool]:
+    intent_name = args.get("intent", "none")
+    if not isinstance(intent_name, str) or intent_name not in _INTENTS:
+        raise MalformedRequest("intent is not a supported Label I/O intent")
+    return (
+        _INTENTS[intent_name],
+        _integer(args, "priority", 0, 0, 255),
+        _integer(args, "ttl_seconds", 0, 0, 2**32 - 1),
+        _integer(args, "timeout_ms", 30000, 0, 86_400_000),
+        _boolean(args, "cancel_on_timeout"),
+    )
+
+
+def _decode_data(value: str, encoding: str) -> bytes:
+    if encoding == "utf-8":
+        return value.encode("utf-8")
+    if encoding == "base64":
+        try:
+            return base64.b64decode(value, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise MalformedRequest("data is not valid base64") from exc
+    raise MalformedRequest("encoding must be 'utf-8' or 'base64'")
+
+
+def _encode_data(value: bytes, encoding: str) -> str:
+    if encoding == "base64":
+        return base64.b64encode(value).decode("ascii")
+    if encoding == "utf-8":
+        try:
+            return value.decode("utf-8", "strict")
+        except UnicodeDecodeError as exc:
+            raise MalformedRequest(
+                "retrieved bytes are not UTF-8; request base64 encoding"
+            ) from exc
+    raise MalformedRequest("encoding must be 'utf-8' or 'base64'")
+
+
+def _completion(item: object) -> dict[str, Any]:
+    return {
+        "label_id": int(getattr(item, "label_id", 0)),
+        "state": _enum_name(getattr(item, "state", "unknown")),
+        "lifecycle": _enum_name(getattr(item, "lifecycle", "unknown")),
+        "category": str(getattr(item, "category", "")),
+        "message": str(getattr(item, "error", "")),
+        "park_reason": str(getattr(item, "park_reason", "")),
+        "park_attempts": int(getattr(item, "park_attempts", 0)),
+        "next_retry_at_ms": int(getattr(item, "next_retry_at_ms", 0)),
+        "worker_id": int(getattr(item, "worker_id", -1)),
+        "attempt": int(getattr(item, "attempt", 0)),
+    }
+
+
+def _terminal_failure(item: object) -> dict[str, Any]:
+    completion = _completion(item)
+    label_id = completion["label_id"]
+    state = completion["state"]
+    category = completion["category"] or _category(completion["message"], "EXECUTION_FAILED")
+    if state == "cancelled" or category == "CANCELED":
+        return _error(
+            "cancelled", "CANCELED", completion["message"] or "operation cancelled",
+            label_id=label_id, completion=completion,
         )
-    return _redis
+    if state == "unknown":
+        return _error(
+            "completion_unknown", "COMPLETION_UNKNOWN_OR_EXPIRED",
+            completion["message"] or "completion is unknown or expired",
+            label_id=label_id, completion=completion,
+        )
+    admission_categories = {
+        "MALFORMED_BUFFER", "LIMIT_EXCEEDED", "UNSUPPORTED_IR_VERSION",
+        "INVALID_ENUM", "INVALID_IDENTIFIER", "AUTHORIZATION_FAILED",
+        "UNKNOWN_REFINEMENT", "UNKNOWN_RESOURCE", "FORBIDDEN_INTERNAL_RESOURCE",
+        "ADDRESS_CONFLICT", "AMBIGUOUS_INPUT", "MISSING_FIELD",
+        "ILLEGAL_COMBINATION", "INVALID_RESOURCE", "UNSAFE_MEMORY_REFERENCE",
+        "INVALID_PIPELINE", "INVALID_DEPENDENCY", "DUPLICATE_ID",
+        "UNAUTHORIZED_MUTATION", "INVALID_STATE_TRANSITION",
+    }
+    kind = "admission_failure" if category in admission_categories else "execution_failure"
+    return _error(
+        kind, category, completion["message"] or "Label I/O operation failed",
+        label_id=label_id, completion=completion,
+    )
 
 
-def _text(data: Any) -> list[TextContent]:
-    """Wrap a response as MCP TextContent."""
-    if isinstance(data, (dict, list)):
-        return [TextContent(type="text", text=json.dumps(data, indent=2))]
-    return [TextContent(type="text", text=str(data))]
+def decode_registry_snapshot(payload: bytes) -> WorkerRegistrySnapshot:
+    """Decode only a verified LWR2 protocol-v2 worker snapshot.
+
+    Normal MCP observations use public Observe labels.  This helper exists for
+    callers that already receive a registry snapshot from a supported public
+    inspection surface; it never requests a private NATS subject.
+    """
+    message = parse_worker_registry_message(
+        payload, expected_kind=PayloadKind.PayloadKind.Snapshot
+    )
+    if not isinstance(message.payload, WorkerRegistrySnapshot):
+        raise ValueError("WRONG_KIND: registry payload is not a snapshot")
+    return message.payload
 
 
-def _parse_queue_depth(raw: bytes | str | None) -> int:
-    """Parse dispatcher queue depth values like 'total,pipeline,observe'."""
-    if raw is None:
-        return 0
-    value = raw.decode() if isinstance(raw, bytes) else raw
-    try:
-        return int(value.split(",", 1)[0])
-    except (TypeError, ValueError):
-        return 0
+@dataclass
+class McpFrontend:
+    """Synchronous, testable lowering layer behind the async MCP callbacks."""
 
+    client: Any
 
-def _parse_worker_registry(payload: bytes | str) -> tuple[list[dict[str, Any]], int]:
-    """Parse manager worker registry rows: id,available,capacity,load,speed,energy,tier."""
-    text = payload.decode() if isinstance(payload, bytes) else payload
-    workers: list[dict[str, Any]] = []
-    malformed = 0
-    for line in text.splitlines():
-        if not line:
-            continue
-        parts = line.split(",")
-        if len(parts) < 6:
-            malformed += 1
-            continue
+    def call(self, name: str, arguments: object) -> dict[str, Any]:
         try:
-            tier = int(parts[6]) if len(parts) > 6 and parts[6] else 0
-            tier = max(0, min(2, tier))
-            workers.append({
-                "id": int(parts[0]),
-                "available": parts[1] == "1",
-                "capacity": float(parts[2]),
-                "load": float(parts[3]),
-                "speed": int(parts[4]),
-                "energy": int(parts[5]),
-                "tier": tier,
-                "score": 1.0,
-            })
-        except ValueError:
-            malformed += 1
-    return workers, malformed
+            args = _require_object(arguments)
+            if name == "labios_store":
+                return self.store(args)
+            if name == "labios_retrieve":
+                return self.retrieve(args)
+            if name == "labios_process":
+                return self.process(args)
+            if name == "labios_observe":
+                return self.observe(args)
+            if name == "labios_knowledge":
+                return _error(
+                    "unsupported_feature", "PENDING_PROMPT_14",
+                    "workspace-backed knowledge is pending Prompt 14",
+                )
+            raise MalformedRequest(f"unknown tool: {name}")
+        except MalformedRequest as exc:
+            return _error("malformed_request", "MALFORMED_REQUEST", str(exc))
+        except labios.CompletionLookupError as exc:
+            return _error(
+                "completion_unknown", "COMPLETION_UNKNOWN_OR_EXPIRED", str(exc)
+            )
+        except (labios.SubmissionError, labios.ValidationError,
+                labios.ResourceError, labios.PipelineError,
+                labios.DependencyError, labios.AuthorizationError) as exc:
+            message = str(exc)
+            return _error(
+                "admission_failure", _category(message, "ADMISSION_REJECTED"), message
+            )
+        except (labios.ExecutionError, labios.BackendError,
+                labios.CompletionError) as exc:
+            message = str(exc)
+            return _error(
+                "execution_failure", _category(message, "EXECUTION_FAILED"), message
+            )
+        except (labios.MalformedBufferError, labios.UnsupportedVersionError,
+                labios.ProtocolError) as exc:
+            message = str(exc)
+            return _error(
+                "malformed_request", _category(message, "MALFORMED_BUFFER"), message
+            )
+        except labios.LabiosError as exc:
+            message = str(exc)
+            return _error("execution_failure", _category(message, "LABIOS_ERROR"), message)
+        except Exception as exc:  # keep the MCP process alive on adapter/runtime faults
+            return _error("execution_failure", "FRONTEND_FAILURE", str(exc))
 
+    def _params(
+        self,
+        args: Mapping[str, Any],
+        label_type: object,
+        *,
+        source: str = "",
+        destination: str = "",
+        pipeline: object | None = None,
+    ) -> tuple[object, int, bool]:
+        intent, priority, ttl, timeout, cancel = _common(args)
+        params = labios.LabelParams()
+        params.type = label_type
+        params.intent = intent
+        params.priority = priority
+        params.ttl_seconds = ttl
+        if source:
+            params.source_resource = labios.resource_from_uri(source)
+        if destination:
+            params.destination_resource = labios.resource_from_uri(destination)
+        if pipeline is not None:
+            params.pipeline = pipeline
+        return params, timeout, cancel
 
-async def _query_workers_from_manager() -> tuple[list[dict[str, Any]], int]:
-    """Ask the live manager for the current worker registry over NATS."""
-    if nats is None:
-        raise RuntimeError("nats-py is not installed")
+    def _wait(self, operation: object, timeout_ms: int, cancel: bool) -> dict[str, Any]:
+        waited = operation.wait_all(timeout_ms)
+        items = list(getattr(waited, "results", ()))
+        state = _enum_name(getattr(waited, "state", "unknown"))
+        if state == "complete":
+            return {
+                "ok": True,
+                "status": "completed",
+                "label_id": int(operation.label_id()),
+                "completion": _completion(items[0]) if items else {},
+            }
+        if state in {"failed", "cancelled", "unknown"}:
+            item = items[0] if items else operation.test()
+            return _terminal_failure(item)
+        if state == "parked":
+            item = items[0] if items else operation.test()
+            return _error(
+                "parked", "PARKED", "label is admitted and parked",
+                label_id=int(operation.label_id()), retryable=True,
+                completion=_completion(item),
+            )
+        if state != "timeout":
+            return _error(
+                "execution_failure", "INVALID_COMPLETION_STATE",
+                f"unexpected completion state: {state}",
+                label_id=int(operation.label_id()),
+            )
 
-    nc = await nats.connect(NATS_URL, connect_timeout=1)
-    try:
-        msg = await nc.request("labios.manager.workers", b"", timeout=2)
-        return _parse_worker_registry(msg.data)
-    finally:
-        with contextlib.suppress(Exception):
-            await nc.close()
+        last = items[0] if items else operation.test()
+        last_payload = _completion(last)
+        if cancel:
+            outcomes = list(operation.cancel())
+            if not outcomes:
+                return _error(
+                    "completion_unknown", "COMPLETION_UNKNOWN_OR_EXPIRED",
+                    "cancellation returned no label outcome",
+                    label_id=int(operation.label_id()), completion=last_payload,
+                )
+            outcome = outcomes[0]
+            cancellation = _enum_name(getattr(outcome, "state", "unknown"))
+            if cancellation == "cancelled":
+                return _error(
+                    "cancelled", "CANCELED", "cancellation won before execution",
+                    label_id=int(operation.label_id()),
+                    cancellation="cancelled", completion=last_payload,
+                )
+            if cancellation == "unknown":
+                return _error(
+                    "completion_unknown", "COMPLETION_UNKNOWN_OR_EXPIRED",
+                    "completion is unknown or expired",
+                    label_id=int(operation.label_id()),
+                    cancellation="unknown", completion=last_payload,
+                )
+            if cancellation == "terminal":
+                terminal = getattr(outcome, "completion", None) or operation.test()
+                projected = _terminal_failure(terminal)
+                if _enum_name(getattr(terminal, "state", "")) == "complete":
+                    return {
+                        "ok": True, "status": "completed",
+                        "label_id": int(operation.label_id()),
+                        "cancellation": "terminal",
+                        "completion": _completion(terminal),
+                    }
+                return projected
+            return _error(
+                "cancellation", "CANCELLATION_TOO_LATE",
+                "worker execution won the cancellation race",
+                label_id=int(operation.label_id()), retryable=True,
+                cancellation="too_late", completion=last_payload,
+            )
 
+        if last_payload["state"] == "parked" or last_payload["lifecycle"] == "parked":
+            return _error(
+                "parked", "PARKED", "label is admitted and parked",
+                label_id=int(operation.label_id()), retryable=True,
+                completion=last_payload,
+            )
+        return _error(
+            "timeout", "TIMEOUT", "wait deadline elapsed; operation remains active",
+            label_id=int(operation.label_id()), retryable=True,
+            completion=last_payload,
+        )
 
-# ── Workspace key helpers (match C++ workspace.cpp key patterns) ──────────
-
-
-def _ws_data_key(scope: str, key: str) -> str:
-    return f"labios:ws:{scope}:{key}"
-
-
-def _ws_version_key(scope: str, key: str, version: int) -> str:
-    return f"labios:ws:{scope}:{key}:v{version}"
-
-
-def _ws_meta_key(scope: str, key: str) -> str:
-    return f"labios:ws:{scope}:_meta:{key}"
-
-
-def _ws_index_key(scope: str) -> str:
-    return f"labios:ws:{scope}:_index"
-
-
-# ── Pipeline operations (pure functions, no I/O) ─────────────────────────
-
-
-def _apply_pipeline_op(op: str, lines: list[str], filename: str) -> list[str]:
-    """Apply a single pipeline operation to lines."""
-    parts = op.split(":", 1)
-    cmd = parts[0]
-    arg = parts[1] if len(parts) > 1 else ""
-
-    if cmd == "grep":
-        try:
-            pattern = re.compile(arg, re.IGNORECASE)
-            return [line for line in lines if pattern.search(line)]
-        except re.error:
-            return [line for line in lines if arg in line]
-    elif cmd == "head":
-        n = int(arg) if arg else 10
-        return lines[:n]
-    elif cmd == "tail":
-        n = int(arg) if arg else 10
-        return lines[-n:]
-    elif cmd == "count":
-        return [str(len(lines))]
-    elif cmd == "wc":
-        word_count = sum(len(line.split()) for line in lines)
-        char_count = sum(len(line) for line in lines)
-        return [f"lines: {len(lines)}, words: {word_count}, chars: {char_count}"]
-    elif cmd == "sort":
-        return sorted(lines)
-    elif cmd == "uniq":
-        seen: set[str] = set()
-        result = []
-        for line in lines:
-            if line not in seen:
-                seen.add(line)
-                result.append(line)
+    def store(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        allowed = {"destination", "data", "encoding", *_COMMON_PROPERTIES}
+        _reject_unknown(args, allowed)
+        destination = _string(args, "destination", required=True)
+        data_text = _string(args, "data", required=True)
+        encoding = args.get("encoding", "utf-8")
+        if not isinstance(encoding, str):
+            raise MalformedRequest("encoding must be a string")
+        data = _decode_data(data_text, encoding)
+        params, timeout, cancel = self._params(
+            args, labios.LabelType.Write, destination=destination
+        )
+        label = self.client.create_label(params)
+        operation = self.client.publish(label, data)
+        result = self._wait(operation, timeout, cancel)
+        result.update({"destination": destination, "size_bytes": len(data)})
         return result
-    elif cmd == "filter":
-        return [line for line in lines if arg in line]
-    elif cmd == "sample":
-        n = int(arg) if arg else 10
-        return random.sample(lines, min(n, len(lines)))
-    return lines
+
+    def retrieve(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        allowed = {"source", "size", "encoding", *_COMMON_PROPERTIES}
+        _reject_unknown(args, allowed)
+        source = _string(args, "source", required=True)
+        size = _integer(args, "size", 0, 0, 2**63 - 1)
+        encoding = args.get("encoding", "base64")
+        if not isinstance(encoding, str):
+            raise MalformedRequest("encoding must be a string")
+        params, timeout, cancel = self._params(args, labios.LabelType.Read, source=source)
+        label = self.client.create_label(params)
+        label.data_size = size
+        operation = self.client.publish(label)
+        result = self._wait(operation, timeout, cancel)
+        if result.get("ok"):
+            data = bytes(operation.read(0))
+            result.update({
+                "source": source,
+                "size_bytes": len(data),
+                "encoding": encoding,
+                "data": _encode_data(data, encoding),
+            })
+        return result
+
+    def process(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        allowed = {"source", "destination", "pipeline", *_COMMON_PROPERTIES}
+        _reject_unknown(args, allowed)
+        source = _string(args, "source", required=True)
+        destination = _string(args, "destination", required=True)
+        rows = args.get("pipeline")
+        if not isinstance(rows, list) or not rows:
+            raise MalformedRequest("pipeline must be a non-empty array of stage objects")
+        pipeline = labios.Pipeline()
+        stages = []
+        for index, row in enumerate(rows):
+            if not isinstance(row, dict):
+                raise MalformedRequest(f"pipeline[{index}] must be an object")
+            _reject_unknown(row, {"operation", "args", "input_stage", "output_stage"})
+            operation_name = _string(row, "operation", required=True)
+            if operation_name not in _REGISTERED_PIPELINE_OPERATIONS:
+                raise MalformedRequest(
+                    f"pipeline[{index}] operation is not a registered Label I/O transform"
+                )
+            stage_args = row.get("args", "")
+            if not isinstance(stage_args, str):
+                raise MalformedRequest(f"pipeline[{index}].args must be a string")
+            input_stage = _integer(row, "input_stage", -1, -1, index - 1)
+            output_stage = _integer(row, "output_stage", -1, -1, len(rows) - 1)
+            stages.append(labios.PipelineStage(
+                operation_name, stage_args, input_stage, output_stage
+            ))
+        pipeline.stages = stages
+        params, timeout, cancel = self._params(
+            args, labios.LabelType.Write, source=source,
+            destination=destination, pipeline=pipeline,
+        )
+        operation = self.client.publish(self.client.create_label(params))
+        result = self._wait(operation, timeout, cancel)
+        result.update({
+            "source": source,
+            "destination": destination,
+            "stages": len(stages),
+        })
+        return result
+
+    def observe(self, args: Mapping[str, Any]) -> dict[str, Any]:
+        _reject_unknown(args, {"query", "label_id"})
+        query = _string(args, "query", required=True)
+        if query in {"label/status", "label/inspect"}:
+            label_id = _integer(args, "label_id", 0, 1, 2**64 - 1)
+            if query == "label/status":
+                item = self.client.operation([label_id]).test()
+                payload = _completion(item)
+                if payload["state"] == "unknown":
+                    return _error(
+                        "completion_unknown", "COMPLETION_UNKNOWN_OR_EXPIRED",
+                        payload["message"] or "completion is unknown or expired",
+                        label_id=label_id, completion=payload,
+                    )
+                return {"ok": True, "status": "observed", "completion": payload}
+            return {
+                "ok": True,
+                "status": "observed",
+                "label": self._label(self.client.inspect_label(label_id)),
+            }
+        if query.startswith("data/location?"):
+            raw = self.client.observe(query)
+        elif query in _PUBLIC_OBSERVATIONS:
+            raw = self.client.observe(query)
+        else:
+            raise MalformedRequest("query is not a public Observe/inspection route")
+        try:
+            observed = json.loads(raw)
+        except (TypeError, json.JSONDecodeError) as exc:
+            raise labios.ProtocolError("Observe returned malformed JSON") from exc
+        return {"ok": True, "status": "observed", "query": query, "observation": observed}
+
+    @staticmethod
+    def _resource(resource: object | None) -> dict[str, Any] | None:
+        if resource is None:
+            return None
+        return {
+            "family": _enum_name(getattr(resource, "family", "unknown")),
+            "backend_id": str(getattr(resource, "backend_id", "")),
+            "logical_id": str(getattr(resource, "logical_id", "")),
+            "namespace": str(getattr(resource, "namespace_name", "")),
+            "database": str(getattr(resource, "database", "")),
+            "path": str(getattr(resource, "path", "")),
+            "key": str(getattr(resource, "key", "")),
+            "offset": int(getattr(resource, "offset", 0)),
+            "length": int(getattr(resource, "length", 0)),
+        }
+
+    @classmethod
+    def _label(cls, label: object) -> dict[str, Any]:
+        history = getattr(getattr(label, "placement_history", None), "decisions", ())
+        decisions = [{
+            "decision_id": int(getattr(row, "decision_id", 0)),
+            "attempt": int(getattr(row, "attempt", 0)),
+            "outcome": str(getattr(row, "outcome", "")),
+            "chosen_worker_id": int(getattr(row, "chosen_worker_id", -1)),
+            "park_reason": str(getattr(row, "park_reason", "")),
+            "policy": str(getattr(row, "policy_name", "")),
+        } for row in history]
+        return {
+            "id": int(getattr(label, "id", 0)),
+            "ir_version": int(getattr(label, "ir_version", 0)),
+            "operation": str(getattr(label, "operation", "")),
+            "operation_version": int(getattr(label, "operation_version", 0)),
+            "type": _enum_name(getattr(label, "type", "unknown")),
+            "intent": _enum_name(getattr(label, "intent", "none")),
+            "priority": int(getattr(label, "priority", 0)),
+            "ttl_seconds": int(getattr(label, "ttl_seconds", 0)),
+            "source": cls._resource(getattr(label, "source_resource", None)),
+            "destination": cls._resource(getattr(label, "destination_resource", None)),
+            "pipeline": [{
+                "operation": str(stage.operation),
+                "args": str(stage.args),
+                "input_stage": int(stage.input_stage),
+                "output_stage": int(stage.output_stage),
+            } for stage in getattr(getattr(label, "pipeline", None), "stages", ())],
+            "placement_history": decisions,
+        }
 
 
-# ── Tool definitions ──────────────────────────────────────────────────────
+_frontend: McpFrontend | None = None
+_frontend_lock = threading.Lock()
+
+
+def _default_frontend() -> McpFrontend:
+    global _frontend
+    with _frontend_lock:
+        if _frontend is None:
+            client = labios.connect_to(
+                os.environ.get("LABIOS_NATS_URL", "nats://nats:4222"),
+                os.environ.get("LABIOS_REDIS_HOST", "redis"),
+                int(os.environ.get("LABIOS_REDIS_PORT", "6379")),
+            )
+            _frontend = McpFrontend(client)
+    return _frontend
 
 
 @app.list_tools()
@@ -180,493 +616,92 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="labios_observe",
             description=(
-                "Query LABIOS runtime state. Returns JSON with system metrics. "
-                "Queries: 'queue/depth', 'workers/scores', 'workers/count', "
-                "'system/health', 'channels/list', 'workspaces/list', "
-                "'config/current', 'data/location?file=/path'."
+                "Observe health, queue, workers, active scheduler profile, or a "
+                "label lifecycle/residual through public LABIOS inspection APIs."
             ),
             inputSchema={
-                "type": "object",
+                "type": "object", "additionalProperties": False,
                 "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "What to observe (e.g. 'workers/scores', 'system/health')",
-                    }
+                    "query": {"type": "string"},
+                    "label_id": {"type": "integer", "minimum": 1},
                 },
                 "required": ["query"],
             },
         ),
         Tool(
             name="labios_store",
-            description=(
-                "Store data in a LABIOS workspace. Data persists across sessions. "
-                "Scope controls visibility: 'session/<id>', 'project/<hash>', "
-                "'user/<name>', 'team/<name>'. Stores bulk data (code snapshots, "
-                "diffs, build outputs, analysis results) not just small strings."
-            ),
+            description="Write exact bytes to an external backend through typed Label I/O.",
             inputSchema={
-                "type": "object",
+                "type": "object", "additionalProperties": False,
                 "properties": {
-                    "key": {
-                        "type": "string",
-                        "description": "Storage key (e.g. 'arch/dependency-graph', 'test-results/run-42')",
-                    },
-                    "data": {
-                        "type": "string",
-                        "description": "Data to store (text or base64-encoded binary)",
-                    },
-                    "scope": {
-                        "type": "string",
-                        "description": "Workspace scope: 'session/<id>', 'project/<hash>', 'user/<name>'",
-                        "default": "project/default",
-                    },
-                    "intent": {
-                        "type": "string",
-                        "enum": [
-                            "checkpoint", "cache", "tool_output", "final_result",
-                            "intermediate", "shared_state", "embedding",
-                            "model_weight", "kv_cache", "reasoning_trace",
-                        ],
-                        "description": "What this data is for (affects lifecycle and retrieval ranking)",
-                        "default": "reasoning_trace",
-                    },
-                    "ttl_seconds": {
-                        "type": "integer",
-                        "description": "Auto-expire after N seconds (0 = permanent)",
-                        "default": 0,
-                    },
+                    "destination": {"type": "string", "description": "External backend URI."},
+                    "data": {"type": "string"},
+                    "encoding": {"type": "string", "enum": ["utf-8", "base64"], "default": "utf-8"},
+                    **_COMMON_PROPERTIES,
                 },
-                "required": ["key", "data"],
+                "required": ["destination", "data"],
             },
         ),
         Tool(
             name="labios_retrieve",
-            description=(
-                "Retrieve data from a LABIOS workspace. Searches across scopes "
-                "in priority order: session -> project -> user -> team. "
-                "Returns the data and metadata (intent, version, size)."
-            ),
+            description="Read exact bytes from an external backend through typed Label I/O.",
             inputSchema={
-                "type": "object",
+                "type": "object", "additionalProperties": False,
                 "properties": {
-                    "key": {
-                        "type": "string",
-                        "description": "Storage key to retrieve",
-                    },
-                    "scope": {
-                        "type": "string",
-                        "description": "Specific scope to search, or 'all' to search all tiers",
-                        "default": "all",
-                    },
+                    "source": {"type": "string", "description": "External backend URI."},
+                    "size": {"type": "integer", "minimum": 0, "default": 0},
+                    "encoding": {"type": "string", "enum": ["base64", "utf-8"], "default": "base64"},
+                    **_COMMON_PROPERTIES,
                 },
-                "required": ["key"],
-            },
-        ),
-        Tool(
-            name="labios_knowledge",
-            description=(
-                "Query what knowledge is stored across all accessible memory tiers. "
-                "Without a query: returns summary stats (count per scope and intent). "
-                "With a query: returns matching keys ranked by scope and recency."
-            ),
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Search term to match against keys (prefix match). Empty for summary.",
-                        "default": "",
-                    },
-                },
+                "required": ["source"],
             },
         ),
         Tool(
             name="labios_process",
             description=(
-                "Process data at the storage layer using a pipeline of operations. "
-                "Source can be a file path or glob pattern. Pipeline operations "
-                "execute without loading raw data into the agent's context. "
-                "Example: labios_process(source='/repo/src/**/*.py', "
-                "pipeline=['grep:TODO', 'head:20'])"
+                "Execute a structured, registered bytes-to-bytes pipeline from a "
+                "source URI to a destination URI through one LABIOS worker."
             ),
             inputSchema={
-                "type": "object",
+                "type": "object", "additionalProperties": False,
                 "properties": {
-                    "source": {
-                        "type": "string",
-                        "description": "File path or glob pattern to process",
-                    },
+                    "source": {"type": "string"},
+                    "destination": {"type": "string"},
                     "pipeline": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": (
-                            "Pipeline operations: 'grep:<pattern>', 'head:<n>', "
-                            "'tail:<n>', 'filter:<expr>', 'count', 'wc', 'sort', "
-                            "'uniq', 'sample:<n>'"
-                        ),
+                        "type": "array", "minItems": 1,
+                        "items": {
+                            "type": "object", "additionalProperties": False,
+                            "properties": {
+                                "operation": {"type": "string", "enum": sorted(_REGISTERED_PIPELINE_OPERATIONS)},
+                                "args": {"type": "string", "default": ""},
+                                "input_stage": {"type": "integer", "minimum": -1, "default": -1},
+                                "output_stage": {"type": "integer", "minimum": -1, "default": -1},
+                            },
+                            "required": ["operation"],
+                        },
                     },
-                    "intent": {
-                        "type": "string",
-                        "default": "tool_output",
-                    },
+                    **_COMMON_PROPERTIES,
                 },
-                "required": ["source", "pipeline"],
+                "required": ["source", "destination", "pipeline"],
             },
+        ),
+        Tool(
+            name="labios_knowledge",
+            description="Reserved for workspace-backed knowledge in Prompt 14; currently returns a stable pending response.",
+            inputSchema={"type": "object", "additionalProperties": False, "properties": {}},
         ),
     ]
 
 
-# ── Tool dispatch ────────────────────────────────────────────────────────
-
-
 @app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    if name == "labios_observe":
-        return await _observe(arguments["query"])
-    elif name == "labios_store":
-        return await _store(arguments)
-    elif name == "labios_retrieve":
-        return await _retrieve(arguments)
-    elif name == "labios_knowledge":
-        return await _knowledge(arguments.get("query", ""))
-    elif name == "labios_process":
-        return await _process(arguments)
-    return _text({"error": f"unknown tool: {name}"})
+async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+    result = await asyncio.to_thread(_default_frontend().call, name, arguments)
+    return _text(result)
 
 
-# ── Tool implementations ────────────────────────────────────────────────
-
-
-async def _observe(query: str) -> list[TextContent]:
-    """Query LABIOS runtime state from Redis and the live worker manager."""
-    try:
-        r = await get_redis()
-
-        if query == "queue/depth":
-            val = await r.get("labios:queue:depth")
-            depth = _parse_queue_depth(val)
-            return _text({"queue_depth": depth, "timestamp_ms": int(time.time() * 1000)})
-
-        if query == "system/health":
-            try:
-                await r.ping()
-                redis_ok = True
-            except Exception:
-                redis_ok = False
-            try:
-                workers, malformed = await _query_workers_from_manager()
-                nats_ok = True
-                worker_count = len(workers)
-            except Exception:
-                nats_ok = False
-                malformed = 0
-                worker_count = 0
-            uptime_val = await r.get("labios:dispatcher:start_ms")
-            uptime_s = 0
-            if uptime_val:
-                start_ms = int(uptime_val)
-                uptime_s = (int(time.time() * 1000) - start_ms) // 1000
-            return _text({
-                "nats": "connected" if nats_ok else "disconnected",
-                "redis": "connected" if redis_ok else "disconnected",
-                "worker_count": worker_count,
-                "malformed_worker_rows": malformed,
-                "uptime_seconds": uptime_s,
-            })
-
-        if query == "workers/scores":
-            workers, malformed = await _query_workers_from_manager()
-            return _text({"workers": workers, "malformed_worker_rows": malformed})
-
-        if query == "workspaces/list":
-            keys = [k async for k in r.scan_iter("labios:ws:*:_index")]
-            names = []
-            for key in keys:
-                k_str = key.decode()
-                parts = k_str.split(":")
-                if len(parts) >= 3:
-                    names.append(":".join(parts[2:-1]))
-            return _text({"workspaces": names})
-
-        if query == "channels/list":
-            keys = [k async for k in r.scan_iter("labios:channel:*")]
-            channel_names: set[str] = set()
-            for key in keys:
-                k_str = key.decode()
-                parts = k_str.removeprefix("labios:channel:").split(":")
-                if parts:
-                    channel_names.add(parts[0])
-            return _text({"channels": sorted(channel_names)})
-
-        if query == "config/current":
-            config_keys = [k async for k in r.scan_iter("labios:config:*")]
-            config: dict[str, str] = {}
-            for key in config_keys:
-                val = await r.get(key)
-                k_str = key.decode().removeprefix("labios:config:")
-                config[k_str] = val.decode() if val else ""
-            if not config:
-                config = {"note": "no runtime config keys found"}
-            return _text(config)
-
-        if query.startswith("data/location"):
-            file_path = ""
-            if "?" in query:
-                params = dict(
-                    p.split("=", 1)
-                    for p in query.split("?", 1)[1].split("&")
-                    if "=" in p
-                )
-                file_path = params.get("file", "")
-            if not file_path:
-                return _text({"error": "missing file parameter"})
-            loc = await r.get(f"labios:location:{file_path}")
-            worker_id = int(loc) if loc else None
-            return _text({"file": file_path, "worker_id": worker_id})
-
-        if query == "workers/count":
-            workers, malformed = await _query_workers_from_manager()
-            counts = {"databot": 0, "pipeline": 0, "agentic": 0}
-            for worker in workers:
-                if worker["tier"] == 0:
-                    counts["databot"] += 1
-                elif worker["tier"] == 1:
-                    counts["pipeline"] += 1
-                elif worker["tier"] == 2:
-                    counts["agentic"] += 1
-            counts["total"] = len(workers)
-            counts["malformed_worker_rows"] = malformed
-            return _text(counts)
-
-        return _text({"error": f"unknown observe query: {query}"})
-
-    except Exception as e:
-        return _text({"error": f"Redis connection failed: {e}"})
-
-
-async def _store(args: dict) -> list[TextContent]:
-    """Store data in a LABIOS workspace (matches C++ workspace key patterns)."""
-    try:
-        r = await get_redis()
-        key = args["key"]
-        data = args["data"].encode("utf-8")
-        scope = args.get("scope", "project/default")
-        intent = args.get("intent", "reasoning_trace")
-        ttl = args.get("ttl_seconds", 0)
-
-        redis_key = _ws_data_key(scope, key)
-        meta_key = _ws_meta_key(scope, key)
-        now_us = int(time.time() * 1_000_000)
-        index_key = _ws_index_key(scope)
-
-        async with r.pipeline(transaction=True) as pipe:
-            pipe.set(redis_key, data)
-            pipe.hincrby(meta_key, "version", 1)
-            pipe.hset(meta_key, mapping={
-                "intent": intent,
-                "size": len(data),
-                "updated_us": str(now_us),
-            })
-            pipe.sadd(index_key, key)
-            # version_key uses a placeholder; we fix it after execute
-            # because we need the hincrby result for the version number.
-            # Instead, do a two-phase approach: first get version, then store.
-            results = await pipe.execute()
-            version_val = results[1]  # hincrby returns the new value
-
-        version_key = _ws_version_key(scope, key, version_val)
-        async with r.pipeline(transaction=True) as pipe:
-            pipe.set(version_key, data)
-            pipe.hset(meta_key, "version", str(version_val))
-            if ttl > 0:
-                pipe.expire(redis_key, ttl)
-                pipe.expire(meta_key, ttl)
-                pipe.expire(version_key, ttl)
-            await pipe.execute()
-
-        return _text({
-            "stored": True,
-            "key": key,
-            "scope": scope,
-            "version": version_val,
-            "size_bytes": len(data),
-            "intent": intent,
-        })
-
-    except Exception as e:
-        return _text({"error": f"Redis connection failed: {e}"})
-
-
-async def _retrieve(args: dict) -> list[TextContent]:
-    """Retrieve data from workspace, searching across tiers if scope='all'."""
-    try:
-        r = await get_redis()
-        key = args["key"]
-        scope = args.get("scope", "all")
-
-        if scope != "all":
-            return _text(await _get_from_scope(r, scope, key))
-
-        scopes_to_search = []
-        for pattern_prefix in ["session/", "project/", "user/", "team/"]:
-            index_keys = [
-                k async for k in r.scan_iter(f"labios:ws:{pattern_prefix}*:_index")
-            ]
-            for idx_key in index_keys:
-                ws_name = idx_key.decode().removeprefix("labios:ws:").removesuffix(":_index")
-                if await r.sismember(idx_key, key.encode()):
-                    scopes_to_search.append(ws_name)
-
-        if not scopes_to_search:
-            return _text({"found": False, "key": key, "searched": "all tiers"})
-
-        tier_order = {"session": 0, "project": 1, "user": 2, "team": 3}
-        scopes_to_search.sort(key=lambda s: tier_order.get(s.split("/")[0], 99))
-
-        result = await _get_from_scope(r, scopes_to_search[0], key)
-        result["searched_scopes"] = scopes_to_search
-        return _text(result)
-
-    except Exception as e:
-        return _text({"error": f"Redis connection failed: {e}"})
-
-
-async def _get_from_scope(r: aioredis.Redis, scope: str, key: str) -> dict:
-    redis_key = _ws_data_key(scope, key)
-    data = await r.get(redis_key)
-    if data is None:
-        return {"found": False, "key": key, "scope": scope}
-
-    meta_key = _ws_meta_key(scope, key)
-    meta = await r.hgetall(meta_key)
-    meta_dict = {k.decode(): v.decode() for k, v in meta.items()} if meta else {}
-
-    return {
-        "found": True,
-        "key": key,
-        "scope": scope,
-        "data": data.decode("utf-8", errors="replace"),
-        "intent": meta_dict.get("intent", "unknown"),
-        "version": int(meta_dict.get("version", 1)),
-        "size_bytes": len(data),
-    }
-
-
-async def _knowledge(query: str) -> list[TextContent]:
-    """Query knowledge across all accessible tiers."""
-    try:
-        r = await get_redis()
-
-        if not query:
-            summary: dict[str, int] = {}
-            for prefix in ["session/", "project/", "user/", "team/"]:
-                index_keys = [
-                    k async for k in r.scan_iter(f"labios:ws:{prefix}*:_index")
-                ]
-                for idx_key in index_keys:
-                    ws_name = idx_key.decode().removeprefix("labios:ws:").removesuffix(":_index")
-                    count = await r.scard(idx_key)
-                    summary[ws_name] = count
-            return _text({"knowledge_summary": summary, "total_tiers": len(summary)})
-
-        results = []
-        for prefix in ["session/", "project/", "user/", "team/"]:
-            index_keys = [
-                k async for k in r.scan_iter(f"labios:ws:{prefix}*:_index")
-            ]
-            for idx_key in index_keys:
-                ws_name = idx_key.decode().removeprefix("labios:ws:").removesuffix(":_index")
-                members = await r.smembers(idx_key)
-                for member in members:
-                    k = member.decode()
-                    if query.lower() in k.lower():
-                        meta_key = _ws_meta_key(ws_name, k)
-                        meta = await r.hgetall(meta_key)
-                        meta_dict = {
-                            mk.decode(): mv.decode() for mk, mv in meta.items()
-                        } if meta else {}
-                        results.append({
-                            "key": k,
-                            "scope": ws_name,
-                            "intent": meta_dict.get("intent", "unknown"),
-                            "size_bytes": int(meta_dict.get("size", 0)),
-                            "version": int(meta_dict.get("version", 1)),
-                        })
-
-        tier_order = {"session": 0, "project": 1, "user": 2, "team": 3}
-        results.sort(key=lambda x: tier_order.get(x["scope"].split("/")[0], 99))
-
-        return _text({"query": query, "matches": results, "count": len(results)})
-
-    except Exception as e:
-        return _text({"error": f"Redis connection failed: {e}"})
-
-
-async def _process(args: dict) -> list[TextContent]:
-    """Process files through a pipeline at the storage layer."""
-    try:
-        source = args["source"]
-        pipeline = args.get("pipeline", [])
-
-        if ".." in source:
-            return _text({"error": "path traversal not allowed"})
-
-        search_root = pathlib.Path("/labios/data")
-        if not search_root.exists():
-            return _text({"error": "worker data volume not mounted at /labios/data"})
-
-        # Resolve glob or single file
-        if "*" in source or "?" in source:
-            files = sorted(
-                globmod.glob(str(search_root / source.lstrip("/")), recursive=True)
-            )
-        else:
-            target = search_root / source.lstrip("/")
-            files = [str(target)] if target.exists() else []
-
-        if not files:
-            return _text({
-                "error": f"no files matched: {source}",
-                "search_root": str(search_root),
-            })
-
-        # Process each file individually; accumulate only pipeline output
-        output_lines: list[str] = []
-        total_bytes = 0
-        for f in files[:1000]:
-            try:
-                content = pathlib.Path(f).read_text(errors="replace")
-                total_bytes += len(content.encode("utf-8"))
-                lines = content.splitlines()
-                for op in pipeline:
-                    lines = _apply_pipeline_op(op, lines, str(f))
-                if lines:
-                    output_lines.append(f"=== {f} ===")
-                    output_lines.extend(lines)
-            except Exception as e:
-                output_lines.append(f"=== {f} === ERROR: {e}")
-
-        return _text({
-            "files_matched": len(files),
-            "bytes_processed": total_bytes,
-            "output": "\n".join(output_lines[:5000]),
-            "truncated": len(output_lines) > 5000,
-        })
-
-    except Exception as e:
-        return _text({"error": f"processing failed: {e}"})
-
-
-# ── Entry point ───────────────────────────────────────────────────────────
-
-
-async def main():
+async def main() -> None:
     async with stdio_server() as (read_stream, write_stream):
-        try:
-            await app.run(read_stream, write_stream, app.create_initialization_options())
-        finally:
-            if _redis is not None:
-                await _redis.aclose()
+        await app.run(read_stream, write_stream, app.create_initialization_options())
 
 
 if __name__ == "__main__":

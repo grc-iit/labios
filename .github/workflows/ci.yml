@@ -14,7 +14,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends build-essential cmake git libssl-dev python3-dev python3-pip
-          python3 -m pip install flatbuffers==24.3.25 pytest==8.3.5
+          python3 -m pip install -r mcp/requirements.txt
 
       - name: Configure
         run: cmake --preset ci
@@ -29,6 +29,11 @@ jobs:
         env:
           PYTHONPATH: build/ci/python
         run: python3 -m pytest -q tests/python -m "not live"
+
+      - name: Run hermetic MCP Label I/O tests
+        env:
+          PYTHONPATH: build/ci/python:mcp
+        run: python3 -m pytest -q mcp/tests -m "not live"
 
   compose-golden-path:
     runs-on: ubuntu-latest
@@ -61,12 +66,18 @@ jobs:
       - name: Verify shared file and SQLite visibility
         run: docker compose run --rm test labios-data-path-test "[deployment]"
 
-      - name: Run Python public-API live tests and golden example
+      - name: Run Python and MCP public-API live tests and golden examples
         run: |
           docker compose run --rm -e LABIOS_PYTHON_LIVE=1 test \
             python3 -m pytest -q /opt/labios/tests/python -m live
           docker compose run --rm test \
             python3 /opt/labios/examples/python/golden.py
+          docker compose exec -T mcp python -c \
+            'import flatbuffers, labios, labios_mcp; print(labios.__file__)'
+          docker compose exec -T -e LABIOS_MCP_LIVE=1 mcp \
+            python -m pytest -q tests -m live
+          docker compose exec -T mcp \
+            python /opt/labios/examples/mcp/golden.py
 
       - name: Prove round-robin reached every worker
         run: |

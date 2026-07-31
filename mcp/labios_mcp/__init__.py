@@ -1,1 +1,1 @@
-"""LABIOS MCP Server — Agent I/O Runtime interface for Claude Code."""
+"""LABIOS MCP server: a public Label I/O frontend for agent I/O."""
