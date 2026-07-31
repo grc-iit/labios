@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     pkg-config \
     libssl-dev \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /src
@@ -74,7 +75,11 @@ FROM debian:bookworm-slim AS test
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl3 \
-    && rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 -m pip install --break-system-packages --no-cache-dir \
+       flatbuffers==24.3.25 pytest==8.3.5
 
 COPY --from=builder /src/build/release/tests/labios-smoke-test /usr/local/bin/
 COPY --from=builder /src/build/release/tests/labios-data-path-test /usr/local/bin/
@@ -91,6 +96,9 @@ COPY --from=builder /src/build/release/tests/labios-kernel-montage-test /usr/loc
 COPY --from=builder /src/build/release/tests/labios-kernel-kmeans-test /usr/local/bin/
 COPY --from=builder /src/build/release/src/services/labios-demo /usr/local/bin/
 COPY --from=builder /src/build/release/lib/liblabios_intercept.so /usr/local/lib/
+COPY --from=builder /src/build/release/python/ /usr/local/lib/labios/python/
+COPY --from=builder /src/tests/python/ /opt/labios/tests/python/
+COPY --from=builder /src/examples/python/ /opt/labios/examples/python/
 COPY --from=builder /src/conf/ /etc/labios/
 
 RUN ldconfig
@@ -98,5 +106,6 @@ RUN ldconfig
 ENV LABIOS_NATS_URL=nats://nats:4222
 ENV LABIOS_REDIS_HOST=redis
 ENV LABIOS_CONFIG_PATH=/etc/labios/labios.toml
+ENV PYTHONPATH=/usr/local/lib/labios/python
 
 CMD ["labios-smoke-test"]

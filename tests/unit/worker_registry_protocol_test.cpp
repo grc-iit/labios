@@ -82,17 +82,19 @@ TEST_CASE("Verified v2 preserves capability versions and attachments", "[worker-
     CHECK_THROWS(labios::encode_worker_registration(worker));
 }
 
-TEST_CASE("Worker registry protocol preserves tier field", "[worker-registry]") {
+TEST_CASE("Worker registry v2 preserves tier fields in snapshots", "[worker-registry]") {
     std::vector<labios::WorkerInfo> workers{
         {1, true, 0.9, 0.1, 5, 2, labios::WorkerTier::Databot},
         {2, true, 0.8, 0.2, 4, 3, labios::WorkerTier::Pipeline},
         {3, false, 0.7, 0.3, 3, 4, labios::WorkerTier::Agentic},
     };
-
-    auto encoded = labios::encode_worker_registry(workers);
-    auto decoded = labios::decode_worker_registry(encoded);
-
-    REQUIRE(decoded.malformed_rows == 0);
+    for (auto& worker : workers) {
+        worker.registration_epoch = 1;
+        worker.operations = {"core.read"};
+        worker.operation_versions = {1};
+    }
+    const auto encoded = labios::encode_worker_snapshot(workers, 3, 1);
+    const auto decoded = labios::decode_worker_message(encoded);
     REQUIRE(decoded.workers.size() == 3);
     CHECK(decoded.workers[0].tier == labios::WorkerTier::Databot);
     CHECK(decoded.workers[1].tier == labios::WorkerTier::Pipeline);
@@ -100,20 +102,15 @@ TEST_CASE("Worker registry protocol preserves tier field", "[worker-registry]") 
     CHECK_FALSE(decoded.workers[2].available);
 }
 
-TEST_CASE("Worker registry protocol accepts legacy rows without tier", "[worker-registry]") {
-    auto decoded = labios::decode_worker_registry("4,1,0.6,0.4,2,5\n");
-
-    REQUIRE(decoded.malformed_rows == 0);
-    REQUIRE(decoded.workers.size() == 1);
-    CHECK(decoded.workers[0].tier == labios::WorkerTier::Databot);
+TEST_CASE("Worker registry v2 rejects CSV without fallback", "[worker-registry]") {
+    const std::string csv = "4,1,0.6,0.4,2,5\n";
+    const auto bytes = std::as_bytes(std::span(csv));
+    CHECK_THROWS(labios::decode_worker_message(bytes));
 }
 
-TEST_CASE("Worker registry protocol reports malformed rows", "[worker-registry]") {
-    auto decoded = labios::decode_worker_registry(
-        "1,1,0.9,0.1,5,2,0\n"
-        "not,a,worker\n"
-        "2,1,0.8,0.2,4\n");
-
-    CHECK(decoded.workers.size() == 1);
-    CHECK(decoded.malformed_rows == 2);
+TEST_CASE("Worker registry v2 rejects truncated payloads", "[worker-registry]") {
+    auto encoded = labios::encode_worker_snapshot({}, 0, 1);
+    REQUIRE(encoded.size() > 8);
+    encoded.resize(8);
+    CHECK_THROWS(labios::decode_worker_message(encoded));
 }

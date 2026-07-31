@@ -1,35 +1,82 @@
-"""LABIOS 2.0 Python SDK.
+"""LABIOS 2.1 Python Label I/O SDK.
 
-US Patent 11,630,834 B2 | NSF Award #2313154
+The native ``Operation`` is the owning asynchronous handle.  It remains valid
+after its originating ``Client`` is destroyed and timeout observations never
+cancel or consume it.
 """
 try:
     from _labios import (
+        AuthorizationError,
+        BackendError,
+        BindingProvenance,
+        CancellationResult,
+        CancellationState,
+        CancelledError,
+        CandidateEvaluation,
         Client,
+        ClientError,
+        CompletionError,
+        CompletionLookupError,
+        CompletionResult,
+        CompletionState,
         Config,
-        PendingIO,
-        LabelType,
-        Intent,
-        Isolation,
+        DependencyError,
         Durability,
+        ExecutionError,
+        ExpiredError,
+        Intent,
+        InvalidArgumentError,
+        Isolation,
+        Label,
+        LabelParams,
+        LabelType,
+        LabiosError,
+        LifecycleState,
+        MalformedBufferError,
+        Operation,
+        OperationKind,
+        PendingIO,
+        Pipeline,
+        PipelineError,
+        PipelineStage,
+        PlacementDecision,
+        PlacementHistory,
+        ProtocolError,
+        ResourceError,
+        ResourceFamily,
+        ResourceRef,
+        SessionShutdownError,
+        StagedInputBinding,
+        StatusCode,
+        SubmissionError,
+        TimeoutError,
+        UnsupportedVersionError,
+        ValidationError,
+        WaitResult,
         connect,
         connect_to,
         load_config,
+        resource_from_uri,
     )
-except ImportError as e:
+except ImportError as error:
     raise ImportError(
         "LABIOS native module not found. Build with: "
         "cmake --preset dev && cmake --build build/dev"
-    ) from e
+    ) from error
 
-__all__ = [
-    "Client",
-    "Config",
-    "PendingIO",
-    "LabelType",
-    "Intent",
-    "Isolation",
-    "Durability",
-    "connect",
-    "connect_to",
-    "load_config",
-]
+from .registry_v2 import (
+    Attachment as RegistryAttachment,
+    MalformedRegistryBuffer,
+    RegistryV2Error,
+    UnexpectedRegistryPayload,
+    UnsupportedRegistryVersion,
+    WorkerDeregistration,
+    WorkerDescriptor,
+    WorkerRegistration,
+    WorkerRegistryMessage,
+    WorkerRegistrySnapshot,
+    WorkerResourceUpdate,
+    parse_worker_registry_message,
+)
+
+__all__ = [name for name in globals() if not name.startswith("_")]

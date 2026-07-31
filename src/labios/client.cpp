@@ -430,6 +430,15 @@ Operation Client::execute_pipeline(std::string_view source_uri,
     return publish(create_label(params));
 }
 
+LabelData Client::inspect_label(uint64_t label_id) {
+    const auto label = session_->catalog_manager().get_snapshot(label_id);
+    if (!label) {
+        throw ClientError(ClientErrorCode::LookupFailed, "LOOKUP_FAILED",
+                          "label is unknown or its catalog record expired");
+    }
+    return *label;
+}
+
 std::string Client::get_config() { return observe("config/current"); }
 bool Client::set_config(std::string_view key, std::string_view value) {
     return session_->mutable_config().set(std::string(key), std::string(value));

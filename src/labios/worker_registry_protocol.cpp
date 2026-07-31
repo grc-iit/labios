@@ -9,7 +9,6 @@
 #include <cmath>
 #include <optional>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 
 namespace labios {
@@ -323,46 +322,4 @@ WorkerRegistryMessage decode_worker_message(std::span<const std::byte> bytes) {
     return result;
 }
 
-// These helpers are retained solely for old component tests and offline
-// inspection. No runtime subject uses them; all runtime messages are v2.
-std::string encode_worker_registry(std::span<const WorkerInfo> workers) {
-    std::string result;
-    for (const auto& worker : workers) {
-        result += std::to_string(worker.id) + "," + (worker.available ? "1" : "0") + "," +
-                  std::to_string(worker.capacity) + "," + std::to_string(worker.load) + "," +
-                  std::to_string(worker.speed) + "," + std::to_string(worker.energy) + "," +
-                  std::to_string(static_cast<int>(worker.tier)) + "\n";
-    }
-    return result;
-}
-
-WorkerRegistrySnapshot decode_worker_registry(std::string_view text) {
-    WorkerRegistrySnapshot result;
-    std::istringstream input{std::string(text)};
-    std::string line;
-    while (std::getline(input, line)) {
-        std::istringstream row(line);
-        std::string token;
-        WorkerInfo worker;
-        try {
-            if (!std::getline(row, token, ',')) throw std::runtime_error("row");
-            worker.id = std::stoi(token);
-            if (!std::getline(row, token, ',')) throw std::runtime_error("row");
-            worker.available = token == "1";
-            if (!std::getline(row, token, ',')) throw std::runtime_error("row");
-            worker.capacity = std::stod(token);
-            if (!std::getline(row, token, ',')) throw std::runtime_error("row");
-            worker.load = std::stod(token);
-            if (!std::getline(row, token, ',')) throw std::runtime_error("row");
-            worker.speed = std::stoi(token);
-            if (!std::getline(row, token, ',')) throw std::runtime_error("row");
-            worker.energy = std::stoi(token);
-            if (std::getline(row, token, ',')) worker.tier = static_cast<WorkerTier>(std::stoi(token));
-            result.workers.push_back(worker);
-        } catch (...) {
-            ++result.malformed_rows;
-        }
-    }
-    return result;
-}
 } // namespace labios

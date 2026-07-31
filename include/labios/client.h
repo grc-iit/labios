@@ -203,6 +203,10 @@ public:
     void workspace_grant(std::string_view workspace, uint32_t app_id);
 
     std::string observe(std::string_view query);
+    /// Return the catalog-authoritative admitted label and runtime residual.
+    /// This is the public placement-history surface; callers do not address
+    /// catalog keys or transport subjects directly.
+    LabelData inspect_label(uint64_t label_id);
 
     void write_to(std::string_view dest_uri, std::span<const std::byte> data);
     Operation async_write_to(std::string_view dest_uri,

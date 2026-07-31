@@ -35,6 +35,12 @@ if(LABIOS_PYTHON_BINDINGS)
     set_target_properties(_labios PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python"
     )
+    add_custom_command(TARGET _labios POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/src/python/labios"
+                "${CMAKE_BINARY_DIR}/python/labios"
+        COMMENT "Copying the LABIOS Python package and registry-v2 bindings"
+    )
 endif()
 
 add_subdirectory(tests)
