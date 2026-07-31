@@ -48,6 +48,19 @@ struct CompletionResult {
     CompletionState state = CompletionState::Pending;
     std::string error;
     std::string data_key;
+    uint32_t observation_version = 0;
+    int worker_id = -1;
+    uint32_t attempt = 0;
+    uint64_t queued_us = 0;
+    uint64_t dispatched_us = 0;
+    uint64_t started_us = 0;
+    uint64_t completed_us = 0;
+    uint64_t queue_delay_us = 0;
+    uint64_t service_time_us = 0;
+
+    bool has_execution_observation() const {
+        return observation_version == 1;
+    }
 
     bool terminal() const {
         return state == CompletionState::Complete ||

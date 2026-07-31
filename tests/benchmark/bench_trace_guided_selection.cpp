@@ -35,6 +35,9 @@ struct Row {
     uint64_t submission_us = 0;
     uint64_t completion_us = 0;
     int worker_id = -1;
+    uint32_t attempt = 0;
+    uint64_t actual_queue_delay_us = 0;
+    uint64_t actual_service_time_us = 0;
     double trace_service_input_us = 0.0;
     double trace_queue_input = 0.0;
     uint64_t trace_samples_input = 0;
@@ -119,7 +122,8 @@ void enrich_from_snapshot(labios::Client& client, Row& row) {
     const auto snapshot = catalog.get_snapshot(row.label_id);
     if (!snapshot || snapshot->score_snapshot.decisions.empty()) return;
     const auto& decision = snapshot->score_snapshot.decisions.back();
-    row.worker_id = decision.chosen_worker_id;
+    REQUIRE(decision.chosen_worker_id == row.worker_id);
+    REQUIRE(decision.attempt == row.attempt);
     const auto worker = std::find_if(
         decision.replay_workers.begin(), decision.replay_workers.end(),
         [&](const auto& value) { return value.worker_id == row.worker_id; });
@@ -154,6 +158,11 @@ std::vector<Row> await_all(labios::Client& client,
                 .count());
         found->row.terminal_state = completion_state(completion.state);
         found->row.failure = completion.error;
+        REQUIRE(completion.has_execution_observation());
+        found->row.worker_id = completion.worker_id;
+        found->row.attempt = completion.attempt;
+        found->row.actual_queue_delay_us = completion.queue_delay_us;
+        found->row.actual_service_time_us = completion.service_time_us;
         enrich_from_snapshot(client, found->row);
         rows.push_back(std::move(found->row));
         submitted.erase(found);
@@ -280,7 +289,8 @@ void write_header(std::ofstream& output) {
     output
         << "run_id,profile,arm,repetition,workload_order,label_id,scheme,"
            "resource,"
-           "bytes,submission_us,completion_us,worker_id,"
+           "bytes,submission_us,completion_us,worker_id,attempt,"
+           "actual_queue_delay_us,actual_service_time_us,"
            "trace_service_input_us,trace_queue_input,trace_samples_input,"
            "park_retries,terminal_state,failure,expected_digest,"
            "observed_digest,verified\n";
@@ -293,7 +303,10 @@ void write_row(std::ofstream& output, const Row& row) {
            << csv(row.scheme) << ',' << csv(row.resource) << ','
            << row.bytes << ','
            << row.submission_us << ',' << row.completion_us << ','
-           << row.worker_id << ',' << row.trace_service_input_us << ','
+           << row.worker_id << ',' << row.attempt << ','
+           << row.actual_queue_delay_us << ','
+           << row.actual_service_time_us << ','
+           << row.trace_service_input_us << ','
            << row.trace_queue_input << ',' << row.trace_samples_input << ','
            << row.park_retries << ',' << csv(row.terminal_state) << ','
            << csv(row.failure) << ',' << csv(row.expected_digest) << ','

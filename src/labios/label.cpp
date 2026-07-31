@@ -299,6 +299,29 @@ void mark_label_finished(LabelData& label, CompletionStatus status,
         : StatusCode::Failed;
 }
 
+void record_completion_observation(CompletionData& completion,
+                                   const LabelData& label, int worker_id) {
+    if (worker_id < 0 || label.queued_us == 0 || label.dispatched_us == 0 ||
+        label.started_us == 0 || label.completed_us == 0 ||
+        label.dispatched_us < label.queued_us ||
+        label.started_us < label.dispatched_us ||
+        label.completed_us < label.started_us) {
+        return;
+    }
+
+    completion.observation_version = 1;
+    completion.worker_id = worker_id;
+    completion.attempt = label.score_snapshot.decisions.empty()
+        ? 1U
+        : label.score_snapshot.decisions.back().attempt;
+    completion.queued_us = label.queued_us;
+    completion.dispatched_us = label.dispatched_us;
+    completion.started_us = label.started_us;
+    completion.completed_us = label.completed_us;
+    completion.queue_delay_us = label.started_us - label.queued_us;
+    completion.service_time_us = label.completed_us - label.started_us;
+}
+
 // ---------------------------------------------------------------------------
 // Pointer serialization helpers
 // ---------------------------------------------------------------------------
@@ -1427,7 +1450,16 @@ std::vector<std::byte> serialize_completion(const CompletionData& comp) {
         comp.label_id,
         static_cast<schema::CompletionStatus>(comp.status),
         error_off,
-        data_key_off);
+        data_key_off,
+        comp.observation_version,
+        comp.worker_id,
+        comp.attempt,
+        comp.queued_us,
+        comp.dispatched_us,
+        comp.started_us,
+        comp.completed_us,
+        comp.queue_delay_us,
+        comp.service_time_us);
 
     fbb.Finish(comp_off);
 
@@ -1457,6 +1489,28 @@ CompletionData deserialize_completion(std::span<const std::byte> buf) {
     out.status   = static_cast<CompletionStatus>(fb->status());
     fb_read_string(out.error, fb->error());
     fb_read_string(out.data_key, fb->data_key());
+    out.observation_version = fb->observation_version();
+    out.worker_id = fb->worker_id();
+    out.attempt = fb->attempt();
+    out.queued_us = fb->queued_us();
+    out.dispatched_us = fb->dispatched_us();
+    out.started_us = fb->started_us();
+    out.completed_us = fb->completed_us();
+    out.queue_delay_us = fb->queue_delay_us();
+    out.service_time_us = fb->service_time_us();
+    if (out.observation_version != 0 &&
+        (out.observation_version != 1 || out.worker_id < 0 ||
+         out.attempt == 0 || out.queued_us == 0 || out.dispatched_us == 0 ||
+         out.started_us == 0 || out.completed_us == 0 ||
+         out.dispatched_us < out.queued_us ||
+         out.started_us < out.dispatched_us ||
+         out.completed_us < out.started_us ||
+         out.queue_delay_us != out.started_us - out.queued_us ||
+         out.service_time_us != out.completed_us - out.started_us)) {
+        throw LabelDecodeError(
+            "INVALID_STATE_TRANSITION",
+            "completion execution observation is incoherent");
+    }
     return out;
 }
 

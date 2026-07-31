@@ -113,15 +113,16 @@ Using recovery validation to admit an untrusted producer label is forbidden.
 
 ## 2. Complete field partition and mutation authority
 
-This section inventories every declared field currently in
-schemas/label.fbs exactly once. There are 68 fields: 30 in support tables, 34
-in Label, and 4 in Completion. All 34 Label fields map to the 34 current
-LabelData members. The current C++ header is include/labios/label.h.
+This section preserves the original 68-field inventory: 30 fields in baseline
+support tables, 34 in Label, and the original 4 in Completion. All 34 baseline
+Label fields map to the corresponding LabelData members. The current C++
+header is include/labios/label.h.
 
-The proposed ir_version, operation_version, typed ResourceRef,
-declared_dependencies, and StagedInputBinding fields are normative additions
-and therefore are not part of this 68-field inventory. They are classified
-separately in Sections 3 through 5 and Section 8.
+Append-only additions are classified where their contracts are introduced.
+The ir_version, operation_version, typed ResourceRef,
+declared_dependencies, and StagedInputBinding fields are classified in
+Sections 3 through 5 and Section 8. Scheduling evidence is classified in
+Section 9.7.8. Completion execution observations are rows 69 through 77 below.
 
 ### 2.1 Support-table fields
 
@@ -205,6 +206,15 @@ separately in Sections 3 through 5 and Section 8.
 | 66 | Completion.status | CompletionData.status | Execution state | Completion coordinator sets Complete or Error exactly once. |
 | 67 | Completion.error | CompletionData.error | Execution state | Completion coordinator emits an empty string on Complete or CATEGORY: detail on Error. |
 | 68 | Completion.data_key | CompletionData.data_key | Execution state | Executor/completion coordinator may provide an opaque internal retrieval handle for returned data. It is empty on failures and is not a user resource address. |
+| 69 | Completion.observation_version | CompletionData.observation_version | Execution state | Worker completion coordinator sets version 1 only when all timestamps for one worker attempt are coherent. Zero means no worker execution observation is present. |
+| 70 | Completion.worker_id | CompletionData.worker_id | Execution state | Worker completion coordinator records the actual executor. The default -1 is valid only when observation_version is zero. |
+| 71 | Completion.attempt | CompletionData.attempt | Execution state | Worker completion coordinator copies the scheduling attempt represented by the delivered label. It is positive when observation_version is 1. |
+| 72 | Completion.queued_us | CompletionData.queued_us | Execution state | Worker completion coordinator copies the label's first queued-admission timestamp without rewriting it. |
+| 73 | Completion.dispatched_us | CompletionData.dispatched_us | Execution state | Worker completion coordinator copies the timestamp of this scheduling assignment. |
+| 74 | Completion.started_us | CompletionData.started_us | Execution state | Worker completion coordinator copies the timestamp recorded immediately before covered worker execution begins. |
+| 75 | Completion.completed_us | CompletionData.completed_us | Execution state | Worker completion coordinator copies the terminal timestamp after covered execution settles. |
+| 76 | Completion.queue_delay_us | CompletionData.queue_delay_us | Execution state | Version 1 records exactly started_us minus queued_us. It is an actual per-label queue delay, not a worker EWMA or queue-depth input. |
+| 77 | Completion.service_time_us | CompletionData.service_time_us | Execution state | Version 1 records exactly completed_us minus started_us. It is an actual per-label worker service observation, not a scheduling-time trace input. |
 
 ### 2.4 Whole-field mutation rules
 
@@ -2086,8 +2096,12 @@ rewrite the result.
 
 Client operations use a conceptual `CompletionView` containing the label ID,
 current semantic state, terminal category/detail, result metadata, and (for a
-successful read/observe) a retrieval handle or value. This is an API contract,
-not a textual IR or a new wire object.
+successful read/observe) a retrieval handle or value. A worker-terminal view
+also exposes the versioned executor, attempt, lifecycle timestamps, actual
+queued-to-start delay, and actual start-to-terminal service time carried by the
+Completion. Dispatcher-local rejection, cancellation, expiry, and Observe
+completions may have no worker execution observation. This is an API contract,
+not a textual IR or a parallel wire format.
 
 - **`test(id)`** is nonblocking. It reads the catalog/completion record and
   returns `Pending` with the current nonterminal state, or the terminal view.

@@ -446,6 +446,19 @@ struct CompletionData {
     CompletionStatus status = CompletionStatus::Complete;
     std::string error;
     std::string data_key;
+
+    // Append-only, worker-observed execution measurement. Version 1 defines
+    // queue delay as queued_us -> started_us and service time as
+    // started_us -> completed_us for this scheduling attempt.
+    uint32_t observation_version = 0;
+    int worker_id = -1;
+    uint32_t attempt = 0;
+    uint64_t queued_us = 0;
+    uint64_t dispatched_us = 0;
+    uint64_t started_us = 0;
+    uint64_t completed_us = 0;
+    uint64_t queue_delay_us = 0;
+    uint64_t service_time_us = 0;
 };
 
 uint64_t generate_label_id(uint32_t app_id);
@@ -471,6 +484,11 @@ void mark_label_finished(LabelData& label, CompletionStatus status,
                          uint64_t bytes_transferred = 0,
                          std::string_view error = {},
                          uint64_t timestamp_us = 0);
+/// Copy coherent worker execution timestamps into the completion's public
+/// measurement surface. Incoherent or incomplete timestamps leave the
+/// observation absent rather than fabricating a duration.
+void record_completion_observation(CompletionData& completion,
+                                   const LabelData& label, int worker_id);
 
 std::vector<std::byte> serialize_label(const LabelData& label);
 

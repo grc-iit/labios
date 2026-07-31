@@ -108,6 +108,15 @@ the arm. The informed arm additionally requires successful trace samples from
 at least two workers and a maximum/minimum service-proxy separation of at least
 1.20.
 
+The current benchmark source additionally requires Completion observation
+version 1 and records `actual_queue_delay_us` (queued admission to worker start),
+`actual_service_time_us` (worker start to terminal completion), executor, and
+attempt from the public `CompletionResult`. The scheduling-time EWMA columns
+remain explicitly named `trace_*_input` because they are policy inputs, not
+observed outcomes. This updated surface has hermetic codec/derivation evidence;
+a live Compose validation was attempted after implementation but could not run
+because the Docker daemon was unavailable.
+
 Raw per-label median, nearest-rank p95, and mean distributions are descriptive.
 The attempted analysis incorrectly treated the median completion latency within
 each of the 20 stateful repetitions as an independent inferential unit. The
@@ -142,7 +151,9 @@ performance experiment**. Repetitions accumulated state within one arm and
 showed strong serial dependence; untimed setup/read-back labels trained trace
 state; the service/queue columns captured scheduling EWMAs rather than actual
 per-label observations; and source provenance omitted then-untracked method
-files. `INVALID.md` records the audit. The generated numerical analysis is
+files. Those historical raw rows predate the Completion observation fields;
+the current source does not retroactively repair them. `INVALID.md` records the
+audit. The generated numerical analysis is
 retained only to diagnose the rejected method and must not be cited as a null,
 negative, or favorable performance result. Prompt 08 and WS3's performance exit
 remain open. The reduced dry run remains method-readiness evidence only.

@@ -514,6 +514,8 @@ int main() {
                                 child, child_comp.status,
                                 child_result.result_location,
                                 child_result.bytes_transferred);
+                            labios::record_completion_observation(
+                                child_comp, child, worker_id);
                             catalog.set_status(child.id,
                                                labios::LabelStatus::Complete);
                         } catch (const std::exception& ex) {
@@ -521,6 +523,8 @@ int main() {
                             child_comp.error = ex.what();
                             labios::mark_label_finished(
                                 child, child_comp.status, {}, 0, ex.what());
+                            labios::record_completion_observation(
+                                child_comp, child, worker_id);
                             catalog.set_status(child.id,
                                                labios::LabelStatus::Error);
                             catalog.set_error(child.id, ex.what());
@@ -542,6 +546,8 @@ int main() {
                     completion.status = labios::CompletionStatus::Complete;
                     labios::mark_label_finished(
                         label, completion.status, {}, composite_bytes);
+                    labios::record_completion_observation(
+                        completion, label, worker_id);
                     catalog.set_status(label.id, labios::LabelStatus::Complete);
                     catalog.set_completion(completion);
 
@@ -564,6 +570,8 @@ int main() {
                         + std::to_string(static_cast<int>(label.type)));
                 }
 
+                labios::record_completion_observation(
+                    completion, label, worker_id);
                 catalog.set_status(label.id, labios::LabelStatus::Complete);
                 catalog.set_completion(completion);
                 publish_completion(nats, label.reply_to, completion);
@@ -582,6 +590,8 @@ int main() {
                 if (have_label) {
                     labios::mark_label_finished(
                         label, completion.status, {}, 0, e.what());
+                    labios::record_completion_observation(
+                        completion, label, worker_id);
                 }
 
                 std::cerr << "[" << timestamp() << "] worker " << worker_id

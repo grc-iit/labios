@@ -354,6 +354,19 @@ table Completion {
   status:   CompletionStatus;
   error:    string;
   data_key: string;
+
+  // Append-only execution observations. Version 1 measures queue delay from
+  // first queued admission to worker start and service time from worker start
+  // to terminal completion for the recorded scheduling attempt.
+  observation_version: uint;
+  worker_id: int = -1;
+  attempt: uint;
+  queued_us: uint64;
+  dispatched_us: uint64;
+  started_us: uint64;
+  completed_us: uint64;
+  queue_delay_us: uint64;
+  service_time_us: uint64;
 }
 
 root_type Label;

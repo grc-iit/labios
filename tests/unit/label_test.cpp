@@ -332,6 +332,15 @@ TEST_CASE("Completion serialization roundtrip", "[label]") {
     comp.status = labios::CompletionStatus::Error;
     comp.error = "disk full";
     comp.data_key = "warehouse:777";
+    comp.observation_version = 1;
+    comp.worker_id = 3;
+    comp.attempt = 2;
+    comp.queued_us = 100;
+    comp.dispatched_us = 120;
+    comp.started_us = 150;
+    comp.completed_us = 250;
+    comp.queue_delay_us = 50;
+    comp.service_time_us = 100;
 
     auto buf = labios::serialize_completion(comp);
     REQUIRE(!buf.empty());
@@ -342,6 +351,46 @@ TEST_CASE("Completion serialization roundtrip", "[label]") {
     REQUIRE(result.status == labios::CompletionStatus::Error);
     REQUIRE(result.error == "disk full");
     REQUIRE(result.data_key == "warehouse:777");
+    REQUIRE(result.observation_version == 1);
+    REQUIRE(result.worker_id == 3);
+    REQUIRE(result.attempt == 2);
+    REQUIRE(result.queued_us == 100);
+    REQUIRE(result.dispatched_us == 120);
+    REQUIRE(result.started_us == 150);
+    REQUIRE(result.completed_us == 250);
+    REQUIRE(result.queue_delay_us == 50);
+    REQUIRE(result.service_time_us == 100);
+}
+
+TEST_CASE("Completion observations use actual lifecycle timestamps", "[label]") {
+    labios::LabelData label;
+    label.queued_us = 100;
+    label.dispatched_us = 130;
+    label.started_us = 175;
+    label.completed_us = 425;
+    labios::SchedulingDecisionSnapshot decision;
+    decision.attempt = 4;
+    label.score_snapshot.decisions.push_back(decision);
+
+    labios::CompletionData completion;
+    labios::record_completion_observation(completion, label, 7);
+
+    REQUIRE(completion.observation_version == 1);
+    REQUIRE(completion.worker_id == 7);
+    REQUIRE(completion.attempt == 4);
+    REQUIRE(completion.queue_delay_us == 75);
+    REQUIRE(completion.service_time_us == 250);
+
+    label.started_us = 120;
+    labios::CompletionData incoherent;
+    labios::record_completion_observation(incoherent, label, 7);
+    REQUIRE(incoherent.observation_version == 0);
+
+    completion.service_time_us += 1;
+    const auto malformed = labios::serialize_completion(completion);
+    REQUIRE_THROWS_WITH(
+        labios::deserialize_completion(malformed),
+        "INVALID_STATE_TRANSITION: completion execution observation is incoherent");
 }
 
 // ---------------------------------------------------------------------------

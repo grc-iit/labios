@@ -114,11 +114,24 @@ static void resolve_reply(PendingLabel& p, int timeout_ms) {
 }
 
 static CompletionResult view(uint64_t id, const CompletionData& c) {
-    return {id, c.status == CompletionStatus::Complete
-                    ? CompletionState::Complete
-                    : (c.error.rfind("CANCELED:", 0) == 0
-                           ? CompletionState::Cancelled : CompletionState::Failed),
-            c.error, c.data_key};
+    CompletionResult result;
+    result.label_id = id;
+    result.state = c.status == CompletionStatus::Complete
+        ? CompletionState::Complete
+        : (c.error.rfind("CANCELED:", 0) == 0
+               ? CompletionState::Cancelled : CompletionState::Failed);
+    result.error = c.error;
+    result.data_key = c.data_key;
+    result.observation_version = c.observation_version;
+    result.worker_id = c.worker_id;
+    result.attempt = c.attempt;
+    result.queued_us = c.queued_us;
+    result.dispatched_us = c.dispatched_us;
+    result.started_us = c.started_us;
+    result.completed_us = c.completed_us;
+    result.queue_delay_us = c.queue_delay_us;
+    result.service_time_us = c.service_time_us;
+    return result;
 }
 
 CompletionResult LabelManager::test(uint64_t label_id) {
