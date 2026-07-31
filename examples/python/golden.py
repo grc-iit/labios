@@ -45,8 +45,10 @@ def main() -> int:
     assert first.state in (labios.CompletionState.TIMEOUT,
                            labios.CompletionState.COMPLETE)
     require_complete(operation.wait_all(30_000))
-    actual = client.read_from(destination, len(expected))
+    read_operation = client.async_read_from(destination, len(expected))
+    actual = read_operation.read(30_000)
     assert actual == expected, (actual, expected)
+    assert read_operation.read(30_000) == expected
 
     # Typed label-level publication with sealed intent and priority.
     params = labios.LabelParams()
@@ -67,10 +69,7 @@ def main() -> int:
     active = json.loads(client.observe("config/current"))
     assert "scheduler_policy" in active and "scheduler_profile" in active
 
-    # Read retrieval is repeatable and timeout did not consume the handle.
-    read_operation = client.async_read_from(destination, len(expected))
-    assert read_operation.read(30_000) == expected
-    assert read_operation.read(30_000) == expected
+    # The repeated retrieval above did not consume the completed read handle.
 
     # A retained owning Operation survives destruction of its originating Client.
     survivor = client.async_write_to(lifetime_destination, expected)
