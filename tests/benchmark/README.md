@@ -145,6 +145,30 @@ logs, checksums, machine-readable analysis, and a concise result table beneath
 `tests/benchmark/artifacts/`. A valid run's compact evidence bundle is reviewed
 and tracked with Prompt 08; transient container layers remain untracked.
 
+The committed replacement method is
+`run_trace_guided_independent_experiment.sh` with
+`analyze_trace_guided_independent.py`. It executes 20 fresh-volume runtime
+replicates for every profile and arm (180 isolated cells total) in a seeded
+random order. Each cell performs the same declared 43-label training phase,
+then exactly one measured profile. Public read-back verification is deferred
+until every measured placement decision in that cell has completed, so those
+verification labels cannot train a later measured decision. Every training and
+measured row must carry the actual Completion executor, attempt,
+queued-to-start delay, and start-to-terminal service time.
+
+The replacement topology holds advertised speed, energy, and capacity equal
+across the three workers while applying identical hidden 0/20/60 ms execution
+delays in every arm. This deliberately tests whether completion-derived traces
+adapt when static descriptors do not encode service differences; it is not a
+claim about arbitrary production heterogeneity. The primary unit is the median
+completion latency within one fresh-state replicate. The primary comparison,
+Mann–Whitney/Holm procedure, Cliff's delta, bootstrap, calibration gate, and
+requirement for an observed placement treatment are frozen in the committed
+analyzer before images are built. The runner refuses a dirty/source-incomplete
+tree and records commit, index hash, image identities, rendered topology,
+cell manifest, calibration, raw rows, and checksums. This method has not yet
+produced a result.
+
 The attempted `p08-20260730T193949Z` run produced 1,260/1,260 verified measured
 completions and passed the informed calibration gate, but it is **invalid as a
 performance experiment**. Repetitions accumulated state within one arm and

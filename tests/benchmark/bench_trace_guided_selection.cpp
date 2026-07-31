@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
+#include <iterator>
 #include <limits>
 #include <regex>
 #include <sstream>
@@ -26,6 +27,7 @@ struct Row {
     std::string run_id;
     std::string profile;
     std::string arm;
+    std::string phase;
     int repetition = 0;
     int workload_order = 0;
     uint64_t label_id = 0;
@@ -277,6 +279,104 @@ std::vector<Row> mixed_pipeline(labios::Client& client,
     return rows;
 }
 
+struct ExpectedValue {
+    std::string resource;
+    std::vector<std::byte> data;
+};
+
+struct DeferredWorkload {
+    std::vector<Row> rows;
+    std::vector<ExpectedValue> expected;
+};
+
+DeferredWorkload deferred_small_hot_metadata(labios::Client& client,
+                                              std::string_view prefix,
+                                              const Row& prototype) {
+    const auto data = payload(4096, 0x11);
+    std::vector<Submitted> submitted;
+    DeferredWorkload result;
+    for (int i = 0; i < 16; ++i) {
+        auto resource = std::string(prefix) + "/small-" + std::to_string(i);
+        submitted.push_back(submit_write(client, prototype, resource, data));
+        result.expected.push_back({std::move(resource), data});
+    }
+    result.rows = await_all(client, std::move(submitted));
+    return result;
+}
+
+DeferredWorkload deferred_large_sequential(labios::Client& client,
+                                            std::string_view prefix,
+                                            const Row& prototype) {
+    const auto data = payload(1024 * 1024, 0x42);
+    std::vector<Submitted> submitted;
+    DeferredWorkload result;
+    for (int i = 0; i < 4; ++i) {
+        auto resource = std::string(prefix) + "/large-" + std::to_string(i);
+        submitted.push_back(submit_write(client, prototype, resource, data));
+        result.expected.push_back({std::move(resource), data});
+    }
+    result.rows = await_all(client, std::move(submitted));
+    return result;
+}
+
+DeferredWorkload deferred_pipeline(labios::Client& client,
+                                    std::string_view source_resource,
+                                    const Row& prototype) {
+    const auto source = payload(256 * 1024, 0x73);
+    labios::sds::Pipeline pipeline;
+    pipeline.stages.push_back({"builtin://identity", "", -1, 1});
+    const std::string destination =
+        "sqlite:///bench_p08_" + prototype.run_id + "_" +
+        prototype.phase + "_" + std::to_string(prototype.repetition) + "_" +
+        std::to_string(prototype.workload_order) + "_result";
+    const auto start = Clock::now();
+    auto pending = client.execute_pipeline(
+        std::string(source_resource), destination, pipeline);
+    const auto submitted_at = Clock::now();
+    REQUIRE(pending.pending.size() == 1);
+    auto row = prototype;
+    row.label_id = pending.pending.front().label_id;
+    row.resource = destination;
+    row.bytes = source.size();
+    row.submission_us = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            submitted_at - start).count());
+    row.expected_digest = digest(source);
+    DeferredWorkload result;
+    result.rows = await_all(
+        client, {{std::move(pending), submitted_at, std::move(row)}});
+    result.expected.push_back({destination, source});
+    return result;
+}
+
+void append_workload(DeferredWorkload& destination,
+                     DeferredWorkload source) {
+    destination.rows.insert(destination.rows.end(),
+                            std::make_move_iterator(source.rows.begin()),
+                            std::make_move_iterator(source.rows.end()));
+    destination.expected.insert(
+        destination.expected.end(),
+        std::make_move_iterator(source.expected.begin()),
+        std::make_move_iterator(source.expected.end()));
+}
+
+void verify_after_measurement(labios::Client& client,
+                              DeferredWorkload& workload) {
+    for (const auto& expected : workload.expected) {
+        const auto value = client.read_from(expected.resource,
+                                            expected.data.size());
+        const auto row = std::find_if(
+            workload.rows.begin(), workload.rows.end(), [&](const auto& item) {
+                return item.resource == expected.resource;
+            });
+        REQUIRE(row != workload.rows.end());
+        row->observed_digest = digest(value);
+        row->verified = value == expected.data &&
+                        row->terminal_state == "complete";
+        REQUIRE(row->verified);
+    }
+}
+
 using Workload = std::vector<Row> (*)(labios::Client&, std::string_view,
                                       const Row&);
 
@@ -287,7 +387,7 @@ constexpr std::array<std::array<int, 3>, 6> orders{{
 
 void write_header(std::ofstream& output) {
     output
-        << "run_id,profile,arm,repetition,workload_order,label_id,scheme,"
+        << "run_id,profile,arm,phase,repetition,workload_order,label_id,scheme,"
            "resource,"
            "bytes,submission_us,completion_us,worker_id,attempt,"
            "actual_queue_delay_us,actual_service_time_us,"
@@ -298,7 +398,8 @@ void write_header(std::ofstream& output) {
 
 void write_row(std::ofstream& output, const Row& row) {
     output << csv(row.run_id) << ',' << csv(row.profile) << ','
-           << csv(row.arm) << ',' << row.repetition << ','
+           << csv(row.arm) << ',' << csv(row.phase) << ','
+           << row.repetition << ','
            << row.workload_order << ',' << row.label_id << ','
            << csv(row.scheme) << ',' << csv(row.resource) << ','
            << row.bytes << ','
@@ -325,6 +426,109 @@ std::vector<double> trace_services(std::string_view json) {
         if (value > 0.0) values.push_back(value);
     }
     return values;
+}
+
+void run_independent_replicate(labios::Client& client,
+                               const std::string& arm,
+                               const std::string& run_id,
+                               const std::string& output_path) {
+    const auto selected_profile = env_or("LABIOS_BENCH_PROFILE", "");
+    REQUIRE((selected_profile == "small-hot-metadata" ||
+             selected_profile == "large-sequential" ||
+             selected_profile == "mixed-pipeline"));
+    const int repetition =
+        std::max(0, std::stoi(env_or("LABIOS_BENCH_REPETITION", "0")));
+    const auto root = "file:///bench/p08-independent/" + run_id + "/" +
+        arm + "/" + selected_profile + "/" + std::to_string(repetition);
+    const auto pipeline_source = root + "/training/pipeline-source";
+    const auto pipeline_data = payload(256 * 1024, 0x73);
+
+    DeferredWorkload workload;
+    Row source_row;
+    source_row.run_id = run_id;
+    source_row.profile = "training-pipeline-source";
+    source_row.arm = arm;
+    source_row.phase = "training";
+    source_row.repetition = repetition;
+    source_row.workload_order = 0;
+    source_row.scheme = "file";
+    auto source = submit_write(client, source_row, pipeline_source,
+                               pipeline_data);
+    auto source_rows = await_all(client, {std::move(source)});
+    workload.rows.push_back(std::move(source_rows.front()));
+    workload.expected.push_back({pipeline_source, pipeline_data});
+
+    Row training;
+    training.run_id = run_id;
+    training.arm = arm;
+    training.phase = "training";
+    training.repetition = repetition;
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        const auto cycle_root = root + "/training/cycle-" +
+            std::to_string(cycle);
+        training.profile = "small-hot-metadata";
+        training.workload_order = cycle * 3 + 1;
+        training.scheme = "file";
+        append_workload(workload, deferred_small_hot_metadata(
+            client, cycle_root + "/small", training));
+        training.profile = "large-sequential";
+        training.workload_order = cycle * 3 + 2;
+        append_workload(workload, deferred_large_sequential(
+            client, cycle_root + "/large", training));
+        training.profile = "mixed-pipeline";
+        training.workload_order = cycle * 3 + 3;
+        training.scheme = "sqlite";
+        append_workload(workload, deferred_pipeline(
+            client, pipeline_source, training));
+    }
+
+    Row measured;
+    measured.run_id = run_id;
+    measured.profile = selected_profile;
+    measured.arm = arm;
+    measured.phase = "measured";
+    measured.repetition = repetition;
+    measured.workload_order = 0;
+    if (selected_profile == "small-hot-metadata") {
+        measured.scheme = "file";
+        append_workload(workload, deferred_small_hot_metadata(
+            client, root + "/measured/small", measured));
+    } else if (selected_profile == "large-sequential") {
+        measured.scheme = "file";
+        append_workload(workload, deferred_large_sequential(
+            client, root + "/measured/large", measured));
+    } else {
+        measured.scheme = "sqlite";
+        append_workload(workload, deferred_pipeline(
+            client, pipeline_source, measured));
+    }
+
+    // Capture calibration before read-back labels can update trace state.
+    const auto trace_probe = client.observe("workers/scores");
+    const auto calibration_output =
+        env_or("LABIOS_BENCH_CALIBRATION_OUTPUT", "");
+    if (!calibration_output.empty()) {
+        std::ofstream output(calibration_output);
+        REQUIRE(output.good());
+        output << trace_probe << '\n';
+    }
+    if (arm == "informed") {
+        REQUIRE(std::regex_search(
+            trace_probe,
+            std::regex("\"trace_samples\":[1-9][0-9]*")));
+        const auto services = trace_services(trace_probe);
+        REQUIRE(services.size() >= 2);
+        const auto [minimum, maximum] =
+            std::minmax_element(services.begin(), services.end());
+        REQUIRE(*maximum >= *minimum * 1.20);
+    }
+
+    // Public read-back happens only after every measured placement decision.
+    verify_after_measurement(client, workload);
+    std::ofstream output(output_path);
+    REQUIRE(output.good());
+    write_header(output);
+    for (const auto& row : workload.rows) write_row(output, row);
 }
 
 } // namespace
@@ -367,6 +571,11 @@ TEST_CASE("P10 trace-guided live selection experiment",
                 std::string::npos);
     }
 
+    if (env_or("LABIOS_BENCH_INDEPENDENT", "0") == "1") {
+        run_independent_replicate(client, arm, run_id, output_path);
+        return;
+    }
+
     const std::array<std::string, 3> profiles{
         "small-hot-metadata", "large-sequential", "mixed-pipeline"};
     const std::array<std::string, 3> schemes{"file", "file", "sqlite"};
@@ -385,6 +594,7 @@ TEST_CASE("P10 trace-guided live selection experiment",
             prototype.run_id = run_id;
             prototype.profile = profiles[workload_index];
             prototype.arm = arm;
+            prototype.phase = repetition < 0 ? "warmup" : "measured";
             prototype.repetition = repetition;
             prototype.workload_order = order_index;
             prototype.scheme = schemes[workload_index];
