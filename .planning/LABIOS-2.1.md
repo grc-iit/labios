@@ -1272,6 +1272,45 @@ coordination semantics, or distributed pipeline stages. The only C++ source
 change exposes already-public `LabelData.ir_version` and `operation_version` in
 the Python binding for public inspection; no runtime behavior changed.
 
+#### Prompt 12 — Cross-process coordination semantic contract
+
+**Complete (2026-07-31).** `docs/label-ir.md` Section 14 is the normative WS4
+contract for named channels and workspaces. Canonical identity is the versioned
+namespace/name/kind tuple; each incarnation has a monotonic epoch, and owning
+handles retain a reconnect-capable session and principal independently of the
+creating `Client`. Create is an atomic, idempotent create-or-open operation;
+kind/options conflict deterministically, open never creates, and stale handles
+cannot cross recreation.
+
+The selected implementation model is one versioned catalog key family per
+object with atomic scripts for identity, metadata, ACLs, channel sequence and
+retention, durable subscriber cursors/leases/acks, workspace head/history
+versions, optimistic CAS, idempotency records, TTL transitions, and bounded
+cleanup. NATS channel messages become wake-up hints only; catalog data and
+cursors are authoritative. Channel delivery is ordered per subscriber and at
+least once, duplicates use `(epoch, sequence)`, slow consumers receive explicit
+gaps, and no exactly-once claim is made. Workspace put/delete/expiry create
+strictly increasing entry revisions and tombstones; Exact/MustExist/
+MustNotExist conflicts are linearizable and no arbitrary multi-entry transaction
+is added.
+
+Owner, Admin, Writer, and Reader ACLs are checked atomically on every operation.
+A production principal must come from transport-authenticated identity. The
+single-host reference deployment can enforce only spoofable logical principal
+comparisons because clients hold unauthenticated plumbing access; this is not a
+production tenant-security claim. Existing PID app IDs remain compatibility
+identifiers only.
+
+Direct catalog coordination is allowed solely behind public channel/workspace
+handles as the specified transient primitive. A Label carrying
+`ChannelResource` or `WorkspaceResource` uses the same identity, epoch/version,
+ACL, sequence/CAS, and error semantics but still traverses ordinary Label I/O;
+other backend I/O cannot use the coordination catalog as a bypass. Legacy
+process-local keys are not silently imported. Section 14 fixes stable errors,
+public C++/Python API shape, state machines, rolling compatibility, observability,
+recovery bounds, invariants, and the independent-process acceptance matrix that
+Prompt 13 must implement. Prompt 12 changes documentation only.
+
 ## 12. Immediate integration steps
 
 1. Collect the project team's publication and artifact list for the annual

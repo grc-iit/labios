@@ -2305,3 +2305,550 @@ client operations over these persisted records. P07 selects acknowledged,
 durable transport machinery and recovery scans that satisfy these guarantees;
 it must not redefine the states, timeout meaning, cancellation boundary, or
 no-worker outcome.
+
+## 14. Cross-process channel and workspace contract
+
+This section defines the WS4 named-transient-resource contract. It replaces the
+process-local identity, ACL, sequence, and lifecycle semantics of the prototype.
+It is normative input to Prompt 13; it is not a claim that the current runtime
+already implements these rules.
+
+A channel or workspace is a public LABIOS transient I/O primitive whose
+coordination state is catalog-backed. Process memory MAY cache immutable
+metadata and callbacks, but it MUST NOT be the authority for identity, ACL,
+sequence, cursor, version, lifecycle, or data state. The public API is the only
+supported client access path. DragonflyDB keys and NATS subjects below are
+catalog implementation details, not user resources.
+
+### 14.1 Identity, names, principals, and handles
+
+The canonical object identity is:
+
+```text
+(coordination_schema_version=1, deployment_namespace, object_name, object_kind)
+```
+
+`object_kind` is exactly `channel` or `workspace`. The namespace defaults to
+`default`. Namespace and principal strings are 1 through 128 bytes; object names
+are 1 through 255 bytes. They are valid UTF-8, contain no NUL or control byte,
+and are compared byte-for-byte after UTF-8 validation. No case folding,
+filesystem normalization, or URI path normalization is applied. Entry keys,
+subscriber IDs, and request IDs are scoped by the object identity rather than
+being part of it. Entry keys are nonempty valid UTF-8 up to 1024 bytes.
+
+The URI projections are `channel://<namespace>/<percent-encoded-name>` and
+`workspace://<namespace>/<percent-encoded-name>`. Percent decoding happens once;
+malformed or noncanonical encodings are `INVALID_COORDINATION_ID`. A typed
+`ChannelResource` or `WorkspaceResource` and its URI projection are equivalent
+only when namespace, name, sequence/entry scope, backend ID
+`labios-coordination`, and version constraint agree.
+
+Every catalog incarnation has a positive 64-bit `epoch`. Recreating a cleaned
+name allocates a larger epoch. A handle captures kind, namespace, name, epoch,
+principal, and a shared reconnect-capable coordination session. Therefore:
+
+- copying a handle preserves the same principal and incarnation;
+- destroying the creating `Client` does not invalidate retained handles;
+- destroying the final handle does not delete or drain the object;
+- reopening after process restart reconstructs a handle from catalog metadata;
+- a handle for an older epoch fails with `STALE_HANDLE` and can never address a
+  newer object that reused the same name.
+
+A **principal** is an opaque stable deployment identity, not a process ID. In a
+secured deployment it MUST come from a transport-authenticated identity mapped
+by a trusted coordination service; a caller-provided `app_id`, PID, JSON field,
+or label field is not authentication. The single-host reference deployment has
+no NATS account authentication, TLS identity, or protected DragonflyDB service
+boundary. It may compare an explicitly configured logical principal in atomic
+catalog operations, but any process with plumbing credentials can spoof or
+bypass it. Such checks prove logical ACL behavior only, not tenant isolation or
+production security. The legacy PID-derived app ID maps to
+`legacy-app:<decimal>` only for source compatibility and is neither stable over
+restart nor a security principal.
+
+### 14.2 Create, open, conflict, and incarnation rules
+
+`create_channel` and `create_workspace` are idempotent create-or-open operations.
+The create transaction is linearizable and follows this table:
+
+| Catalog state at the name | Result |
+|---|---|
+| Absent | Create kind, epoch, owner ACL, options, and active state atomically; return an owning handle. |
+| Same kind, Active, same immutable options | Return the existing epoch if the principal is authorized; do not reset data, TTL, ACL, sequence, or versions. |
+| Same kind, Active, different immutable options | `CONFIG_CONFLICT`; no mutation. |
+| Other kind | `TYPE_CONFLICT`; no second object may occupy the same namespace/name. |
+| Draining/Destroying | `DRAINING` or `DESTROYED`; do not reactivate it. |
+| Expired/Destroyed tombstone | `EXPIRED` or `DESTROYED` until explicit recreation is authorized and cleanup is complete. |
+
+`open_channel` and `open_workspace` never create. They validate kind, epoch when
+one is supplied, lifecycle, and ACL, then return a handle. An open without an
+epoch selects only the current nonterminal incarnation. Creation retries use a
+caller-visible request ID; repeating the same principal/request ID and identical
+arguments returns the original result. Reusing that ID with different arguments
+is `REQUEST_REPLAY_CONFLICT`.
+
+Recreation is a distinct owner/admin operation after cleanup. It retains the
+small name/epoch tombstone, increments the epoch, installs new options and ACL,
+and never exposes old messages, cursors, entries, versions, or request records.
+Automatic name reuse on TTL expiry is forbidden because it could redirect stale
+handles.
+
+### 14.3 Version-1 catalog key and record schema
+
+Let `enc(x)` percent-encode every UTF-8 byte outside ASCII
+`[A-Za-z0-9._-]` using uppercase hexadecimal. Let:
+
+```text
+O = labios:coord:v1:{enc(namespace)|enc(object_name)}
+```
+
+The braces are part of the key and keep one object's records in one Redis hash
+slot. Applications MUST NOT construct these keys. Version 1 uses exactly these
+record families:
+
+| Key | Type | Purpose |
+|---|---|---|
+| `O:meta` | hash | Common identity, kind, epoch, state, owner, revisions, timestamps, and immutable options. |
+| `O:acl` | hash | Principal to role mapping. |
+| `O:requests` | sorted set | Bounded idempotency-record expiry index. |
+| `O:request:enc(principal):enc(request_id)` | hash | Request digest, committed result, and expiry. |
+| `O:messages` | sorted set | Channel retained sequence index. |
+| `O:message:<20-digit-sequence>` | hash | Channel message metadata and binary data. |
+| `O:subscribers` | set | Channel subscriber-record names. |
+| `O:subscriber:enc(principal):enc(subscriber_id)` | hash | Durable cursor, lease, delivery, gap, and heartbeat state. |
+| `O:entries` | sorted set | Workspace live-entry index ordered by encoded key. |
+| `O:entry:enc(entry_key)` | hash | Workspace current head, including tombstone state. |
+| `O:version:enc(entry_key):<20-digit-revision>` | hash | Immutable workspace entry version or tombstone. |
+
+`O:meta` common fields are
+`schema_version`, `kind`, `namespace`, `name`, `epoch`, `state`,
+`owner_principal`, `acl_revision`, `object_revision`, `created_us`,
+`updated_us`, `expires_at_us`, and `cleanup_cursor`. Channel metadata additionally
+contains `next_sequence`, `head_sequence`, `tail_sequence`,
+`retained_messages`, `retained_bytes`, `max_messages`, `max_bytes`,
+`max_age_us`, `default_message_ttl_us`, and `drain_deadline_us`. Workspace
+metadata additionally contains `live_entries`, `max_entries`,
+`default_entry_ttl_us`, and `history_retention_us`.
+
+A message record contains `epoch`, `sequence`, `label_id`, `publisher_principal`,
+`published_us`, `expires_at_us`, `size`, `digest`, and binary `data`. A subscriber
+record contains `epoch`, `state`, `acked_sequence`, `leased_sequence`,
+`lease_token`, `lease_expires_us`, `delivery_count`, `gap_count`, `heartbeat_us`,
+and `cursor_expires_us`. An entry head and immutable version contain `epoch`,
+`entry_key`, `revision`, `state` (`live`, `deleted`, or `expired`), `size`,
+`writer_principal`, `created_us`, `updated_us`, `expires_at_us`, `digest`, and,
+for a live value, binary `data`.
+
+All times used for TTL, leases, and mutation ordering come from the catalog
+server's clock inside the atomic operation. Client clocks are diagnostic only.
+`schema_version` is checked before interpreting any other record. Unknown
+versions fail as `UNSUPPORTED_COORDINATION_VERSION`; there is no best-effort
+field guessing.
+
+The following operations are one atomic catalog script/transaction each. ACL,
+epoch, lifecycle, version/sequence guard, data, indexes, counters, timestamps,
+and idempotency result either all commit or none commit:
+
+- create/recreate/open authorization;
+- ACL grant, revoke, and role replacement;
+- channel publish and retention trimming;
+- subscriber create/open, lease, acknowledge, seek, and close;
+- workspace get, put/CAS, delete/CAS, and expiration transition;
+- object drain, destroy/expire transition, and each bounded cleanup batch.
+
+A client-side mutex, a Redis pipeline, multiple independent commands, or NATS
+publication is not an atomic substitute. Prompt 13 may extend the catalog
+transport with verified Lua/script primitives; it MUST NOT reproduce these
+transactions as check-then-act client code.
+
+### 14.4 ACL model and authorization linearization
+
+Roles are `Reader`, `Writer`, `Admin`, and the distinguished immutable `Owner`.
+The owner ACL is created with the object and cannot be removed or downgraded.
+The effective permissions are:
+
+| Operation | Reader | Writer | Admin | Owner |
+|---|:---:|:---:|:---:|:---:|
+| Open and inspect authorized metadata | yes | yes | yes | yes |
+| Channel receive/ack/seek; workspace get/list/history | yes | yes | yes | yes |
+| Channel publish; workspace put/delete | no | yes | yes | yes |
+| Drain channel | no | no | yes | yes |
+| Grant/revoke Reader or Writer | no | no | yes | yes |
+| Grant/revoke Admin, recreate, force destroy | no | no | no | yes |
+| Ordinary destroy after preconditions | no | no | yes | yes |
+
+A principal has one highest role. Granting the same role is idempotent. Revoking
+a missing principal is idempotent. An Admin cannot change an Owner or another
+Admin. ACL reads and the protected mutation occur in the same atomic operation;
+a mutation linearized before a revoke may complete, while one linearized after
+it must return `AUTHORIZATION_FAILED`. Cached ACL results can reject obviously
+invalid local input but can never authorize an operation.
+
+Opening a handle does not confer a lease on authorization. Every operation
+rechecks the current ACL. A revoked process holding a valid handle is denied on
+its next operation. ACL and object revisions increment on every effective ACL
+change and not on idempotent no-ops.
+
+### 14.5 Channel state, publication, retention, and ordering
+
+The channel state machine is:
+
+```text
+Absent -> Active -> Draining -> Destroying -> Destroyed
+                    |              ^
+                    +--------------+  (drain complete or deadline)
+Active/Draining -> Expired -> Destroying -> Destroyed
+Destroyed --owner recreate after cleanup--> Active with epoch+1
+```
+
+Only Active accepts publication. Draining accepts receive and acknowledge but
+rejects new publication. Destroying, Destroyed, and Expired reject ordinary
+operations. `drain` is idempotent. It completes when every nonexpired durable
+subscriber has acknowledged through the retained tail, or when its explicit
+deadline elapses; deadline completion records which subscribers were abandoned.
+`destroy` immediately prevents new operations and starts bounded cleanup. No
+reference-count transition changes catalog state.
+
+A successful publish transaction:
+
+1. rechecks Writer permission, Active state, epoch, payload limits, and request
+   replay identity;
+2. allocates `sequence = next_sequence` and increments `next_sequence`;
+3. writes the complete message and retained index;
+4. updates tail, head, retained counts/bytes, revision, and server timestamps;
+5. removes expired/over-limit oldest records according to retention; and
+6. commits the request ID to the allocated `(epoch, sequence)`.
+
+Sequence 1 is the first sequence in an epoch. Sequences of committed publishes
+are strictly increasing and contiguous. A rejected publish consumes no sequence.
+Retention or expiry may make committed sequences unavailable, but sequence IDs
+are never reused. Concurrent publishers are ordered by this transaction; label
+ID and NATS arrival order do not determine channel order.
+
+Retention is configured by finite `max_messages`, `max_bytes`, `max_age_us`, and
+an optional per-message TTL default. The effective message expiry is the earliest
+applicable message, age, or object deadline. A single message larger than
+`max_bytes` is rejected as `RETENTION_LIMIT` before allocation. Otherwise a
+publish evicts the oldest committed messages until count and byte bounds hold.
+Retention does not wait for slow subscribers. `head_sequence` is the lowest
+retained sequence, or `next_sequence` when empty; `tail_sequence` is the highest
+committed sequence, or zero before the first publish.
+
+After the catalog commit, NATS MAY publish a wake-up containing only object
+epoch and tail sequence. It is an optimization, not data or ordering authority.
+A lost, duplicated, or reordered wake-up cannot lose or reorder catalog data;
+subscribers poll from their catalog cursor on wake-up, timeout, and reconnect.
+A notification failure after the catalog commit does not roll back publication.
+
+### 14.6 Channel subscriptions, duplicates, gaps, and slow consumers
+
+A durable subscription identity is `(object epoch, principal, subscriber_id)`.
+Creation chooses exactly one initial cursor mode: `Earliest` starts before the
+current head, `Latest` starts at the current tail, and `At(sequence)` starts
+before that sequence if it is still meaningful. Reopening the same identity
+continues its catalog cursor; it does not replay from a process-local counter.
+Different subscribers consume independently.
+
+Version 1 permits one in-flight message per durable subscription. `receive`
+leases exactly `acked_sequence + 1` with an unpredictable lease token and
+bounded deadline. Concurrent receive calls for the same subscription either
+return the same leased delivery to its owner or `SUBSCRIPTION_BUSY`; they never
+lease a later sequence. `ack` succeeds only for the current epoch, sequence, and
+lease token, then atomically advances `acked_sequence`. Acking a future,
+stale, or mismatched delivery is `ACK_CONFLICT`. A callback compatibility API
+auto-acks only after the callback returns normally; a thrown callback leaves the
+lease for redelivery.
+
+Delivery is **at least once**. A process crash, expired lease, or lost ack reply
+may redeliver the same `(epoch, sequence)`, with a larger delivery count. A
+consumer deduplicates side effects by that stable pair if it requires them.
+LABIOS makes no exactly-once delivery or exactly-once consumer-effect claim.
+
+If `acked_sequence + 1 < head_sequence`, retention has overtaken the subscriber.
+`receive` returns a typed `Gap {expected_sequence, available_from,
+lost_count}` and does not silently move the cursor. The same gap remains visible
+until the Reader calls explicit `seek(available_from)` or closes/recreates the
+subscription. Seeking records the skipped interval and increments `gap_count`.
+Seeking outside `[head_sequence, next_sequence]`, or skipping a retained leased
+message, is rejected. An expired message creates the same visible gap semantics;
+it is never returned as empty data.
+
+Subscriber records have an explicit cursor TTL/heartbeat. Expiring a subscriber
+removes it from drain preconditions but does not delete channel messages. A slow
+consumer is therefore bounded by retention and receives a gap, rather than
+blocking every publisher, growing the catalog without bound, or being silently
+reported as caught up.
+
+### 14.7 Workspace state, versions, CAS, TTL, and crash behavior
+
+The workspace state machine is:
+
+```text
+Absent -> Active -> Destroying -> Destroyed
+           |
+           +-------> Expired -> Destroying -> Destroyed
+Destroyed --owner recreate after cleanup--> Active with epoch+1
+```
+
+Only Active permits entry operations. Every effective entry or ACL mutation
+increments `object_revision`. Every entry has its own monotonically increasing
+positive `revision`; revision zero means that no head has ever existed. Delete
+and TTL expiry create tombstone revisions instead of resetting the counter, so
+delete/recreate and expiry/recreate cannot suffer an ABA match.
+
+Public write conditions are:
+
+| Condition | Put behavior | Delete behavior |
+|---|---|---|
+| `Any` | Write a new live revision regardless of prior live/tombstone state. | Delete a live head; missing/tombstone returns `NOT_FOUND`. |
+| `Exact(v)` | Succeed only when the current head revision is exactly `v`, including an intentional rewrite after a known tombstone. | Succeed only when the current head is live at exactly `v`. |
+| `MustNotExist` | Succeed only when no head exists or the head is deleted/expired. | Invalid for delete. |
+| `MustExist` | Succeed only when the current head is live. | Delete the current live head. |
+
+A failed condition returns `VERSION_CONFLICT` with the observed revision and
+state and performs no mutation. A successful `put` atomically allocates the next
+entry revision, writes the immutable version and live head, updates the live
+index/counters and object revision, and stores the request result. A successful
+`delete` performs the same transaction with a deleted tombstone and no value.
+`get` returns one coherent value plus entry revision, object revision, writer,
+and expiry. `get_version` addresses one immutable historical revision and never
+means "read latest then compare". Missing retained history is
+`VERSION_EXPIRED`, distinct from an entry that never existed.
+
+A put may use the workspace default entry TTL or an explicit shorter TTL; zero
+means no entry TTL unless the workspace itself expires. Expiration uses catalog
+server time and atomically replaces a due live head with one expired tombstone
+revision, removes it from the live index, and increments object revision. A
+reader or writer may perform this lazy transition, and a janitor performs the
+same idempotent transaction. An expired value is never returned. Historical live
+versions remain readable until `history_retention_us`; history cleanup does not
+change the current revision.
+
+`list` returns only live, authorized entries in deterministic encoded-key order.
+One bounded page is linearizable at its reported `object_revision`. A page token
+contains epoch, object revision, and last encoded key. If the workspace changes
+before the next page, continuation returns `VERSION_CONFLICT` and the caller
+restarts; a multi-page list is not advertised as a distributed snapshot.
+Version 1 provides no arbitrary multi-entry transaction.
+
+Mutations carry request IDs. A reconnect within request-record retention reuses
+the same request ID and receives the committed version without applying a
+second mutation. If a process crashes before the atomic transaction, no partial
+head/version/index exists. If it crashes after commit, the new head and request
+result are reconstructable. After request retention expires, a caller with an
+unknown outcome must read the current version and reconcile; LABIOS does not
+invent success or blindly repeat a non-idempotent mutation.
+
+### 14.8 Concurrency and linearization table
+
+| Race | Linearization rule and observable result |
+|---|---|
+| Two matching creates | One creates; the other opens the same epoch and options. |
+| Channel versus workspace create at one name | One kind wins; the other receives `TYPE_CONFLICT`. |
+| Publish versus drain | Publish commits before drain and receives a sequence, or drain wins and publish receives `DRAINING`; no half-message. |
+| Concurrent channel publishes | Atomic sequence allocation gives one total contiguous order. |
+| Receive versus ack on one subscriber | The cursor/lease script serializes them; no later message is leased before the current ack. |
+| Ack reply loss versus reconnect | Reopen reads the committed cursor; uncommitted ack causes duplicate redelivery, never silent advancement. |
+| Retention versus receive | Receive returns the retained message or a typed gap according to whichever transaction linearizes first. |
+| Put versus put with the same Exact revision | Exactly one commits; all others receive `VERSION_CONFLICT` with the winner's revision. |
+| Put versus delete | Atomic head-version checks totally order them; returned revisions expose that order. |
+| Entry expiry versus put | Expiry first creates a tombstone revision that can conflict with Exact; put first installs a new expiry/value. |
+| ACL revoke versus protected mutation | Mutation before revoke may commit; mutation after revoke is denied. |
+| Object destroy versus any operation | The operation commits before Destroying or fails `DESTROYED`; cleanup never removes a partially committed operation. |
+| Client destruction versus retained handle call | The handle's shared session preserves the call; client lifetime is irrelevant. |
+
+### 14.9 Stable errors and public API shape
+
+Coordination APIs return typed results or throw a `CoordinationError` carrying a
+stable category. Python exposes the same categories through `LabiosError`
+subclasses. The version-1 categories are:
+
+| Category | Meaning / retryability |
+|---|---|
+| `INVALID_COORDINATION_ID` | Invalid namespace/name/key/subscriber/request syntax; not retryable unchanged. |
+| `UNSUPPORTED_COORDINATION_VERSION` | Catalog schema is not supported; requires compatible software. |
+| `NOT_FOUND` | Object, live entry, or subscription does not exist. |
+| `TYPE_CONFLICT` / `CONFIG_CONFLICT` | Existing name or immutable options disagree; not retryable unchanged. |
+| `AUTHORIZATION_FAILED` | Current principal lacks the required role. |
+| `STALE_HANDLE` | Handle epoch differs from the current incarnation. |
+| `DRAINING` / `DESTROYED` / `EXPIRED` | Lifecycle rejects the operation. |
+| `VERSION_CONFLICT` | Workspace condition or page revision failed; caller may reread and retry deliberately. |
+| `VERSION_EXPIRED` | Requested historical revision is outside retention. |
+| `SUBSCRIPTION_BUSY` | Another receive lease is active; retry after ack/lease expiry. |
+| `ACK_CONFLICT` | Sequence/token/epoch does not identify the current lease. |
+| `CHANNEL_GAP` | Expected sequence is no longer retained; explicit seek is required. |
+| `RETENTION_LIMIT` / `LIMIT_EXCEEDED` | Payload, object, page, or configured bound would be exceeded. |
+| `REQUEST_REPLAY_CONFLICT` | A request ID was reused with different arguments. |
+| `COORDINATION_UNAVAILABLE` | Catalog cannot be reached; retryable with the same request ID. |
+| `OUTCOME_UNKNOWN` | Connection failed after a mutation may have committed and no replay result is available; inspect/reconcile. |
+| `COORDINATION_CORRUPT` | Required metadata/index invariants disagree; stop mutation and surface diagnostics. |
+
+The native conceptual surface is additive:
+
+```text
+Client.create_channel/open_channel(ChannelIdentity, ChannelOptions)
+Client.create_workspace/open_workspace(WorkspaceIdentity, WorkspaceOptions)
+
+ChannelHandle.metadata / role / grant / revoke / publish / subscribe
+ChannelSubscription.receive / ack / seek / close
+ChannelHandle.drain / destroy
+
+WorkspaceHandle.metadata / role / grant / revoke
+WorkspaceHandle.get / get_version / put(condition) / erase(condition) / list
+WorkspaceHandle.destroy
+```
+
+`ChannelHandle`, `ChannelSubscription`, and `WorkspaceHandle` are owning,
+copy-safe values. Blocking receive and reconnect paths release the Python GIL.
+Timeout leaves the handle/subscription valid and performs no cursor advance.
+Every mutation result exposes its request ID so a caller can persist it across a
+process crash. The existing simple C++ calls remain wrappers where semantics are
+unambiguous: default namespace, legacy logical principal, create-or-open,
+channel callback auto-ack, workspace unconditional put/delete, and `grant(app)`
+meaning Writer. New code uses explicit identity, role, options, CAS, and durable
+subscription objects.
+
+Intentional compatibility changes are:
+
+- duplicate create returns the authorized existing object instead of an empty
+  handle;
+- registry identity, sequence, owner, and ACL state are no longer process-local;
+- channel backpressure is rolling retention, not a lifetime publish counter;
+- handle reference count no longer destroys a channel;
+- workspace delete preserves a tombstone and retained history;
+- legacy `labios:channel:*` and `labios:ws:*` records are not silently imported,
+  because they lack a trustworthy epoch, type, ACL, cursor, and atomic version
+  history. Detection returns `UNSUPPORTED_COORDINATION_VERSION` until an
+  explicit offline migration or cleanup is performed.
+
+### 14.10 Observability, cleanup, and recovery bounds
+
+Public authorized observations include:
+
+- object kind/identity/epoch/state, owner, caller role, schema/object/ACL
+  revisions, creation/update/expiry, and immutable retention options;
+- channel head/tail/next sequence, retained count/bytes, publish/eviction rate,
+  durable subscriber count, cursor/lease age, duplicate delivery count, gap
+  count, and drain progress;
+- workspace live entry count, current object revision, history-retention state,
+  ACL membership visible only to Admin/Owner, conflict count, expiration count,
+  and cleanup progress.
+
+`channels/list` and `workspaces/list` return only objects visible to the caller.
+Detailed routes are namespace/name scoped and ACL checked. Values, secret ACL
+identities, lease tokens, request digests, DragonflyDB keys, and NATS subjects
+are never emitted to an unauthorized observer.
+
+Cleanup is state-driven and idempotent. Destroy/expiry first commits a terminal
+state that rejects new operations, then a janitor deletes messages/cursors or
+entries/history/request records in bounded indexed batches. It records
+`cleanup_cursor`; a crash resumes without making the object Active. The meta
+record becomes a Destroyed tombstone only after indexed children are gone. The
+tombstone and epoch counter outlive the configured stale-handle and request
+windows. Cleanup MUST use maintained indexes, not a correctness-critical global
+`SCAN` or wildcard deletion.
+
+The bounded failure contract is:
+
+- client process loss does not affect objects; request replay and durable cursors
+  reconstruct committed state;
+- NATS loss delays wake-ups only; polling/reconnect reads catalog authority;
+- DragonflyDB restart is recoverable only to the persistence/replication level
+  configured by the reference deployment; clients reconnect and do not replace
+  durable state with caches;
+- catalog unavailability fails or times out rather than accepting divergent
+  local writes;
+- catalog loss/corruption, split-brain Dragonfly deployments, compromised
+  plumbing credentials, and multi-region consensus are outside the guarantee;
+- manager and worker availability is irrelevant to direct transient coordination
+  operations, except when the same resource is executed through a Label I/O
+  worker path.
+
+No exactly-once delivery, consumer effect, arbitrary multi-key transaction,
+production tenant-security, or catalog-loss recovery claim is made.
+
+### 14.11 Relationship to Label I/O resources
+
+The direct channel/workspace API is the one permitted catalog coordination path
+for these named transient primitives. It is not an external backend and it is
+not a general escape from Label I/O. Its catalog implementation may use
+DragonflyDB and NATS internally, but callers name only the typed resource and
+invoke public coordination methods.
+
+A Label I/O program that carries `ChannelResource` or `WorkspaceResource` uses
+the same canonical identity, epoch/version constraints, ACL checks, sequence or
+entry scope, atomic operation, and errors defined here. Such a label still goes
+through normal admission, dispatcher, scheduler, and a registered worker/runtime
+adapter; it MUST NOT be rewritten into a client-side catalog call. Conversely,
+direct `ChannelHandle`/`WorkspaceHandle` coordination does not fabricate a
+backend label merely to hide a catalog request.
+
+Core operation mapping is exact:
+
+| Typed resource operation | Coordination operation |
+|---|---|
+| Channel Write | One atomic publish; result reports epoch and sequence. |
+| Channel Read | Receive the declared sequence/range through a durable cursor; open-tail count zero does not promise a finite completion. |
+| Channel Flush | Barrier through the committed tail at admission time for the named subscriber set/declared scope; it is not a global NATS flush. |
+| Channel Observe | Authorized metadata/cursor/retention observation. |
+| Workspace Read | Read the named entry under its version constraint; whole-workspace Read is invalid. |
+| Workspace Write | Atomic put under Any/Exact/MustNotExist constraint. |
+| Workspace Delete | Atomic entry tombstone under its version constraint; empty entry key is invalid. |
+| Workspace Flush | Catalog durability barrier for prior ordered workspace mutations. |
+| Workspace Observe | Authorized whole-workspace or entry metadata. |
+
+An epoch constraint prevents a label from crossing recreation. Channel sequence
+and Workspace entry version remain sealed resource constraints; observed
+sequence/revision is execution state. Ordinary file, SQLite, external KV, object,
+vector, or other backend I/O MUST continue through Label I/O and MUST NOT use
+this coordination key space. MCP Prompt 14 may consume only the public Python
+workspace handle and principal mapping; it may not address this key schema.
+
+### 14.12 Invariants and executable acceptance cases
+
+A conforming implementation preserves these invariants:
+
+1. One namespace/name has at most one kind and one live epoch.
+2. No authoritative coordination state exists only in process memory.
+3. Every authorized mutation rechecks ACL, epoch, and lifecycle atomically with
+   its effect.
+4. Committed channel sequences are unique, contiguous, increasing, and never
+   reused within an epoch.
+5. One subscriber never acknowledges sequence `n+1` before `n`; missing
+   retention is an explicit gap.
+6. Delivery is at least once and duplicate identity is `(epoch, sequence)`.
+7. Workspace entry revisions strictly increase across put, delete, expiry, and
+   recreation; a failed CAS changes nothing.
+8. Data, head metadata, immutable version, indexes, counters, and idempotency
+   result never partially disagree after a successful operation.
+9. Object cleanup is terminal, bounded, restartable, and cannot reactivate an
+   old epoch.
+10. Direct primitive access never exposes or accepts an internal catalog key or
+    notification subject.
+
+Prompt 13 MUST make the following cases executable using independently launched
+processes, not multiple objects sharing one in-process registry:
+
+| ID | Given / action | Required observation |
+|---|---|---|
+| C01 | Two processes concurrently create the same channel with identical options. | Both receive the same epoch; metadata is created once. Different options and workspace-at-same-name produce `CONFIG_CONFLICT` and `TYPE_CONFLICT`. |
+| C02 | Creator `Client` is destroyed while a copied channel handle remains. | The handle publishes/receives; a newly launched process opens the same epoch. |
+| C03 | At least four publisher processes commit at least 100 messages each. | Exactly 400 unique contiguous sequences exist and each sequence maps to its committed bytes/label ID. |
+| C04 | A subscriber crashes after receive before ack, then independently reopens. | The same `(epoch, sequence)` is redelivered and later ack advances once. |
+| C05 | Ack commits but its reply is deliberately lost. | Reopen observes the advanced cursor; the next receive does not skip an unacked message. |
+| C06 | Retention overtakes a stopped subscriber and message TTL expires another sequence. | Reopen receives typed `CHANNEL_GAP`; no empty/fabricated message appears; explicit seek resumes at head. |
+| C07 | Channel drains with one caught-up and one expired subscriber. | Publish is rejected after drain, retained reads/acks continue, and cleanup reaches Destroyed with abandonment diagnostics. |
+| W01 | Owner creates a workspace; separate Reader, Writer, Admin, and unauthorized processes open it. | Permission matrix is enforced on every call; a retained handle is denied immediately after revoke. |
+| W02 | Two writer processes put with the same `Exact(v)`. | Exactly one returns `v+1`; the other gets `VERSION_CONFLICT` and no extra version exists. |
+| W03 | Put, delete, MustNotExist put, and TTL expiry race on one key. | Returned/tombstone revisions form one strict order with no ABA and expired bytes are never returned. |
+| W04 | A mutation commits and its response is lost, then the process restarts with the same request ID. | It receives the original revision; no duplicate version is created. Reusing the ID with different bytes conflicts. |
+| W05 | Creator `Client` is destroyed and DragonflyDB is restarted within the reference persistence guarantee. | Independent handles reopen with the same owner, ACL, epoch, values, and versions. |
+| W06 | Owner destroys a nonempty workspace and the cleaner process is killed mid-cleanup. | Calls fail terminally; cleanup resumes from its cursor; recreation uses a larger epoch and exposes no old data. |
+| R01 | NATS is stopped while channel publishes commit, then restarted. | Polling subscriber retrieves catalog-ordered messages; wake-up loss causes delay only. |
+| R02 | Channel/Workspace typed resources and equivalent URIs are normalized. | They resolve to the same public identity and version/sequence scope; a conflicting projection rejects before mutation. |
+| R03 | Tests run with command tracing or a guarded transport. | Public clients and MCP consumers issue no raw `labios:coord:*` key or private channel subject operation. |
+| R04 | Every case above is repeated twice from clean named volumes under ASan/UBSan where applicable. | Results are stable; claims remain bounded to the single-host reference topology and tested restart windows. |
+
+These cases supersede the existing one-process component tests as evidence for
+cross-process coordination. The old tests may remain as compatibility/component
+checks, but they cannot satisfy WS4.
