@@ -14,7 +14,7 @@ localhost
   NATS JetStream ─┬─ dispatcher ─┬─ worker-1 ─┐
   DragonflyDB ────┤              ├─ worker-2 ─┼─ shared worker-data volume
   Redis fixture ──┘              └─ worker-3 ─┘
-                         manager       MCP prototype
+                         manager       MCP Label I/O frontend
 ```
 
 | Service | Purpose | Host port |
@@ -25,11 +25,15 @@ localhost
 | `manager` | Worker registry | none |
 | `dispatcher` | Label admission, shuffling, and scheduling | none |
 | `worker-1`…`worker-3` | Tier-1 file, SQLite, and configured KV execution | none |
-| `mcp` | Current MCP prototype; see its documented runtime-bypass limitations | none |
+| `mcp` | Public Label I/O frontend with the packaged native Python SDK; no direct-store adapter or worker volume | none |
 | `test` | One-shot test/demo image, enabled only when explicitly run | none |
 
 The internal DragonflyDB warehouse is not a user storage backend. The separate
-`redis-kv` container is only a local simulation of user infrastructure.
+`redis-kv` container is only a local simulation of user infrastructure. The MCP
+service receives runtime endpoints only as public Python `Client` configuration;
+its application code does not import Redis/NATS adapters or address internal
+keys/subjects. Build its self-contained image with
+`docker build -f mcp/Dockerfile -t labios-mcp .` from the repository root.
 
 ## Start, inspect, and stop
 
@@ -148,7 +152,7 @@ unsafe for production:
 - Monitoring and data-plane ports are exposed on localhost.
 - Images and dependencies are not configured here for production secret or
   certificate rotation.
-- The MCP prototype has known direct-access/runtime-bypass limitations.
+- The MCP stdio endpoint can submit I/O and therefore needs agent-side access control before production exposure; Compose does not provide it.
 
 Binding to localhost reduces accidental network exposure but is not production
 hardening. A production design must add authentication, authorization, TLS,

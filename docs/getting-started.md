@@ -117,4 +117,4 @@ the package requires `flatbuffers==24.3.25`. The built import root is
 - [Configuration](configuration.md) — implemented TOML and environment settings
 - [SDK guide](sdk-guide.md) — client APIs
 - [Backends](backends.md) — external backend adapters
-- [MCP integration](mcp-integration.md) — current MCP prototype and limitations
+- [MCP integration](mcp-integration.md) — public Label I/O tools, stable errors, golden path, and compatibility migration

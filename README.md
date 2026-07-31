@@ -75,7 +75,7 @@ with C++, C, and MCP examples.
 | Workspaces | Shared state (Redis) with per-key versioning; ACLs are process-local today |
 | Elastic scaling | Per-tier auto-scaling via Docker Engine API (off by default; enable via `docker-compose.elastic.yml`) |
 | POSIX intercept | LD_PRELOAD transparent interception of 30 POSIX and stdio calls |
-| MCP server | 5 tools for coding agent integration (observe, store, retrieve, process, knowledge) |
+| MCP server | Public Label I/O frontend for observe, typed store/retrieve, and registered pipelines; workspace knowledge is reserved for Prompt 14 |
 | Observability | 8 query endpoints, continuous telemetry with p50/p95/p99 latencies |
 | Continuations | Reactive I/O chaining (Notify, Chain, Conditional) on label completion |
 
@@ -112,11 +112,13 @@ Connect Claude Code, Codex CLI, or any MCP-compatible agent:
 }
 ```
 
-The agent gains five MCP tools: `labios_observe`, `labios_store`,
-`labios_retrieve`, `labios_process`, and `labios_knowledge`. Note: the MCP server
-currently talks directly to the DragonflyDB warehouse and the worker data volume;
-it does not yet create labels or traverse the dispatcher/worker path. See
-[docs/mcp-integration.md](docs/mcp-integration.md) for the full reference.
+The agent gains five MCP tool names: `labios_observe`, `labios_store`,
+`labios_retrieve`, `labios_process`, and `labios_knowledge`. Core I/O compiles to
+typed labels and traverses the public Python Client, dispatcher, scheduler,
+worker, and external backend. `labios_knowledge` is an explicit Prompt-14
+placeholder rather than a direct-store fallback. See
+[docs/mcp-integration.md](docs/mcp-integration.md) for schemas, stable error
+payloads, and migration breaks.
 
 ## Build
 
@@ -153,7 +155,9 @@ ctest --test-dir build/dev -L unit      # Fast, no infrastructure
 ctest --test-dir build/dev -L smoke     # Needs live cluster
 ctest --test-dir build/dev -L bench     # Vanilla-vs-LABIOS comparisons
 python3 -m pytest tests/python
-cd mcp && python3 -m pytest tests
+PYTHONPATH="$PWD/build/dev/python:$PWD/mcp" python3 -m pytest mcp/tests -m "not live"
+# With Compose running:
+docker compose exec -T -e LABIOS_MCP_LIVE=1 mcp python -m pytest tests -m live
 ```
 
 ## Tech Stack

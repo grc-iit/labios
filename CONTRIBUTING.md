@@ -85,10 +85,11 @@ Check the GitHub issues for tagged tasks. Priority areas:
 | Kernel | `ctest -L kernel` | NATS + DragonflyDB |
 | Benchmark | `ctest -L bench` | None |
 | Integration | `ctest -L integration` | Full stack |
-| MCP | `docker compose exec mcp python -m pytest tests/ -v` | Docker stack |
+| MCP hermetic | `PYTHONPATH="$PWD/build/dev/python:$PWD/mcp" python3 -m pytest mcp/tests -m "not live" -v` | Built Python SDK + MCP dependencies |
+| MCP live | `docker compose exec -T -e LABIOS_MCP_LIVE=1 mcp python -m pytest tests -m live -v` | Docker stack |
 
-Unit tests run without infrastructure and must always pass. Smoke and integration
-tests require `docker compose up -d`.
+Unit and hermetic MCP tests run without infrastructure and must always pass.
+Smoke, live MCP, and integration tests require `docker compose up -d --wait`.
 
 ## Questions
 

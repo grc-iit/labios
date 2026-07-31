@@ -1373,12 +1373,12 @@ message invalid.
 
 There is no text/CSV fallback. Manager, workers, and dispatcher require one
 coordinated runtime cutover in P09; mixed text/v2 operation is unsupported. The
-former Python MCP parser for `labios.manager.workers` is incompatible after
-this cutover. Prompt 10 owns generated Python FlatBuffers bindings and the
-shared verified registry-v2 parser. MCP behavior does not consume that parser
-until Prompt 11, so worker-registry, worker-score, and worker-count MCP behavior
-remains unsupported in the Prompt 10 slice. The prior P09 compatibility gap is
-reported explicitly rather than hidden behind a CSV fallback.
+former Python MCP CSV parser for `labios.manager.workers` is incompatible after
+this cutover. Prompt 10 supplied generated Python FlatBuffers bindings and the
+shared verified registry-v2 parser. Prompt 11 removes the MCP CSV path: normal
+worker-score/count tools use public Observe labels, and any supplied registry
+snapshot is accepted only through that shared `LWR2` protocol-v2 parser. The
+prior P09 compatibility gap is closed without a text fallback.
 
 #### 9.7.6 Common feasibility and plan validation
 
@@ -1659,11 +1659,11 @@ registry codec tests, and exact 8 MiB paper trace pass in the native unit lane.
 The live mixed-batch scheduling integration path was not run because Docker
 Compose was unavailable on the verification host; no live end-to-end claim is
 made. Prompt 10 supplies Python FlatBuffers support, generated bindings, and a shared
-verified registry-v2 parser. MCP behavior remains unchanged until Prompt 11 and
-therefore does not yet claim worker-registry, worker-score, or worker-count
-support. Automatic provisioning, elasticity triggers, leader election, new
-solver algorithms, and distributed pipeline-stage placement remain out of
-scope.
+verified registry-v2 parser. Prompt 11 routes MCP worker score/count through
+public Observe labels and removes direct manager-subject and CSV access;
+verified snapshots use only the shared parser. Automatic provisioning,
+elasticity triggers, leader election, new solver algorithms, and distributed
+pipeline-stage placement remain out of scope.
 
 ## 10. Deterministic validation rules
 

@@ -717,8 +717,9 @@ docker compose --profile test down -v --remove-orphans
 
 The default is a single-host reference deployment. It includes durable NATS
 JetStream and DragonflyDB plumbing, a separate external Redis fixture, manager,
-dispatcher, three workers, the MCP prototype, and a profiled one-shot test
-image. Every worker mounts one shared data volume because its file and SQLite
+dispatcher, three workers, the public Label I/O MCP frontend, and a profiled
+one-shot test image. The MCP image packages the Python SDK and has no worker
+volume mount. Every worker mounts one shared data volume because its file and SQLite
 registry attachments are `Shared`. See [deployment.md](deployment.md) for the
 authoritative topology, health checks, persistence, security limitations, and
 the unsupported status of node-local/multi-node deployment.
@@ -840,7 +841,8 @@ ctest --test-dir build/dev -L unit      # Unit only
 ctest --test-dir build/dev -L kernel    # Science kernels
 ctest --test-dir build/dev -L bench     # Agent benchmarks
 python3 -m pytest tests/python          # Python SDK tests
-cd mcp && python3 -m pytest tests       # MCP server tests
+PYTHONPATH="$PWD/build/dev/python:$PWD/mcp" \\
+  python3 -m pytest mcp/tests -m "not live"  # MCP lowering tests
 ```
 
 ---

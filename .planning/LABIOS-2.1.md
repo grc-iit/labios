@@ -215,8 +215,8 @@ Baseline audited at commit `d8e6a4d`; P09 implementation evidence updated 2026-0
 | Completion API | Prompt 09 replaces mutable public `PendingIO` internals with an owning, copyable `Operation` over immutable label IDs and shared session context. Operation observation/wait/cancel/read methods are concurrent-safe, survive originating `Client` destruction, preserve handles after typed nonterminal timeout, deterministically select wait-any, return pending views from timed-out wait-all, expose categorized errors and cancellation race outcomes, and retain read results for repeat retrieval. `PendingIO` remains only a compatibility spelling. The C API now uses registry-validated owning status records, stable error codes/categories, explicit result/buffer/error release functions, and stale/double-release protection. Catalog compare-and-set transitions continue to linearize cancellation, scheduling, and worker claim. |
 | Elasticity | Decision engines and Docker orchestration abstractions exist. Elasticity is disabled by default; leader election is not implemented. |
 | POSIX | The intercept is a useful `/labios` virtual-path prototype, not complete transparent POSIX behavior for arbitrary repositories. |
-| Python | Prompt 10 binds the Prompt 09 owning `Operation`, typed labels/resources, label-level and URI submission, intent/priority, pipelines, completion/cancellation/lifecycle results, repeatable reads, placement history, and public Observe queries. Blocking native calls release the GIL. Versioned generated FlatBuffers bindings and one verified `LWR2` registry-v2 parser live in the Python package; MCP behavior remains unchanged until Prompt 11. |
-| MCP | The five-tool prototype accesses DragonflyDB and a worker volume directly. It does not compile MCP I/O into labels or traverse the dispatcher/worker path. |
+| Python | Prompt 10 binds the Prompt 09 owning `Operation`, typed labels/resources, label-level and URI submission, intent/priority, pipelines, completion/cancellation/lifecycle results, repeatable reads, placement history, and public Observe queries. Blocking native calls release the GIL. Versioned generated FlatBuffers bindings and one verified `LWR2` registry-v2 parser live in the Python package; Prompt 11 consumes this surface for MCP core Label I/O. |
+| MCP | Prompt 11 makes the five-name server a public Label I/O frontend: store/retrieve/process lower typed resources and structured registered pipelines through the Python Client and owning Operation, dispatcher, workers, and external backends. Health, workers, active profile, lifecycle, and placement use public Observe/inspection APIs. Direct Redis/NATS/worker-volume core paths and CSV fallback are removed; workspace knowledge is an explicit Prompt-14 placeholder. |
 | Configuration | `Client::set_config` changes local client configuration, not distributed runtime state. Public configuration docs list only implemented TOML keys and environment overrides. |
 | Serialization safety | Label and Completion deserialization now verifies FlatBuffers buffers before access, rejects malformed/unsupported input with stable categories, and performs deterministic structural/admission checks in the client submission path. |
 | Dispatcher ingress and parking | Durable callbacks use an explicit `DurableAck`; the precise acknowledgement boundary is a conditional atomic catalog transaction that writes the canonical label plus queued recovery metadata. In-memory insertion follows that durable transition, and a later lifecycle state wins over ingress redelivery. Catalog snapshots expose recovery labels plus park reason/attempt/next retry/last error. Batch failures release catalog-owned records for retry; malformed snapshots and dependency lookup failures are isolated. Composite parent snapshot, child IDs, packed ordered programs, and reply metadata are persisted before placement and reconstructed as one all-or-nothing scheduling unit. Parking uses bounded exponential backoff, capability-relevant wakeups, explicit TTL expiry, and bounded decision history. |
@@ -403,6 +403,24 @@ Baseline audited at commit `d8e6a4d`; P09 implementation evidence updated 2026-0
   Generated Python FlatBuffers support closes the package-level P09 registry-v2
   gap, but MCP worker-registry/score/count behavior remains unchanged and
   unsupported until Prompt 11 consumes the shared parser.
+- **Prompt 11 MCP core Label I/O ingress (2026-07-31):** 17 hermetic MCP
+  pytest cases cover tool schemas/imports, typed lowering, source/destination/
+  pipeline/intent/priority preservation, stable error categories, timeout,
+  cancellation, parking, malformed requests, registry-v2 malformed/truncated/
+  version-skew rejection, unsupported arbitrary transforms, and absence of
+  direct Redis/NATS/volume adapters. Four opt-in Compose cases and the stdio MCP
+  golden cover exact store/retrieve bytes, registered identity-pipeline
+  destination bytes, timeout/cancellation race projection, versioned typed
+  label and placement inspection, and public health/worker/profile observation.
+  The MCP image builds the native Python SDK from the same repository sources
+  and installs FlatBuffers 24.3.25. UBSan passes the combined 27 Python/MCP
+  hermetic cases. ASan passes the 17 MCP boundary cases with leak detection
+  disabled; leak-enabled execution reports CPython/pytest process-exit
+  allocations, and the full Python exception-path lane hits an ASan
+  `__cxa_throw` interceptor check before completion, so no leak-enabled or full
+  exception-path ASan claim is made. Workspace-backed knowledge remains pending
+  Prompt 14; no Prompt 12/13 coordination, new backend, arbitrary execution, or
+  distributed pipeline-stage behavior is claimed.
 - The HPDC'19 published results (up to 16x CM1 I/O improvement, 6x HACC, 17x
   Montage, 40-60% execution-time reduction) are prior-publication evidence.
   None of them has been reproduced by this repository, and no current document
@@ -1223,6 +1241,36 @@ catalog-owned public API returning the admitted label and placement residual;
 Python does not address DragonflyDB keys or NATS subjects. The Compose test image
 and CI now carry and execute the SDK, its live pytest, and
 `examples/python/golden.py`.
+
+#### Prompt 11 — MCP core tools through Label I/O
+
+**Complete (2026-07-31).** MCP is a public Label I/O frontend. `labios_store`,
+`labios_retrieve`, and `labios_process` lower typed external resources, sealed
+intent/priority/TTL, and structured registered pipelines through the packaged
+Python `Client`; synchronous MCP responses project the owning `Operation`
+without rebuilding asynchronous state. Timeout leaves the label active unless
+`cancel_on_timeout` explicitly requests cancellation. Stable payloads distinguish
+malformed request, admission failure, parked, timeout, cancelled/too-late,
+execution failure, and unknown/expired completion.
+
+Health, queue, worker score/count, active scheduler profile, lifecycle, and
+placement use public Observe, Operation, and `inspect_label` APIs. Normal paths
+contain no direct Redis/NATS/worker-volume adapter. The shared Prompt-10 parser
+accepts only verified `LWR2` protocol-v2 snapshots when a snapshot is supplied;
+worker observations normally use Observe and there is no CSV/text fallback.
+The MCP image is built from the repository root, compiles the matching Python
+SDK, and installs FlatBuffers 24.3.25.
+
+Compatibility breaks are intentional: workspace key/scope store/retrieve,
+workspace-tier search/version metadata, line-oriented process strings/globs,
+in-process process output, direct workspace scans, and legacy worker CSV are
+removed with no hidden fallback. Store/retrieve now require external backend
+URIs; process requires source, destination, and structured registered stages.
+`labios_knowledge` remains discoverable but returns
+`PENDING_PROMPT_14`. Prompt 11 adds no backend, arbitrary tool execution,
+coordination semantics, or distributed pipeline stages. The only C++ source
+change exposes already-public `LabelData.ir_version` and `operation_version` in
+the Python binding for public inspection; no runtime behavior changed.
 
 ## 12. Immediate integration steps
 

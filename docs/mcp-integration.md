@@ -1,38 +1,31 @@
 # LABIOS MCP Integration Guide
 
-LABIOS ships an MCP (Model Context Protocol) server that gives coding agents
-five tools for storing data, querying state, and running line-oriented pipelines
-over files.
+LABIOS ships an MCP (Model Context Protocol) server that is a public **Label
+I/O frontend**. Core store, retrieve, and process requests compile to versioned,
+typed labels and traverse:
 
-> **Status:** The MCP server currently connects **directly** to the DragonflyDB
-> warehouse and the mounted worker data volume. `labios_store`/`labios_retrieve`
-> read and write Redis workspace keys directly, `labios_process` reads files from
-> the worker volume and runs a Python-side pipeline in-process, and
-> `labios_observe` reads Redis keys and queries the manager over NATS. These
-> tools do **not** yet create labels or traverse the dispatcher/scheduler/worker
-> path, and the `labios_process` pipeline ops are a separate implementation from
-> the C++ SDS builtins. See `.planning/LABIOS-2.1.md`.
+```text
+MCP client -> packaged Python Client -> dispatcher -> scheduler -> worker
+           -> external file/SQLite/KV backend
+```
 
-## Prerequisites
+The MCP process does not import Redis or NATS clients, request private subjects,
+or mount a worker volume. Its Python `Client` uses LABIOS runtime endpoints in
+the same way as every public SDK client. Runtime observations are Observe labels;
+label inspection uses `Client.inspect_label`.
 
-- LABIOS runtime running (`docker compose up -d`)
-- Claude Code, Codex CLI, or another MCP-compatible client
+Workspace-backed knowledge remains explicitly pending Prompt 14. LABIOS is not
+a shell, arbitrary compute runtime, or generic tool broker.
 
-## Quick Setup
-
-### 1. Start the Runtime
+## Start and connect
 
 ```bash
 cd /path/to/labios
-docker compose up -d
-docker compose ps   # Verify all services healthy
+docker compose up -d --build --wait
+docker compose ps
 ```
 
-### 2. Configure Your Agent
-
-Add the LABIOS MCP server to your agent's configuration.
-
-**Claude Code** (`~/.claude/settings.json` or project `.mcp.json`):
+Configure an MCP client with an absolute path:
 
 ```json
 {
@@ -44,252 +37,212 @@ Add the LABIOS MCP server to your agent's configuration.
 }
 ```
 
-**Codex CLI** (`.codex/config.json`):
+`connect.sh` attaches stdio to the packaged MCP container. The image is built
+from the repository root so it contains the native Python extension, the
+`labios` package, generated registry-v2 bindings, and FlatBuffers 24.3.25.
+The standalone, executable build path is:
+
+```bash
+docker build -f mcp/Dockerfile -t labios-mcp .
+docker run --rm labios-mcp python -c \
+  'import flatbuffers, labios, labios_mcp; print(labios.Operation)'
+```
+
+## Stable response envelope
+
+Every tool returns one JSON object in MCP text content.
+
+Successful terminal I/O:
 
 ```json
 {
-  "mcpServers": {
-    "labios": {
-      "command": "/absolute/path/to/labios/mcp/connect.sh"
-    }
-  }
+  "ok": true,
+  "status": "completed",
+  "label_id": 123,
+  "completion": {"state": "complete", "lifecycle": "completed"}
 }
 ```
 
-The `connect.sh` script runs `docker compose exec mcp python -m labios_mcp`
-to attach the agent to the MCP container via stdio. The path must be absolute.
+Failures and nonterminal projections use:
 
-### 3. Verify Connection
-
-Start a new Claude Code session and test the connection:
-
-```
-> Use labios_observe to check system health
-
-labios_observe(query="system/health")
-→ {"status": "healthy", "nats": "connected", "redis": "connected", ...}
-```
-
-## MCP Tools Reference
-
-### `labios_observe`
-
-Query runtime state without side effects.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query` | string | yes | Observation target |
-
-Supported queries:
-
-| Query | Returns |
-|-------|---------|
-| `system/health` | NATS and Redis connection status, worker count |
-| `queue/depth` | Labels waiting in the dispatch queue |
-| `workers/scores` | Current scores for all registered workers |
-| `channels/list` | Active channel names and subscriber counts |
-| `workspaces/list` | Active workspace names and key counts |
-| `config/current` | Current runtime configuration |
-
-Example:
 ```json
-labios_observe(query="workers/scores")
-→ {
-    "workers": [
-        {"id": "worker-1", "speed": 5, "energy": 1, "score": 0.82},
-        {"id": "worker-2", "speed": 3, "energy": 3, "score": 0.65},
-        {"id": "worker-3", "speed": 1, "energy": 5, "score": 0.41}
-    ]
-  }
+{
+  "ok": false,
+  "status": "timeout",
+  "label_id": 123,
+  "error": {
+    "kind": "timeout",
+    "category": "TIMEOUT",
+    "message": "wait deadline elapsed; operation remains active",
+    "retryable": true
+  },
+  "completion": {"state": "pending", "lifecycle": "scheduled"}
+}
 ```
+
+Stable `status` values distinguish:
+
+| Status | Meaning |
+|---|---|
+| `malformed_request` | MCP JSON is missing, ill-typed, out of range, or names an unsupported transform. No label is submitted. |
+| `admission_failure` | Label I/O normalization/validation rejected the program. `error.category` is the stable IR category where available. |
+| `parked` | The label is admitted but nonterminal; park reason/retry data is in `completion`. |
+| `timeout` | MCP wait elapsed. The owning operation and label remain active. |
+| `cancelled` | `cancel_on_timeout` won before execution; category is `CANCELED`. |
+| `cancellation` | Execution won the race; category is `CANCELLATION_TOO_LATE`. |
+| `execution_failure` | A registered stage, backend, completion protocol, or frontend execution failed. |
+| `completion_unknown` | The completion ID is unknown or its retained record expired. |
+| `unsupported_feature` | The advertised placeholder is intentionally not implemented, currently Prompt-14 knowledge. |
+
+Timeout never implies cancellation. `cancel_on_timeout` calls the same owning
+Python `Operation.cancel()` after a timeout; MCP does not recreate pending state.
+A too-late outcome does not claim rollback.
+
+## Tools
 
 ### `labios_store`
 
-Store data in workspace memory with scope-based organization.
+Writes exact bytes to an external backend through a typed core Write label.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `key` | string | yes | Storage key (e.g., `model/weights`, `cache/embeddings`) |
-| `value` | string | yes | Data to store |
-| `scope` | string | no | Memory scope: `session`, `project`, `user`, `team` (default: `session`) |
-| `metadata` | object | no | Additional metadata to attach |
-| `ttl_seconds` | integer | no | Time-to-live in seconds (0 = permanent) |
+| Field | Type | Required | Meaning |
+|---|---|---:|---|
+| `destination` | URI string | yes | External backend destination, for example `file:///agent/out.bin` or `sqlite:///agent/item`. |
+| `data` | string | yes | UTF-8 text or base64 text. |
+| `encoding` | `utf-8` / `base64` | no | Input encoding; default `utf-8`. |
+| `intent` | enum | no | Sealed Label I/O intent; default `none`. |
+| `priority` | 0..255 | no | Sealed scheduling preference. |
+| `ttl_seconds` | integer | no | Checked latest-start TTL; default 0. |
+| `timeout_ms` | integer | no | Wait only; default 30000. |
+| `cancel_on_timeout` | boolean | no | Attempt public cancellation after timeout; default false. |
 
-Scopes control data visibility and persistence:
-
-| Scope | Lifetime | Visibility |
-|-------|----------|------------|
-| `session` | Current agent session | This agent only |
-| `project` | Project duration | All agents in project |
-| `user` | Indefinite | All of this user's agents |
-| `team` | Indefinite | All team members' agents |
-
-Example:
 ```json
-labios_store(
-    key="analysis/findings",
-    value="The dispatcher batches labels every 50ms before shuffling...",
-    scope="project/labios",
-    metadata={"source": "code_review", "confidence": 0.95}
-)
+{
+  "destination": "file:///agent/exact.bin",
+  "data": "AEFC/w==",
+  "encoding": "base64",
+  "intent": "tool_output",
+  "priority": 200
+}
 ```
 
 ### `labios_retrieve`
 
-Retrieve data from workspace memory. Searches scopes in priority order:
-session, project, user, team.
+Reads exact public bytes through a typed core Read label.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `key` | string | yes | Storage key to retrieve |
-| `scope` | string | no | Specific scope to search (default: searches all) |
-| `version` | integer | no | Specific version (default: latest) |
+| Field | Type | Required | Meaning |
+|---|---|---:|---|
+| `source` | URI string | yes | External backend source. |
+| `size` | integer | no | Requested byte count; 0 asks a supporting backend for the whole value. |
+| `encoding` | `base64` / `utf-8` | no | Output representation; default `base64`. |
+| common fields | | no | `intent`, `priority`, `ttl_seconds`, `timeout_ms`, `cancel_on_timeout`. |
 
-Example:
-```json
-labios_retrieve(key="analysis/findings")
-→ {
-    "key": "analysis/findings",
-    "value": "The dispatcher batches labels every 50ms before shuffling...",
-    "scope": "project/labios",
-    "version": 1,
-    "metadata": {"source": "code_review", "confidence": 0.95}
-  }
-```
+Returned `data` is base64 by default, so arbitrary bytes round-trip without
+replacement decoding.
 
 ### `labios_process`
 
-Process files through pipelines at the storage layer. Data flows through
-pipeline stages without loading raw content into the agent context.
+Executes one structured bytes-to-bytes pipeline from a typed source to a typed
+destination on one worker. `source`, `destination`, and a nonempty `pipeline`
+are required. Each stage is an object:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `source` | string | yes | Source path or URI |
-| `pipeline` | array | yes | Ordered list of pipeline operations |
-| `output_format` | string | no | Output format: `text`, `json`, `summary` (default: `text`) |
-
-Available pipeline operations:
-
-| Operation | Description | Example |
-|-----------|-------------|---------|
-| `grep:PATTERN` | Filter lines matching pattern | `grep:TODO` |
-| `head:N` | Take first N lines | `head:20` |
-| `tail:N` | Take last N lines | `tail:10` |
-| `count` | Count lines | `count` |
-| `wc` | Word count | `wc` |
-| `sort` | Sort lines | `sort` |
-| `uniq` | Remove duplicate lines | `uniq` |
-| `filter:FIELD:VALUE` | Filter structured data by field | `filter:status:error` |
-| `sample:N` | Random sample of N lines | `sample:5` |
-
-Example:
 ```json
-labios_process(
-    source="/data/logs/app.log",
-    pipeline=["grep:ERROR", "tail:50", "count"]
-)
-→ {"result": "17", "stages_executed": 3}
+{
+  "source": "file:///agent/input.bin",
+  "destination": "sqlite:///agent/result",
+  "pipeline": [
+    {"operation": "builtin://identity"},
+    {"operation": "builtin://truncate", "args": "16", "input_stage": 0}
+  ],
+  "intent": "intermediate",
+  "priority": 175
+}
 ```
+
+Registered operations are `identity`, `compress_rle`, `decompress_rle`,
+`filter_bytes`, `sum_uint64`, `sort_uint64`, `sample`, `truncate`,
+`deduplicate`, `median_uint64`, and `format_convert` in the `builtin://`
+namespace. Stage arguments and graph indices remain structured fields.
+Unregistered names, legacy `grep:TODO` strings, shell commands, globs, and
+arbitrary `repo://` operations are rejected before submission. Pipeline stages
+remain single-worker; distributed stage placement is not implemented.
+
+### `labios_observe`
+
+Uses public Observe or inspection APIs. Supported queries are:
+
+- `system/health`
+- `queue/depth`
+- `workers/scores`
+- `workers/count`
+- `channels/list`
+- `workspaces/list`
+- `config/current`
+- `data/location?file=...`
+- `label/status` with `label_id`
+- `label/inspect` with `label_id`
+
+`label/inspect` returns IR/operation versions, typed source/destination,
+structured pipeline, sealed intent/priority/TTL, and placement history. Worker
+score/count and health come from Observe labels rather than direct manager,
+Redis, or NATS access. The shared `labios.parse_worker_registry_message` decoder
+is used only when a registry snapshot is supplied by a supported inspection
+surface; it accepts verified `LWR2` protocol-v2 snapshots only and has no
+CSV/text fallback.
 
 ### `labios_knowledge`
 
-Query stored knowledge across all memory tiers. Returns a summary of stored
-data organized by scope and prefix.
+This name remains discoverable for migration clarity, but returns
+`unsupported_feature/PENDING_PROMPT_14`. No direct workspace-key fallback is
+retained. Cross-process workspace/knowledge behavior belongs to Prompt 14 after
+coordination work; Prompt 11 does not implement it.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `query` | string | no | Prefix filter (default: list everything) |
-| `scope` | string | no | Limit to specific scope |
+## Compatibility breaks from the prototype
 
-Example:
-```json
-labios_knowledge(query="analysis/")
-→ {
-    "entries": [
-        {"key": "analysis/findings", "scope": "project/labios", "size": 1234},
-        {"key": "analysis/metrics", "scope": "session", "size": 567}
-    ],
-    "total_entries": 2,
-    "total_size": 1801
-  }
-```
+Prompt 11 intentionally removes runtime-bypass behavior:
 
-## How It Works
+1. `labios_store` no longer accepts `key`, `scope`, `metadata`, or workspace
+   TTL semantics. Use `destination`, exact `data`, and Label I/O fields.
+2. `labios_retrieve` no longer searches workspace tiers by `key`/`scope` or
+   returns workspace versions. Use `source` and optional byte `size`.
+3. `labios_process` now requires an explicit `destination`; `pipeline` entries
+   are structured registered stages, not line-oriented strings. Globs and the
+   Python-side grep/head/tail/count/wc/sort/uniq/filter/sample implementation
+   were removed.
+4. Process output is written to the declared backend and is retrieved with
+   `labios_retrieve`; it is not read from a mounted worker path or returned as
+   an in-process line summary.
+5. Worker registry CSV, legacy-row acceptance, and text fallback are removed.
+6. Observation results now use the stable response envelope rather than ad hoc
+   `{"error": ...}` strings.
+7. `labios_knowledge` is a stable pending response until Prompt 14; old direct
+   DragonflyDB workspace scans are gone.
 
-The MCP server runs as a Python process inside a Docker container alongside the
-LABIOS stack. It connects to the same DragonflyDB instance used by the C++
-runtime, reading workspace data via the same key patterns:
+There is no hidden direct-store compatibility mode. Existing users must migrate
+to external backend URIs and structured stages.
 
-```
-labios:ws:{scope}:{key}           → data
-labios:ws:{scope}:{key}:vN        → versioned data
-labios:ws:{scope}:{key}:metadata  → JSON metadata
-```
+## Verification
 
-For `labios_observe`, the server queries NATS and DragonflyDB directly to
-report system state. For `labios_process`, it reads files from the worker's
-data volume (mounted read-only) and applies pipeline operations in Python.
-
-## Architecture
-
-```
-Claude Code / Codex CLI
-        │
-        │ MCP stdio protocol
-        │
-        ▼
-┌──────────────────┐
-│  connect.sh      │
-│  docker exec     │
-└───────┬──────────┘
-        │
-        ▼
-┌──────────────────┐     ┌──────────┐     ┌──────┐
-│  labios_mcp      │────▶│DragonflyDB│    │ NATS  │
-│  (Python MCP)    │     │  :6379   │     │:4222  │
-│                  │────▶│          │     │       │
-└──────────────────┘     └──────────┘     └──────┘
-        │
-        ▼
-┌──────────────────┐
-│  Worker data     │
-│  volume (ro)     │
-└──────────────────┘
-```
-
-## Troubleshooting
-
-### "Connection refused" on startup
-
-The runtime must be running before connecting. Start it with `docker compose up
--d` and wait for health checks to pass.
-
-### MCP tools not appearing
-
-Verify the path in your configuration is absolute and points to the correct
-`connect.sh`:
+Hermetic MCP tests (after building the SDK):
 
 ```bash
-# Test the connection script manually
-/path/to/labios/mcp/connect.sh
-# Should start the MCP server and wait for stdio input
+cmake --preset dev
+cmake --build build/dev -j"$(nproc)" --target _labios
+PYTHONPATH="$PWD/build/dev/python:$PWD/mcp" \
+  python3 -m pytest mcp/tests -m "not live" -v
 ```
 
-### Redis connection errors in tool output
-
-The MCP server connects to DragonflyDB lazily on first tool use. If DragonflyDB
-is still starting, the first call may fail. Retry after a few seconds.
-
-### Stale data after restart
-
-`docker compose down -v` removes all data volumes. If you want to preserve
-workspace data across restarts, use `docker compose down` (without `-v`).
-
-## Running MCP Server Tests
+Packaged image import and live Compose tests:
 
 ```bash
-cd mcp
-python -m pytest tests/ -v
+docker compose build mcp
+docker compose up -d --wait
+docker compose exec -T mcp python -c \
+  'import flatbuffers, labios, labios_mcp; print(labios.__file__)'
+docker compose exec -T -e LABIOS_MCP_LIVE=1 mcp \
+  python -m pytest tests -m live -v
+docker compose exec -T mcp python /opt/labios/examples/mcp/golden.py
 ```
 
-Tests mock the Redis connection and verify tool input/output contracts.
+The golden example speaks MCP over stdio, verifies exact binary store/retrieve
+and source→identity→destination bytes, inspects the versioned typed label and
+placement history, and checks public health/worker/config observations.

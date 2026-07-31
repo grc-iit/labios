@@ -213,7 +213,10 @@ The package also versions FlatBuffers 24.3.25-generated registry-v2 bindings.
 Use `labios.parse_worker_registry_message(bytes, expected_kind=...)`. It requires
 the `LWR2` identifier, protocol version 2, and consistent payload kind/union,
 and rejects malformed, truncated, duplicate, or version-skewed input. There is
-no CSV fallback. MCP behavior does not consume this parser until Prompt 11.
+no CSV fallback. The MCP frontend shares this parser whenever a supported
+inspection surface supplies a registry snapshot; normal worker score/count
+queries use public Observe labels and do not request the manager's private NATS
+subject.
 
 ## C golden path
 
