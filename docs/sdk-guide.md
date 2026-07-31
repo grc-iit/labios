@@ -293,12 +293,16 @@ lost cancellation race is `LABIOS_ERR_TOO_LATE`, unknown/expired completion is
 - Corrected behavior: unknown IDs are lookup errors, `wait_any` is deterministic,
   `wait_all` preserves pending views on timeout, and cancellation exposes the
   race outcome.
-- Python breaking changes in Prompt 10: `PendingIO` is now an alias of the owning
-  `Operation`; code relying on its former empty shell or undocumented mutable
-  state must migrate. Timed waits return `WaitResult` instead of `None`; native
-  failures use the documented exception hierarchy; bytes reads are repeatable;
-  timeout arguments are integer milliseconds; and label resources use typed
-  `ResourceRef`/`LabelParams` objects.
+- Python compatibility: existing `Client.wait`, `wait_read`, channel publish,
+  workspace, sync/async file, and URI calls remain. `PendingIO` now aliases
+  `Operation`, so code depending on the exact `_labios.PendingIO` runtime type
+  name or type identity breaks (ordinary opaque handles remain compatible).
+  Native failures now use the documented exception subclasses rather than an
+  undifferentiated `RuntimeError`; handlers matching only `RuntimeError` must
+  migrate to `LabiosError`. New timed APIs take integer milliseconds and return
+  `WaitResult`; they do not replace an older timed Python signature. Repeatable
+  reads correct the former destructive behavior and may retain result bytes
+  longer than code relying on one-shot retrieval expected.
 - Registry compatibility break: the obsolete C++ offline CSV codec is removed,
   and Python accepts only verified `LWR2` FlatBuffers v2 messages. Mixed CSV/v2
   operation and text fallback are unsupported.

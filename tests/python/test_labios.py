@@ -9,6 +9,7 @@ def test_imports_and_owning_operation_alias():
     assert labios.Client is not None
     assert hasattr(labios.Client, "publish_to_channel")
     assert hasattr(labios.Client, "workspace_put")
+    assert hasattr(labios.Client, "wait_read")
     assert labios.parse_worker_registry_message is not None
 
 

@@ -532,6 +532,46 @@ PYBIND11_MODULE(_labios, module) {
             py::gil_scoped_release release;
             return client.operation(ids, kind);
         }, py::arg("label_ids"), py::arg("kind") = labios::OperationKind::Generic)
+        .def("test", [](labios::Client& client, const labios::Operation& operation) {
+            py::gil_scoped_release release;
+            return client.test(operation);
+        }, py::arg("operation"))
+        .def("wait", [](labios::Client& client, const labios::Operation& operation) {
+            py::gil_scoped_release release;
+            client.wait(operation);
+        }, py::arg("operation"))
+        .def("wait_for", [](labios::Client& client, const labios::Operation& operation,
+                            uint64_t timeout_ms) {
+            py::gil_scoped_release release;
+            return client.wait_for(operation, milliseconds(timeout_ms));
+        }, py::arg("operation"), py::arg("timeout_ms"))
+        .def("wait_any", [](labios::Client& client, const std::vector<uint64_t>& ids,
+                            uint64_t timeout_ms) {
+            py::gil_scoped_release release;
+            return client.wait_any(ids, milliseconds(timeout_ms));
+        }, py::arg("label_ids"), py::arg("timeout_ms") = 30000)
+        .def("wait_all", [](labios::Client& client, const std::vector<uint64_t>& ids,
+                            uint64_t timeout_ms) {
+            py::gil_scoped_release release;
+            return client.wait_all(ids, milliseconds(timeout_ms));
+        }, py::arg("label_ids"), py::arg("timeout_ms") = 30000)
+        .def("cancel", [](labios::Client& client, uint64_t label_id) {
+            py::gil_scoped_release release;
+            return client.cancel(label_id);
+        }, py::arg("label_id"))
+        .def("cancel_label", [](labios::Client& client, uint64_t label_id) {
+            py::gil_scoped_release release;
+            return client.cancel_label(label_id);
+        }, py::arg("label_id"))
+        .def("wait_read", [](labios::Client& client,
+                             const labios::Operation& operation) {
+            std::vector<std::byte> result;
+            {
+                py::gil_scoped_release release;
+                result = client.wait_read(operation);
+            }
+            return python_bytes(result);
+        }, py::arg("operation"))
         .def("create_label", [](labios::Client& client, const labios::LabelParams& params) {
             py::gil_scoped_release release;
             return client.create_label(params);
