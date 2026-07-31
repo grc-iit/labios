@@ -1,388 +1,237 @@
-# LABIOS SDK Guide
+# LABIOS Native SDK Guide
 
-API reference for the LABIOS client libraries. The C++ client is the most
-complete surface. Operations publish a label through NATS to the dispatcher and
-wait for the worker's reply.
+The C++ and C APIs express one Label I/O lifecycle: submit a sealed I/O program,
+retain its owning operation handle, inspect or wait for catalog-backed completion,
+and explicitly release caller-owned C results. Clients never contact workers
+directly.
 
-> **Binding coverage:** The C API exposes only synchronous and asynchronous I/O.
-> The Python bindings expose a subset of the C++ client: sync/async I/O, URI I/O
-> (`write_to`/`read_from`), `publish_to_channel`, `workspace_put`/`get`/`del`/
-> `grant`, and `observe`. Label-level `create_label`/`publish`,
-> `write_with_intent`, `execute_pipeline`, channel/workspace *creation*, and
-> `set_config` are **C++-only today**. Python examples below that use those
-> methods describe the intended API and are not yet callable from Python. See
-> `.planning/LABIOS-2.1.md` (current engineering baseline).
+Python is outside this native API coherence pass and remains a subset described
+by the engineering baseline in `.planning/LABIOS-2.1.md`.
 
-## API Layers
+## C++ golden path
 
-The client exposes eight layers, ordered from highest to lowest abstraction:
-
-| Layer | Purpose | C++ | Python | C |
-|-------|---------|-----|--------|---|
-| Synchronous I/O | Read/write with blocking wait | `write()` / `read()` | `write()` / `read()` | `labios_write()` / `labios_read()` |
-| Asynchronous I/O | Non-blocking with explicit wait | `async_write()` / `async_read()` / `wait()` | `async_write()` / `async_read()` / `wait()` | `labios_async_write()` / `labios_async_read()` / `labios_wait()` |
-| Label-level | Build and publish raw labels | `create_label()` / `publish()` | not yet bound | -- |
-| URI-based | Route by URI scheme | `write_to()` / `read_from()` | `write_to()` / `read_from()` | -- |
-| Intent-driven | Semantic intent on labels | `write_with_intent()` / `execute_pipeline()` | not yet bound | -- |
-| Channels | Streaming pub/sub | `create_channel()` / `publish_to_channel()` / `subscribe_to_channel()` | `publish_to_channel()` only | -- |
-| Workspaces | Persistent shared state with ACL | `create_workspace()` / `workspace_put()` / `workspace_get()` | `workspace_put/get/del/grant` (no create) | -- |
-| Observability | Query runtime state | `observe()` | `observe()` | -- |
-
-## Connecting
-
-### C++
+The complete, compile-tested source is
+[`examples/native/cpp_golden.cpp`](../examples/native/cpp_golden.cpp). It covers
+label-level submission, URI conveniences, intent and priority, pipelines,
+timeout and completion, cancellation, categorized errors, and observability.
 
 ```cpp
 #include <labios/client.h>
 #include <labios/config.h>
 
-// From TOML config file
-auto cfg = labios::load_config("conf/labios.toml");
-auto client = labios::connect(cfg);
+#include <chrono>
+#include <cstddef>
+#include <iostream>
+#include <vector>
 
-// Or set connection details directly
-labios::Config cfg;
-cfg.nats_url = "nats://localhost:4222";
-cfg.redis_host = "localhost";
-cfg.redis_port = 6379;
-auto client = labios::connect(cfg);
+int main() {
+    try {
+        auto client = labios::connect(labios::load_config("conf/labios.toml"));
+        std::vector<std::byte> data(4096, std::byte{0x2a});
+
+        labios::LabelParams params{};
+        params.type = labios::LabelType::Write;
+        params.dest_uri = "file:///examples/label.bin";
+        params.intent = labios::Intent::Checkpoint;
+        params.priority = 200;
+        auto operation = client.publish(client.create_label(params), data);
+
+        auto result = operation.wait_for(std::chrono::milliseconds(1));
+        if (result.state == labios::CompletionState::Timeout) {
+            // Timeout did not cancel or invalidate the operation.
+            result = operation.wait_all(std::chrono::seconds(30));
+        }
+        if (result.state != labios::CompletionState::Complete) {
+            const auto cancellation = operation.cancel();
+            std::cerr << "cancel outcomes=" << cancellation.size() << '\n';
+        }
+
+        client.write_to("file:///examples/uri.bin", data);
+        auto bytes = client.read_from("file:///examples/uri.bin", data.size());
+
+        labios::sds::Pipeline pipeline;
+        pipeline.stages.push_back({"builtin://identity", "", -1, -1});
+        auto transformed = client.execute_pipeline(
+            "file:///examples/uri.bin",
+            "sqlite:///examples/pipeline-result",
+            pipeline, labios::Intent::Intermediate);
+        client.wait(transformed);
+
+        std::cout << client.observe("system/health") << '\n';
+        return bytes == data ? 0 : 1;
+    } catch (const labios::CompletionError& error) {
+        std::cerr << "label " << error.label_id() << ": " << error.what() << '\n';
+        return 1;
+    }
+}
 ```
 
-### Python
+### Operation ownership and thread safety
 
-```python
-import labios
+`Operation` owns shared session state plus an immutable set of label IDs. Copies
+may be observed, waited, or cancelled concurrently. Destroying or moving the
+originating `Client` does not cancel the operation and does not invalidate its
+handles. The session closes after its final operation/channel/workspace handle
+is released.
 
-# From config file
-client = labios.connect("conf/labios.toml")
+`PendingIO` remains a compatibility spelling for `Operation`, but the former
+public mutable `pending` vector no longer exists. Use `label_ids()` and
+`label_id()`.
 
-# Direct connection
-client = labios.connect_to("nats://localhost:4222", "localhost", 6379)
+A retained label ID can reconstruct a catalog-backed handle after client
+restart:
+
+```text
+std::vector<uint64_t> ids{saved_label_id};
+auto operation = client.operation(ids, labios::OperationKind::Read);
+auto current = operation.test();
 ```
 
-### C
+### Completion semantics
+
+- `test(index)` is nonblocking and reports `Pending`, `Parked`, or a terminal
+  state for one operation member (`index` defaults to zero).
+- `wait_for()` and `wait_all()` return members in input order.
+- `wait_any()` selects earliest persisted terminal time, then lowest label ID.
+- `Timeout` is typed and nonterminal. Every handle remains reusable.
+- `cancel()` returns one `CancellationResult` per label: `Cancelled`, `TooLate`,
+  `Terminal`, or `Unknown`.
+- Cancellation prevents external I/O only when its catalog compare-and-set wins
+  before `Executing`. It does not promise rollback.
+- Completed read retrieval is repeatable within result retention; waiting does
+  not erase the completion or result bytes.
+
+Each `CompletionResult` also carries the catalog-authoritative `lifecycle`:
+`Submitted`, `Admitted`, `Queued`, `Parked`, `Shuffled`, `Scheduled`,
+`Executing`, `Completed`, `Failed`, `Cancelled`, or `Unknown`. `state` answers
+whether a wait is pending/terminal; `lifecycle` identifies the exact durable
+runtime phase. `Submitted` is only a provisional client record and has no
+recovery/completion guarantee until dispatcher admission. Some short
+transitions, such as `Admitted`, may not be observable between two client polls.
+
+Terminal failures expose the stable Label I/O category separately from detail in
+`CompletionResult::category` and `CompletionResult::error`.
+
+## URI and label-level unity
+
+`write`, `read`, `write_to`, `read_from`, `write_with_intent`, and
+`execute_pipeline` all construct and submit the same normalized Label I/O IR.
+URI strings are convenience ingress syntax; typed `ResourceRef` values are the
+canonical representation after normalization.
+
+Implemented external worker attachments are `file://`, `sqlite://`, and optional
+user-Redis `kv://`. Internal DragonflyDB is warehouse/catalog plumbing, not a
+`kv://` backend.
+
+## Owning channel and workspace handles
+
+```text
+auto channel = client.create_channel("progress", 300);
+const auto sequence = channel.publish(data);
+const auto subscription = channel.subscribe(
+    [](const labios::ChannelMessage& message) {
+        std::cout << message.sequence << '\n';
+    });
+channel.unsubscribe(subscription);
+
+auto workspace = client.create_workspace("project", 300);
+workspace.put("artifact", data);
+auto artifact = workspace.get("artifact");
+workspace.grant(other_app_id);
+```
+
+These handles own/share the state needed to remain safe after `Client`
+destruction. Calls on empty handles throw `ClientError`; a destroyed workspace
+throws a stable failure and a destroyed channel rejects further publication.
+
+**Current limitation:** channel registries and sequence allocation, plus
+workspace registries, owner identity, and ACLs, remain process-local. Their data
+uses DragonflyDB, but this release does not claim cross-process coordination.
+
+## Process-local configuration
+
+`Client::set_config()` changes only the current client process's `Config` object.
+It does not reconfigure dispatchers, managers, workers, or other clients.
+
+```text
+const bool changed = client.set_config("reply_timeout_ms", "45000");
+```
+
+## C golden path
+
+The complete compile-tested source is
+[`examples/native/c_golden.c`](../examples/native/c_golden.c).
 
 ```c
 #include <labios/labios.h>
+#include <stddef.h>
 
-labios_client_t client;
-int rc = labios_connect("nats://localhost:4222", "localhost", 6379, &client);
-if (rc != LABIOS_OK) { /* handle error */ }
+int main(void) {
+    labios_client_t client = NULL;
+    labios_status_t status = NULL;
+    const char data[] = "Label I/O";
 
-// Or from config file
-rc = labios_connect_config("conf/labios.toml", &client);
+    labios_error_t code = labios_connect(
+        "nats://localhost:4222", "localhost", 6379, &client);
+    if (code != LABIOS_OK) return 1;
 
-// Always disconnect when done
-labios_disconnect(client);
+    code = labios_async_write(client, "/examples/c.bin",
+                              data, sizeof(data), 0, &status);
+    if (code != LABIOS_OK) return 1;
+
+    /* The status owns the required session lifetime. */
+    labios_disconnect_ref(&client);
+
+    labios_completion_list_t results = {0};
+    code = labios_wait_for(status, 1, &results);
+    if (code == LABIOS_ERR_TIMEOUT) {
+        labios_completion_list_release(&results);
+        code = labios_wait_for(status, 30000, &results);
+    }
+    labios_completion_list_release(&results);
+    labios_status_release(&status);
+    return code == LABIOS_OK ? 0 : 1;
+}
 ```
 
-## Synchronous I/O
-
-Blocking write and read. The call returns only after the worker confirms
-execution.
-
-### C++
-
-```cpp
-// Write 1KB at offset 0
-std::vector<std::byte> data(1024, std::byte{0x42});
-client.write("/data/output.bin", data, 0);
-
-// Read 1KB from offset 0
-auto result = client.read("/data/output.bin", 0, 1024);
-// result is std::vector<std::byte>
-```
-
-### Python
-
-```python
-client.write("/data/output.bin", b"\x42" * 1024, 0)
-data = client.read("/data/output.bin", 0, 1024)
-# data is bytes
-```
-
-### C
-
-```c
-char data[1024];
-memset(data, 0x42, sizeof(data));
-labios_write(client, "/data/output.bin", data, sizeof(data), 0);
-
-char buf[1024];
-size_t bytes_read;
-labios_read(client, "/data/output.bin", 0, 1024, buf, sizeof(buf), &bytes_read);
-```
-
-## Asynchronous I/O
-
-Non-blocking publish. The client returns immediately with a handle. Call `wait()`
-to collect the result.
-
-### C++
-
-```cpp
-auto pending = client.async_write("/data/big.bin", data, 0);
-// ... do other work ...
-client.wait(pending);
-
-auto rpending = client.async_read("/data/big.bin", 0, size);
-auto result = client.wait_read(rpending);
-```
-
-### Python
-
-```python
-pending = client.async_write("/data/big.bin", data, 0)
-# ... do other work ...
-client.wait(pending)
-
-rpending = client.async_read("/data/big.bin", 0, size)
-result = client.wait_read(rpending)
-```
-
-## Label-level API
-
-For maximum control, build labels directly. This exposes the full label
-structure (see `include/labios/label.h`).
-
-```cpp
-auto label = client.create_label(labios::LabelType::Write,
-                                 "/data/custom.bin", data, 0);
-// Modify label fields before publishing
-label.intent = labios::Intent::Checkpoint;
-label.priority = 10;
-label.isolation = labios::Isolation::Relaxed;
-
-client.publish(label);
-```
-
-```python
-label = client.create_label(labios.LabelType.Write,
-                            "/data/custom.bin", data, 0)
-label.intent = labios.Intent.Checkpoint
-client.publish(label)
-```
-
-## URI-based I/O
-
-Route labels to specific backends by URI scheme. The URI determines which
-`BackendStore` handles the operation.
-
-```cpp
-// Write to the local filesystem
-client.write_to("file:///data/output.bin", data, 0);
-
-// Write to a KV store
-client.write_to("kv://session/model-weights", data, 0);
-
-// Write to SQLite
-client.write_to("sqlite:///data/results.db?key=run-42", data, 0);
-
-// Async variant
-auto pending = client.async_write_to("kv://cache/embeddings", data, 0);
-client.wait(pending);
-```
-
-```python
-client.write_to("file:///data/output.bin", data, 0)
-client.write_to("kv://session/model-weights", data, 0)
-result = client.read_from("kv://session/model-weights", 0, 0)
-```
-
-See [backends.md](backends.md#uri-scheme-reference) for the authoritative URI
-scheme support table. In this branch, workers always register `file://` and
-`sqlite://`; `kv://` is registered when `LABIOS_KV_HOST` and `LABIOS_KV_PORT`
-point at an external Redis-compatible store.
-
-## Intent-driven API
-
-Attach semantic intent to labels. The scheduler uses intent to adjust worker
-scoring weights (spec S7.4).
-
-```cpp
-client.write_with_intent("/data/checkpoint.bin", data, 0,
-                         labios::Intent::Checkpoint);
-
-// Execute a pipeline at the storage layer
-client.execute_pipeline("file:///data/logs/",
-                        {"grep:ERROR", "count", "head:100"});
-```
-
-```python
-client.write_with_intent("/data/checkpoint.bin", data, 0,
-                         labios.Intent.Checkpoint)
-
-client.execute_pipeline("file:///data/logs/",
-                        ["grep:ERROR", "count", "head:100"])
-```
-
-Available intents: `None`, `Checkpoint`, `Cache`, `ToolOutput`, `FinalResult`,
-`Intermediate`, `SharedState`.
-
-## Channels
-
-Streaming coordination for multi-agent workflows. Channels provide ordered,
-append-only message streams with backpressure, TTL, and subscriber callbacks.
-
-```cpp
-// Create a channel with TTL and max pending messages
-client.create_channel("progress", /*ttl_seconds=*/300, /*max_pending=*/1000);
-
-// Publish a message (returns monotonic sequence number)
-uint64_t seq = client.publish_to_channel("progress", data);
-
-// Subscribe with a callback
-client.subscribe_to_channel("progress",
-    [](const labios::ChannelMessage& msg) {
-        std::cout << "seq=" << msg.sequence
-                  << " size=" << msg.data.size() << "\n";
-    });
-
-// Destroy when done (auto-destroys if TTL expires)
-client.destroy_channel("progress");
-```
-
-```python
-client.create_channel("progress", ttl_seconds=300, max_pending=1000)
-seq = client.publish_to_channel("progress", data)
-client.subscribe_to_channel("progress", lambda msg: print(msg))
-```
-
-## Workspaces
-
-Persistent shared state for multi-agent collaboration. Workspaces provide
-per-key versioning, access control lists, and prefix-based listing.
-
-```cpp
-// Create a workspace with creator identity
-client.create_workspace("project-data", "agent-1");
-
-// Grant access to another agent
-client.workspace_grant("project-data", "agent-2");
-
-// Put/get/delete data
-client.workspace_put("project-data", "model/v1", model_bytes);
-auto data = client.workspace_get("project-data", "model/v1");
-auto v2 = client.workspace_get("project-data", "model/v1", /*version=*/2);
-
-// List keys by prefix
-auto keys = client.workspace_list("project-data", "model/");
-
-// Delete a key
-client.workspace_del("project-data", "model/v1");
-```
-
-```python
-client.create_workspace("project-data", "agent-1")
-client.workspace_grant("project-data", "agent-2")
-client.workspace_put("project-data", "model/v1", model_bytes)
-data = client.workspace_get("project-data", "model/v1")
-```
-
-## Observability
-
-Query the runtime state without side effects. The `observe()` method creates
-an OBSERVE-type label that the dispatcher handles inline (no shuffling or
-scheduling).
-
-`Client::observe()` adds the `observe://` scheme; pass only a registered route:
-
-```cpp
-auto health = client.observe("system/health");
-auto depth = client.observe("queue/depth");
-auto scores = client.observe("workers/scores");
-auto count = client.observe("workers/count");
-auto channels = client.observe("channels/list");
-auto workspaces = client.observe("workspaces/list");
-auto config = client.observe("config/current");
-auto loc = client.observe("data/location?path=/data/output.bin");
-```
-
-```python
-health = client.observe("system/health")
-scores = client.observe("workers/scores")
-```
-
-Returns a JSON string with the query results.
-
-## Local Client Configuration
-
-`Client::set_config()` changes only the current client's process-local `Config`.
-It does not reconfigure the dispatcher, workers, manager, or other clients.
-
-```cpp
-client.set_config("batch_size", "200");
-client.set_config("scheduler_policy", "constraint");
-client.set_config("aggregation_enabled", "false");
-client.set_config("reply_timeout_ms", "10000");
-client.set_config("cache_flush_interval_ms", "2000");
-client.set_config("cache_read_policy", "always");
-
-auto cfg = client.get_config();
-```
-
-```python
-client.set_config("batch_size", "200")
-client.set_config("scheduler_policy", "constraint")
-```
-
-## Error Handling
-
-### C++ Exceptions
-
-The C++ client throws `std::runtime_error` on connection failures and I/O
-timeouts. Wrap calls in try/catch at the application boundary.
-
-### C Error Codes
-
-| Code | Meaning |
-|------|---------|
-| `LABIOS_OK` | Success |
-| `LABIOS_ERR_CONNECT` | Failed to connect to NATS or DragonflyDB |
-| `LABIOS_ERR_TIMEOUT` | Reply did not arrive within the configured timeout |
-| `LABIOS_ERR_IO` | Worker reported an I/O error |
-| `LABIOS_ERR_INVALID` | Invalid arguments (null pointer, zero size) |
-
-### Python
-
-Python raises `RuntimeError` for connection failures and `TimeoutError` for
-reply timeouts. The native module prints a helpful message if the shared library
-is not built.
-
-## Enums
-
-### LabelType
-
-`Read`, `Write`, `Delete`, `Flush`, `Observe`, `Composite`
-
-### Intent
-
-`None`, `Checkpoint`, `Cache`, `ToolOutput`, `FinalResult`, `Intermediate`,
-`SharedState`
-
-### Isolation
-
-`Strict`, `Session`, `Relaxed`
-
-### Durability
-
-`None`, `WriteThrough`, `Replicate`
-
-## Building the Python Module
-
-The Python SDK builds automatically with the CMake project:
-
-```bash
-cmake --preset dev
-cmake --build build/dev -j$(nproc)
-```
-
-The shared module is placed at `build/dev/python/_labios.cpython-*.so`. Add
-the directory to `PYTHONPATH` or install it:
-
-```bash
-export PYTHONPATH=/path/to/labios/build/dev/python:$PYTHONPATH
-python -c "import labios; print(labios.connect_to.__doc__)"
-```
-
-Inside the Docker test container, the module is pre-installed.
+### C ownership rules
+
+- Client and status handles are opaque and registry-validated.
+- Status handles own the operation session and remain usable after client
+  release.
+- `labios_status_release(&status)` and `labios_disconnect_ref(&client)` clear the
+  caller variable and are idempotent.
+- Copied stale handles are rejected without dereferencing freed memory.
+- A concurrent wait obtains shared ownership before release removes the public
+  token, so in-flight calls finish safely.
+- `labios_completion_result_t` (including `labios_lifecycle_state_t`),
+  `labios_completion_list_t`,
+  `labios_cancel_list_t`, `labios_buffer_t`, and `labios_error_info_t` are
+  caller-owned after successful return. Release each with its named release
+  function. Release functions are idempotent for zeroed/already-released values.
+- `labios_wait_read` copies into caller storage and returns the required size in
+  `bytes_read`; `LABIOS_ERR_BUFFER_TOO_SMALL` means no truncation occurred.
+  `labios_wait_read_alloc` instead returns a LABIOS-allocated buffer released by
+  `labios_buffer_release`.
+- `labios_last_error` copies the current thread's stable category and message
+  into caller-owned storage.
+- `labios_test` inspects member zero; `labios_test_label` selects a member by
+  index for split operations.
+- `labios_wait_all` is the explicit ordered-all wait; `labios_wait_for` is its
+  compatibility spelling. `labios_wait_any` applies the same deterministic
+  terminal-time/label-ID rule as C++.
+
+C timeout is `LABIOS_ERR_TIMEOUT`, cancellation is `LABIOS_ERR_CANCELLED`, a
+lost cancellation race is `LABIOS_ERR_TOO_LATE`, unknown/expired completion is
+`LABIOS_ERR_NOT_FOUND`, and stale handles return `LABIOS_ERR_RELEASED`.
+
+## Compatibility decisions
+
+- Source-compatible: existing opaque uses of `PendingIO`, Client wait wrappers,
+  synchronous/async C calls, and existing C numeric error values.
+- Deprecated: the `PendingIO` name and boolean `Client::cancel(uint64_t)` wrapper.
+- Breaking: direct `PendingIO::pending` access; raw `Channel*`/`Workspace*`
+  returns; code that depended on destructive one-shot read retrieval.
+- Corrected behavior: unknown IDs are lookup errors, `wait_any` is deterministic,
+  `wait_all` preserves pending views on timeout, and cancellation exposes the
+  race outcome.

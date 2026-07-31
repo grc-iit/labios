@@ -88,7 +88,7 @@ workspace put/get/del/grant, and `observe`). Label-level `create_label`/`publish
 | Layer | C++ | Python | C |
 |-------|-----|--------|---|
 | Sync I/O | `write()` / `read()` | `write()` / `read()` | `labios_write()` / `labios_read()` |
-| Async I/O | `async_write()` / `wait()` | `async_write()` / `wait()` | `labios_async_write()` / `labios_wait()` |
+| Async I/O | owning `Operation`: `test()` / `wait_for()` / `cancel()` | `async_write()` / `wait()` | owning status: `labios_test()` / `labios_wait_for()` / `labios_cancel()` |
 | Label-level | `create_label()` / `publish()` | `create_label()` / `publish()` | |
 | URI-based | `write_to("kv://...")` | `write_to("kv://...")` | |
 | Intent-driven | `write_with_intent()` | `write_with_intent()` | |

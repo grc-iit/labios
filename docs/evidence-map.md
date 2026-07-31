@@ -1,7 +1,8 @@
 # LABIOS 2.1 evidence map
 
-This map records what each LABIOS 2.1 capability is evidenced by as of commit
-`6a68b4f`. It distinguishes implementation artifacts from tests and experiments.
+This map records what each LABIOS 2.1 capability is evidenced by through Prompt
+09's public native API coherence slice. It distinguishes implementation artifacts
+from tests and experiments.
 An implementation path is not, by itself, evidence that the path works end to
 end.
 
@@ -25,7 +26,7 @@ Evidence classes used below:
 | Versioned Label I/O and deterministic admission | `schemas/label.fbs`, `src/labios/label.cpp`, `src/labios/client.cpp` | `Serialized labels carry the current IR version`; `FlatBuffers rejects malformed label and completion buffers`; P03 normalization/admission cases in `tests/unit/label_test.cpp` | Malformed durable recovery records are isolated in live scenario 3/6 and `durable_catalog_test.cpp` | `Client::publish` performs preflight admission | Unit CI | No performance claim; complete sealed-origin enforcement remains unproven |
 | Typed resources and compatibility normalization | `ResourceRef` codec/normalizer in `label.cpp` | P03 URI, Pointer, conflict, resource-family, and round-trip tests | File, SQLite, and external-KV executable shapes are exercised by live/Compose tests | `write_to`, `read_from`, `execute_pipeline` | Unit plus Compose golden path for file/SQLite | Lossless executable support for every semantic ResourceRef family is unproven |
 | Durable label ingress and recovery | JetStream transport plus catalog admission/recovery in `transport/nats.cpp`, `catalog_manager.cpp`, dispatcher | Durable callback and malformed-input unit cases | `tests/live/ws2_ws3_correctness.sh` scenario 3 kills the dispatcher after durable queued admission; historical retained runs `20260715T160503Z-16d4f13-pass1` and `20260715T160847Z-16d4f13-pass2`; triage rerun on 2026-07-30 passed but its scratch artifact was not retained | Submission uses the C++ client | Compose CI checks persistence restart, but does not inject dispatcher loss | Catalog-loss recovery, multi-node recovery, and exactly-once execution are unproven |
-| Completion inspection, waiting, timeout, cancellation, and execution observations | `include/labios/label_manager.h`, `src/labios/label_manager.cpp`, append-only Completion fields, catalog CAS transitions | Client completion ordering, timeout, and state tests; Completion observation codec/derivation proves actual queued-to-start and start-to-terminal durations; `Cancellation and worker claim linearize at the catalog status` is correctly labeled smoke because it needs Redis | Live scenario 7 covers parked cancellation, a cancellation-winning Scheduled race, and an execution-winning TooLate race; the new observation fields have not yet been Compose-validated because Docker was unavailable | `test`, `wait_for`, `wait_any`, `wait_all`, and `cancel`; terminal C++ results expose executor, attempt, timestamps, queue delay, and service time | Hermetic completion cases in unit CI; races and observation live path are not CI-reachable | Latency/performance unproven |
+| Completion inspection, waiting, timeout, cancellation, and execution observations | Owning `Operation`, synchronized completion hints, catalog CAS transitions, append-only Completion fields, and C handle registry | Five operation lifetime/concurrency/reuse/read tests, C stale/double-release checks, documentation compile test, catalog-lifecycle projection test, and existing Completion observation derivation | Prompt 09's three live C lifetime cases cover client destruction, timeout reuse, and concurrent wait/cancel/release; prior live scenario 7 covers cancellation race outcomes | C++ `Operation::test/wait_for/wait_any/wait_all/cancel/read`; C `labios_test/labios_test_label/labios_wait_for/labios_wait_all/labios_wait_any/labios_cancel/labios_wait_read_alloc`; results expose catalog lifecycle, stable category, and executor observations | New hermetic cases are unit-CI reachable; live C lifetime and prior races are not CI-reachable | Latency/performance unproven |
 | Worker delivery deduplication | Stable completion record and explicit idempotent reclaim gate in worker/catalog | Catalog claim/cancel test requires Redis and is smoke, not hermetic | Live scenario 2 kills the worker after claim and before a direct staged core-write effect, then checks completion and unchanged mtime after replay | Label is submitted and waited through the C++ client; replay injection is harness-internal | Not CI-reachable | Only the reproduced pre-effect direct staged core-write window is proven; arbitrary mid-effect or non-idempotent recovery is unproven |
 | One-worker source → pipeline → destination | backend registry, SDS executor, Tier-1 worker path | SDS repository/executor unit tests | `Source URI pipeline writes to a different SQLite backend` and live scenario 1 verify exact output bytes | `execute_pipeline`, `wait`, and `read_from` | Compose golden path builds the path; CI directly runs the broader `[deployment]` data-path case, not the named pipeline case | No ETL or pipeline speedup claim |
 | File and SQLite backends | POSIX and SQLite adapters plus registry | Adapter CRUD, path-containment, zero-length, and registry tests | Demo and `[deployment]` test perform 24 writes/read-backs over shared file and SQLite attachments | `write_to` and `read_from` | Compose golden path | Throughput unproven |
@@ -33,7 +34,7 @@ Evidence classes used below:
 | Batch scheduling and common feasibility | scheduling layer, dispatcher batch preparation, registry v2 | Section 9.7 scheduling cases, solver cases, exact 8 MiB paper trace, structured deterministic replay, and actual Completion observation derivation | Live scenario 6 covers one mixed batch, dependency deferral, Composite, unknown demand, and 16/24/32 KiB capacity constraints; Prompt 08's attempted run retained 1,260 verified measured completions but failed the independence and measurement contract | Work is submitted through the C++ client; the current benchmark reads actual service/queue observations through public completion results while decision inspection remains catalog-backed | Hermetic cases in unit CI; mixed live batch and experiment are not CI-reachable | Policy performance remains unproven; the source-complete 180-cell independent-replicate method is frozen but has not produced a valid run |
 | Explainable scheduling residual | append-only scheduling decision history in `ScoreSnapshot` | Residual codec and replay cases in scheduling tests | Live scenario 6 records decision snapshots | Public completion does not yet expose the full explanation; catalog inspection does | Hermetic codec/replay only | No performance result |
 | Registry v2 and replacement-safe epochs | `worker_registry.fbs`, manager/worker protocol | Malformed/version/capability/epoch cases | Live scenario 5 restarts the manager, observes reconstruction, restarts a worker, and rejects stale deregistration | Manager request path is runtime-internal; C++ test driver decodes the public control reply | Hermetic codec/state cases in unit CI; manager-loss injection is not CI-reachable | No performance result; Python/MCP registry-v2 support is unproven until prompt 10 |
-| Channels and workspaces | `channel.cpp`, `workspace.cpp` | Some object-level logic exists, but the CTest targets are labeled smoke and use Redis/NATS | No independent-producer/consumer multi-process proof | C++ client methods exist but resolve process-local registries | Not selected by current CI | Cross-process identity, ACL, and channel sequence semantics are unproven; prompts 12–13 own this gap |
+| Channels and workspaces | Owning `ChannelHandle`/`WorkspaceHandle` over shared process-local registries | Object-level targets remain smoke because they use Redis/NATS; public raw-pointer lifetime hazards are removed by construction | No independent-producer/consumer multi-process proof | C++ handles retain required session/object lifetime and fail predictably when empty/destroyed | Not selected by current CI | Registry identity, ACL, and sequence allocation remain process-local; cross-process semantics are unproven |
 | Observability | dispatcher Observe handler and telemetry | Query formatting/component cases are not hermetic in current classification | Compose smoke demonstrates system health; other endpoints have component/live fixtures | `Client::observe` | Demo/health indirectly in Compose CI; endpoint matrix not directly selected | No performance result |
 | Elasticity | decision engine, Docker client, per-tier orchestrator | Decision and mock-runtime tests in unit CI | No enabled-default, leader-election, or safe live provisioning experiment | Configuration surface exists; disabled by default | Unit CI only | Live elasticity behavior and benefit are unproven |
 | POSIX intercept | `src/drivers/posix_intercept.cpp` and adapter | FD-table cases are hermetic | The intercept binary is built, but its integration executable is unlabeled and not run by CI | LD_PRELOAD surface, restricted to configured LABIOS prefixes | Build-only | Transparent arbitrary-repository POSIX compatibility and performance are unproven |
@@ -45,15 +46,23 @@ Evidence classes used below:
 
 ## Test-label and CI audit
 
-Fresh CTest discovery at `6a68b4f` contains 407 tests:
+Prompt 09 fresh CTest discovery contains 432 tests:
 
 | CTest label | Count | Classification |
 |---|---:|---|
-| `unit` | 257 | Hermetic lane. `ctest --test-dir build/dev -L unit` passed 257/257 on 2026-07-30 and is run by CI. |
-| `smoke` | 91 | Infrastructure-dependent. Includes Redis/NATS/catalog/content/data-path/channel/workspace/observability cases. It must not be described as hermetic. |
+| `unit` | 277 | Hermetic lane. Prompt 09 passed 277/277, including five operation lifetime cases, C stale/double-release checks, and exact compilation of both native SDK snippets. |
+| `smoke` | 96 | Infrastructure-dependent. Three new public-C cases cover client destruction, timeout reuse, and concurrent wait/cancel/release; two additional cases verify catalog lifecycle projection and public parked reason/retry metadata. |
 | `integration` | 3 | Cross-service behavior; requires a live topology. |
 | `kernel` | 15 | Kernel replay/characterization cases. These are not reproductions of HPDC'19 results. |
 | `bench` | 41 | Mixed microbenchmark/component/live-benchmark registrations. A CTest label does not establish a fair baseline or a performance claim. |
+
+The six hermetic C++/C handle cases and three live C lifetime cases also pass an
+ASan+UBSan build with leak detection. UBSan suppressions are limited to two
+known cnats null/zero-byte nonnull-attribute reports in
+`glib_dispatch_pool.c` and `msg.c`, recorded in `tests/ubsan.supp`; no LABIOS
+source is suppressed. TSan did not
+run because its instrumented build-time `flatc` failed with an unexpected memory
+mapping, so no thread-sanitizer claim is made.
 
 Additional executables (`labios-intercept-test`,
 `labios-elastic-flood-test`, and `labios-live-correctness-driver`) are not
@@ -63,7 +72,7 @@ build-only unless invoked explicitly.
 
 Current CI reaches:
 
-1. the 257-test hermetic lane;
+1. the 277-test hermetic lane after this change;
 2. Compose model validation and clean image build;
 3. health of NATS, DragonflyDB, the separate external Redis fixture, manager,
    dispatcher, three workers, and MCP container;
@@ -73,7 +82,7 @@ Current CI reaches:
 7. NATS/Dragonfly persistence across explicit restart followed by daemon
    restart and another demo.
 
-Current CI does **not** reach the full 91-test smoke lane, the three integration
+Current CI does **not** reach the full 96-test smoke lane, the three integration
 tests, kernel cases, benchmarks, the failure-injection harness, Python pytest,
 MCP pytest, POSIX-intercept execution, external-KV completion, live elasticity,
 or multi-process coordination. Those remain local/manual evidence or unproven.

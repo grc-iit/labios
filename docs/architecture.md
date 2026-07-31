@@ -158,7 +158,7 @@ The client presents a layered API surface. Each layer builds on the one below.
 
 ### Layer 1: Synchronous Convenience
 
-```cpp
+```text
 auto client = labios::connect(labios::load_config("conf/labios.toml"));
 
 client.write("/data/output.dat", buffer);
@@ -167,7 +167,7 @@ auto data = client.read("/data/output.dat", 0, size);
 
 ### Layer 2: Asynchronous I/O
 
-```cpp
+```text
 auto s1 = client.async_write("/data/step1.dat", buf1);
 auto s2 = client.async_write("/data/step2.dat", buf2);
 // ... application continues computing ...
@@ -177,29 +177,27 @@ client.wait(s2);
 
 ### Layer 3: Label-Level Control
 
-```cpp
-auto label = client.create_label({
-    .type = labios::LabelType::Write,
-    .source = labios::memory_ptr(buffer, size),
-    .destination = labios::file_path("/data/output.dat"),
-    .flags = labios::LabelFlags::Async,
-    .priority = 5,
-    .intent = labios::Intent::Checkpoint,
-});
-auto status = client.publish(label, data_span);
-client.wait(status);
+```text
+labios::LabelParams params{};
+params.type = labios::LabelType::Write;
+params.destination = labios::file_path("/data/output.dat");
+params.priority = 5;
+params.intent = labios::Intent::Checkpoint;
+auto label = client.create_label(params);
+auto operation = client.publish(label, buffer);
+client.wait(operation);
 ```
 
 ### Layer 4: URI-Based I/O
 
-```cpp
+```text
 client.write_to("file:///data/output.dat", data);
 auto result = client.read_from("s3://bucket/key", size);
 ```
 
 ### Layer 5: Intent-Driven and Pipelines
 
-```cpp
+```text
 client.write_with_intent("/data/model.bin", weights, Intent::ModelWeight, 10);
 
 client.execute_pipeline(
@@ -212,7 +210,7 @@ client.execute_pipeline(
 
 ### Layer 6: Channels (Streaming Coordination)
 
-```cpp
+```text
 client.create_channel("embeddings", /*ttl=*/300);
 client.publish_to_channel("embeddings", embedding_data);
 client.subscribe_to_channel("embeddings", [](const labios::ChannelMessage& msg) {
@@ -222,7 +220,7 @@ client.subscribe_to_channel("embeddings", [](const labios::ChannelMessage& msg) 
 
 ### Layer 7: Workspaces (Persistent Shared State)
 
-```cpp
+```text
 client.create_workspace("shared-context", /*ttl=*/3600);
 client.workspace_put("shared-context", "config", config_bytes);
 auto val = client.workspace_get("shared-context", "config");
@@ -231,7 +229,7 @@ client.workspace_grant("shared-context", other_agent_id);
 
 ### Layer 8: Observability
 
-```cpp
+```text
 std::string json = client.observe("workers/scores");
 std::string health = client.observe("system/health");
 ```
@@ -256,14 +254,17 @@ Intercepts 26 POSIX entry points: `open`, `open64`, `close`, `read`, `write`,
 
 ### C API (FFI)
 
-```c
+```text
 #include <labios/labios.h>
 
-labios_client_t client;
+labios_client_t client = NULL;
+labios_status_t status = NULL;
+char buf[] = "data";
 labios_connect("nats://localhost:4222", "localhost", 6379, &client);
-labios_async_write(client, "/data/out.dat", buf, size, 0, &status);
+labios_async_write(client, "/data/out.dat", buf, sizeof(buf), 0, &status);
 labios_wait(status);
-labios_disconnect(client);
+labios_status_release(&status);
+labios_disconnect_ref(&client);
 ```
 
 ---
@@ -493,7 +494,7 @@ Output:
 The `Orchestrator<Runtime>` template accepts any type satisfying the
 `ContainerRuntime` concept:
 
-```cpp
+```text
 template<typename T>
 concept ContainerRuntime = requires(T rt, const ContainerSpec& spec, const std::string& id) {
     { rt.create_and_start(spec) } -> std::same_as<std::string>;
@@ -519,7 +520,7 @@ them.
 
 ### Pipeline Definition
 
-```cpp
+```text
 struct PipelineStage {
     std::string operation;     // "builtin://compress_rle" or "repo://custom"
     std::string args;          // stage-specific arguments
@@ -549,11 +550,13 @@ stages: each stage's output becomes the next stage's input.
 
 ## Channels and Workspaces
 
-Two coordination primitives serve multi-agent workflows.
+Two process-local coordination components can serve participants sharing one
+client registry. They do not currently establish cross-process coordination.
 
 ### Channels (Streaming)
 
-Named pub/sub streams backed by DragonflyDB (data) and NATS (notifications).
+Named pub/sub streams backed by DragonflyDB (data) and NATS (notifications),
+with registry identity and sequence allocation held in process memory.
 Each message gets a monotonically increasing sequence number. Channels support
 TTL-based retention, drain (stop + wait), and auto-destroy on last disconnect.
 
@@ -562,7 +565,8 @@ NATS subject: `labios.channel.{name}`
 
 ### Workspaces (Persistent Shared State)
 
-Named key-value regions with per-key versioning, access control lists, and TTL.
+Named key-value regions with per-key versioning, access control lists, and TTL;
+workspace identity, owner, and ACL state are process-local.
 Agents call `workspace_put()` to write and `workspace_get()` to read. Every
 write increments the version counter. Access is granted per-agent via
 `workspace_grant()`. Prefix-filtered listing enables namespace conventions.
@@ -581,7 +585,7 @@ Labels carry `source_uri` and `dest_uri` fields that address storage through URI
 schemes. The `BackendRegistry` maps schemes to implementations via the
 label-based C++20 `BackendStore` concept:
 
-```cpp
+```text
 template<typename B>
 concept BackendStore = requires(B b, const LabelData& label,
     std::span<const std::byte> data) {

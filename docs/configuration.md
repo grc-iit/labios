@@ -153,7 +153,7 @@ The following keys are accepted by `Config::set`, and therefore by
 
 Example:
 
-```cpp
+```text
 bool changed = client.set_config("reply_timeout_ms", "45000");
 ```
 
@@ -166,7 +166,7 @@ dispatcher.
 `Client::observe()` prepends the `observe://` scheme. Pass the route without the
 scheme:
 
-```cpp
+```text
 auto health = client.observe("system/health");
 auto depth = client.observe("queue/depth");
 auto scores = client.observe("workers/scores");
