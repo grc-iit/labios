@@ -1,0 +1,15 @@
+ Container p08independent-nats-1 Running 
+ Container p08independent-redis-1 Running 
+ Container p08independent-dispatcher-1 Running 
+ Container p08independent-worker-1-1 Running 
+ Container p08independent-worker-3-1 Running 
+ Container p08independent-worker-2-1 Running 
+ Container p08independent-manager-1 Running 
+ Container p08independent-redis-kv-1 Running 
+ Container p08independent-benchmark Creating 
+ Container p08independent-benchmark Created 
+Filters: [!benchmark]
+Randomness seeded to: 2953087891
+===============================================================================
+All tests passed (407 assertions in 1 test case)
+

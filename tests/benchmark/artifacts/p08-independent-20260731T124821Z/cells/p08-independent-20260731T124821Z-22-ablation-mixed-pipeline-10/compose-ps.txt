@@ -1,0 +1,9 @@
+NAME                          IMAGE                                         COMMAND                  SERVICE      CREATED          STATUS                    PORTS
+p08independent-dispatcher-1   p08independent-dispatcher                     "labios-dispatcher"      dispatcher   19 seconds ago   Up 7 seconds (healthy)    
+p08independent-manager-1      p08independent-manager                        "labios-manager"         manager      19 seconds ago   Up 13 seconds (healthy)   
+p08independent-nats-1         nats:2.10-alpine                              "docker-entrypoint.s…"   nats         19 seconds ago   Up 18 seconds (healthy)   127.0.0.1:4222->4222/tcp, 127.0.0.1:8222->8222/tcp
+p08independent-redis-1        docker.dragonflydb.io/dragonflydb/dragonfly   "/usr/bin/tini -- en…"   redis        19 seconds ago   Up 18 seconds (healthy)   127.0.0.1:6379->6379/tcp
+p08independent-redis-kv-1     redis:7-alpine                                "docker-entrypoint.s…"   redis-kv     19 seconds ago   Up 18 seconds (healthy)   127.0.0.1:6380->6379/tcp
+p08independent-worker-1-1     p08independent-worker-1                       "labios-worker"          worker-1     19 seconds ago   Up 6 seconds (healthy)    
+p08independent-worker-2-1     p08independent-worker-2                       "labios-worker"          worker-2     19 seconds ago   Up 6 seconds (healthy)    
+p08independent-worker-3-1     p08independent-worker-3                       "labios-worker"          worker-3     19 seconds ago   Up 6 seconds (healthy)    
