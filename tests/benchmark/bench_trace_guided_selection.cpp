@@ -160,6 +160,13 @@ std::vector<Row> await_all(labios::Client& client,
                 .count());
         found->row.terminal_state = completion_state(completion.state);
         found->row.failure = completion.error;
+        INFO("label=" << completion.label_id
+             << " worker=" << completion.worker_id
+             << " attempt=" << completion.attempt
+             << " queued=" << completion.queued_us
+             << " dispatched=" << completion.dispatched_us
+             << " started=" << completion.started_us
+             << " completed=" << completion.completed_us);
         REQUIRE(completion.has_execution_observation());
         found->row.worker_id = completion.worker_id;
         found->row.attempt = completion.attempt;
