@@ -87,15 +87,13 @@ TEST_CASE("Worker error path still fires notify continuation", "[scheduling]") {
     });
 
     labios::LabelParams params;
-    params.type = labios::LabelType::Write;
-    params.dest_uri = "nosuch://backend/failure";
+    params.type = labios::LabelType::Read;
+    params.source_uri = "file:///integration/missing-" + channel_name;
     params.continuation.kind = labios::ContinuationKind::Notify;
     params.continuation.target_channel = channel_name;
 
     auto label = client.create_label(params);
-    std::vector<std::byte> payload(64, std::byte{0x5A});
-
-    auto pending = client.publish(label, payload);
+    auto pending = client.publish(label);
     REQUIRE_THROWS(client.wait(pending));
 
     for (int i = 0; i < 100 && received.load() == 0; ++i) {
