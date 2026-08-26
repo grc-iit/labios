@@ -1,8 +1,8 @@
 # LABIOS 2.1 evidence map
 
-This map records what each LABIOS 2.1 capability is evidenced by through Prompt
-11's MCP Label I/O ingress slice. It distinguishes implementation artifacts
-from tests and experiments.
+This map records what each LABIOS 2.1 capability is evidenced by through the
+2.1.0-rc.1 release rehearsal. It distinguishes implementation artifacts from
+tests and experiments.
 An implementation path is not, by itself, evidence that the path works end to
 end.
 
@@ -46,11 +46,11 @@ Evidence classes used below:
 
 ## Test-label and CI audit
 
-Prompt 09 fresh CTest discovery contains 432 tests:
+The 2.1.0-rc.1 release-audit build discovers 433 CTest tests:
 
 | CTest label | Count | Classification |
 |---|---:|---|
-| `unit` | 277 | Hermetic lane. Prompt 09 passed 277/277, including five operation lifetime cases, C stale/double-release checks, and exact compilation of both native SDK snippets. |
+| `unit` | 278 | Hermetic lane. Release rehearsal passed 278/278, including staged-write binding/order, five operation lifetime cases, C stale/double-release checks, and exact compilation of both native SDK snippets. |
 | `smoke` | 96 | Infrastructure-dependent. Three new public-C cases cover client destruction, timeout reuse, and concurrent wait/cancel/release; two additional cases verify catalog lifecycle projection and public parked reason/retry metadata. |
 | `integration` | 3 | Cross-service behavior; requires a live topology. |
 | `kernel` | 15 | Kernel replay/characterization cases. These are not reproductions of HPDC'19 results. |
@@ -69,6 +69,18 @@ allocations, and the full Python exception-path lane hits an ASan
 `__cxa_throw` interceptor check; neither is promoted to a LABIOS memory defect,
 but no leak-enabled/full-exception ASan claim is made.
 
+The 2026-08-26 release rehearsal also passed all 96 smoke cases using scoped
+execution: runtime-facing cases ran with the healthy topology, while the four
+catalog recovery cases ran with the dispatcher stopped so it could not consume
+their deliberately queued fixtures. The rehearsal found and fixed an unsafe
+legacy aggregation path for staged split writes; the exact 3 MiB split
+write/read case now verifies all child completions and reconstructed bytes.
+The three integration cases pass. Optional characterization is not release-
+clean: the 1000-label CM1 kernel case and 1000-file legacy benchmark timed out,
+and the host-sensitive 100 MiB benchmark missed its fixed 15 MiB/s thresholds
+(approximately 2.16 MiB/s write and 1.85 MiB/s read). These results support no
+performance conclusion and remain reported failures, not suppressed evidence.
+
 Additional executables (`labios-intercept-test`,
 `labios-elastic-flood-test`, and `labios-live-correctness-driver`) are not
 registered as ordinary CTest cases. The live driver is intentionally controlled
@@ -77,7 +89,7 @@ build-only unless invoked explicitly.
 
 Current CI reaches:
 
-1. the 277-test native hermetic lane, 10 hermetic Python pytest cases, and 17 hermetic MCP pytest cases;
+1. the 278-test native hermetic lane, 10 hermetic Python pytest cases, and 17 hermetic MCP pytest cases;
 2. Compose model validation and clean image build;
 3. health of NATS, DragonflyDB, the separate external Redis fixture, manager,
    dispatcher, three workers, and MCP container;

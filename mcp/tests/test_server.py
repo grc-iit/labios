@@ -363,7 +363,7 @@ def test_normal_core_paths_have_no_direct_store_transport_or_volume_adapter():
 def test_knowledge_is_explicitly_pending_prompt_14():
     result = McpFrontend(FakeClient()).call("labios_knowledge", {})
     assert result["status"] == "unsupported_feature"
-    assert result["error"]["category"] == "PENDING_PROMPT_14"
+    assert result["error"]["category"] == "WORKSPACE_KNOWLEDGE_UNAVAILABLE"
 
 
 def _worker(builder, worker_id=7):

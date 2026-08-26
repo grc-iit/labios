@@ -1,7 +1,7 @@
 # LABIOS 2.1
 
 **Status:** Living design and planning authority
-**Updated:** 2026-07-15
+**Updated:** 2026-08-26
 **Project:** LABIOS — Label-Based I/O System
 **Provenance:** US Patent 11,630,834 B2 · NSF Award 2313154
 
@@ -403,6 +403,22 @@ Baseline audited at commit `d8e6a4d`; P09 implementation evidence updated 2026-0
   Generated Python FlatBuffers support closes the package-level P09 registry-v2
   gap, but MCP worker-registry/score/count behavior remains unchanged and
   unsupported until Prompt 11 consumes the shared parser.
+- **2.1.0-rc.1 release rehearsal (2026-08-26):** a clean strict native build
+  discovers 433 tests and passes the 278-test unit lane, 10 hermetic Python
+  cases, and 17 hermetic MCP cases. Fresh Compose volumes and rebuilt images
+  pass daemon health, the 24-operation demo, shared deployment path, four live
+  Python cases, four live MCP cases, and both exact-byte golden examples. The
+  broader smoke audit found an unsafe legacy aggregation path for independently
+  staged split writes; staged chunks now retain their bindings, carry explicit
+  producer order, execute as one Composite, and pass exact 3 MiB reconstruction.
+  All 96 smoke cases pass when runtime-facing cases and the four deliberately
+  queued catalog-recovery fixtures are run in their documented live/isolated
+  scopes, and the three integration cases pass. Optional characterization is
+  not release-clean: the 1000-label CM1 kernel case and 1000-file benchmark
+  timed out, while the legacy 100 MiB benchmark missed its host-sensitive fixed
+  throughput thresholds. No performance conclusion is drawn. This checkpoint
+  is an RC, not final 2.1.0: Prompts 13–16 and the valid Prompt-08 experiment
+  remain open.
 - **Prompt 11 MCP core Label I/O ingress (2026-07-31):** 17 hermetic MCP
   pytest cases cover tool schemas/imports, typed lowering, source/destination/
   pipeline/intent/priority preservation, stable error categories, timeout,
@@ -1315,11 +1331,13 @@ Prompt 13 must implement. Prompt 12 changes documentation only.
 
 1. Collect the project team's publication and artifact list for the annual
    report evidence map (§8.2).
-2. Execute the numbered files directly under `.planning/prompts/` in lexical
-   order, starting with `01-durable-ingress-and-parking.md`.
-3. Each completed prompt updates the evidence (§6) and decision (§11) state in
+2. Produce the valid independent Prompt-08 experiment before making any WS3
+   performance claim.
+3. Continue the serialized implementation queue with Prompt 13, then 14–16;
+   Prompts 01–12 are complete at the bounded evidence stated above.
+4. Each completed prompt updates the evidence (§6) and decision (§11) state in
    this document before a later prompt proceeds.
-4. Implement, verify, and review one slice before selecting the next.
+5. Implement, verify, and review one slice before selecting the next.
 
 ## 13. Archive policy
 

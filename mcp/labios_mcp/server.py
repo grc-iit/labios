@@ -290,8 +290,8 @@ class McpFrontend:
                 return self.observe(args)
             if name == "labios_knowledge":
                 return _error(
-                    "unsupported_feature", "PENDING_PROMPT_14",
-                    "workspace-backed knowledge is pending Prompt 14",
+                    "unsupported_feature", "WORKSPACE_KNOWLEDGE_UNAVAILABLE",
+                    "workspace-backed knowledge is not available in LABIOS 2.1.0-rc.1",
                 )
             raise MalformedRequest(f"unknown tool: {name}")
         except MalformedRequest as exc:
@@ -687,7 +687,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="labios_knowledge",
-            description="Reserved for workspace-backed knowledge in Prompt 14; currently returns a stable pending response.",
+            description="Reserved for workspace-backed knowledge; LABIOS 2.1.0-rc.1 returns a stable unsupported response.",
             inputSchema={"type": "object", "additionalProperties": False, "properties": {}},
         ),
     ]

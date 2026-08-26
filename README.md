@@ -6,6 +6,9 @@ as it passes. Labels are the information highway of the system.
 
 **US Patent 11,630,834 B2 | NSF Award #2313154 | HPDC'19 Karsten Schwan Best Paper Award**
 
+**Release status:** LABIOS 2.1.0-rc.1 candidate. See
+[CHANGELOG.md](CHANGELOG.md) for scope and compatibility notes.
+
 ## What Is It
 
 LABIOS is not a filesystem, not middleware, not an object store. It is the
@@ -45,7 +48,7 @@ Clients never talk to workers. The dispatcher is the only bridge.
 ## Quick Start
 
 ```bash
-git clone https://github.com/akougkas/labios.git && cd labios
+git clone https://github.com/grc-iit/labios.git && cd labios
 docker compose up -d --build --wait
 ```
 
@@ -75,7 +78,7 @@ with C++, C, and MCP examples.
 | Workspaces | Shared state (Redis) with per-key versioning; ACLs are process-local today |
 | Elastic scaling | Per-tier auto-scaling via Docker Engine API (off by default; enable via `docker-compose.elastic.yml`) |
 | POSIX intercept | LD_PRELOAD transparent interception of 30 POSIX and stdio calls |
-| MCP server | Public Label I/O frontend for observe, typed store/retrieve, and registered pipelines; workspace knowledge is reserved for Prompt 14 |
+| MCP server | Public Label I/O frontend for observe, typed store/retrieve, and registered pipelines; workspace-backed knowledge is not available in this candidate |
 | Observability | 8 query endpoints, continuous telemetry with p50/p95/p99 latencies |
 | Continuations | Reactive I/O chaining (Notify, Chain, Conditional) on label completion |
 
@@ -115,8 +118,8 @@ Connect Claude Code, Codex CLI, or any MCP-compatible agent:
 The agent gains five MCP tool names: `labios_observe`, `labios_store`,
 `labios_retrieve`, `labios_process`, and `labios_knowledge`. Core I/O compiles to
 typed labels and traverses the public Python Client, dispatcher, scheduler,
-worker, and external backend. `labios_knowledge` is an explicit Prompt-14
-placeholder rather than a direct-store fallback. See
+worker, and external backend. `labios_knowledge` returns an explicit
+`unsupported_feature` response rather than using a direct-store fallback. See
 [docs/mcp-integration.md](docs/mcp-integration.md) for schemas, stable error
 payloads, and migration breaks.
 
@@ -165,7 +168,7 @@ docker compose exec -T -e LABIOS_MCP_LIVE=1 mcp python -m pytest tests -m live
 C++20 (`std::jthread`, concepts) | FlatBuffers | NATS 2.10 (server runs with
 JetStream enabled; labels use durable JetStream delivery) | DragonflyDB |
 POSIX file I/O (io_uring planned) | xxHash3 | pybind11 | Catch2 | Docker Compose |
-CMake 3.25+ | GitHub Actions (ASan, TSan, UBSan)
+CMake 3.25+ | GitHub Actions (strict native/unit/Python/MCP and Compose golden path)
 
 ## Documentation
 

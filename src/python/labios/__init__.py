@@ -4,6 +4,8 @@ The native ``Operation`` is the owning asynchronous handle.  It remains valid
 after its originating ``Client`` is destroyed and timeout observations never
 cancel or consume it.
 """
+__version__ = "2.1.0rc1"
+
 try:
     from _labios import (
         AuthorizationError,

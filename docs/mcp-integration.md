@@ -14,8 +14,8 @@ or mount a worker volume. Its Python `Client` uses LABIOS runtime endpoints in
 the same way as every public SDK client. Runtime observations are Observe labels;
 label inspection uses `Client.inspect_label`.
 
-Workspace-backed knowledge remains explicitly pending Prompt 14. LABIOS is not
-a shell, arbitrary compute runtime, or generic tool broker.
+Workspace-backed knowledge is not available in LABIOS 2.1.0-rc.1. LABIOS is
+not a shell, arbitrary compute runtime, or generic tool broker.
 
 ## Start and connect
 
@@ -92,7 +92,7 @@ Stable `status` values distinguish:
 | `cancellation` | Execution won the race; category is `CANCELLATION_TOO_LATE`. |
 | `execution_failure` | A registered stage, backend, completion protocol, or frontend execution failed. |
 | `completion_unknown` | The completion ID is unknown or its retained record expired. |
-| `unsupported_feature` | The advertised placeholder is intentionally not implemented, currently Prompt-14 knowledge. |
+| `unsupported_feature` | The advertised placeholder is intentionally unavailable, currently workspace-backed knowledge. |
 
 Timeout never implies cancellation. `cancel_on_timeout` calls the same owning
 Python `Operation.cancel()` after a timeout; MCP does not recreate pending state.
@@ -192,13 +192,13 @@ CSV/text fallback.
 ### `labios_knowledge`
 
 This name remains discoverable for migration clarity, but returns
-`unsupported_feature/PENDING_PROMPT_14`. No direct workspace-key fallback is
-retained. Cross-process workspace/knowledge behavior belongs to Prompt 14 after
-coordination work; Prompt 11 does not implement it.
+`unsupported_feature/WORKSPACE_KNOWLEDGE_UNAVAILABLE`. No direct workspace-key
+fallback is retained. Cross-process workspace/knowledge behavior is outside
+this release candidate.
 
 ## Compatibility breaks from the prototype
 
-Prompt 11 intentionally removes runtime-bypass behavior:
+LABIOS 2.1 intentionally removes prototype runtime-bypass behavior:
 
 1. `labios_store` no longer accepts `key`, `scope`, `metadata`, or workspace
    TTL semantics. Use `destination`, exact `data`, and Label I/O fields.
@@ -214,7 +214,7 @@ Prompt 11 intentionally removes runtime-bypass behavior:
 5. Worker registry CSV, legacy-row acceptance, and text fallback are removed.
 6. Observation results now use the stable response envelope rather than ad hoc
    `{"error": ...}` strings.
-7. `labios_knowledge` is a stable pending response until Prompt 14; old direct
+7. `labios_knowledge` returns a stable unsupported response; old direct
    DragonflyDB workspace scans are gone.
 
 There is no hidden direct-store compatibility mode. Existing users must migrate

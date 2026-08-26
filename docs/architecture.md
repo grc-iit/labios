@@ -1,4 +1,4 @@
-# LABIOS 2.0 Architecture
+# LABIOS 2.1 Architecture
 
 LABIOS is the first agent I/O runtime. It converts all I/O into self-describing
 labels that flow through a distributed pipeline of shufflers, schedulers, and
@@ -8,11 +8,12 @@ information highway, the state machine, and the audit trail. US Patent
 
 This document describes the intended architecture. Some elements below are
 component-level or planned rather than verified end to end. Known deviations of
-the current code from this description: the runtime uses **core NATS pub/sub**
-(not JetStream), there is **no leader election** (the manager is a single
-process), **Tier 2 "Agentic" reasoning is planned** (Tier 2 executes pipelines
-exactly like Tier 1 today), **elastic scaling is off by default**, and there is
-**no io_uring or coroutine** async path. For the authoritative
+the current code from this description: label delivery uses **durable NATS
+JetStream** while control-plane traffic remains on core NATS, there is **no
+leader election** (the manager is a single process), **Tier 2 "Agentic"
+reasoning is planned** (Tier 2 executes pipelines exactly like Tier 1 today),
+**elastic scaling is off by default**, and there is **no io_uring or coroutine**
+async path. For the authoritative
 capability-by-capability status see the internal planning authority
 `.planning/LABIOS-2.1.md`.
 
@@ -459,8 +460,9 @@ compatibility when routing labels that carry SDS pipelines.
 > **Status:** The only behavioral tier difference today is that Databot (Tier 0)
 > workers reject labels carrying SDS pipelines. Tier 2 (Agentic) currently
 > executes pipelines exactly like Tier 1 (Pipeline); the reasoning/tool/inference
-> capabilities are planned, not implemented. Default Compose workers set no tier
-> and therefore run as Tier 0. See `.planning/LABIOS-2.1.md`.
+> capabilities are planned, not implemented. Default Compose workers explicitly
+> run as Tier 1 so the verified pipeline path is executable. See
+> `.planning/LABIOS-2.1.md`.
 
 ---
 
@@ -613,10 +615,10 @@ truth.
 
 ### NATS
 
-All label routing flows through NATS. The transport wrapper currently uses
-**core NATS** publish/subscribe/request (at-most-once); it does not use JetStream
-streams, durable consumers, or acknowledgements, even though the server is
-started with `--jetstream`. Key subjects:
+All label routing flows through NATS. Label subjects use the `LABIOS_LABELS`
+JetStream stream with durable explicit-ack consumers, publication
+acknowledgements, bounded redelivery, and catalog-backed recovery. Control-plane
+request/reply and notifications continue to use core NATS. Key subjects:
 
 | Subject                     | Direction      | Payload               |
 |-----------------------------|----------------|-----------------------|
@@ -869,9 +871,9 @@ plug in without modifying existing code.
 **Cooperative shutdown.** All background threads use `std::jthread` with
 `std::stop_token`. No kill booleans, no signal handlers, no forced termination.
 
-**Scale-adaptive.** The same codebase runs on a laptop (1 worker, no elastic) and
-a cluster (100+ workers, per-tier elastic scaling). Configuration controls the
-deployment model; the architecture does not change.
+**Scale-adaptive design.** The worker and solver abstractions are intended to
+scale beyond one host, but this release verifies only the single-host Compose
+reference topology. Multi-node and live elastic behavior are not release claims.
 
 ---
 
@@ -882,7 +884,7 @@ deployment model; the architecture does not change.
 | Language        | C++20 (`std::jthread`, concepts)    |
 | Build           | CMake 3.25+ with presets            |
 | Serialization   | FlatBuffers                         |
-| Label queue     | NATS 2.10 (server JetStream-enabled; runtime uses core NATS) |
+| Label queue     | NATS 2.10 JetStream (durable explicit-ack delivery) |
 | Warehouse       | DragonflyDB (Redis 7 wire-compatible)|
 | Async I/O       | POSIX file I/O (io_uring planned)   |
 | Hashing         | xxHash3                             |
@@ -890,4 +892,4 @@ deployment model; the architecture does not change.
 | Testing         | Catch2 (C++) + pytest (Python)      |
 | Config          | TOML                                |
 | Containers      | Docker + Docker Compose             |
-| CI              | GitHub Actions (ASan, TSan, UBSan)  |
+| CI              | GitHub Actions (strict native/unit/Python/MCP + Compose golden path) |
