@@ -116,7 +116,13 @@ std::vector<LabelData> Shuffler::aggregate(
     output.reserve(labels.size());
 
     for (auto& l : labels) {
-        if (l.file_key.empty() || !std::holds_alternative<FilePath>(l.destination)) {
+        // Legacy aggregation cannot combine independently staged content
+        // objects. Merging such labels drops their bindings and makes the
+        // resulting write consume only the first chunk. Keep versioned staged
+        // writes intact; producer-declared Order edges can group them into an
+        // executable Composite without changing their content identities.
+        if (l.has_input_binding || l.file_key.empty() ||
+            !std::holds_alternative<FilePath>(l.destination)) {
             output.push_back(std::move(l));
             continue;
         }

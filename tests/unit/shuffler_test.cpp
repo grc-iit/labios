@@ -65,6 +65,33 @@ TEST_CASE("Aggregation merges consecutive offsets", "[shuffler]") {
     CHECK(fp->length == 3072);
 }
 
+TEST_CASE("Staged writes retain bindings and declared order", "[shuffler][typed-resource]") {
+    labios::Shuffler s(labios::ShufflerConfig{});
+    auto first = make_write(1, "/data/a.dat", 0, 1024);
+    auto second = make_write(2, "/data/a.dat", 1024, 1024);
+    for (auto* label : {&first, &second}) {
+        label->has_input_binding = true;
+        label->input_binding.provenance = labios::BindingProvenance::MaterializedSource;
+        label->input_binding.content_id = std::to_string(label->id);
+        label->input_binding.logical_length = label->data_size;
+    }
+    second.dependencies.push_back({first.id, labios::HazardType::Order});
+
+    std::vector<labios::LabelData> batch;
+    batch.push_back(std::move(first));
+    batch.push_back(std::move(second));
+    auto result = s.shuffle(std::move(batch), no_location);
+
+    CHECK(result.independent.empty());
+    REQUIRE(result.supertasks.size() == 1);
+    REQUIRE(result.supertasks[0].children.size() == 2);
+    CHECK(result.supertasks[0].children[0].input_binding.content_id == "1");
+    CHECK(result.supertasks[0].children[1].input_binding.content_id == "2");
+    REQUIRE(result.supertasks[0].children[1].dependencies.size() == 1);
+    CHECK(result.supertasks[0].children[1].dependencies[0].hazard_type ==
+          labios::HazardType::Order);
+}
+
 TEST_CASE("URI writes with empty compatibility keys stay distinct", "[shuffler][typed-resource]") {
     labios::Shuffler s(labios::ShufflerConfig{});
     std::vector<labios::LabelData> batch(3);

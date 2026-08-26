@@ -57,6 +57,7 @@ std::vector<uint64_t> LabelManager::publish_write(
     std::span<const std::byte> data) {
     uint64_t remaining = data.size();
     uint64_t pos = 0;
+    uint64_t previous_label_id = 0;
     std::vector<uint64_t> pending;
 
     while (remaining > 0) {
@@ -76,6 +77,9 @@ std::vector<uint64_t> LabelManager::publish_write(
         label.input_binding.content_id = std::to_string(label.id);
         label.input_binding.logical_length = chunk_size;
         label.has_input_binding = true;
+        if (previous_label_id != 0) {
+            label.declared_dependencies.push_back(previous_label_id);
+        }
         normalize_label_resources(label);
         mark_label_created(label);
         validate_label_admission(label);
@@ -87,6 +91,7 @@ std::vector<uint64_t> LabelManager::publish_write(
         catalog_.create(label);
         nats_.publish_durable("labios.labels", serialized);
         pending.push_back(label.id);
+        previous_label_id = label.id;
         register_reply(label.id, std::move(reply));
 
         pos += chunk_size;

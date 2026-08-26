@@ -73,7 +73,12 @@ TEST_CASE("Split write then split read returns original data", "[label_manager]"
 
     auto write_pending = lm.publish_write("/test/split_3mb.bin", 0, data);
     REQUIRE(write_pending.size() == 3);
-    lm.wait(write_pending);
+    const auto write_result = lm.wait(write_pending);
+    REQUIRE(write_result.state == labios::CompletionState::Complete);
+    REQUIRE(write_result.results.size() == write_pending.size());
+    for (const auto& completion : write_result.results) {
+        CHECK(completion.state == labios::CompletionState::Complete);
+    }
 
     auto read_pending = lm.publish_read("/test/split_3mb.bin", 0, data.size());
     REQUIRE(read_pending.size() == 3);
