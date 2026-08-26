@@ -1,21 +1,29 @@
-# LABIOS: The First Agent I/O Runtime
+# LABIOS: A Declarative Runtime for I/O Programs
 
-LABIOS converts all I/O into self-describing labels that flow through a distributed
-runtime of shufflers, schedulers, and workers. Each component enriches the label
-as it passes. Labels are the information highway of the system.
+LABIOS turns application and agent I/O intent into versioned, self-describing
+labels. The runtime validates, routes, schedules, transforms, and executes those
+labels against supported external storage systems.
+
+A label is a sealed I/O program plus a mutable runtime residual: applications
+declare what I/O should happen, while LABIOS records how that operation is
+placed and executed.
+
+**LABIOS 2.1.0-rc.1 — available for development and evaluation**
+
+[Get started](docs/getting-started.md) ·
+[Release notes](docs/releases/2.1.0-rc.1.md) ·
+[Architecture](docs/architecture.md) ·
+[SDK guide](docs/sdk-guide.md)
 
 **US Patent 11,630,834 B2 | NSF Award #2313154 | HPDC'19 Karsten Schwan Best Paper Award**
-
-**Release status:** LABIOS 2.1.0-rc.1 candidate. See
-[CHANGELOG.md](CHANGELOG.md) for scope and compatibility notes.
 
 ## What Is It
 
 LABIOS is not a filesystem, not middleware, not an object store. It is the
 execution environment for I/O operations expressed as labels. Agents, HPC
 applications, and AI frameworks produce labels. LABIOS routes, shuffles,
-schedules, transforms, and delivers them to workers that execute against any
-storage backend.
+schedules, transforms, and delivers them to workers that execute against
+supported external storage backends.
 
 ```
 Agent / HPC App
@@ -37,13 +45,29 @@ Backends (file:// | sqlite:// | optional kv:// | planned S3/vector/graph)
 
 Clients never talk to workers. The dispatcher is the only bridge.
 
-> **Implementation status:** This README describes the intended system. Several
-> capabilities are component-level or prototype rather than verified end to end
-> (for example, Tier 2 workers are not yet reasoning-capable, cross-process
-> channels/workspaces are not implemented, and elastic scaling is off by
-> default). See the
-> internal planning authority `.planning/LABIOS-2.1.md` for the engineering
-> truth baseline and project direction.
+## Why Label I/O?
+
+Traditional I/O APIs describe individual calls. Label I/O represents an I/O
+operation as a portable program carrying its resources, intent, dependencies,
+pipeline, and execution state.
+
+This gives the runtime enough information to:
+
+- validate operations before backend execution;
+- schedule work according to resource capabilities and application intent;
+- move transformation pipelines closer to data;
+- preserve replayable placement and lifecycle evidence; and
+- expose one I/O model across C++, C, Python, POSIX interception, and MCP.
+
+> **Release-candidate boundary**
+>
+> LABIOS 2.1.0-rc.1 verifies a single-host Docker Compose reference deployment.
+> It does not claim production readiness, verified multi-node operation,
+> cross-process channel/workspace coordination, Tier-2 reasoning, or performance
+> superiority. Several capabilities remain component-level or prototype, and
+> elastic scaling is disabled by default. See the
+> [release notes](docs/releases/2.1.0-rc.1.md) for complete evidence and
+> limitations.
 
 ## Quick Start
 
