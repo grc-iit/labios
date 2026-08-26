@@ -13,6 +13,19 @@ docker compose up -d --build --wait
 
 See [docs/getting-started.md](docs/getting-started.md) for the full walkthrough.
 
+## Planning and release status
+
+Start with the [planning index](.planning/README.md). The single design and
+engineering-truth authority is [.planning/LABIOS-2.1.md](.planning/LABIOS-2.1.md);
+the active prompt files are bounded execution checklists, not competing plans.
+The [2.1.0-rc.1 release notes](docs/releases/2.1.0-rc.1.md) and
+[evidence map](docs/evidence-map.md) define the current verified claims and
+limitations.
+
+Do not add a backend, adapter, scheduler, or deployment target merely because it
+appeared in an older plan. Current work prioritizes the active 2.1 release gates
+and complete public paths over new surface area.
+
 ## Build and Test
 
 ```bash
@@ -20,20 +33,25 @@ See [docs/getting-started.md](docs/getting-started.md) for the full walkthrough.
 docker compose run --rm --build test
 docker compose run --rm --build test labios-data-path-test "[deployment]"
 
-# Native
+# Native hermetic lane
 cmake --preset dev
 cmake --build build/dev -j$(nproc)
-ctest --test-dir build/dev
+ctest --test-dir build/dev -L unit --output-on-failure
 ```
 
-All tests must pass before submitting a pull request.
+Run every focused test affected by the change. Infrastructure-dependent and
+characterization lanes must use the scoped commands in the evidence map; an
+indiscriminate `ctest` is not a hermetic release gate. Record failures rather
+than weakening tests or converting benchmark results into correctness claims.
 
 ## Workflow
 
-1. Create a branch from `labios-2.0` (not `master`)
-2. Write code, write tests
-3. Run the full test suite
-4. Open a pull request against `labios-2.0`
+1. Create a branch from `labios-2.0` (not `master`).
+2. Read the planning authority and the active prompt for the selected release gate.
+3. Implement one bounded slice and add focused tests.
+4. Run the hermetic lane plus every affected live/failure path.
+5. Update the authority, evidence map, and public docs when a claim changes.
+6. Open a pull request against `labios-2.0` with commands and results recorded.
 
 ## Coding Conventions
 
@@ -66,15 +84,21 @@ Key invariants:
 - Internal plumbing (DragonflyDB warehouse, NATS label queue) is separate from external backends (user's Redis, user's filesystem).
 - All intelligence lives in the runtime. Backends are thin last-mile adapters.
 
-## What Needs Work
+## Current 2.1 priorities
 
-Check the GitHub issues for tagged tasks. Priority areas:
+Check the planning index and GitHub issues before taking ownership. The serialized
+path from the release candidate to final 2.1.0 is:
 
-- Additional backend adapters (`vector://`, `graph://`, `s3://`, `pfs://`)
-- FUSE filesystem mount
-- Kubernetes deployment (Helm charts)
-- Additional scheduling policies
-- io_uring integration for async I/O
+1. Catalog-authoritative cross-process channels and workspaces (Prompt 13).
+2. MCP workspace knowledge over the public coordination API (Prompt 14).
+3. A scientific frontend with machine-checked Label I/O equivalence (Prompt 15).
+4. The frozen independent trace-guided experiment, with positive or negative
+   results reported without spin (Prompt 08).
+5. Final clean-tree evidence, documentation coherence, and release review
+   (Prompt 16).
+
+Additional adapters, FUSE, Kubernetes packaging, new scheduling policies, and
+`io_uring` are deferred unless the planning authority is deliberately changed.
 
 ## Tests
 

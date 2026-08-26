@@ -205,6 +205,7 @@ CMake 3.25+ | GitHub Actions (strict native/unit/Python/MCP and Compose golden p
 | [Backends](docs/backends.md) | BackendStore concept, writing new backends |
 | [MCP Integration](docs/mcp-integration.md) | Connecting coding agents via MCP |
 | [Architecture](docs/architecture.md) | Intended architecture reference |
+| [Development Plan](.planning/README.md) | 2.1 authority and serialized RC-to-final queue |
 
 ## Contributing
 

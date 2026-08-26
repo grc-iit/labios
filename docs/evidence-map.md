@@ -126,25 +126,23 @@ reinterpret a benchmark threshold as semantic correctness.
 The historical values above are prior-publication results. This repository has
 not reproduced the 16x CM1, 6x HACC, 17x Montage, or 40–60% figures.
 
-## Release-critical gaps and prompt order
+## Release-critical gaps and active order
 
-The lexical prompt order remains authoritative. The evidence gaps explain its
-release criticality; this is not a second roadmap:
+Prompts 01–12 are complete at the bounded evidence recorded above, except that
+Prompt 08 still lacks a valid experiment result. The authority in
+`.planning/LABIOS-2.1.md` defines this serialized RC-to-final order:
 
-1. **06** freezes trace accounting and method readiness.
-2. **07** closes MinMax determinism and policy correctness.
-3. **08** remains blocked at the WS3 live performance exit. The retained
-   three-arm attempt has correct output rows but invalid independence,
-   measurement, and provenance assumptions, so neither its formal null result
-   nor its numerical differences are performance evidence.
-4. **09–10** make documented C++/C examples and Python/registry-v2 surfaces
-   compile and cohere.
-5. **11** closes the MCP core runtime-bypass claim; workspace knowledge remains Prompt 14.
-6. **12–13** specify, then implement, cross-process coordination.
-7. **14** builds MCP workspace/knowledge behavior on that runtime.
-8. **15** supplies the second frontend family and equivalence evidence.
-9. **16** audits every public claim and produces release evidence from a clean
-   tree and fresh volumes.
+1. **13** implements the Prompt-12 cross-process coordination contract.
+2. **14** builds MCP workspace knowledge only on that proven public runtime.
+3. **15** supplies the scientific frontend and machine-checked cross-frontend
+   equivalence evidence.
+4. **08** runs the already frozen independent-replicate experiment against the
+   resulting feature-complete candidate. The retained earlier attempt remains
+   invalid evidence; no method redesign is permitted after observing results.
+5. **16** audits every public claim and produces final release evidence from a
+   clean tree and fresh volumes.
+
+This section ranks evidence gaps; it does not override the planning authority.
 
 ## Team inputs still required
 

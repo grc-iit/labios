@@ -55,8 +55,21 @@ dist/
 # Testing artifacts
 Testing/
 
-# Internal
-.planning/
+# Planning
+# Keep the current authority, active queue, and its index reviewable. Ignore
+# historical, reporting, and session-local planning material by default.
+.planning/*
+!.planning/README.md
+!.planning/LABIOS-2.1.md
+!.planning/prompts/
+.planning/prompts/*
+!.planning/prompts/08-trace-guided-full-experiment.md
+!.planning/prompts/13-cross-process-coordination-runtime.md
+!.planning/prompts/14-mcp-workspace-knowledge.md
+!.planning/prompts/15-scientific-label-frontend.md
+!.planning/prompts/16-release-evidence-and-coherence.md
+
+# Internal agent state
 .claude/
 .superpowers/
 

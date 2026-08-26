@@ -2,6 +2,7 @@
 
 **Status:** Living design and planning authority
 **Updated:** 2026-08-26
+**Current checkpoint:** LABIOS 2.1.0-rc.1 source candidate
 **Project:** LABIOS — Label-Based I/O System
 **Provenance:** US Patent 11,630,834 B2 · NSF Award 2313154
 
@@ -593,9 +594,12 @@ and a focused plan through July 2027 tied to the four objectives.
 ## 9. Working Set roadmap
 
 Each Working Set is delivered through the small bounded prompts directly under
-`.planning/prompts/`. Execute those numbered files in lexical order. No session
-owns the entire roadmap, and no prompt is parallelized unless the user explicitly
-changes the sequence. This section carries the intellectual structure.
+`.planning/prompts/`. Prompt numbers preserve the sequence in which the work was
+designed; completed prompts are not rerun merely to preserve lexical order. The
+current active execution order is explicit in §12 and `.planning/README.md`. No
+session owns the entire roadmap, and no prompt is parallelized unless the project
+lead explicitly changes the sequence. This section carries the intellectual
+structure.
 
 Dependency structure, validated against the code at `d9bdfa8`:
 
@@ -1329,15 +1333,31 @@ Prompt 13 must implement. Prompt 12 changes documentation only.
 
 ## 12. Immediate integration steps
 
-1. Collect the project team's publication and artifact list for the annual
-   report evidence map (§8.2).
-2. Produce the valid independent Prompt-08 experiment before making any WS3
-   performance claim.
-3. Continue the serialized implementation queue with Prompt 13, then 14–16;
-   Prompts 01–12 are complete at the bounded evidence stated above.
-4. Each completed prompt updates the evidence (§6) and decision (§11) state in
-   this document before a later prompt proceeds.
-5. Implement, verify, and review one slice before selecting the next.
+The `2.1.0-rc.1` checkpoint is for team evaluation. Final 2.1.0 work is
+serialized as follows unless the project lead explicitly changes the order:
+
+1. **Prompt 13 — cross-process coordination runtime.** Move channel/workspace
+   identity, ACL, sequence, cursor, and version truth into the catalog and pass
+   the independent-process acceptance matrix twice from clean state.
+2. **Prompt 14 — MCP workspace knowledge.** Build the knowledge workflow only
+   over the proven public workspace API; retain the no-direct-plumbing boundary.
+3. **Prompt 15 — scientific frontend.** Demonstrate machine-checked sealed-label
+   equivalence and exact result bytes between one scientific workflow and the
+   direct SDK path.
+4. **Prompt 08 — frozen trace-guided experiment.** Run the source-complete method
+   against the resulting feature-complete candidate. Report a valid positive or
+   negative result; if the contract cannot be satisfied, keep performance
+   explicitly unclaimed and record the blocker for release approval.
+5. **Prompt 16 — final evidence and coherence.** Start from a clean disposable
+   tree and fresh volumes, rerun the complete scoped evidence matrix, reconcile
+   public claims, and prepare the final 2.1.0 checklist. This prompt runs last.
+
+Each completed prompt updates §6, §11, `docs/evidence-map.md`, and relevant public
+documentation before the next prompt begins. Implement, verify, and review one
+bounded slice at a time. In parallel with implementation, the project team may
+collect the publication, artifact, education/outreach, testbed, award-record, and
+attribution inputs listed in §8.2; those inputs must not be inferred from the
+repository.
 
 ## 13. Archive policy
 
