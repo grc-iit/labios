@@ -7,11 +7,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # All targets need -fPIC so the static lib can link into the LD_PRELOAD .so
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-# WorkerInfo and score residuals are append-only wire models; older aggregate
-# initializers intentionally omit newly appended fields.
-add_compile_options(-Wno-missing-field-initializers)
-
 include(cmake/LabiosDependencies.cmake)
+
+# Keep project warnings off third-party FetchContent targets. Applying -Werror
+# through CMAKE_CXX_FLAGS makes dependency diagnostics break LABIOS builds.
+option(LABIOS_STRICT_WARNINGS "Treat warnings in LABIOS-owned targets as errors" OFF)
+add_compile_options(-Wno-missing-field-initializers)
+if(LABIOS_STRICT_WARNINGS)
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
 
 enable_testing()
 
